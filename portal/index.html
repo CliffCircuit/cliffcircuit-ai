@@ -397,6 +397,11 @@
               <span class="pill bg-blue-950 text-blue-300">Cloudflare</span>
             </div>
 
+            <!-- Live Sessions -->
+            <div id="cliff-sessions" class="mb-3 hidden">
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Live Sessions</div>
+              <div id="cliff-sessions-list" class="space-y-2"></div>
+            </div>
             <!-- Last activity -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
               <span>Last active: <span id="cliff-last-active" class="text-gray-300">—</span></span>
@@ -807,6 +812,35 @@
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
         if (el('last-active')) el('last-active').textContent = lastActive;
         if (el('job-errors')) el('job-errors').classList.toggle('hidden', !hasErrors);
+
+        // Live sessions (Cliff only)
+        if (name === 'cliff') {
+          const sessions = d.sessions || [];
+          const sessionsEl = document.getElementById('cliff-sessions');
+          const sessionsListEl = document.getElementById('cliff-sessions-list');
+          if (sessions.length && sessionsEl && sessionsListEl) {
+            sessionsEl.classList.remove('hidden');
+            sessionsListEl.innerHTML = sessions.map(s => {
+              const pct = s.pct;
+              const barColor = pct >= 80 ? '#ef4444' : pct >= 60 ? '#facc15' : '#34d399';
+              const pctColor = pct >= 80 ? 'text-red-400' : pct >= 60 ? 'text-yellow-400' : 'text-green-400';
+              const statusLabel = pct >= 80 ? '🔴 Critical' : pct >= 60 ? '🟡 Getting there' : '🟢 Healthy';
+              return `<div class="bg-gray-900 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-gray-200 text-xs font-semibold">${esc(s.label)}</span>
+                  <span class="text-xs ${pctColor} font-bold">${pct}% — ${statusLabel}</span>
+                </div>
+                <div class="bg-gray-700 rounded-full h-2 mb-1">
+                  <div class="h-2 rounded-full transition-all" style="width:${pct}%; background:${barColor};"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-600">
+                  <span>${Math.round(s.used/1000)}k / ${Math.round(s.limit/1000)}k tokens</span>
+                  <span>${esc(s.age)}</span>
+                </div>
+              </div>`;
+            }).join('');
+          }
+        }
 
         // Context window usage bar
         const MAX_TOKENS = 200000;
