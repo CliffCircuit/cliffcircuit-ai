@@ -1840,14 +1840,14 @@
       const ctxDot = document.getElementById('nav-ctx-dot');
       const ctxLabel = ctxDot?.nextElementSibling;
       if (ctxDot) {
-        if (pct >= 90) {
-          ctxDot.style.background = '#ef4444'; // red
+        if (pct >= 75) {
+          ctxDot.style.background = '#ef4444'; // red — matches agent card threshold
           if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ef4444'; }
-        } else if (pct >= 70) {
-          ctxDot.style.background = '#eab308'; // yellow
+        } else if (pct >= 50) {
+          ctxDot.style.background = '#facc15'; // yellow — matches agent card threshold
           if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ca8a04'; }
         } else {
-          ctxDot.style.background = '#22c55e'; // green
+          ctxDot.style.background = '#34d399'; // green
           if (ctxLabel) { ctxLabel.textContent = 'context'; ctxLabel.style.color = '#4b5563'; }
         }
       }
