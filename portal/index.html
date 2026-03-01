@@ -840,33 +840,50 @@
           }
         }
 
-        // Live session context bar (replaces last-run usage)
+        // Live session context bar — falls back to last-run token usage if no live session
         const sessions = (name === 'cliff') ? (d.sessions || []) : [];
         const liveSession = sessions.find(s => s.label === 'Telegram') || sessions[0];
+
+        const generatedTs = d.generatedAt ? new Date(d.generatedAt).getTime() : null;
+        function snapshotAge(ts) {
+          if (!ts) return '—';
+          const mins = Math.round((Date.now() - ts) / 60000);
+          if (mins < 1) return 'just now';
+          if (mins < 60) return mins + 'm ago';
+          const hrs = Math.round(mins / 60);
+          if (hrs < 24) return hrs + 'h ago';
+          return new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+        }
+
         if (liveSession && liveSession.pct !== undefined) {
+          // Live session — show real context window
           const pct = liveSession.pct;
           const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
           const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
-
-          const generatedTs = d.generatedAt ? new Date(d.generatedAt).getTime() : null;
-          function snapshotAge(ts) {
-            if (!ts) return '—';
-            const mins = Math.round((Date.now() - ts) / 60000);
-            if (mins < 1) return 'just now';
-            if (mins < 60) return mins + 'm ago';
-            const hrs = Math.round(mins / 60);
-            if (hrs < 24) return hrs + 'h ago';
-            return new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-          }
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
           if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy'); el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
           if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
-          if (el('ctx-sublabel')) {
-            el('ctx-sublabel').textContent = snapshotAge(generatedTs);
-            if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs;
+          if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = snapshotAge(generatedTs); if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs; }
+        } else {
+          // No live session — fall back to last cron run token usage
+          const agentTokens = d.agentTokens || {};
+          const tokenData = agentTokens[agentId];
+          if (tokenData && tokenData.totalTokens) {
+            const MAX_TOKENS = 200000;
+            const tokens = tokenData.totalTokens;
+            const pct = Math.round((tokens / MAX_TOKENS) * 100);
+            const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
+            const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
+            const tokLabel = (tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens) + ' tokens';
+            if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
+            if (el('ctx-none')) el('ctx-none').classList.add('hidden');
+            if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
+            if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
+            if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
+            if (el('ctx-sublabel')) el('ctx-sublabel').textContent = 'Last run usage';
           }
         }
 
