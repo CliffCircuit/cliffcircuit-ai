@@ -1510,10 +1510,11 @@
       if (isArticle && item.heroImage) {
         // Try portal/images/ first (pre-pushed for approved unpublished articles), fall back to live site
         const slug = item.heroImage.split('/').pop();
-        const portalSrc = `/portal/images/${slug}`;
+        const cb = '?t=' + Date.now();
+        const portalSrc = `https://cliffcircuit.ai/portal/images/${slug}${cb}`;
         const liveSrc = item.heroImage.startsWith('http') ? item.heroImage : `https://shopcliffmart.com${item.heroImage}`;
         heroImg.src = portalSrc;
-        heroImg.onerror = () => { heroImg.src = liveSrc; heroImg.onerror = null; };
+        heroImg.onerror = () => { heroImg.src = liveSrc + cb; heroImg.onerror = null; };
         heroEl.classList.remove('hidden');
         closeBtn.classList.add('hidden'); // close btn is on the image
       } else {
