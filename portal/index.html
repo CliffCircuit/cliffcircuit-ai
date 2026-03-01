@@ -364,15 +364,18 @@
         <h2 class="text-base font-semibold text-white mb-4">Cron Jobs</h2>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
-            <thead><tr class="border-b border-gray-800">
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Job</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Schedule</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Last Run</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Next Run</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Agent</th>
+            <thead><tr class="border-b border-gray-800 bg-gray-900">
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Job</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Schedule</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Thinking</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Status</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Next Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
             </tr></thead>
-            <tbody id="cron-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="cron-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1530,15 +1533,50 @@
       set('system-text', errs===0?'All systems nominal':`${errs} job${errs>1?'s':''} in error state`);
       set('system-sub', errs===0?`${crons.length} cron jobs running`:'Content pipeline still flowing');
 
-      document.getElementById('cron-body').innerHTML = crons.length===0
-        ? '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">No cron data</td></tr>'
-        : crons.map(c=>`<tr class="cron-row border-b border-gray-900">
-            <td class="px-4 py-3 text-white font-medium">${esc(c.name)}</td>
-            <td class="px-3 py-1 text-gray-500 font-mono text-xs">${esc(c.schedule||'—')}</td>
-            <td class="px-4 py-3"><span class="pill status-${c.status==='ok'?'ok':c.status==='error'?'error':'idle'}">${c.status}</span></td>
-            <td class="px-3 py-1 text-gray-400 text-xs">${esc(c.lastRun||'—')}</td>
-            <td class="px-3 py-1 text-gray-400 text-xs">${esc(c.nextRun||'—')}</td>
-            <td class="px-3 py-1 text-gray-500 text-xs">${esc(c.agent||'main')}</td>
+      const thinkingBadgeH = t => {
+        if (!t) return '<span class="text-gray-700">—</span>';
+        const map = { low: { label: 'Low', cls: 'text-blue-400' }, medium: { label: 'Medium', cls: 'text-yellow-400' }, high: { label: 'High', cls: 'text-orange-400' } };
+        const v = map[t] || { label: t, cls: 'text-gray-400' };
+        return `<span class="${v.cls}">${v.label}</span>`;
+      };
+      const modelShortH = m => {
+        if (!m) return '<span class="text-gray-700">—</span>';
+        if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+        if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+        if (m.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+        return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
+      };
+      const fmtTokensH = (t, j) => {
+        if (!t && j.model === null) return '<span class="text-gray-700 text-xs">sys</span>';
+        if (!t) return '<span class="text-gray-700">—</span>';
+        const k = (t/1000).toFixed(1);
+        const cls = t > 100000 ? 'text-red-400' : t > 50000 ? 'text-yellow-400' : 'text-green-400';
+        return `<span class="${cls} font-medium">${k}K</span>`;
+      };
+      const agentLabel = a => {
+        const map = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
+        const cls = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
+        const label = map[a] || a;
+        return `<span class="${cls[a]||'text-gray-400'} font-medium text-xs">${label}</span>`;
+      };
+      const statusDot = s => {
+        const cls = s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
+        return `<span class="${cls}">● ${esc(s||'idle')}</span>`;
+      };
+      // Sort by nextRunMs ascending (soonest first); fall back to name
+      const sortedCrons = [...crons].sort((a,b) => (a.nextRunMs||Infinity) - (b.nextRunMs||Infinity));
+      document.getElementById('cron-body').innerHTML = sortedCrons.length===0
+        ? '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No cron data</td></tr>'
+        : sortedCrons.map(c=>`<tr class="cron-row border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(c.name)}')">
+            <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(c.name||'—')} <span class="text-gray-600 text-xs">→</span></td>
+            <td class="px-4 py-2.5 text-gray-400 text-xs">${esc(humanCron(c.schedule||'—'))}</td>
+            <td class="px-4 py-2.5 text-xs">${agentLabel(c.agent||'main')}</td>
+            <td class="px-4 py-2.5 text-xs">${modelShortH(c.model)}</td>
+            <td class="px-4 py-2.5 text-xs">${thinkingBadgeH(c.thinking)}</td>
+            <td class="px-4 py-2.5 text-xs">${statusDot(c.status)}</td>
+            <td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.lastRun||'—')}</td>
+            <td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.nextRun||'—')}</td>
+            <td class="px-4 py-2.5 text-xs">${fmtTokensH(c.lastRunTokens, c)}</td>
           </tr>`).join('');
 
       const sites = d.sites||[];
