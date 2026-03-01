@@ -354,6 +354,30 @@ async function main() {
         return sessions;
       } catch(e) { return []; }
     })(),
+    conversationSessions: (() => {
+      try {
+        const raw = run('openclaw sessions --all-agents --json');
+        const d = JSON.parse(raw);
+        const sessions = Array.isArray(d) ? d : (d.sessions || []);
+        const cutoff = Date.now() - 30 * 86400000;
+        return sessions
+          .filter(s => s.updatedAt > cutoff)
+          .map(s => ({
+            sessionId: s.sessionId,
+            key: s.key,
+            agentId: s.agentId,
+            kind: s.kind,
+            model: s.model,
+            totalTokens: s.totalTokens || 0,
+            inputTokens: s.inputTokens || 0,
+            outputTokens: s.outputTokens || 0,
+            percentUsed: s.percentUsed || 0,
+            updatedAt: s.updatedAt,
+            thinkingLevel: s.thinkingLevel || null,
+          }))
+          .sort((a,b) => b.updatedAt - a.updatedAt);
+      } catch(e) { return []; }
+    })(),
     sessionHistory: (() => {
       try {
         const raw = run('openclaw status --json');
