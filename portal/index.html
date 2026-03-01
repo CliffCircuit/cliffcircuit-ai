@@ -164,9 +164,24 @@
           </table>
         </div>
 
-        <!-- Scheduled Tweets -->
-        <h2 class="text-base font-semibold text-white mb-1">Scheduled Tweets</h2>
-        <p class="text-xs text-gray-600 mb-4">@TimHarris707 standalone posts queued for posting. All times Pacific.</p>
+        <!-- Cliff Standalone Tweets -->
+        <h2 class="text-base font-semibold text-white mb-1">@CliffCircuit Tweets</h2>
+        <p class="text-xs text-gray-600 mb-4">Standalone tweets — not article promos. All times Pacific.</p>
+        <div class="card overflow-hidden mb-8">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Post</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Status</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Scheduled</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">In Queue</th>
+            </tr></thead>
+            <tbody id="cliff-tweets-queue-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+          </table>
+        </div>
+
+        <!-- Tim Standalone Tweets -->
+        <h2 class="text-base font-semibold text-white mb-1">@TimHarris707 Tweets</h2>
+        <p class="text-xs text-gray-600 mb-4">Tim's standalone posts queued for posting. All times Pacific.</p>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
@@ -418,8 +433,9 @@
       set('count-tim', timPosts.length);
 
       const rejected = q.filter(i=>i.status==='rejected');
-      const pendingArticles = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.account!=='timharris707');
-      const pendingTweets   = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.account==='timharris707');
+      const pendingArticles   = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.account!=='timharris707' && i.type!=='tweet');
+      const pendingCliffTweets = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.account==='cliffcircuit' && i.type==='tweet');
+      const pendingTweets      = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.account==='timharris707');
 
       // Pending Articles table
       const aqb = document.getElementById('articles-queue-body');
@@ -431,7 +447,18 @@
             <td class="px-4 py-3 text-gray-500 text-xs">${ago(i.createdAt)}</td>
           </tr>`).join('');
 
-      // Scheduled Tweets table
+      // Cliff standalone tweets table
+      const cqb = document.getElementById('cliff-tweets-queue-body');
+      cqb.innerHTML = pendingCliffTweets.length === 0
+        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No Cliff tweets queued — drafts arrive at 7am daily ✓</td></tr>'
+        : pendingCliffTweets.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
+            <td class="px-4 py-3 text-white font-medium">${esc(i.tweetText?.slice(0,70)||i.id)}${(i.tweetText?.length||0)>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
+            <td class="px-4 py-3">${fmtScheduled(i)}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs">${ago(i.createdAt)}</td>
+          </tr>`).join('');
+
+      // Tim tweets table
       const tqb = document.getElementById('tweets-queue-body');
       tqb.innerHTML = pendingTweets.length === 0
         ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No tweets scheduled — queue is clear ✓</td></tr>'
