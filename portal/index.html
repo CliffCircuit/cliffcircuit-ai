@@ -162,9 +162,10 @@
             <thead><tr class="border-b border-gray-800">
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Title</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Scheduled</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">In Queue</th>
             </tr></thead>
-            <tbody id="articles-queue-body"><tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="articles-queue-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       <!-- Blog Posted -->
@@ -1187,10 +1188,11 @@
       // Pending Articles table
       const aqb = document.getElementById('articles-queue-body');
       aqb.innerHTML = pendingArticles.length === 0
-        ? '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">No articles pending — queue is clear ✓</td></tr>'
+        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No articles pending — queue is clear</td></tr>'
         : pendingArticles.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
-            <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.id)} <span class="text-gray-600 text-xs ml-1">→</span></td>
-            <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
+            <td class="px-3 py-1 text-gray-400 font-medium">${esc(i.title||i.id)} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-3 py-1"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
+            <td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td>
             <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
           </tr>`).join('');
 
