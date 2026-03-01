@@ -1548,42 +1548,18 @@
       // Article full body preview (strip HTML tags from tweetHook or use excerpt)
       const articleBodyEl = document.getElementById('modal-article-body');
       const articleTextEl = document.getElementById('modal-article-text');
-      if (isArticle && item.slug) {
+      if (isArticle && item.htmlContent) {
         articleBodyEl.classList.remove('hidden');
-        // Try to load the article HTML and extract body text
-        const blogUrl = `https://cliffcircuit.ai/blog/${item.slug}.html`;
-        articleTextEl.innerHTML = '<span class="text-gray-600 text-xs">Loading article...</span>';
-        fetch(blogUrl)
-          .then(r => r.text())
-          .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            // Extract hero image if not already set
-            if (!item.heroImage) {
-              const img = doc.querySelector('article img, .hero-image img, img[src*="/blog/images"]');
-              if (img) {
-                heroImg.src = img.src;
-                heroEl.classList.remove('hidden');
-                closeBtn.classList.add('hidden');
-              }
-            }
-            // Extract article paragraphs
-            const article = doc.querySelector('article, .post-body, main');
-            if (article) {
-              const paras = Array.from(article.querySelectorAll('p, h2, h3')).slice(0, 20);
-              articleTextEl.innerHTML = paras.map(el => {
-                if (el.tagName === 'H2' || el.tagName === 'H3') {
-                  return `<p class="text-white font-semibold mt-3 mb-1">${el.textContent}</p>`;
-                }
-                return `<p>${el.textContent}</p>`;
-              }).join('');
-            } else {
-              articleTextEl.textContent = item.excerpt || '(Preview not available)';
-            }
-          })
-          .catch(() => {
-            articleTextEl.textContent = item.excerpt || '(Could not load article — may not be deployed yet)';
-          });
+        // Render excerpt preview from queue data (no fetch needed)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(item.htmlContent, 'text/html');
+        const paras = Array.from(doc.querySelectorAll('p, h2, h3')).slice(0, 8);
+        articleTextEl.innerHTML = paras.length ? paras.map(el => {
+          if (el.tagName === 'H2' || el.tagName === 'H3') {
+            return `<p class="text-white font-semibold mt-3 mb-1">${el.textContent}</p>`;
+          }
+          return `<p>${el.textContent}</p>`;
+        }).join('') : `<p>${item.excerpt || ''}</p>`;
       } else {
         articleBodyEl.classList.add('hidden');
       }
@@ -1592,7 +1568,12 @@
       const linkEl = document.getElementById('modal-link');
       let links = [];
       if (item.slug) {
-        links.push(`<a href="https://cliffcircuit.ai/blog/${esc(item.slug)}.html" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Open in Blog ↗</a>`);
+        if (item.status === 'published' && item.liveUrl) {
+          links.push(`<a href="${esc(item.liveUrl)}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Open on Blog ↗</a>`);
+        } else if (item.htmlContent) {
+          links.push(`<button onclick="previewFullArticle()" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors cursor-pointer">Preview Full Article ↗</button>`);
+          window._previewItem = item;
+        }
       }
       if (item.tweetId) {
         links.push(`<a href="https://x.com/i/status/${esc(item.tweetId)}" target="_blank" class="text-gray-400 hover:text-white text-sm border border-gray-700 rounded px-3 py-1 hover:border-gray-500 transition-colors">View Tweet ↗</a>`);
@@ -1725,6 +1706,48 @@
             sub.textContent = label;
           }
         }, 60000);
+
+    // Full article preview overlay
+    function previewFullArticle() {
+      const item = window._previewItem;
+      if (!item || !item.htmlContent) return;
+      // Build a full preview page in an overlay iframe using a blob URL
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="https://shopcliffmart.com/">
+  <link rel="stylesheet" href="https://shopcliffmart.com/styles.css">
+  <style>body{background:#111;color:#e5e7eb;padding:2rem;max-width:860px;margin:0 auto;font-family:system-ui,sans-serif;line-height:1.7;}h1{color:#fff;font-size:2rem;margin-bottom:1rem;}h2{color:#fff;font-size:1.4rem;margin-top:2rem;}img{max-width:100%;border-radius:8px;margin:1.5rem 0;}.excerpt{color:#9ca3af;font-style:italic;font-size:1.1rem;border-left:3px solid #374151;padding-left:1rem;margin-bottom:2rem;}</style>
+</head>
+<body>
+  <div style="margin-bottom:2rem;">
+    <button onclick="window.parent.closeArticlePreview()" style="background:#1f2937;color:#9ca3af;border:1px solid #374151;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.85rem;">← Back to Portal</button>
+  </div>
+  ${item.heroImage ? `<img src="https://shopcliffmart.com${item.heroImage}" alt="${item.title}" onerror="this.src='/portal/images/${item.heroImage.split('/').pop()}'">` : ''}
+  <h1>${item.title || ''}</h1>
+  <p class="excerpt">${item.excerpt || ''}</p>
+  ${item.htmlContent || ''}
+</body>
+</html>`;
+      const blob = new Blob([html], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      // Create fullscreen overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'article-preview-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;display:flex;flex-direction:column;';
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.style.cssText = 'flex:1;border:none;width:100%;height:100%;';
+      overlay.appendChild(iframe);
+      document.body.appendChild(overlay);
+    }
+
+    function closeArticlePreview() {
+      const el = document.getElementById('article-preview-overlay');
+      if (el) el.remove();
+    }
 
     // Global: called by Queue window dropdown
     function setQueueWindow(hours) {
