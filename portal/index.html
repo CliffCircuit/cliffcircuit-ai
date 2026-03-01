@@ -371,7 +371,7 @@
                 <div class="text-gray-600 text-xs">fast + accurate</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
-                <div class="text-xs text-gray-500 mb-1">Live Session</div>
+                <div class="text-xs text-gray-500 mb-1" id="cliff-ctx-title">Live Session</div>
                 <div id="cliff-ctx-bar-wrap" class="hidden">
                   <div class="flex justify-between items-center">
                     <span id="cliff-ctx-pct" class="text-white text-sm font-semibold"></span>
@@ -471,7 +471,7 @@
                 <div class="text-gray-600 text-xs">deep reasoning</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
-                <div class="text-xs text-gray-500 mb-1">Live Session</div>
+                <div class="text-xs text-gray-500 mb-1" id="samantha-ctx-title">Live Session</div>
                 <div id="samantha-ctx-bar-wrap" class="hidden">
                   <div class="flex justify-between items-center">
                     <span id="samantha-ctx-pct" class="text-white text-sm font-semibold"></span>
@@ -861,6 +861,7 @@
           const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
           const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
+          if (el('ctx-title')) el('ctx-title').textContent = 'Live Session';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
           if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy'); el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
@@ -878,6 +879,7 @@
             const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
             const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
             const tokLabel = (tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens) + ' tokens';
+            if (el('ctx-title')) el('ctx-title').textContent = 'Last Run';
             if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
             if (el('ctx-none')) el('ctx-none').classList.add('hidden');
             if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
