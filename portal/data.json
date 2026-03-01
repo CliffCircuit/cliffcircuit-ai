@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T16:11:05.640Z",
+  "generatedAt": "2026-03-01T16:16:02.589Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -397,7 +397,7 @@
     },
     {
       "id": "20260301-085400-plumbing",
-      "status": "approved",
+      "status": "published",
       "approvedAt": "2026-03-01T05:00:00-08:00",
       "approvedBy": "cliff-cron",
       "scheduledFor": "2026-03-01T10:48:00-08:00",
@@ -423,11 +423,14 @@
         "keywordInFirst100Words": true
       },
       "cliffNotes": "Angle: plumbers lose emergency leads not from bad service but from physical unavailability during jobs. Real failure moment: first auto-reply workflow had no triage — generated noise across all missed calls, not just real leads. Fixed with two-question triage (emergency vs scheduled, then actively happening vs can wait). Key differentiator: 72-hour post-job follow-up taps the post-emergency mindset when homeowners are most receptive. The dispatcher section (avoiding false emergency dispatches) is a practical angle shop owners will immediately recognize.",
-      "requeuedAt": "2026-03-01T12:32:00Z"
+      "requeuedAt": "2026-03-01T12:32:00Z",
+      "publishedAt": "2026-03-01T16:11:11.509956+00:00",
+      "liveUrl": "https://shopcliffmart.com/blog/plumbing-emergency-lead-response.html",
+      "tweetId": "2028140900862632362"
     },
     {
       "id": "20260301-105400-cleaning",
-      "status": "approved",
+      "status": "published",
       "approvedAt": "2026-03-01T05:00:00-08:00",
       "approvedBy": "cliff-cron",
       "scheduledFor": "2026-03-01T11:36:00-08:00",
@@ -453,7 +456,10 @@
       "cliffNotes": "Angle: cleaning churn is invisible because clients are polite — they drift rather than cancel. Real failure moment: naive frequency-alert had too many false positives; fixed with per-client history context to set dynamic thresholds. Unexpected insight: the graceful-exit third message outperforms discount follow-ups by keeping lapsed clients warm for referrals. Data cleanup framing is honest — this is the actual prerequisite most operators skip.",
       "heroImage": "/blog/images/cleaning-service-silent-churn.png",
       "heroImageGenerated": true,
-      "requeuedAt": "2026-03-01T12:32:00Z"
+      "requeuedAt": "2026-03-01T12:32:00Z",
+      "publishedAt": "2026-03-01T16:11:11.510085+00:00",
+      "liveUrl": "https://shopcliffmart.com/blog/cleaning-service-silent-churn.html",
+      "tweetId": "2028140916645695573"
     },
     {
       "id": "tweet-cliffcircuit-20260301-1",
@@ -746,72 +752,27 @@
   ],
   "crons": [
     {
-      "name": "github-monitoring",
-      "schedule": "0 */4 * * *",
-      "status": "ok",
-      "lastRun": "4h ago",
-      "lastRunMs": 1772366498739,
-      "nextRun": "in 10m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Monitors the CliffCircuit GitHub org every 4 hours — checks for new issues, pull requests, security alerts, and failed deployments. Flags anything that needs Tim's attention.",
-      "lastRunTokens": 32962
-    },
-    {
-      "name": "pipeline-health-check",
-      "schedule": "0 7-23 * * *",
-      "status": "error",
-      "lastRun": "1h ago",
-      "lastRunMs": 1772377560904,
-      "nextRun": "in 8m",
-      "agent": "main",
-      "consecutiveErrors": 1,
-      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
-      "lastRunTokens": null
-    },
-    {
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "7m ago",
-      "lastRunMs": 1772381014531,
-      "nextRun": "in 6m",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772381453874,
+      "nextRun": "in 1m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13155
-    },
-    {
-      "name": "social-monitoring",
-      "schedule": "5 */4 * * *",
-      "status": "ok",
-      "lastRun": "4h ago",
-      "lastRunMs": 1772366826419,
-      "nextRun": "in 4m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Checks both @CliffCircuit and @timharris707 on X/Twitter — tracks follower counts, recent post engagement, mentions, and any replies that need a response.",
-      "lastRunTokens": 13904
+      "lastRunTokens": 13131
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "10m ago",
+      "lastRun": "15m ago",
       "lastRunMs": 1772380849790,
-      "nextRun": "in 4m",
+      "nextRun": "in 1m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -824,9 +785,9 @@
       "name": "cliff-article-review",
       "schedule": "*/30 * * * *",
       "status": "error",
-      "lastRun": "5m ago",
+      "lastRun": "10m ago",
       "lastRunMs": 1772381179988,
-      "nextRun": "in 19m",
+      "nextRun": "in 14m",
       "agent": "main",
       "consecutiveErrors": 1,
       "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
@@ -841,7 +802,7 @@
       "status": "idle",
       "lastRun": null,
       "lastRunMs": null,
-      "nextRun": "in 49m",
+      "nextRun": "in 44m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "bbbd846b-ecb6-420f-822b-4c95e69a6d4d",
@@ -851,10 +812,25 @@
       "lastRunTokens": null
     },
     {
+      "name": "pipeline-health-check",
+      "schedule": "0 7-23 * * *",
+      "status": "error",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772381333869,
+      "nextRun": "in 47m",
+      "agent": "main",
+      "consecutiveErrors": 2,
+      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
+      "lastRunTokens": null
+    },
+    {
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "19m ago",
+      "lastRun": "24m ago",
       "lastRunMs": 1772380340089,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -866,10 +842,40 @@
       "lastRunTokens": 74266
     },
     {
+      "name": "github-monitoring",
+      "schedule": "0 */4 * * *",
+      "status": "ok",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772381310517,
+      "nextRun": "in 4h",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Monitors the CliffCircuit GitHub org every 4 hours — checks for new issues, pull requests, security alerts, and failed deployments. Flags anything that needs Tim's attention.",
+      "lastRunTokens": 21904
+    },
+    {
+      "name": "social-monitoring",
+      "schedule": "5 */4 * * *",
+      "status": "ok",
+      "lastRun": "8m ago",
+      "lastRunMs": 1772381300055,
+      "nextRun": "in 4h",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Checks both @CliffCircuit and @timharris707 on X/Twitter — tracks follower counts, recent post engagement, mentions, and any replies that need a response.",
+      "lastRunTokens": 12970
+    },
+    {
       "name": "samantha-tim-posts",
       "schedule": "0 8,13,18 * * *",
       "status": "ok",
-      "lastRun": "9m ago",
+      "lastRun": "14m ago",
       "lastRunMs": 1772380903656,
       "nextRun": "in 5h",
       "agent": "samantha",
@@ -884,7 +890,7 @@
       "name": "samantha-cliff-tweets",
       "schedule": "0 8,15 * * *",
       "status": "error",
-      "lastRun": "7m ago",
+      "lastRun": "12m ago",
       "lastRunMs": 1772381033370,
       "nextRun": "in 7h",
       "agent": "samantha",
@@ -944,7 +950,7 @@
       "name": "morning-check-in",
       "schedule": "0 8 * * *",
       "status": "ok",
-      "lastRun": "11m ago",
+      "lastRun": "16m ago",
       "lastRunMs": 1772380800014,
       "nextRun": "in 1d",
       "agent": "main",
@@ -995,20 +1001,20 @@
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 172000,
+      "used": 170000,
       "limit": 200000,
-      "pct": 86,
+      "pct": 85,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772381406250
+      "lastActiveAt": 1772381703204
     },
     {
       "label": "Main",
       "key": "agent:main:main",
-      "used": 27000,
+      "used": 28000,
       "limit": 200000,
       "pct": 14,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772381046250
+      "lastActiveAt": 1772381703204
     }
   ],
   "sites": [
@@ -1062,7 +1068,7 @@
     "percent": 6
   },
   "stats": {
-    "articlesToday": 6,
+    "articlesToday": 8,
     "timPostsToday": 1
   }
 }
