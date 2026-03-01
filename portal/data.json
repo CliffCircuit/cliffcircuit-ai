@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T12:00:48.194Z",
+  "generatedAt": "2026-03-01T12:05:11.643Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -501,7 +501,7 @@
     },
     {
       "id": "20260301-113800-vetclinic",
-      "status": "draft",
+      "status": "approved",
       "createdAt": "2026-03-01T11:42:32.944Z",
       "publishAfter": "2026-03-01T17:42:32.944Z",
       "title": "40% of vet patients are overdue for a visit. Here's the AI that finds them.",
@@ -523,11 +523,14 @@
       },
       "cliffNotes": "Angle: vet clinics have the richest patient data of any service business (age, breed, health history, declined services) and barely use it for outreach. Real failure moment: first trigger was naive overdue-by-days — missed the senior/adult/senior-with-flags distinction. Key differentiator: emotional register guidance (no urgency/guilt framing) is specific to this industry and will resonate immediately with practice managers. Declined dental follow-up is the highest-ROI layer and the most skipped.",
       "heroImageGenerated": true,
-      "heroImage": "/blog/images/vet-clinic-overdue-patient-ai.png"
+      "heroImage": "/blog/images/vet-clinic-overdue-patient-ai.png",
+      "approvedAt": "2026-03-01T12:00:00.000Z",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T06:00:00-08:00"
     },
     {
       "id": "20260301-1772365905019-painting",
-      "status": "draft",
+      "status": "approved",
       "createdAt": "2026-03-01T11:51:45.019Z",
       "publishAfter": "2026-03-01T17:51:45.019Z",
       "title": "Painters quote 30 jobs a month and close 10. The follow-up gap explains the other 20.",
@@ -549,11 +552,14 @@
       },
       "cliffNotes": "Angle: painting contractors' close rate problem is a follow-up problem, not a price problem. Real failure moment: first version led with 'booking out' as a pressure tactic — a painter told me immediately it sounds fake. Fixed by burying it as context. Bonus layers: change order capture and referral ask timing — both underused in the industry. Honest section about data cleanup prerequisite for shops that don't have centralized estimate tracking.",
       "heroImageGenerated": true,
-      "heroImage": "/blog/images/painting-contractors-estimate-follow-up-gap.png"
+      "heroImage": "/blog/images/painting-contractors-estimate-follow-up-gap.png",
+      "approvedAt": "2026-03-01T12:00:00.000Z",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T06:48:00-08:00"
     },
     {
       "id": "20260301-1772365990751-gym",
-      "status": "draft",
+      "status": "approved",
       "createdAt": "2026-03-01T11:55:00.000Z",
       "publishAfter": "2026-03-01T17:55:00.000Z",
       "title": "Gym members ghost before they cancel. Here's the AI that catches them first.",
@@ -575,7 +581,10 @@
         "seoTitleUnder60": true,
         "keywordInFirst100Words": true
       },
-      "cliffNotes": "Angle: gym churn has a predictable 3-5 week warning period in the check-in data — almost no gym is watching it. First failure moment: naive 14-day no-show trigger had massive seasonal false positives (holidays, vacations). Fixed with per-member baseline comparison. Key differentiators: pause vs. cancel framing (economically better and philosophically better), milestone messages (30-40% response rate), early-win reinforcement for new members in first 60 days. Staff buy-in section addresses the 'I already do that' objection directly. Different vertical from all home services content — adds important variety."
+      "cliffNotes": "Angle: gym churn has a predictable 3-5 week warning period in the check-in data — almost no gym is watching it. First failure moment: naive 14-day no-show trigger had massive seasonal false positives (holidays, vacations). Fixed with per-member baseline comparison. Key differentiators: pause vs. cancel framing (economically better and philosophically better), milestone messages (30-40% response rate), early-win reinforcement for new members in first 60 days. Staff buy-in section addresses the 'I already do that' objection directly. Different vertical from all home services content — adds important variety.",
+      "approvedAt": "2026-03-01T12:00:00.000Z",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T07:36:00-08:00"
     }
   ],
   "crons": [
@@ -583,61 +592,16 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "6m ago",
-      "lastRunMs": 1772366100015,
-      "nextRun": "in 1m",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772366436283,
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13071
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "30m ago",
-      "lastRunMs": 1772364641199,
-      "nextRun": "in 1m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": null,
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 50812
-    },
-    {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "16m ago",
-      "lastRunMs": 1772365500015,
-      "nextRun": "in 1m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 44418
-    },
-    {
-      "name": "github-monitoring",
-      "schedule": "0 */4 * * *",
-      "status": "ok",
-      "lastRun": "4h ago",
-      "lastRunMs": 1772352066959,
-      "nextRun": "in 0m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Monitors the CliffCircuit GitHub org every 4 hours — checks for new issues, pull requests, security alerts, and failed deployments. Flags anything that needs Tim's attention.",
-      "lastRunTokens": 25121
+      "lastRunTokens": 13073
     },
     {
       "name": "social-monitoring",
@@ -645,7 +609,7 @@
       "status": "ok",
       "lastRun": "4h ago",
       "lastRunMs": 1772352426412,
-      "nextRun": "in 6m",
+      "nextRun": "in 2m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -655,10 +619,40 @@
       "lastRunTokens": 98955
     },
     {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772366400017,
+      "nextRun": "in 10m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 52592
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "ok",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772366452108,
+      "nextRun": "in 25m",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": null,
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": 59505
+    },
+    {
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "8m ago",
+      "lastRun": "13m ago",
       "lastRunMs": 1772365940051,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -703,7 +697,7 @@
       "name": "samantha-cliff-tweets",
       "schedule": "0 8,15 * * *",
       "status": "error",
-      "lastRun": "43m ago",
+      "lastRun": "47m ago",
       "lastRunMs": 1772363884290,
       "nextRun": "in 4h",
       "agent": "samantha",
@@ -728,6 +722,21 @@
       "thinking": null,
       "description": "Sends Tim a good morning briefing — covers the day's calendar events, any urgent emails, weather if relevant, and a quick summary of what happened overnight.",
       "lastRunTokens": 23830
+    },
+    {
+      "name": "github-monitoring",
+      "schedule": "0 */4 * * *",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772366498739,
+      "nextRun": "in 4h",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Monitors the CliffCircuit GitHub org every 4 hours — checks for new issues, pull requests, security alerts, and failed deployments. Flags anything that needs Tim's attention.",
+      "lastRunTokens": 32962
     },
     {
       "name": "weekly-report",
@@ -812,37 +821,37 @@
       "outputTokens": 3660,
       "jobName": "social-monitoring"
     },
-    "main": {
-      "totalTokens": 50812,
-      "inputTokens": 12,
-      "outputTokens": 6003,
-      "jobName": "cliff-article-review"
-    },
     "samantha": {
       "totalTokens": 62707,
       "inputTokens": 12,
       "outputTokens": 12106,
       "jobName": "samantha-draft"
+    },
+    "main": {
+      "totalTokens": 59505,
+      "inputTokens": 6,
+      "outputTokens": 3053,
+      "jobName": "cliff-article-review"
     }
   },
   "sessions": [
     {
-      "label": "Main",
-      "key": "agent:main:main",
-      "used": 36000,
-      "limit": 200000,
-      "pct": 18,
-      "model": "claude-opus-4-6",
-      "lastActiveAt": 1772366328820
-    },
-    {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 114000,
+      "used": 117000,
       "limit": 200000,
-      "pct": 57,
+      "pct": 58,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772366328820
+      "lastActiveAt": 1772366592260
+    },
+    {
+      "label": "Main",
+      "key": "agent:main:main",
+      "used": 27000,
+      "limit": 200000,
+      "pct": 13,
+      "model": "claude-sonnet-4-6",
+      "lastActiveAt": 1772366592260
     }
   ],
   "sites": [
