@@ -414,6 +414,7 @@
             <thead><tr class="border-b border-gray-800 bg-gray-900">
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
@@ -510,6 +511,7 @@
             <thead><tr class="border-b border-gray-800 bg-gray-900">
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
@@ -533,6 +535,35 @@
     </div>
 
   </div><!-- /portal -->
+
+  <!-- Job Detail Modal -->
+  <div id="job-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeJobModal()">
+    <div class="absolute inset-0 bg-black opacity-70"></div>
+    <div class="relative card w-full max-w-lg overflow-hidden" style="z-index:1;">
+      <div class="p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <div class="text-xs text-gray-500 mb-1 uppercase tracking-wide">Scheduled Job</div>
+            <h3 id="job-modal-name" class="text-white font-bold text-lg"></h3>
+          </div>
+          <button onclick="closeJobModal()" class="text-gray-500 hover:text-white text-xl leading-none ml-4">✕</button>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span id="job-modal-status" class="pill"></span>
+          <span id="job-modal-schedule" class="pill bg-gray-800 text-gray-300"></span>
+          <span id="job-modal-model" class="pill bg-indigo-950 text-indigo-300"></span>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4 mb-4">
+          <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">What it does</div>
+          <p id="job-modal-desc" class="text-gray-200 text-sm leading-relaxed"></p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs text-gray-500">
+          <div>Last run: <span id="job-modal-last" class="text-gray-300"></span></div>
+          <div>Next run: <span id="job-modal-next" class="text-gray-300"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Detail Modal -->
   <div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeDetail()">
@@ -803,10 +834,23 @@
         const tbody = document.getElementById(`${name}-jobs-body`);
         if (tbody && info.jobs.length) {
           const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
+          // Store job descriptions for modal
+          if (!window._jobMap) window._jobMap = {};
+          info.jobs.forEach(j => { window._jobMap[j.name] = j; });
+
+          const modelShort = m => {
+            if (!m) return '<span class="text-gray-700">—</span>';
+            if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+            if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+            if (m.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+            return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
+          };
+
           tbody.innerHTML = info.jobs.map(j => `
-            <tr class="border-b border-gray-900 hover:bg-gray-900 transition-colors">
-              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')}</td>
+            <tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')} <span class="text-gray-600 text-xs">→</span></td>
               <td class="px-4 py-2.5 text-gray-400">${esc(humanCron(j.schedule||'—'))}</td>
+              <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRun || '—'}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.nextRun || '—'}</td>
@@ -1127,6 +1171,31 @@
       linkEl.innerHTML = links.join('');
 
       document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function openJobDetail(name) {
+      const j = window._jobMap && window._jobMap[name];
+      if (!j) return;
+      const modelShortText = m => {
+        if (!m) return 'Default model';
+        if (m.includes('haiku')) return 'Claude Haiku';
+        if (m.includes('sonnet')) return 'Claude Sonnet';
+        if (m.includes('opus')) return 'Claude Opus';
+        return m.split('/').pop();
+      };
+      document.getElementById('job-modal-name').textContent = j.name;
+      document.getElementById('job-modal-status').textContent = j.status || 'idle';
+      document.getElementById('job-modal-status').className = `pill status-${j.status||'idle'}`;
+      document.getElementById('job-modal-schedule').textContent = '🕐 ' + humanCron(j.schedule || '—');
+      document.getElementById('job-modal-model').textContent = '🤖 ' + modelShortText(j.model);
+      document.getElementById('job-modal-desc').textContent = j.description || 'No description available.';
+      document.getElementById('job-modal-last').textContent = j.lastRun || '—';
+      document.getElementById('job-modal-next').textContent = j.nextRun || '—';
+      document.getElementById('job-modal').classList.remove('hidden');
+    }
+
+    function closeJobModal() {
+      document.getElementById('job-modal').classList.add('hidden');
     }
 
     function closeDetail() {
