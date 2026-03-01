@@ -155,6 +155,7 @@
                   <span id="metric-tweets-today" class="text-xl font-bold text-blue-400">—</span>
                 </div>
               </div>
+              <div class="text-gray-700 text-xs mt-3">next 24 hours</div>
             </div>
           </div>
 
@@ -1289,9 +1290,13 @@
         return m < 60 ? m+'m' : Math.floor(m/60)+'h '+( m%60)+'m';
       })() : '—';
 
-      set('metric-in-queue', allPending.length);
-      set('metric-articles-today', approvedArticlesToday.length + articles.length);
-      set('metric-tweets-today', approvedTweetsToday.length + cliffTweets48.filter(i=>new Date(i.publishedAt)>new Date(today)).length);
+      const next24 = new Date(Date.now() + 24*60*60*1000);
+      const approved24Articles = approved.filter(i=>(i.title||i.slug) && i.scheduledFor && new Date(i.scheduledFor) <= next24);
+      const approved24Tweets = approved.filter(i=>(i.type==='tweet'||i.tweetText) && i.scheduledFor && new Date(i.scheduledFor) <= next24);
+      const approved24All = approved.filter(i=>i.scheduledFor && new Date(i.scheduledFor) <= next24);
+      set('metric-in-queue', approved24All.length);
+      set('metric-articles-today', approved24Articles.length);
+      set('metric-tweets-today', approved24Tweets.length);
       set('metric-next-publish', nextPublish);
       set('metric-articles-48h', articles48.length);
       set('metric-cliff-tweets-48h', cliffTweets48.length);
