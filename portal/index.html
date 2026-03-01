@@ -367,7 +367,17 @@
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Context Window</div>
                 <div class="text-white text-sm font-semibold">200K tokens</div>
-                <div class="text-gray-600 text-xs">~150K words</div>
+                <div id="cliff-ctx-bar-wrap" class="mt-2 hidden">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span id="cliff-ctx-label" class="text-gray-400"></span>
+                    <span id="cliff-ctx-pct" class="font-semibold"></span>
+                  </div>
+                  <div class="bg-gray-700 rounded-full h-1.5">
+                    <div id="cliff-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
+                  </div>
+                  <div class="text-gray-600 text-xs mt-1">last run usage</div>
+                </div>
+                <div id="cliff-ctx-none" class="text-gray-600 text-xs">~150K words</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
@@ -447,7 +457,17 @@
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Context Window</div>
                 <div class="text-white text-sm font-semibold">200K tokens</div>
-                <div class="text-gray-600 text-xs">~150K words</div>
+                <div id="samantha-ctx-bar-wrap" class="mt-2 hidden">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span id="samantha-ctx-label" class="text-gray-400"></span>
+                    <span id="samantha-ctx-pct" class="font-semibold"></span>
+                  </div>
+                  <div class="bg-gray-700 rounded-full h-1.5">
+                    <div id="samantha-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
+                  </div>
+                  <div class="text-gray-600 text-xs mt-1">last run usage</div>
+                </div>
+                <div id="samantha-ctx-none" class="text-gray-600 text-xs">~150K words</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
@@ -680,6 +700,24 @@
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
         if (el('last-active')) el('last-active').textContent = lastActive;
         if (el('job-errors')) el('job-errors').classList.toggle('hidden', !hasErrors);
+
+        // Context window usage bar
+        const MAX_TOKENS = 200000;
+        const agentTokens = d.agentTokens || {};
+        const tokenData = agentTokens[agentId];
+        if (tokenData && tokenData.totalTokens) {
+          const tokens = tokenData.totalTokens;
+          const pct = Math.round((tokens / MAX_TOKENS) * 100);
+          const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
+          const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
+          const tokLabel = tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens;
+
+          if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
+          if (el('ctx-none')) el('ctx-none').classList.add('hidden');
+          if (el('ctx-label')) el('ctx-label').textContent = tokLabel + ' tokens';
+          if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold ${pctColor}`; }
+          if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
+        }
 
         // Status dot — if any errors, show yellow warning
         if (el('agent-status-dot') && el('agent-status-label')) {
