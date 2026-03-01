@@ -236,6 +236,11 @@
               <button onclick="setQueueFilter('acct','cliff')" id="qa-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
               <button onclick="setQueueFilter('acct','tim')" id="qa-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
             </div>
+            <select id="q-date-filter" onchange="setQueueDateFilter(this.value)" style="background:#0f172a;border:1px solid #374151;color:#6b7280;font-size:0.75rem;padding:2px 8px;border-radius:6px;cursor:pointer;outline:none;">
+              <option value="today" selected>Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="all">All</option>
+            </select>
           </div>
         </div>
         <div class="card overflow-hidden mb-8">
@@ -943,11 +948,18 @@
     function renderQueueTable() {
       const tf = window._queueTypeFilter||'all';
       const af = window._queueAcctFilter||'all';
+      const df = window._queueDateFilter||'today';
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+      const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(tomorrowStart.getDate()+1);
+      const tomorrowEnd = new Date(todayEnd); tomorrowEnd.setDate(tomorrowEnd.getDate()+1);
       const items = (window._pendingAll||[]).filter(i => {
         const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
         const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
-        return typeOk && acctOk;
+        const sched = i.scheduledFor ? new Date(i.scheduledFor) : null;
+        const dateOk = df==='all' || (df==='today' && sched && sched>=todayStart && sched<=todayEnd) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
+        return typeOk && acctOk && dateOk;
       });
       const el = document.getElementById('unified-queue-body');
       if (!el) return;
@@ -1771,6 +1783,11 @@
     }
 
     // Global: called by Queue window dropdown
+    function setQueueDateFilter(val) {
+      window._queueDateFilter = val;
+      renderQueueTable();
+    }
+
     function setQueueWindow(hours) {
       window._queueWindowHours = (['yesterday','today','tomorrow'].includes(hours)) ? hours : parseInt(hours);
       if (window._lastData) renderMarketing(window._lastData);
