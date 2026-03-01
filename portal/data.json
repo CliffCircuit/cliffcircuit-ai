@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T07:30:51.501Z",
+  "generatedAt": "2026-03-01T08:06:38.355Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -354,67 +354,11 @@
   ],
   "crons": [
     {
-      "name": "nightly-git-backup",
-      "schedule": "30 23 * * *",
-      "status": "ok",
-      "lastRun": "1d ago",
-      "nextRun": "in 1m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "248701de-21b3-4c1a-86b6-164a8de04ca3",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Nightly git backup: cd /Users/openclaw/.openclaw/workspace && git add -A && git commit -m \"Nightly backup: 2026-02-24\" && git push origin main",
-      "lastRunTokens": 15376
-    },
-    {
-      "name": "portal-data-refresh",
-      "schedule": "*/30 7-23 * * *",
-      "status": "ok",
-      "lastRun": "28m ago",
-      "nextRun": "in 1m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Run this command: node /Users/openclaw/.openclaw/workspace/cliffcircuit-portal/generate-data.js",
-      "lastRunTokens": 21176
-    },
-    {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "16m ago",
-      "nextRun": "in 1m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "You are Samantha, Cliff's content studio agent. This is PHASE 2: PUBLISH. Read AGENTS.md in your workspace (/workspace/samantha/).",
-      "lastRunTokens": 31497
-    },
-    {
-      "name": "github-monitoring",
-      "schedule": "0 */4 * * *",
-      "status": "ok",
-      "lastRun": "4h ago",
-      "nextRun": "in 30m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Check GitHub for CliffCircuit organization: review any new issues or pull requests, check repository activity, flag any items requiring Tim's attention or approval, monitor for security alerts or impo",
-      "lastRunTokens": 24069
-    },
-    {
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
-      "lastRun": "3h ago",
-      "nextRun": "in 36m",
+      "lastRun": "4h ago",
+      "nextRun": "in 1m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -424,11 +368,25 @@
       "lastRunTokens": 26786
     },
     {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "7m ago",
+      "nextRun": "in 8m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "You are Samantha, Cliff's content studio agent. This is PHASE 2: PUBLISH. Read AGENTS.md in your workspace (/workspace/samantha/).",
+      "lastRunTokens": 31390
+    },
+    {
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "37m ago",
-      "nextRun": "in 1h",
+      "lastRun": "1h ago",
+      "nextRun": "in 48m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
@@ -438,11 +396,39 @@
       "lastRunTokens": 38121
     },
     {
+      "name": "github-monitoring",
+      "schedule": "0 */4 * * *",
+      "status": "ok",
+      "lastRun": "5m ago",
+      "nextRun": "in 4h",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Check GitHub for CliffCircuit organization: review any new issues or pull requests, check repository activity, flag any items requiring Tim's attention or approval, monitor for security alerts or impo",
+      "lastRunTokens": 25121
+    },
+    {
+      "name": "portal-data-refresh",
+      "schedule": "*/5 7-23 * * *",
+      "status": "ok",
+      "lastRun": "36m ago",
+      "nextRun": "in 7h",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
+      "lastRunTokens": 21537
+    },
+    {
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "ok",
-      "lastRun": "27m ago",
-      "nextRun": "in 8h",
+      "lastRun": "1h ago",
+      "nextRun": "in 7h",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -525,7 +511,7 @@
       "name": "nightly-extraction",
       "schedule": "0 23 * * *",
       "status": "ok",
-      "lastRun": "31m ago",
+      "lastRun": "1h ago",
       "nextRun": "in 23h",
       "agent": "main",
       "consecutiveErrors": 0,
@@ -534,6 +520,20 @@
       "thinking": "low",
       "description": "Review today's conversations and extract durable facts. For each entity file under /Users/openclaw/life/projects/: READ the existing file first, then APPEND new facts only — never overwrite or truncat",
       "lastRunTokens": 39443
+    },
+    {
+      "name": "nightly-git-backup",
+      "schedule": "30 23 * * *",
+      "status": "ok",
+      "lastRun": "37m ago",
+      "nextRun": "in 23h",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "248701de-21b3-4c1a-86b6-164a8de04ca3",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Nightly git backup: cd /Users/openclaw/.openclaw/workspace && git add -A && git commit -m \"Nightly backup: 2026-02-24\" && git push origin main",
+      "lastRunTokens": 22772
     },
     {
       "name": "tim-thread-3-draft",
@@ -566,22 +566,31 @@
   },
   "sessions": [
     {
-      "label": "Main",
-      "key": "agent:main:main",
-      "used": 126000,
+      "label": "Telegram",
+      "key": "agent:main:teleg...624734",
+      "used": 35000,
       "limit": 200000,
-      "pct": 63,
+      "pct": 18,
       "model": "claude-sonnet-4-6",
       "age": "just now"
     },
     {
-      "label": "Telegram",
-      "key": "agent:main:teleg...624734",
-      "used": 29000,
+      "label": "Main",
+      "key": "agent:main:main",
+      "used": 27000,
       "limit": 200000,
       "pct": 14,
       "model": "claude-sonnet-4-6",
-      "age": "1m ago"
+      "age": "just now"
+    },
+    {
+      "label": "Unknown",
+      "key": "agent:main:subag...af1892",
+      "used": 20000,
+      "limit": 200000,
+      "pct": 10,
+      "model": "claude-opus-4-6",
+      "age": "25m ago"
     },
     {
       "label": "Telegram",
@@ -590,7 +599,7 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "age": "13h ago"
+      "age": "14h ago"
     }
   ],
   "sites": [
@@ -626,10 +635,17 @@
     "cliffPosts": 31,
     "timFollowers": 5,
     "timPosts": 11,
+    "cliffGrowthToday": 0,
+    "timGrowthToday": 0,
+    "cliffGrowthAllTime": 0,
+    "timGrowthAllTime": 0,
+    "trackingSince": "2026-02-28",
     "sparklineCliff": [
+      7,
       7
     ],
     "sparklineTim": [
+      5,
       5
     ]
   },
@@ -637,7 +653,7 @@
     "percent": 6
   },
   "stats": {
-    "articlesToday": 3,
-    "timPostsToday": 5
+    "articlesToday": 0,
+    "timPostsToday": 0
   }
 }
