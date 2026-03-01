@@ -325,6 +325,8 @@ async function main() {
     try {
       run(`cd ${REPO_DIR} && git config user.email "cliff@cliffcircuit.ai"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git config user.name "Cliff"`, { stdio: 'pipe' });
+      // Always pull before pushing to avoid divergence
+      run(`cd ${REPO_DIR} && git pull --rebase https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git main`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git add portal/`, { stdio: 'pipe' });
       const status = run(`cd ${REPO_DIR} && git status --porcelain`);
       if (status) {
