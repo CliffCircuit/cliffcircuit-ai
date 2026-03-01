@@ -1390,8 +1390,12 @@
         }).join('');
       }
 
-      // Conversation Sessions
-      const convSessions = (d.conversationSessions || []);
+      // Conversation Sessions — deduplicated, no crons
+      const convRaw = (d.conversationSessions || []);
+      const convSeen = new Set();
+      const convSessions = convRaw
+        .filter(s => !s.key?.includes('cron:'))
+        .filter(s => { if (convSeen.has(s.sessionId)) return false; convSeen.add(s.sessionId); return true; });
       const convBody = document.getElementById('tok-conv-body');
       if (convSessions.length === 0) {
         convBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No session data available</td></tr>';
@@ -1424,8 +1428,8 @@
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
             <td class="px-4 py-2 text-gray-600 text-xs font-mono">${shortId}</td>
             <td class="px-4 py-2 text-xs">${sessionType(s.key)}</td>
-            <td class="px-4 py-2 text-xs"><span class="${agentCls[s.agentId]||'text-gray-400'}">${agentName[s.agentId]||s.agentId||'—'}</span>${think}</td>
-            <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
+            <td class="px-4 py-2 text-xs"><span class="${agentCls[s.agentId]||'text-gray-400'}">${agentName[s.agentId]||s.agentId||'—'}</span></td>
+            <td class="px-4 py-2 text-xs">${modelShortT(s.model)}${think}</td>
             <td class="px-4 py-2 text-right text-white font-medium text-xs">${fmtK(s.totalTokens)}</td>
             <td class="px-4 py-2 text-right text-yellow-400 text-xs">${costStr}</td>
             <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTimeAgo(s.updatedAt)}</td>
