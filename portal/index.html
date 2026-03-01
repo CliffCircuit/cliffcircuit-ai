@@ -530,7 +530,7 @@
             <!-- Job errors + last job -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
               <span class="text-gray-500">Last job: <span id="cliff-last-job" class="text-gray-300">—</span></span>
-              <span id="cliff-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
+              <span id="cliff-job-errors" class="text-red-400 hidden"></span>
             </div>
           </div>
         </div>
@@ -629,7 +629,7 @@
             <!-- Last activity -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
               <span class="text-gray-500">Last job: <span id="samantha-last-job" class="text-gray-300">—</span></span>
-              <span id="samantha-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
+              <span id="samantha-job-errors" class="text-red-400 hidden"></span>
             </div>
           </div>
         </div>
@@ -728,7 +728,7 @@
             <!-- Last job -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
               <span class="text-gray-500">Last job: <span id="scout-last-job" class="text-gray-300">—</span></span>
-              <span id="scout-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
+              <span id="scout-job-errors" class="text-red-400 hidden"></span>
             </div>
           </div>
         </div>
@@ -1149,7 +1149,7 @@
         const el = id => document.getElementById(`${name}-${id}`);
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
         if (el('last-job')) el('last-job').textContent = lastActive;
-        if (el('job-errors')) el('job-errors').classList.toggle('hidden', !hasErrors);
+        if (el('job-errors')) { el('job-errors').classList.toggle('hidden', !hasErrors); if (hasErrors) el('job-errors').textContent = `⚠ ${info.errors} error${info.errors===1?'':'s'} detected`; }
 
         // Live sessions (Cliff only)
         if (name === 'cliff') {
