@@ -1549,12 +1549,8 @@
       // Article full body preview (strip HTML tags from tweetHook or use excerpt)
       const articleBodyEl = document.getElementById('modal-article-body');
       const articleTextEl = document.getElementById('modal-article-text');
-      if (isArticle && item.slug) {
-        articleBodyEl.classList.remove('hidden');
-        articleTextEl.innerHTML = item.excerpt ? `<p>${item.excerpt}</p>` : '<span class="text-gray-600 text-xs">No excerpt available</span>';
-      } else {
-        articleBodyEl.classList.add('hidden');
-      }
+      // Article preview section hidden — use "Preview Full Article" button instead
+      articleBodyEl.classList.add('hidden');
 
       // Action buttons
       const linkEl = document.getElementById('modal-link');
