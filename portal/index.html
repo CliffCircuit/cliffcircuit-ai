@@ -971,9 +971,9 @@
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = snapshotAge(generatedTs); if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs; }
         } else {
-          // No live session — fall back to most recently run job's token usage
-          const lastRunJob2 = info.jobs.filter(j => j.lastRunMs && j.lastRunTokens).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
-          const tokenData = lastRunJob2 ? { totalTokens: lastRunJob2.lastRunTokens } : null;
+          // No live session — show largest job by token usage
+          const largestJob = info.jobs.filter(j => j.lastRunTokens).sort((a,b) => b.lastRunTokens - a.lastRunTokens)[0];
+          const tokenData = largestJob ? { totalTokens: largestJob.lastRunTokens } : null;
           if (tokenData && tokenData.totalTokens) {
             const MAX_TOKENS = 200000;
             const tokens = tokenData.totalTokens;
@@ -982,14 +982,14 @@
             const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
             const tokLabel = (tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens) + ' tokens';
             const MAX_TOK_LABEL = Math.round(MAX_TOKENS/1000) + 'K tokens';
-            if (el('ctx-title')) el('ctx-title').textContent = 'Last Run';
+            if (el('ctx-title')) el('ctx-title').textContent = 'Largest Job';
             if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
             if (el('ctx-none')) el('ctx-none').classList.add('hidden');
             if (el('ctx-top')) { el('ctx-top').textContent = MAX_TOK_LABEL; el('ctx-top').className = 'text-white text-sm font-semibold mb-0'; }
             if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
             if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold ${pctColor}`; }
             if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
-            if (el('ctx-sublabel')) el('ctx-sublabel').textContent = 'last run usage';
+            if (el('ctx-sublabel')) el('ctx-sublabel').textContent = largestJob ? largestJob.name : 'last run usage';
           }
         }
 
