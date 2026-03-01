@@ -279,7 +279,10 @@
     }
 
     function renderMarketing(d) {
-      const q = d.queue||[], today=new Date().toISOString().slice(0,10);
+      const q = d.queue||[];
+      // Use PT date, not UTC (PT is UTC-8)
+      const ptNow = new Date(Date.now() - 8*60*60*1000);
+      const today = ptNow.toISOString().slice(0,10);
       const drafts = q.filter(i=>i.status==='draft');
       const approved = q.filter(i=>i.status==='approved');
       const pubToday = q.filter(i=>i.status==='published'&&(i.publishedAt||'').startsWith(today));
