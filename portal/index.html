@@ -80,6 +80,11 @@
             <div id="nav-ctx-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
             <span class="text-xs text-gray-600">context</span>
           </div>
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('health')" title="Gateway health">
+            <div id="nav-gw-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
+            <span id="nav-gw-label" class="text-xs text-gray-600">gateway</span>
+            <span id="nav-gw-latency" class="text-xs text-gray-700"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -1513,27 +1518,28 @@
     }
 
     function renderHealth(d) {
-      // Gateway health
+      // Gateway health — update both System Health banner and nav bar
       const gw = d.gateway || {};
-      const gwDot = document.getElementById('gw-dot');
-      const gwLabel = document.getElementById('gw-label');
-      const gwLatency = document.getElementById('gw-latency');
-      if (gwDot && gwLabel) {
+      function applyGwState(dotId, labelId, latencyId) {
+        const dot = document.getElementById(dotId);
+        const label = document.getElementById(labelId);
+        const latency = document.getElementById(latencyId);
+        if (!dot) return;
         if (gw.reachable === true) {
-          gwDot.style.background = '#22c55e';
-          gwLabel.textContent = 'Gateway OK';
-          gwLabel.style.color = '#4b5563';
-          if (gwLatency && gw.latencyMs != null) gwLatency.textContent = gw.latencyMs + 'ms';
+          dot.style.background = '#22c55e';
+          if (label) { label.textContent = 'Gateway OK'; label.style.color = '#4b5563'; }
+          if (latency && gw.latencyMs != null) latency.textContent = gw.latencyMs + 'ms';
         } else if (gw.reachable === false) {
-          gwDot.style.background = '#ef4444';
-          gwDot.style.animation = 'pulse 1s infinite';
-          gwLabel.textContent = 'Gateway Down';
-          gwLabel.style.color = '#f87171';
+          dot.style.background = '#ef4444';
+          dot.style.boxShadow = '0 0 6px #ef4444';
+          if (label) { label.textContent = 'Gateway Down'; label.style.color = '#f87171'; }
         } else {
-          gwDot.style.background = '#6b7280';
-          gwLabel.textContent = 'Gateway';
+          dot.style.background = '#6b7280';
+          if (label) label.textContent = 'Gateway';
         }
       }
+      applyGwState('gw-dot', 'gw-label', 'gw-latency');           // System Health banner
+      applyGwState('nav-gw-dot', 'nav-gw-label', 'nav-gw-latency'); // Nav bar
 
       // Live Sessions
       const sessions = d.sessions || [];
