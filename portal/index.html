@@ -261,7 +261,7 @@
       <!-- Unified Posted -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-base font-semibold text-white">Posted <span class="text-gray-500 font-normal text-sm">(last 48h)</span> <span id="posted-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
+          <h2 class="text-base font-semibold text-white">Posted <select id="posted-date-filter" onchange="setPostedDateFilter(this.value)" style="background:#0f172a;border:1px solid #374151;color:#6b7280;font-size:0.75rem;padding:2px 8px;border-radius:6px;cursor:pointer;outline:none;margin-left:6px;"><option value="today" selected>Today</option><option value="yesterday">Yesterday</option><option value="24">Last 24h</option><option value="48">Last 48h</option></select> <span id="posted-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
           <div class="flex gap-2">
             <div class="flex gap-1" id="p-type-btns">
               <button onclick="setPostedFilter('type','all')" id="pt-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
@@ -999,7 +999,17 @@
     function renderPostedTable() {
       const tf = window._postedTypeFilter||'all';
       const af = window._postedAcctFilter||'all';
-      const items = (window._allRecentPosts||[]).filter(i => {
+      const pdf = window._postedDateFilter||'today';
+      const allPub = window._allPublishedQueue || window._allRecentPosts || [];
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+      const yStart = new Date(todayStart); yStart.setDate(yStart.getDate()-1);
+      const yEnd = new Date(todayStart);
+      let dateFiltered;
+      if (pdf==='today') dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=todayStart && new Date(i.publishedAt)<=todayEnd);
+      else if (pdf==='yesterday') dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=yStart && new Date(i.publishedAt)<yEnd);
+      else dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=new Date(Date.now()-parseInt(pdf)*60*60*1000));
+      const items = dateFiltered.filter(i => {
         const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
         const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
@@ -1783,6 +1793,11 @@
     }
 
     // Global: called by Queue window dropdown
+    function setPostedDateFilter(val) {
+      window._postedDateFilter = val;
+      renderPostedTable();
+    }
+
     function setQueueDateFilter(val) {
       window._queueDateFilter = val;
       renderQueueTable();
