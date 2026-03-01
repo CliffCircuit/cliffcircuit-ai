@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T08:50:10.779Z",
+  "generatedAt": "2026-03-01T08:58:51.162Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -350,6 +350,32 @@
       "cliffNotes": "Angle: restaurants obsess over new customer acquisition while ignoring an existing contactable list of thousands. Win-back window is 60-120 days (nobody targets it). Real failure moment: promotional-in-every-message approach trains discount behavior — fixed with relationship-first, offer-second sequencing. Segmentation by visit frequency is the key differentiator. Different vertical from all the home services — adds variety to the content mix.",
       "heroImageGenerated": true,
       "heroImage": "/blog/images/restaurant-guest-data-ai-winback.png"
+    },
+    {
+      "id": "20260301-085400-plumbing",
+      "status": "draft",
+      "createdAt": "2026-03-01T08:54:00Z",
+      "publishAfter": "2026-03-01T14:54:00Z",
+      "title": "Plumbers miss emergency calls while they're on jobs. An AI doesn't.",
+      "slug": "plumbing-emergency-lead-response",
+      "excerpt": "A pipe bursts at 9am. The homeowner calls three plumbers in a row. The first one to actually respond gets the job. I mapped where those calls go during a typical plumber's day — the answer is mostly voicemail. Here's what an AI-driven response setup actually looks like, and what the missed-lead math says about why it matters.",
+      "wordCount": 1750,
+      "tweetHook": "Plumber is mid-job when an emergency call comes in. Can't answer.\n\nBy the time they call back an hour later, that customer has already booked someone else.\n\nHere's a 4-part workflow that catches those calls — and qualifies emergencies — without interrupting the job:\n\nARTICLE_URL_PLACEHOLDER",
+      "heroImagePrompt": "Isometric illustration of a plumber in blue coveralls working under a kitchen sink, their smartphone on the floor nearby showing multiple missed call notifications, a glowing AI assistant robot floating in the background answering a phone, warm kitchen lighting, clean geometric style, vibrant colors. NO TEXT OF ANY KIND.",
+      "heroImage": "/blog/images/plumbing-emergency-lead-response.png",
+      "heroImageGenerated": true,
+      "seoTitle": "Plumbers lose emergency leads mid-job. Here's the fix.",
+      "seoDescription": "Plumbing shops miss their best leads when they're on jobs — and the caller books a competitor within 90 minutes. Here's the AI workflow that closes that gap.",
+      "selfEditChecklist": {
+        "excerptLength": true,
+        "h2Headers": true,
+        "noCorporateSpeak": true,
+        "realMomentIncluded": true,
+        "tweetHookReady": true,
+        "seoTitleUnder60": true,
+        "keywordInFirst100Words": true
+      },
+      "cliffNotes": "Angle: plumbers lose emergency leads not from bad service but from physical unavailability during jobs. Real failure moment: first auto-reply workflow had no triage — generated noise across all missed calls, not just real leads. Fixed with two-question triage (emergency vs scheduled, then actively happening vs can wait). Key differentiator: 72-hour post-job follow-up taps the post-emergency mindset when homeowners are most receptive. The dispatcher section (avoiding false emergency dispatches) is a practical angle shop owners will immediately recognize."
     }
   ],
   "crons": [
@@ -357,36 +383,22 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "1h ago",
-      "nextRun": "in 0m",
+      "lastRun": "9m ago",
+      "nextRun": "in 4m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 21537
-    },
-    {
-      "name": "samantha-draft",
-      "schedule": "every",
-      "status": "ok",
-      "lastRun": "2h ago",
-      "nextRun": "in 4m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
-      "lastRunTokens": 38121
+      "lastRunTokens": 21404
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "5m ago",
-      "nextRun": "in 10m",
+      "lastRun": "14m ago",
+      "nextRun": "in 1m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -396,10 +408,24 @@
       "lastRunTokens": 31550
     },
     {
+      "name": "samantha-draft",
+      "schedule": "every",
+      "status": "ok",
+      "lastRun": "5m ago",
+      "nextRun": "in 2h",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
+      "lastRunTokens": 46934
+    },
+    {
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "49m ago",
+      "lastRun": "58m ago",
       "nextRun": "in 3h",
       "agent": "main",
       "consecutiveErrors": 0,
@@ -413,7 +439,7 @@
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
-      "lastRun": "43m ago",
+      "lastRun": "52m ago",
       "nextRun": "in 3h",
       "agent": "main",
       "consecutiveErrors": 0,
@@ -558,9 +584,9 @@
       "jobName": "social-monitoring"
     },
     "samantha": {
-      "totalTokens": 38121,
-      "inputTokens": 9,
-      "outputTokens": 7230,
+      "totalTokens": 46934,
+      "inputTokens": 12,
+      "outputTokens": 12575,
       "jobName": "samantha-draft"
     }
   },
@@ -568,11 +594,11 @@
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 75000,
+      "used": 82000,
       "limit": 200000,
-      "pct": 38,
+      "pct": 41,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772355011402
+      "lastActiveAt": 1772355531789
     },
     {
       "label": "Main",
@@ -581,7 +607,7 @@
       "limit": 200000,
       "pct": 14,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772355011402
+      "lastActiveAt": 1772355471789
     }
   ],
   "sites": [
