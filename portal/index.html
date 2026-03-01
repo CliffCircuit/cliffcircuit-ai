@@ -536,6 +536,103 @@
 
     </div>
 
+      <!-- SCOUT CARD -->
+      <div class="card overflow-hidden" data-agent="scout">
+        <div class="flex flex-row">
+          <!-- Avatar -->
+          <div class="relative flex-shrink-0" style="width:220px; height:220px;">
+            <img src="/portal/scout-avatar.jpg" alt="Scout" class="w-full h-full object-cover object-top" />
+            <div class="absolute inset-0" style="background: linear-gradient(to right, transparent 70%, #111827 100%);"></div>
+            <div class="absolute bottom-3 left-3">
+              <span class="pill bg-green-900 text-green-300">INTERN · OPS</span>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="flex-1 p-6">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <div class="flex items-center gap-3 mb-1">
+                  <h3 class="text-2xl font-bold text-white">Scout</h3>
+                  <div id="scout-agent-status-dot" class="w-2.5 h-2.5 rounded-full bg-green-400" style="box-shadow: 0 0 8px #4ade80;"></div>
+                  <span id="scout-agent-status-label" class="text-green-400 text-xs font-semibold uppercase tracking-wide">Online</span>
+                </div>
+                <p class="text-gray-400 text-sm">Monitoring intern · Routine ops · Reports to Cliff</p>
+              </div>
+              <span class="pill bg-gray-800 text-gray-400 text-xs">🔍 Scout</span>
+            </div>
+
+            <!-- Stats row -->
+            <div class="grid grid-cols-4 gap-4 mb-5">
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Model</div>
+                <div class="text-white text-sm font-semibold">Claude Haiku 4.5</div>
+                <div class="text-gray-600 text-xs">anthropic</div>
+              </div>
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Thinking</div>
+                <div class="text-gray-400 text-sm font-semibold">Off</div>
+                <div class="text-gray-600 text-xs">lean & fast</div>
+              </div>
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1" id="scout-ctx-title">Last Run</div>
+                <div id="scout-ctx-bar-wrap" class="hidden">
+                  <div id="scout-ctx-top" class="text-white text-sm font-semibold mb-0"></div>
+                  <div class="flex justify-between items-center text-xs mt-1 mb-1">
+                    <span id="scout-ctx-label" class="text-gray-400"></span>
+                    <span id="scout-ctx-pct" class="font-semibold"></span>
+                  </div>
+                  <div class="bg-gray-700 rounded-full h-1.5">
+                    <div id="scout-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
+                  </div>
+                  <div class="text-gray-600 text-xs mt-1" id="scout-ctx-sublabel">—</div>
+                </div>
+                <div id="scout-ctx-none" class="text-gray-600 text-xs">No recent runs</div>
+              </div>
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
+                <div id="scout-job-count" class="text-white text-sm font-semibold">—</div>
+                <div class="text-gray-600 text-xs">scheduled tasks</div>
+              </div>
+            </div>
+
+            <!-- Capabilities -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="pill bg-green-950 text-green-300">Social Monitoring</span>
+              <span class="pill bg-green-950 text-green-300">GitHub Monitoring</span>
+              <span class="pill bg-green-950 text-green-300">Portal Refresh</span>
+              <span class="pill bg-green-950 text-green-300">Nightly Extraction</span>
+              <span class="pill bg-green-950 text-green-300">Thread Drafts</span>
+            </div>
+
+            <!-- Last job -->
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+              <span class="text-gray-500">Last job: <span id="scout-last-job" class="text-gray-300">—</span></span>
+              <span id="scout-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
+            </div>
+          </div>
+        </div>
+        <!-- Job list -->
+        <div class="border-t border-gray-800 px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors" onclick="toggleJobs('scout')">
+          <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Scheduled Jobs</span>
+          <span id="scout-jobs-toggle" class="text-gray-600 text-xs">▶ show</span>
+        </div>
+        <div id="scout-jobs-list" class="hidden border-t border-gray-900">
+          <table class="w-full text-xs">
+            <thead><tr class="border-b border-gray-800 bg-gray-900">
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Thinking</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Tokens</th>
+            </tr></thead>
+            <tbody id="scout-jobs-body"></tbody>
+          </table>
+        </div>
+      </div>
+
     <!-- Add Agent teaser -->
     <div class="mt-6 card p-6 border-dashed" style="border-color:#374151;">
       <div class="flex items-center gap-4 text-gray-600">
@@ -798,7 +895,7 @@
         if ((job.consecutiveErrors || 0) > 0) agentMap[a].errors++;
       });
 
-      const agentIds = { 'cliff': 'main', 'samantha': 'samantha' };
+      const agentIds = { 'cliff': 'main', 'samantha': 'samantha', 'scout': 'scout' };
 
       Object.entries(agentIds).forEach(([name, agentId]) => {
         const info = agentMap[agentId] || { jobs: [], errors: 0 };
