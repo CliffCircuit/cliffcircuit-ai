@@ -784,8 +784,8 @@
     <div class="absolute inset-0 bg-black opacity-70"></div>
     <div class="relative card w-full max-w-2xl overflow-hidden" style="z-index:1; max-height:90vh; display:flex; flex-direction:column;">
       <!-- Hero image (articles only) -->
-      <div id="modal-hero" class="hidden relative w-full" style="flex-shrink:0;">
-        <img id="modal-hero-img" src="" alt="Hero image" class="w-full" style="display:block;" />
+      <div id="modal-hero" class="hidden relative w-full" style="flex-shrink:0;padding-top:56.25%;overflow:hidden;">
+        <img id="modal-hero-img" src="" alt="Hero image" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#0f172a;" />
         <div class="absolute inset-0" style="background:linear-gradient(to bottom, transparent 50%, #111827 100%);"></div>
         <button onclick="closeDetail()" class="absolute top-3 right-3 bg-black bg-opacity-60 hover:bg-opacity-90 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg leading-none">✕</button>
       </div>
@@ -1713,7 +1713,7 @@
   <div style="margin-bottom:2rem;">
     <button onclick="window.parent.closeArticlePreview()" style="background:#1f2937;color:#9ca3af;border:1px solid #374151;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.85rem;">← Back to Portal</button>
   </div>
-  ${item.heroImage ? `<img src="https://shopcliffmart.com${item.heroImage}" alt="${item.title}" onerror="this.src='/portal/images/${item.heroImage.split('/').pop()}'">` : ''}
+  ${item.heroImage ? `<img src="https://cliffcircuit.ai/portal/images/${item.heroImage.split('/').pop()}?t=${Date.now()}" alt="${item.title}" onerror="this.src='https://shopcliffmart.com${item.heroImage}';this.onerror=null;" style="width:100%;border-radius:8px;margin-bottom:1.5rem;">` : ''}
   <h1>${item.title || ''}</h1>
   <p class="excerpt">${item.excerpt || ''}</p>
   ${item.htmlContent || ''}
