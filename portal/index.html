@@ -522,7 +522,7 @@
       <div class="card overflow-hidden mb-8">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <h3 class="text-sm font-semibold text-white">Conversation Sessions</h3>
-          <span class="text-xs text-gray-600">Interactive sessions — you and the team</span>
+          <span class="text-xs text-gray-600">Estimated — assumes ~150K tokens per session</span>
         </div>
         <table class="w-full text-sm">
           <thead><tr class="border-b border-gray-800 bg-gray-900">
@@ -1429,13 +1429,15 @@
         const agentOrder = ['main','samantha','scout'];
         const agentRows = agentOrder.filter(a => agentMap[a]).map(a => ({ agentId: a, ...agentMap[a] }));
         convBody.innerHTML = agentRows.map(r => {
-          const cost = r.tokens * modelRate(r.model) / 1000;
-          const costStr = cost >= 0.01 ? '$'+cost.toFixed(2) : '<$0.01';
+          // Estimated total: assume 150K tokens per session (reasonable avg vs 200K max)
+          const estTokens = r.sessions * 150000;
+          const cost = estTokens * modelRate(r.model) / 1000;
+          const costStr = cost >= 0.01 ? '~$'+cost.toFixed(2) : '<$0.01';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
             <td class="px-4 py-3 text-xs"><span class="${agentCls[r.agentId]||'text-gray-400'} font-semibold">${agentName[r.agentId]||r.agentId}</span></td>
             <td class="px-4 py-3 text-xs">${modelShortT(r.model)}</td>
             <td class="px-4 py-3 text-right text-gray-400 text-xs">${r.sessions}</td>
-            <td class="px-4 py-3 text-right text-white font-medium text-xs">${fmtK(r.tokens)}</td>
+            <td class="px-4 py-3 text-right text-white font-medium text-xs">~${fmtK(estTokens)}</td>
             <td class="px-4 py-3 text-right text-yellow-400 text-xs">${costStr}</td>
             <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">${fmtTimeAgo(r.lastActive)}</td>
           </tr>`;
