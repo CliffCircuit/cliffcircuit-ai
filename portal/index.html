@@ -1314,6 +1314,7 @@
       document.getElementById('tok-avg').textContent = fmtK(totalAvg);
 
       const agentCls = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
+      const agentName = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
       const modelShortT = m => {
         if (!m) return '<span class="text-gray-700">—</span>';
         if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
@@ -1333,7 +1334,7 @@
           const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
             <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name)}</td>
-            <td class="px-4 py-2.5 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${j.agent||'—'}</span></td>
+            <td class="px-4 py-2.5 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${agentName[j.agent]||j.agent||'—'}</span></td>
             <td class="px-4 py-2.5 text-xs">${modelShortT(j.model)}</td>
             <td class="px-4 py-2.5 text-right text-gray-400">${j.runs}</td>
             <td class="px-4 py-2.5 text-right text-white font-medium">${fmtK(j.tokens)}</td>
