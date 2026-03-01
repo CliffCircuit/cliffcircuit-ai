@@ -157,7 +157,8 @@
               </div>
               <div style="align-self:flex-start;margin-top:0.75rem;">
                 <select id="queue-window-select" onchange="setQueueWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#6b7280;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;width:fit-content;">
-                  <option value="-24">yesterday</option>
+                  <option value="yesterday">yesterday</option>
+                  <option value="today">today</option>
                   <option value="1">next 1h</option>
                   <option value="12">next 12h</option>
                   <option value="24" selected>next 24h</option>
@@ -1304,9 +1305,13 @@
       const qw = window._queueWindowHours;
       let qFilter;
       if (qw === 'yesterday') {
-        const yStart = new Date(Date.now() - 48*60*60*1000);
-        const yEnd = new Date(Date.now() - 24*60*60*1000);
-        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= yStart && new Date(i.scheduledFor) <= yEnd;
+        const yStart = new Date(); yStart.setHours(0,0,0,0); yStart.setDate(yStart.getDate()-1);
+        const yEnd = new Date(); yEnd.setHours(0,0,0,0);
+        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= yStart && new Date(i.scheduledFor) < yEnd;
+      } else if (qw === 'today') {
+        const tStart = new Date(); tStart.setHours(0,0,0,0);
+        const tEnd = new Date(); tEnd.setHours(23,59,59,999);
+        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= tStart && new Date(i.scheduledFor) <= tEnd;
       } else if (qw === 'tomorrow') {
         const tStart = new Date(); tStart.setHours(0,0,0,0); tStart.setDate(tStart.getDate()+1);
         const tEnd = new Date(tStart); tEnd.setDate(tEnd.getDate()+1);
@@ -1757,7 +1762,7 @@
 
     // Global: called by Queue window dropdown
     function setQueueWindow(hours) {
-      window._queueWindowHours = (hours === 'yesterday' || hours === 'tomorrow') ? hours : parseInt(hours);
+      window._queueWindowHours = (['yesterday','today','tomorrow'].includes(hours)) ? hours : parseInt(hours);
       if (window._lastData) renderMarketing(window._lastData);
     }
 
