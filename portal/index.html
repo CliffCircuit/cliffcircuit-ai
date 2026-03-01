@@ -849,7 +849,8 @@
             return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
           };
 
-          const fmtTokens = t => {
+          const fmtTokens = (t, j) => {
+            if (!t && j.model === null && !j.description?.includes('agent')) return '<span class="text-gray-700 text-xs">sys</span>';
             if (!t) return '<span class="text-gray-700">—</span>';
             const k = (t/1000).toFixed(1);
             const cls = t > 100000 ? 'text-red-400' : t > 50000 ? 'text-yellow-400' : 'text-green-400';
@@ -864,7 +865,7 @@
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRun || '—'}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.nextRun || '—'}</td>
-              <td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens)}</td>
+              <td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens, j)}</td>
             </tr>`).join('');
         } else if (tbody) {
           tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
