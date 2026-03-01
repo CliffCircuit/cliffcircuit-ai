@@ -326,6 +326,27 @@ async function main() {
       fs.mkdirSync(path.join(REPO_DIR, 'portal'), { recursive: true });
       fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
       console.log('Wrote data.json');
+
+      // Pre-push hero images for approved (unpublished) articles so portal previews work
+      try {
+        const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
+        if (fs.existsSync(queuePath)) {
+          const queue = JSON.parse(fs.readFileSync(queuePath));
+          const items = Array.isArray(queue) ? queue : Object.values(queue);
+          const approved = items.filter(i => i.status === 'approved' && i.heroImage);
+          const imgDestDir = path.join(REPO_DIR, 'portal/images');
+          fs.mkdirSync(imgDestDir, { recursive: true });
+          approved.forEach(item => {
+            const srcPath = `/Users/openclaw/.openclaw/workspace/cliffmart${item.heroImage}`;
+            const slug = path.basename(item.heroImage);
+            const destPath = path.join(imgDestDir, slug);
+            if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
+              fs.copyFileSync(srcPath, destPath);
+              console.log('Copied image:', slug);
+            }
+          });
+        }
+      } catch(e) { console.warn('Image pre-push skipped:', e.message); }
       run(`cd ${REPO_DIR} && git config user.email "cliff@cliffcircuit.ai"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git config user.name "Cliff"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git add portal/`, { stdio: 'pipe' });
