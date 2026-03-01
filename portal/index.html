@@ -10,6 +10,8 @@
     * { font-family: 'Inter', sans-serif; }
     .tab-active { border-bottom: 2px solid #6366f1; color: #6366f1; }
     .tab-inactive { border-bottom: 2px solid transparent; color: #6b7280; }
+    .tf-active   { background: #312e81; color: #a5b4fc; border-color: #4f46e5 !important; }
+    .tf-inactive { background: transparent; color: #6b7280; }
     .status-published { background: #064e3b; color: #34d399; }
     .status-approved  { background: #1e3a5f; color: #60a5fa; }
     .status-draft     { background: #3b2800; color: #fbbf24; }
@@ -181,49 +183,49 @@
         </div>
       </div>
 
-        <!-- Cliff Standalone Tweets -->
-        <h2 class="text-base font-semibold text-white mb-1">@CliffCircuit Tweets</h2>
-        <p class="text-xs text-gray-600 mb-4">Standalone tweets — not article promos. All times Pacific.</p>
-        <div class="card overflow-hidden mb-8">
-          <table class="w-full text-sm">
-            <thead><tr class="border-b border-gray-800">
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Post</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Scheduled</th>
-              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">In Queue</th>
-            </tr></thead>
-            <tbody id="cliff-tweets-queue-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-          </table>
+        <!-- Combined Tweet Queue -->
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Tweet Queue</h2>
+          <div class="flex gap-1" id="tweet-filter-btns">
+            <button onclick="setTweetFilter('all')" id="tf-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+            <button onclick="setTweetFilter('cliff')" id="tf-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+            <button onclick="setTweetFilter('tim')" id="tf-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+          </div>
         </div>
-
-        <!-- Tim Standalone Tweets -->
-        <h2 class="text-base font-semibold text-white mb-1">@TimHarris707 Tweets</h2>
-        <p class="text-xs text-gray-600 mb-4">Tim's standalone posts queued for posting. All times Pacific.</p>
+        <p class="text-xs text-gray-600 mb-4">Standalone tweets queued for posting. All times Pacific.</p>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Post</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Scheduled</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">In Queue</th>
             </tr></thead>
-            <tbody id="tweets-queue-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="tweets-queue-body"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Tim posts published -->
+      <!-- Combined Recent Posts -->
       <div class="mb-6">
-        <h2 class="text-base font-semibold text-white mb-1">@TimHarris707 Posts <span class="text-gray-500 font-normal text-sm">(last 48h)</span></h2>
-        <p class="text-xs text-gray-600 mb-4">Tim's recent published posts.</p>
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Recent Posts <span class="text-gray-500 font-normal text-sm">(last 48h)</span></h2>
+          <div class="flex gap-1" id="posts-filter-btns">
+            <button onclick="setPostsFilter('all')" id="pf-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+            <button onclick="setPostsFilter('cliff')" id="pf-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+            <button onclick="setPostsFilter('tim')" id="pf-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+          </div>
+        </div>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Post</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Published</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">View</th>
             </tr></thead>
-            <tbody id="tim-posts-body"><tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="recent-posts-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -842,6 +844,51 @@
       document.getElementById('tab-marketing-content').classList.remove('hidden');
     }
 
+    // Tweet queue filter
+    let _tweetFilter = 'all';
+    function setTweetFilter(f) {
+      _tweetFilter = f;
+      ['all','cliff','tim'].forEach(k => {
+        document.getElementById('tf-'+k).className = (k===f?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700';
+      });
+      renderTweetQueue(f);
+    }
+    function renderTweetQueue(f) {
+      const items = (window._allPendingTweets||[]).filter(i => f==='all' || (f==='cliff'&&i.account==='cliffcircuit') || (f==='tim'&&i.account==='timharris707'));
+      const tqb = document.getElementById('tweets-queue-body');
+      tqb.innerHTML = items.length === 0
+        ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No tweets queued</td></tr>`
+        : items.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
+            <td class="px-3 py-1 text-gray-400 font-medium">${esc(i.tweetText?.slice(0,70)||i.id)}${(i.tweetText?.length||0)>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
+            <td class="px-3 py-1"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
+            <td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td>
+            <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
+          </tr>`).join('');
+    }
+
+    // Recent posts filter
+    let _postsFilter = 'all';
+    function setPostsFilter(f) {
+      _postsFilter = f;
+      ['all','cliff','tim'].forEach(k => {
+        document.getElementById('pf-'+k).className = (k===f?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700';
+      });
+      renderPostsTable(f);
+    }
+    function renderPostsTable(f) {
+      const items = (window._allRecentPosts||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707'));
+      const rpb = document.getElementById('recent-posts-body');
+      rpb.innerHTML = items.length === 0
+        ? `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No posts in last 48h</td></tr>`
+        : items.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
+            <td class="px-3 py-1 text-gray-400 font-medium">${esc((i.title||i.tweetText||i.id).slice(0,70))}${(i.title||i.tweetText||'').length>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
+            <td class="px-3 py-1 text-gray-400 text-xs whitespace-nowrap">${relTime(i.publishedAt)}</td>
+            <td class="px-3 py-1">${i.tweetId?`<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">View →</a>`:i.slug?`<a href="https://shopcliffmart.com/blog/${esc(i.slug)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">Read →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
+          </tr>`).join('');
+    }
+
     function switchTab(t) {
       ['marketing','health','agents','ideas'].forEach(n => {
         document.getElementById('tab-'+n+'-content').classList.add('hidden');
@@ -1119,27 +1166,10 @@
             <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
           </tr>`).join('');
 
-      // Cliff standalone tweets table
-      const cqb = document.getElementById('cliff-tweets-queue-body');
-      cqb.innerHTML = pendingCliffTweets.length === 0
-        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No Cliff tweets queued — drafts arrive at 7am daily ✓</td></tr>'
-        : pendingCliffTweets.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
-            <td class="px-4 py-3 text-white font-medium">${esc(i.tweetText?.slice(0,70)||i.id)}${(i.tweetText?.length||0)>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
-            <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
-            <td class="px-4 py-3">${fmtScheduled(i)}</td>
-            <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
-          </tr>`).join('');
-
-      // Tim tweets table
-      const tqb = document.getElementById('tweets-queue-body');
-      tqb.innerHTML = pendingTweets.length === 0
-        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No tweets scheduled — queue is clear ✓</td></tr>'
-        : pendingTweets.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
-            <td class="px-4 py-3 text-white font-medium">${esc(i.tweetText?.slice(0,70)||i.id)}${(i.tweetText?.length||0)>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
-            <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
-            <td class="px-4 py-3">${fmtScheduled(i)}</td>
-            <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
-          </tr>`).join('');
+      // Combined tweet queue
+      const allPendingTweets = [...pendingCliffTweets, ...pendingTweets].sort((a,b)=>new Date(a.scheduledFor||a.createdAt)-new Date(b.scheduledFor||b.createdAt));
+      window._allPendingTweets = allPendingTweets;
+      renderTweetQueue('all');
 
       // Rejected section
       const rejBody = document.getElementById('rejected-body');
@@ -1159,24 +1189,10 @@
       const recentArticles = recent.filter(i=>i.account!=='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
       const recentTim = recent.filter(i=>i.account==='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
 
-      const ab = document.getElementById('articles-body');
-      ab.innerHTML = recentArticles.length === 0
-        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No articles posted in last 48h</td></tr>'
-        : recentArticles.map(i=>`<tr class="border-b border-gray-900">
-            <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.id)}</td>
-            <td class="px-3 py-1 text-gray-400 text-xs">${relTime(i.publishedAt)}</td>
-            <td class="px-4 py-3">${i.slug?`<a href="https://shopcliffmart.com/blog/${esc(i.slug)}" target="_blank" class="text-indigo-400 hover:underline text-xs">Read →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
-            <td class="px-4 py-3">${i.tweetId?`<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs">Tweet →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
-          </tr>`).join('');
-
-      const tb = document.getElementById('tim-posts-body');
-      tb.innerHTML = recentTim.length === 0
-        ? '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">No Tim posts in last 48h</td></tr>'
-        : recentTim.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
-            <td class="px-3 py-1 text-gray-400 font-medium">${esc((i.tweetText||i.id).slice(0,80))}${(i.tweetText||'').length>80?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
-            <td class="px-3 py-1 text-gray-500 text-xs whitespace-nowrap">${relTime(i.publishedAt)}</td>
-            <td class="px-3 py-1">${i.tweetId?`<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">View →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
-          </tr>`).join('');
+      // Combined recent posts
+      const allRecentPosts = [...recentArticles, ...recentTim].sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+      window._allRecentPosts = allRecentPosts;
+      renderPostsTable('all');
 
       const tw = d.twitter||{};
       set('cliff-followers', fmt(tw.cliffFollowers));
