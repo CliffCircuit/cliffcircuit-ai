@@ -504,7 +504,7 @@
 
             <!-- Last activity -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
-              <span>Last active: <span id="samantha-last-active" class="text-gray-300">—</span></span>
+              <span class="text-gray-500">Last job: <span id="samantha-last-job" class="text-gray-300">—</span></span>
               <span id="samantha-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
             </div>
           </div>
@@ -802,16 +802,13 @@
         const jobCount = info.jobs.length;
         const hasErrors = info.errors > 0;
 
-        // Find most recent lastRun
-        const lastRunJob = info.jobs.filter(j => j.lastRun).sort((a,b) => {
-          // sort by raw string — good enough for "Xm ago" / "Xh ago"
-          return a.lastRun < b.lastRun ? 1 : -1;
-        })[0];
+        // Find most recent lastRun using lastRunMs timestamp
+        const lastRunJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
         const lastActive = lastRunJob ? lastRunJob.lastRun : 'No recent runs';
 
         const el = id => document.getElementById(`${name}-${id}`);
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
-        if (el('last-active')) el('last-active').textContent = lastActive;
+        if (el('last-job')) el('last-job').textContent = lastActive;
         if (el('job-errors')) el('job-errors').classList.toggle('hidden', !hasErrors);
 
         // Live sessions (Cliff only)
