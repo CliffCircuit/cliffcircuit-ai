@@ -64,11 +64,23 @@
     </nav>
 
     <div class="border-b border-gray-800 px-6 bg-gray-950">
-      <div class="flex gap-6 max-w-7xl mx-auto">
-        <button onclick="switchTab('marketing')" id="tab-marketing" class="tab-active py-4 text-sm font-medium">Marketing</button>
-        <button onclick="switchTab('health')" id="tab-health" class="tab-inactive py-4 text-sm font-medium">System Health</button>
-        <button onclick="switchTab('agents')" id="tab-agents" class="tab-inactive py-4 text-sm font-medium">Agents</button>
-        <button onclick="switchTab('ideas')" id="tab-ideas" class="tab-inactive py-4 text-sm font-medium">Ideas</button>
+      <div class="flex items-center justify-between max-w-7xl mx-auto w-full">
+        <div class="flex gap-6">
+          <button onclick="switchTab('marketing')" id="tab-marketing" class="tab-active py-4 text-sm font-medium">Marketing</button>
+          <button onclick="switchTab('health')" id="tab-health" class="tab-inactive py-4 text-sm font-medium">System Health</button>
+          <button onclick="switchTab('agents')" id="tab-agents" class="tab-inactive py-4 text-sm font-medium">Agents</button>
+          <button onclick="switchTab('ideas')" id="tab-ideas" class="tab-inactive py-4 text-sm font-medium">Ideas</button>
+        </div>
+        <div class="flex items-center gap-3 py-4" title="Status indicators">
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cron health">
+            <div id="nav-cron-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
+            <span class="text-xs text-gray-600">crons</span>
+          </div>
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cliff context window">
+            <div id="nav-ctx-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
+            <span class="text-xs text-gray-600">context</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -901,6 +913,7 @@
       renderMarketing(d);
       renderHealth(d);
       renderAgents(d);
+      updateNavDots(d);
       document.getElementById('tab-marketing-content').classList.remove('hidden');
     }
 
@@ -1796,6 +1809,42 @@
     function setPostedDateFilter(val) {
       window._postedDateFilter = val;
       renderPostedTable();
+    }
+
+    function updateNavDots(d) {
+      // Cron dot — green if no errors, yellow if any errors
+      const crons = d.crons || [];
+      const cronErrors = crons.filter(c => c.status === 'error').length;
+      const cronDot = document.getElementById('nav-cron-dot');
+      const cronLabel = cronDot?.nextElementSibling;
+      if (cronDot) {
+        if (cronErrors === 0) {
+          cronDot.style.background = '#22c55e'; // green
+          if (cronLabel) { cronLabel.textContent = 'crons'; cronLabel.style.color = '#4b5563'; }
+        } else {
+          cronDot.style.background = '#eab308'; // yellow
+          if (cronLabel) { cronLabel.textContent = `${cronErrors} error${cronErrors>1?'s':''}`; cronLabel.style.color = '#ca8a04'; }
+        }
+      }
+
+      // Context dot — green <70%, yellow 70-89%, red 90%+
+      const sessions = d.sessions || [];
+      const mainSession = sessions.find(s => s.label === 'Telegram' || s.label === 'Main');
+      const pct = mainSession ? mainSession.pct : 0;
+      const ctxDot = document.getElementById('nav-ctx-dot');
+      const ctxLabel = ctxDot?.nextElementSibling;
+      if (ctxDot) {
+        if (pct >= 90) {
+          ctxDot.style.background = '#ef4444'; // red
+          if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ef4444'; }
+        } else if (pct >= 70) {
+          ctxDot.style.background = '#eab308'; // yellow
+          if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ca8a04'; }
+        } else {
+          ctxDot.style.background = '#22c55e'; // green
+          if (ctxLabel) { ctxLabel.textContent = 'context'; ctxLabel.style.color = '#4b5563'; }
+        }
+      }
     }
 
     function setQueueDateFilter(val) {
