@@ -943,7 +943,7 @@
       renderRejected(f);
     }
     function renderRejected(f) {
-      const items = (window._allRejected||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707'));
+      const items = (window._allRejected||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707')).sort((a,b) => new Date(b.rejectedAt||b.createdAt) - new Date(a.rejectedAt||a.createdAt));
       const rejBody = document.getElementById('rejected-body');
       rejBody.innerHTML = items.length === 0
         ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Nothing rejected</td></tr>`
