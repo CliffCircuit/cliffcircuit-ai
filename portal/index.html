@@ -157,10 +157,12 @@
               </div>
               <div style="align-self:flex-start;margin-top:0.75rem;">
                 <select id="queue-window-select" onchange="setQueueWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#6b7280;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;width:fit-content;">
+                  <option value="-24">yesterday</option>
                   <option value="1">next 1h</option>
                   <option value="12">next 12h</option>
                   <option value="24" selected>next 24h</option>
                   <option value="48">next 48h</option>
+                  <option value="tomorrow">tomorrow</option>
                 </select>
               </div>
             </div>
@@ -1299,10 +1301,26 @@
       })() : '—';
 
       window._queueWindowHours = window._queueWindowHours || 24;
-      const nextWindow = new Date(Date.now() + window._queueWindowHours*60*60*1000);
-      const approved24Articles = approved.filter(i=>(i.title||i.slug) && i.scheduledFor && new Date(i.scheduledFor) <= nextWindow);
-      const approved24Tweets = approved.filter(i=>(i.type==='tweet'||i.tweetText) && i.scheduledFor && new Date(i.scheduledFor) <= nextWindow);
-      const approved24All = approved.filter(i=>i.scheduledFor && new Date(i.scheduledFor) <= nextWindow);
+      const qw = window._queueWindowHours;
+      let qFilter;
+      if (qw === 'yesterday') {
+        const yStart = new Date(Date.now() - 48*60*60*1000);
+        const yEnd = new Date(Date.now() - 24*60*60*1000);
+        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= yStart && new Date(i.scheduledFor) <= yEnd;
+      } else if (qw === 'tomorrow') {
+        const tStart = new Date(); tStart.setHours(0,0,0,0); tStart.setDate(tStart.getDate()+1);
+        const tEnd = new Date(tStart); tEnd.setDate(tEnd.getDate()+1);
+        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= tStart && new Date(i.scheduledFor) < tEnd;
+      } else if (qw < 0) {
+        const pStart = new Date(Date.now() + qw*60*60*1000);
+        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= pStart && new Date(i.scheduledFor) <= new Date();
+      } else {
+        const nextWindow = new Date(Date.now() + qw*60*60*1000);
+        qFilter = i => i.scheduledFor && new Date(i.scheduledFor) <= nextWindow;
+      }
+      const approved24Articles = approved.filter(i=>(i.title||i.slug) && qFilter(i));
+      const approved24Tweets = approved.filter(i=>(i.type==='tweet'||i.tweetText) && qFilter(i));
+      const approved24All = approved.filter(i=>qFilter(i));
       set('metric-in-queue', approved24All.length);
       set('metric-articles-today', approved24Articles.length);
       set('metric-tweets-today', approved24Tweets.length);
@@ -1739,7 +1757,7 @@
 
     // Global: called by Queue window dropdown
     function setQueueWindow(hours) {
-      window._queueWindowHours = parseInt(hours);
+      window._queueWindowHours = (hours === 'yesterday' || hours === 'tomorrow') ? hours : parseInt(hours);
       if (window._lastData) renderMarketing(window._lastData);
     }
 
