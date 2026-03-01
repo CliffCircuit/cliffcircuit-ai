@@ -173,7 +173,7 @@
             <div class="px-6 pt-5 pb-6 h-full flex flex-col">
               <div class="flex items-baseline justify-between mb-5">
                 <div class="text-base font-bold text-white">Recent Posts</div>
-                <select id="recent-window-select" onchange="setRecentWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#6b7280;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;"><option value="1">last 1 hour</option><option value="12">last 12 hours</option><option value="24" selected>last 24 hours</option><option value="48">last 48 hours</option></select>
+                <select id="recent-window-select" onchange="setRecentWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#6b7280;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;"><option value="today">today</option><option value="yesterday">yesterday</option><option value="1">last 1 hour</option><option value="12">last 12 hours</option><option value="24" selected>last 24 hours</option><option value="48">last 48 hours</option></select>
               </div>
               <div class="flex flex-1 items-center gap-0">
 
@@ -1353,8 +1353,19 @@
 
       // Recent Posts window — controlled by dropdown (default 24h)
       window._recentWindowHours = window._recentWindowHours || 24;
-      const cutoff = new Date(Date.now() - window._recentWindowHours*60*60*1000);
-      const recent = q.filter(i => i.status==='published' && i.publishedAt && new Date(i.publishedAt) > cutoff);
+      const rw = window._recentWindowHours;
+      let recentCutoffStart, recentCutoffEnd;
+      if (rw === 'today') {
+        recentCutoffStart = new Date(); recentCutoffStart.setHours(0,0,0,0);
+        recentCutoffEnd = new Date();
+      } else if (rw === 'yesterday') {
+        recentCutoffStart = new Date(); recentCutoffStart.setHours(0,0,0,0); recentCutoffStart.setDate(recentCutoffStart.getDate()-1);
+        recentCutoffEnd = new Date(); recentCutoffEnd.setHours(0,0,0,0);
+      } else {
+        recentCutoffStart = new Date(Date.now() - rw*60*60*1000);
+        recentCutoffEnd = new Date();
+      }
+      const recent = q.filter(i => i.status==='published' && i.publishedAt && new Date(i.publishedAt) >= recentCutoffStart && new Date(i.publishedAt) <= recentCutoffEnd);
       const recentArticles = recent.filter(i=>i.account!=='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
       const recentTim = recent.filter(i=>i.account==='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
       const recentCliffTweets = recent.filter(i=>i.type==='tweet' && i.account!=='timharris707');
@@ -1767,7 +1778,7 @@
 
     // Global: called by Recent Posts dropdown
     function setRecentWindow(hours) {
-      window._recentWindowHours = parseInt(hours);
+      window._recentWindowHours = (['today','yesterday'].includes(hours)) ? hours : parseInt(hours);
       if (window._lastData) renderMarketing(window._lastData);
     }
   </script>
