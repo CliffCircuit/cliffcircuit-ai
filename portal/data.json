@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T19:03:23.207Z",
+  "generatedAt": "2026-03-01T19:05:27.142Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -172,7 +172,7 @@
     },
     {
       "id": "tim-20260301-2",
-      "status": "post_failed",
+      "status": "published",
       "account": "timharris707",
       "createdAt": "2026-02-28T18:01:00-08:00",
       "scheduledFor": "2026-03-01T11:00:00-08:00",
@@ -181,8 +181,9 @@
       "reviewedAt": "2026-03-01T03:01:46.751739+00:00",
       "reviewedBy": "cliff",
       "publishAfter": "2026-03-01T19:00:00Z",
-      "postError": "X API 403: Creating posts with @mentions is not allowed for this access package. Tweet starts with @CliffCircuit. Needs manual posting or API tier upgrade.",
-      "failedAt": "2026-03-01T19:00:35Z"
+      "failedAt": "2026-03-01T19:00:35Z",
+      "tweetId": "2028184644223668317",
+      "publishedAt": "2026-03-01T19:04:41.507Z"
     },
     {
       "id": "tim-20260301-3",
@@ -680,6 +681,8 @@
       "status": "rejected",
       "rejectionReason": "poor_title",
       "rejectionNote": "Title is 76 characters — exceeds the 60-character limit. Samantha needs to shorten it significantly. Suggested direction: 'Wedding venues lose tours to the 2-week decision window' (56 chars) or 'Venues follow up once. Couples decide in 2 weeks.' (49 chars). Title must be specific, under 60 chars, and match the article's core thesis (follow-up gap in the 2-week decision window).",
+      "approvedAt": null,
+      "approvedBy": null,
       "rejectedAt": "2026-03-01T08:06:00-08:00",
       "createdAt": "2026-03-01T07:52:00-08:00",
       "title": "Wedding venues follow up once. Couples decide in 2 weeks. Here's the AI fix.",
@@ -1139,57 +1142,12 @@
   ],
   "crons": [
     {
-      "name": "portal-data-refresh",
-      "schedule": "* * * * *",
-      "status": "ok",
-      "lastRun": "4m ago",
-      "lastRunMs": 1772391540013,
-      "nextRun": "in 3m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13065
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "32m ago",
-      "lastRunMs": 1772389869598,
-      "nextRun": "in 3m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 87559
-    },
-    {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "7m ago",
-      "lastRunMs": 1772391373548,
-      "nextRun": "in 3m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 95139
-    },
-    {
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "ok",
       "lastRun": "1h ago",
       "lastRunMs": 1772388162534,
-      "nextRun": "in 1m",
+      "nextRun": "in 3m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -1199,12 +1157,57 @@
       "lastRunTokens": 87016
     },
     {
+      "name": "portal-data-refresh",
+      "schedule": "* * * * *",
+      "status": "ok",
+      "lastRun": "2m ago",
+      "lastRunMs": 1772391790697,
+      "nextRun": "in 1m",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
+      "lastRunTokens": 13061
+    },
+    {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "error",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772391600011,
+      "nextRun": "in 10m",
+      "agent": "samantha",
+      "consecutiveErrors": 1,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 67427
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "error",
+      "lastRun": "2m ago",
+      "lastRunMs": 1772391809288,
+      "nextRun": "in 25m",
+      "agent": "main",
+      "consecutiveErrors": 1,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": 103182
+    },
+    {
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
       "lastRun": "3h ago",
       "lastRunMs": 1772381310517,
-      "nextRun": "in 58m",
+      "nextRun": "in 56m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
@@ -1232,7 +1235,7 @@
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "20m ago",
+      "lastRun": "22m ago",
       "lastRunMs": 1772390608875,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -1365,34 +1368,34 @@
     }
   ],
   "agentTokens": {
+    "main": {
+      "totalTokens": 103182,
+      "inputTokens": 87,
+      "outputTokens": 6352,
+      "jobName": "cliff-article-review"
+    },
     "scout": {
       "totalTokens": 39443,
       "inputTokens": 14,
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "main": {
-      "totalTokens": 87559,
-      "inputTokens": 47,
-      "outputTokens": 3331,
-      "jobName": "cliff-article-review"
-    },
     "samantha": {
-      "totalTokens": 95139,
-      "inputTokens": 8,
-      "outputTokens": 4338,
-      "jobName": "samantha-publish"
+      "totalTokens": 92582,
+      "inputTokens": 19,
+      "outputTokens": 28822,
+      "jobName": "samantha-draft"
     }
   },
   "sessions": [
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 161000,
+      "used": 167000,
       "limit": 200000,
-      "pct": 80,
+      "pct": 83,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772391803815
+      "lastActiveAt": 1772391927756
     },
     {
       "label": "Main",
@@ -1401,7 +1404,7 @@
       "limit": 200000,
       "pct": 30,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772391743815
+      "lastActiveAt": 1772391807756
     }
   ],
   "sites": [
@@ -1436,7 +1439,7 @@
     "cliffFollowers": 7,
     "cliffPosts": 38,
     "timFollowers": 5,
-    "timPosts": 12,
+    "timPosts": 13,
     "cliffGrowthToday": 0,
     "timGrowthToday": 0,
     "cliffGrowthAllTime": 0,
@@ -1456,6 +1459,6 @@
   },
   "stats": {
     "articlesToday": 10,
-    "timPostsToday": 1
+    "timPostsToday": 2
   }
 }
