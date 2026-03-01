@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T14:01:00.157Z",
+  "generatedAt": "2026-03-01T14:05:31.880Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -637,46 +637,46 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "3m ago",
-      "lastRunMs": 1772373455842,
-      "nextRun": "in 1m",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772373648119,
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13101
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "28m ago",
-      "lastRunMs": 1772371964279,
-      "nextRun": "in 1m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": null,
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 60302
+      "lastRunTokens": 13067
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "16m ago",
-      "lastRunMs": 1772372700027,
-      "nextRun": "in 1m",
+      "lastRun": "1m ago",
+      "lastRunMs": 1772373883499,
+      "nextRun": "in 10m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
       "model": "anthropic/claude-sonnet-4-6",
       "thinking": null,
       "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 52328
+      "lastRunTokens": 57134
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "error",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772373666116,
+      "nextRun": "in 25m",
+      "agent": "main",
+      "consecutiveErrors": 1,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": null,
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": null
     },
     {
       "name": "pipeline-health-check",
@@ -684,7 +684,7 @@
       "status": "ok",
       "lastRun": "7h ago",
       "lastRunMs": 1772348603915,
-      "nextRun": "in 1h",
+      "nextRun": "in 57m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -697,7 +697,7 @@
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "9m ago",
+      "lastRun": "13m ago",
       "lastRunMs": 1772373140077,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -866,28 +866,28 @@
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "main": {
-      "totalTokens": 60302,
-      "inputTokens": 6,
-      "outputTokens": 2523,
-      "jobName": "cliff-article-review"
-    },
     "samantha": {
       "totalTokens": 66129,
       "inputTokens": 11,
       "outputTokens": 10963,
       "jobName": "samantha-draft"
+    },
+    "main": {
+      "totalTokens": 43203,
+      "inputTokens": 52,
+      "outputTokens": 3689,
+      "jobName": "pipeline-health-check"
     }
   },
   "sessions": [
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 114000,
+      "used": 132000,
       "limit": 200000,
-      "pct": 57,
+      "pct": 66,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772373600790
+      "lastActiveAt": 1772373812488
     },
     {
       "label": "Main",
@@ -896,7 +896,7 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772373600790
+      "lastActiveAt": 1772373812488
     }
   ],
   "sites": [
