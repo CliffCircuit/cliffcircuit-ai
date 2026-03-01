@@ -220,6 +220,7 @@
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Item</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Type</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Account</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Reason</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Rejected</th>
@@ -1141,11 +1142,12 @@
       // Rejected section
       const rejBody = document.getElementById('rejected-body');
       rejBody.innerHTML = rejected.length === 0
-        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Nothing rejected yet ✓</td></tr>'
+        ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Nothing rejected yet</td></tr>'
         : rejected.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
             <td class="px-4 py-3 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-4 py-3 text-gray-500 text-xs">${i.type==='tweet'?'Tweet':'Article'}</td>
             <td class="px-4 py-3 text-gray-500">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-            <td class="px-4 py-3 text-red-400 text-xs">${esc(i.rejectedReason||'No reason noted')}</td>
+            <td class="px-4 py-3 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td>
             <td class="px-4 py-3 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
           </tr>`).join('');
 
