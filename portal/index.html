@@ -119,17 +119,33 @@
         </div>
       </div>
 
-      <div class="mb-8">
-        <h2 class="text-base font-semibold text-white mb-4">Published Today</h2>
+      <!-- Articles published -->
+      <div class="mb-6">
+        <h2 class="text-base font-semibold text-white mb-4">Blog Articles <span class="text-gray-500 font-normal text-sm">(last 48h)</span></h2>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
-              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Title / Post</th>
-              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Account</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Title</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Published</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Blog</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Tweet</th>
             </tr></thead>
-            <tbody id="published-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="articles-body"><tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tim posts published -->
+      <div class="mb-8">
+        <h2 class="text-base font-semibold text-white mb-4">@TimHarris707 Posts <span class="text-gray-500 font-normal text-sm">(last 48h)</span></h2>
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Post</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Published</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">View</th>
+            </tr></thead>
+            <tbody id="tim-posts-body"><tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -306,13 +322,28 @@
             <td class="px-4 py-3 text-gray-500 text-xs">${ago(i.createdAt)}</td>
           </tr>`).join('');
 
-      const pb = document.getElementById('published-body');
-      pb.innerHTML = pubToday.length === 0
-        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Nothing published yet today</td></tr>'
-        : pubToday.map(i=>`<tr class="border-b border-gray-900">
-            <td class="px-4 py-3 text-white">${esc(i.title||i.tweetText?.slice(0,70)||i.id)}${(i.tweetText?.length||0)>70?'…':''}</td>
-            <td class="px-4 py-3 text-gray-400">${i.account==='timharris707'?'👤 @TimHarris707':'🤖 @CliffCircuit'}</td>
-            <td class="px-4 py-3 text-gray-400 text-xs">${i.publishedAt?new Date(i.publishedAt).toLocaleTimeString():'—'}</td>
+      // Last 48h window
+      const cutoff = new Date(Date.now() - 48*60*60*1000);
+      const recent = q.filter(i => i.status==='published' && i.publishedAt && new Date(i.publishedAt) > cutoff);
+      const recentArticles = recent.filter(i=>i.account!=='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+      const recentTim = recent.filter(i=>i.account==='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+
+      const ab = document.getElementById('articles-body');
+      ab.innerHTML = recentArticles.length === 0
+        ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No articles in last 48h</td></tr>'
+        : recentArticles.map(i=>`<tr class="border-b border-gray-900">
+            <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.id)}</td>
+            <td class="px-4 py-3 text-gray-400 text-xs">${relTime(i.publishedAt)}</td>
+            <td class="px-4 py-3">${i.slug?`<a href="https://shopcliffmart.com/blog/${esc(i.slug)}" target="_blank" class="text-indigo-400 hover:underline text-xs">Read →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
+            <td class="px-4 py-3">${i.tweetId?`<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs">Tweet →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
+          </tr>`).join('');
+
+      const tb = document.getElementById('tim-posts-body');
+      tb.innerHTML = recentTim.length === 0
+        ? '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">No Tim posts in last 48h</td></tr>'
+        : recentTim.map(i=>`<tr class="border-b border-gray-900">
+            <td class="px-4 py-3 text-white">${esc(i.tweetText||i.id)}</td>
+            <td class="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">${relTime(i.publishedAt)}</td>
             <td class="px-4 py-3">${i.tweetId?`<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs">View →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
           </tr>`).join('');
 
@@ -367,6 +398,23 @@
     function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function fmt(n){if(n==null)return'—';return Number(n).toLocaleString();}
     function ago(iso){if(!iso)return'—';const m=(Date.now()-new Date(iso))/60000;if(m<60)return Math.round(m)+'m ago';if(m<1440)return Math.round(m/60)+'h ago';return Math.round(m/1440)+'d ago';}
+    function relTime(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso), now = Date.now(), diff = now - d;
+      const mins = Math.round(diff / 60000);
+      const hrs = Math.round(diff / 3600000);
+      if (mins < 2) return 'just now';
+      if (mins < 60) return mins + ' minutes ago';
+      if (hrs < 24) return hrs + (hrs===1?' hour':' hours') + ' ago';
+      // Check if yesterday
+      const ptNow = new Date(now - 8*60*60*1000);
+      const ptD = new Date(d - 8*60*60*1000);
+      if (ptNow.toISOString().slice(0,10) !== ptD.toISOString().slice(0,10)) {
+        const dayDiff = Math.floor((ptNow - ptD) / 86400000);
+        if (dayDiff === 1) return 'yesterday at ' + d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      }
+      return d.toLocaleDateString([], {month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    }
   </script>
 </body>
 </html>
