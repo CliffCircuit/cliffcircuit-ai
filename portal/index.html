@@ -158,20 +158,22 @@
             </div>
           </div>
 
-          <!-- RIGHT: Last 48 Hours — Cliff + Tim -->
+          <!-- RIGHT: Last 48 Hours — combined total + Cliff/Tim breakdown -->
           <div class="card overflow-hidden flex-1" style="background: linear-gradient(135deg, #0f172a 0%, #0d1a1a 100%);">
             <div class="px-6 pt-5 pb-6 h-full flex flex-col">
-              <div class="text-base font-bold text-white mb-5">Last 48 Hours</div>
-              <div class="flex flex-1 gap-0">
+              <div class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">Last 48 Hours</div>
+              <div class="flex flex-1 gap-6">
+
+                <!-- Combined total — spotlight -->
+                <div class="flex flex-col justify-center items-center pr-6 border-r border-gray-800" style="min-width:110px;">
+                  <div id="metric-combined-48h" class="text-6xl font-bold text-white leading-none tracking-tight">—</div>
+                  <div class="text-xs text-gray-500 mt-2 text-center">total posts</div>
+                </div>
 
                 <!-- Cliff -->
-                <div class="flex-1 pr-6">
+                <div class="flex-1">
                   <div class="text-xs font-semibold text-emerald-500 uppercase tracking-widest mb-4">Cliff</div>
-                  <div class="grid grid-cols-3 gap-4">
-                    <div>
-                      <div id="metric-total-48h" class="text-3xl font-bold text-white leading-none">—</div>
-                      <div class="text-xs text-gray-500 mt-2">Total</div>
-                    </div>
+                  <div class="grid grid-cols-2 gap-x-6 gap-y-4">
                     <div>
                       <div id="metric-articles-48h" class="text-3xl font-bold text-emerald-400 leading-none">—</div>
                       <div class="text-xs text-gray-500 mt-2">Articles</div>
@@ -180,23 +182,27 @@
                       <div id="metric-cliff-tweets-48h" class="text-3xl font-bold text-indigo-400 leading-none">—</div>
                       <div class="text-xs text-gray-500 mt-2">Tweets</div>
                     </div>
+                    <div>
+                      <div id="metric-total-48h" class="text-2xl font-bold text-gray-400 leading-none">—</div>
+                      <div class="text-xs text-gray-600 mt-2">Total</div>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Divider -->
-                <div class="w-px bg-gray-800 self-stretch mx-2"></div>
+                <div class="w-px bg-gray-800 self-stretch"></div>
 
                 <!-- Tim -->
-                <div class="flex-1 pl-6">
+                <div class="flex-1">
                   <div class="text-xs font-semibold text-purple-400 uppercase tracking-widest mb-4">Tim</div>
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <div id="metric-tim-posts-48h" class="text-3xl font-bold text-white leading-none">—</div>
-                      <div class="text-xs text-gray-500 mt-2">Total</div>
-                    </div>
+                  <div class="grid grid-cols-2 gap-x-6 gap-y-4">
                     <div>
                       <div id="metric-tim-tweets-48h-dup" class="text-3xl font-bold text-purple-400 leading-none">—</div>
                       <div class="text-xs text-gray-500 mt-2">Tweets</div>
+                    </div>
+                    <div>
+                      <div id="metric-tim-posts-48h" class="text-2xl font-bold text-gray-400 leading-none">—</div>
+                      <div class="text-xs text-gray-600 mt-2">Total</div>
                     </div>
                   </div>
                 </div>
@@ -1299,6 +1305,7 @@
       set('metric-tim-posts-48h', timPosts48.length);
       set('metric-total-48h', articles48.length + cliffTweets48.length);
       set('metric-tim-tweets-48h-dup', timPosts48.length);
+      set('metric-combined-48h', articles48.length + cliffTweets48.length + timPosts48.length);
 
       const rejected = q.filter(i=>i.status==='rejected');
       const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
