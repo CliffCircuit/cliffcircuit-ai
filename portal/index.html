@@ -1084,6 +1084,8 @@
       const days = { '0':'Sun','1':'Mon','2':'Tue','3':'Wed','4':'Thu','5':'Fri','6':'Sat' };
       const months = { '1':'Jan','2':'Feb','3':'Mar','4':'Apr','5':'May','6':'Jun','7':'Jul','8':'Aug','9':'Sep','10':'Oct','11':'Nov','12':'Dec' };
 
+      // Every minute (* * * * *)
+      if (min === '*' && hour === '*' && dom === '*') return 'Every 1 min';
       // Every X minutes (*/N * * * *)
       if (min.startsWith('*/') && hour === '*') {
         const m = min.slice(2);
@@ -1094,11 +1096,21 @@
         const h = hour.slice(2);
         return `Every ${h}h` + (min !== '0' ? ` at :${min.padStart(2,'0')}` : '');
       }
-      // Hour range like 7-23
-      if (hour.includes('-') && min.startsWith('*/')) {
-        const interval = min.slice(2);
-        const [h1,h2] = hour.split('-');
-        return `Every ${interval}m (${h1}:00–${h2}:00)`;
+      // Hour range like 7-23 (every hour in range)
+      if (hour.includes('-') && !hour.includes(',') && dom === '*' && mon === '*' && dow === '*') {
+        const [h1,h2] = hour.split('-').map(Number);
+        const fmt = h => (h % 12 || 12) + (h >= 12 ? 'PM' : 'AM');
+        if (min.startsWith('*/')) {
+          const interval = min.slice(2);
+          return `Every ${interval}m (${fmt(h1)}–${fmt(h2)})`;
+        }
+        return `Hourly ${fmt(h1)}–${fmt(h2)}`;
+      }
+      // Comma-separated hours (e.g. 8,13,18 or 8,15)
+      if (hour.includes(',') && dom === '*' && mon === '*' && dow === '*') {
+        const hrs = hour.split(',').map(Number);
+        const fmt = h => (h % 12 || 12) + (h >= 12 ? 'PM' : 'AM');
+        return `${hrs.length}x daily (${hrs.map(fmt).join(', ')})`;
       }
       // Specific time, every day
       if (dom === '*' && mon === '*' && dow === '*') {
