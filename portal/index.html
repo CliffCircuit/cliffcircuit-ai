@@ -523,11 +523,20 @@
           const d = new Date(s);
           const now = Date.now();
           const isPast = d.getTime() < now;
-          // Format as "Sun Mar 1, 8:00 AM" 
-          const formatted = d.toLocaleString('en-US', {
-            weekday: 'short', month: 'short', day: 'numeric',
+          const timeStr = d.toLocaleString('en-US', {
             hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles'
           }) + ' PT';
+          // Get PT dates for comparison
+          const ptNow = new Date(now - 8*60*60*1000);
+          const ptD   = new Date(d.getTime() - 8*60*60*1000);
+          const todayStr    = ptNow.toISOString().slice(0,10);
+          const tomorrowStr = new Date(ptNow.getTime() + 86400000).toISOString().slice(0,10);
+          const dStr        = ptD.toISOString().slice(0,10);
+          let dayLabel;
+          if (dStr === todayStr)    dayLabel = 'Today';
+          else if (dStr === tomorrowStr) dayLabel = 'Tomorrow';
+          else dayLabel = d.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', timeZone:'America/Los_Angeles' });
+          const formatted = `${dayLabel} at ${timeStr}`;
           return isPast
             ? `<span class="text-gray-500 text-xs">${formatted} <span class="opacity-60">(overdue)</span></span>`
             : `<span class="text-green-400 text-xs">${formatted}</span>`;
