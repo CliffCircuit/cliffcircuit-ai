@@ -366,16 +366,16 @@
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Live Session</div>
                 <div id="cliff-ctx-bar-wrap" class="hidden">
-                  <div class="flex justify-between items-center mb-1">
-                    <span id="cliff-ctx-label" class="text-white text-sm font-semibold"></span>
-                    <span id="cliff-ctx-pct" class="font-semibold text-sm"></span>
+                  <div class="flex justify-between items-center">
+                    <span id="cliff-ctx-pct" class="text-white text-sm font-semibold"></span>
                   </div>
+                  <div class="text-gray-500 text-xs mb-1" id="cliff-ctx-label"></div>
                   <div class="bg-gray-700 rounded-full h-1.5">
                     <div id="cliff-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
                   </div>
-                  <div class="text-gray-600 text-xs mt-1">Telegram session</div>
+                  <div class="text-gray-600 text-xs mt-1" id="cliff-ctx-sublabel">—</div>
                 </div>
-                <div id="cliff-ctx-none" class="text-gray-600 text-xs text-sm font-semibold">No active session</div>
+                <div id="cliff-ctx-none" class="text-gray-600 text-xs">No active session</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
@@ -849,11 +849,13 @@
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
           const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
 
+          const snapshotTime = d.generatedAt ? new Date(d.generatedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}) : '—';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
+          if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy'); el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
           if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
-          if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold text-sm ${pctColor}`; }
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
+          if (el('ctx-sublabel')) el('ctx-sublabel').textContent = 'Snapshot at ' + snapshotTime;
         }
 
         // Status dot — if any errors, show yellow warning
