@@ -315,17 +315,17 @@ async function main() {
   };
 
   // ── Write + Push ───────────────────────────────────────────────
-  const outPath = path.join(REPO_DIR, 'portal/data.json');
-  fs.mkdirSync(path.join(REPO_DIR, 'portal'), { recursive: true });
-  fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
-  console.log('Wrote data.json');
-
   const ghToken = keychain('github-cliffcircuit');
   if (ghToken) {
     try {
       // Always use a fresh clone to avoid divergence issues
       run(`rm -rf ${REPO_DIR}`, { stdio: 'pipe' });
       run(`git clone https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git ${REPO_DIR}`, { stdio: 'pipe' });
+      // Write AFTER clone so the file isn't wiped
+      const outPath = path.join(REPO_DIR, 'portal/data.json');
+      fs.mkdirSync(path.join(REPO_DIR, 'portal'), { recursive: true });
+      fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
+      console.log('Wrote data.json');
       run(`cd ${REPO_DIR} && git config user.email "cliff@cliffcircuit.ai"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git config user.name "Cliff"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git add portal/`, { stdio: 'pipe' });
