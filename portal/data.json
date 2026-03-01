@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T17:01:57.737Z",
+  "generatedAt": "2026-03-01T17:05:12.436Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -927,7 +927,10 @@
     },
     {
       "id": "20260301-084100-photography",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T09:02:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T13:12:00-08:00",
       "createdAt": "2026-03-01T08:41:00-08:00",
       "title": "Photography studios ghost their best leads. An AI doesn't.",
       "slug": "photography-studio-lead-response-gap",
@@ -952,7 +955,10 @@
     },
     {
       "id": "20260301-084300-electrician",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T09:02:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T14:00:00-08:00",
       "createdAt": "2026-03-01T08:43:00-08:00",
       "title": "Electricians miss emergency calls on the job. AI doesn't.",
       "slug": "electrician-emergency-lead-gap",
@@ -977,7 +983,10 @@
     },
     {
       "id": "20260301-084400-chiro",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T09:02:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T14:48:00-08:00",
       "createdAt": "2026-03-01T08:44:00-08:00",
       "title": "Pain-free patients stop coming. AI brings them back.",
       "slug": "chiropractic-patient-reactivation",
@@ -1006,82 +1015,67 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "16m ago",
-      "lastRunMs": 1772383565927,
-      "nextRun": "in 2m",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772384506578,
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13132
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "26m ago",
-      "lastRunMs": 1772382944402,
-      "nextRun": "in 2m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": null,
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 75488
+      "lastRunTokens": 13068
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "17m ago",
-      "lastRunMs": 1772383500014,
-      "nextRun": "in 2m",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772384437287,
+      "nextRun": "in 10m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
       "model": "anthropic/claude-sonnet-4-6",
       "thinking": null,
       "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 74150
+      "lastRunTokens": 82898
     },
     {
-      "name": "weekly-report",
-      "schedule": "0 9 * * 0",
-      "status": "idle",
-      "lastRun": null,
-      "lastRunMs": null,
-      "nextRun": "in 2m",
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772384522584,
+      "nextRun": "in 25m",
       "agent": "main",
       "consecutiveErrors": 0,
-      "id": "bbbd846b-ecb6-420f-822b-4c95e69a6d4d",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": "low",
-      "description": "Generates a weekly summary report — covers content published, follower growth, site traffic, cron job health, and key decisions made during the week.",
-      "lastRunTokens": null
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": null,
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": 91599
     },
     {
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
-      "status": "error",
-      "lastRun": "53m ago",
-      "lastRunMs": 1772381333869,
-      "nextRun": "in 1m",
+      "status": "ok",
+      "lastRun": "1m ago",
+      "lastRunMs": 1772384634554,
+      "nextRun": "in 58m",
       "agent": "main",
-      "consecutiveErrors": 2,
+      "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
-      "lastRunTokens": null
+      "lastRunTokens": 67274
     },
     {
       "name": "samantha-draft",
       "schedule": "every",
       "status": "error",
-      "lastRun": "19m ago",
+      "lastRun": "22m ago",
       "lastRunMs": 1772383386752,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -1096,7 +1090,7 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "53m ago",
+      "lastRun": "57m ago",
       "lastRunMs": 1772381310517,
       "nextRun": "in 3h",
       "agent": "scout",
@@ -1111,7 +1105,7 @@
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
-      "lastRun": "53m ago",
+      "lastRun": "57m ago",
       "lastRunMs": 1772381300055,
       "nextRun": "in 3h",
       "agent": "scout",
@@ -1141,7 +1135,7 @@
       "name": "samantha-cliff-tweets",
       "schedule": "0 8,15 * * *",
       "status": "error",
-      "lastRun": "58m ago",
+      "lastRun": "1h ago",
       "lastRunMs": 1772381033370,
       "nextRun": "in 6h",
       "agent": "samantha",
@@ -1213,6 +1207,21 @@
       "lastRunTokens": 80197
     },
     {
+      "name": "weekly-report",
+      "schedule": "0 9 * * 0",
+      "status": "ok",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772384400012,
+      "nextRun": "in 7d",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "bbbd846b-ecb6-420f-822b-4c95e69a6d4d",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": "low",
+      "description": "Generates a weekly summary report — covers content published, follower growth, site traffic, cron job health, and key decisions made during the week.",
+      "lastRunTokens": 24829
+    },
+    {
       "name": "tim-thread-3-draft",
       "schedule": "at",
       "status": "idle",
@@ -1235,37 +1244,37 @@
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "main": {
-      "totalTokens": 80197,
-      "inputTokens": 81,
-      "outputTokens": 2584,
-      "jobName": "morning-check-in"
-    },
     "samantha": {
-      "totalTokens": 74150,
-      "inputTokens": 7,
-      "outputTokens": 3354,
+      "totalTokens": 82898,
+      "inputTokens": 9,
+      "outputTokens": 4485,
       "jobName": "samantha-publish"
+    },
+    "main": {
+      "totalTokens": 91599,
+      "inputTokens": 10,
+      "outputTokens": 7289,
+      "jobName": "cliff-article-review"
     }
   },
   "sessions": [
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 69000,
+      "used": 27000,
       "limit": 200000,
-      "pct": 34,
+      "pct": 14,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772384458346
+      "lastActiveAt": 1772384653044
     },
     {
       "label": "Main",
       "key": "agent:main:main",
       "used": 33000,
       "limit": 200000,
-      "pct": 16,
+      "pct": 17,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772384458346
+      "lastActiveAt": 1772384593044
     }
   ],
   "sites": [
