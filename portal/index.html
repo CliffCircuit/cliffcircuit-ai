@@ -70,6 +70,7 @@
           <button onclick="switchTab('health')" id="tab-health" class="tab-inactive py-4 text-sm font-medium">System Health</button>
           <button onclick="switchTab('agents')" id="tab-agents" class="tab-inactive py-4 text-sm font-medium">Agents</button>
           <button onclick="switchTab('ideas')" id="tab-ideas" class="tab-inactive py-4 text-sm font-medium">Ideas</button>
+          <button onclick="switchTab('tokens')" id="tab-tokens" class="tab-inactive py-4 text-sm font-medium">Token Usage</button>
         </div>
         <div class="flex items-center gap-3 py-4" title="Status indicators">
           <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cron health">
@@ -450,6 +451,71 @@
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Tim Posts Today</div>
           <div id="stat-tim2" class="text-2xl font-bold text-white">—</div>
         </div>
+      </div>
+    </div>
+
+    <!-- TOKEN USAGE TAB -->
+    <div id="tab-tokens-content" class="hidden p-6 max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-semibold text-white mb-1">Token Usage</h2>
+          <p class="text-gray-500 text-sm">Consumption and cost estimates across all cron jobs</p>
+        </div>
+        <div class="flex gap-1" id="token-range-btns">
+          <button onclick="setTokenRange('today')" id="tr-today" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">Today</button>
+          <button onclick="setTokenRange('7d')" id="tr-7d" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">7 days</button>
+          <button onclick="setTokenRange('30d')" id="tr-30d" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">30 days</button>
+        </div>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="card p-5">
+          <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
+          <div id="tok-total" class="text-3xl font-bold text-white">—</div>
+          <div id="tok-total-sub" class="text-xs text-gray-600 mt-1">—</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Est. Cost</div>
+          <div id="tok-cost" class="text-3xl font-bold text-yellow-400">—</div>
+          <div class="text-xs text-gray-600 mt-1">blended rate estimate</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Runs</div>
+          <div id="tok-runs" class="text-3xl font-bold text-indigo-400">—</div>
+          <div class="text-xs text-gray-600 mt-1">cron executions</div>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Avg / Run</div>
+          <div id="tok-avg" class="text-3xl font-bold text-teal-400">—</div>
+          <div class="text-xs text-gray-600 mt-1">tokens per execution</div>
+        </div>
+      </div>
+
+      <!-- Per-job breakdown -->
+      <div class="card overflow-hidden mb-8">
+        <div class="px-5 py-4 border-b border-gray-800">
+          <h3 class="text-sm font-semibold text-white">Per-Job Breakdown</h3>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Job</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Runs</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage Bar</th>
+          </tr></thead>
+          <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Efficiency flags -->
+      <div class="card p-5 mb-8">
+        <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
+        <div id="tok-insights" class="space-y-3 text-sm text-gray-500">Loading...</div>
       </div>
     </div>
 
@@ -961,6 +1027,7 @@
       renderMarketing(d);
       renderHealth(d);
       renderAgents(d);
+      renderTokens(d);
       updateNavDots(d);
       document.getElementById('tab-marketing-content').classList.remove('hidden');
     }
@@ -1106,7 +1173,7 @@
     }
 
     function switchTab(t) {
-      ['marketing','health','agents','ideas'].forEach(n => {
+      ['marketing','health','agents','ideas','tokens'].forEach(n => {
         document.getElementById('tab-'+n+'-content').classList.add('hidden');
         document.getElementById('tab-'+n).className = (n===t?'tab-active':'tab-inactive')+' py-4 text-sm font-medium';
       });
@@ -1116,7 +1183,7 @@
 
     function restoreTab() {
       const tab = location.hash.replace('#','');
-      if (['marketing','health','agents','ideas'].includes(tab)) {
+      if (['marketing','health','agents','ideas','tokens'].includes(tab)) {
         switchTab(tab);
       }
     }
@@ -1185,6 +1252,110 @@
         return `${months[mon]||mon} ${dom} ${h12}:${m} ${ampm}`;
       }
       return expr;
+    }
+
+    // ── Token Usage Tab ──────────────────────────────────────────
+    window._tokenRange = 'today';
+    function setTokenRange(r) {
+      window._tokenRange = r;
+      ['today','7d','30d'].forEach(k => {
+        document.getElementById('tr-'+k).className = (k===r?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700';
+      });
+      if (window._lastData) renderTokens(window._lastData);
+    }
+
+    function renderTokens(d) {
+      const range = window._tokenRange || 'today';
+      const costs = d.costs || {};
+      const jobs = d.crons || [];
+      const now = Date.now();
+      const cutoff = range === 'today'
+        ? new Date().setHours(0,0,0,0)
+        : range === '7d' ? now - 7*86400000
+        : now - 30*86400000;
+
+      // Model cost rates (per 1k tokens, blended in/out)
+      const modelRate = m => {
+        if (!m) return 0.003;
+        if (m.includes('haiku')) return 0.0004;
+        if (m.includes('sonnet')) return 0.003;
+        if (m.includes('opus')) return 0.015;
+        return 0.003;
+      };
+
+      // Build per-job stats from costs data
+      const jobStats = jobs.map(j => {
+        const history = (costs[j.id] || []).filter(e => e.ts >= cutoff);
+        const tokens = history.reduce((s,e) => s + (e.tokens||0), 0);
+        const runs = history.length;
+        const rate = modelRate(j.model);
+        const cost = tokens * rate / 1000;
+        return { ...j, tokens, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
+      }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
+
+      const totalTokens = jobStats.reduce((s,j) => s+j.tokens, 0);
+      const totalRuns = jobStats.reduce((s,j) => s+j.runs, 0);
+      const totalCost = jobStats.reduce((s,j) => s+j.cost, 0);
+      const totalAvg = totalRuns ? Math.round(totalTokens/totalRuns) : 0;
+
+      const fmtK = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+      const rangeLabel = range === 'today' ? 'today' : range === '7d' ? 'last 7 days' : 'last 30 days';
+
+      document.getElementById('tok-total').textContent = fmtK(totalTokens);
+      document.getElementById('tok-total-sub').textContent = rangeLabel;
+      document.getElementById('tok-cost').textContent = '$' + totalCost.toFixed(2);
+      document.getElementById('tok-runs').textContent = totalRuns;
+      document.getElementById('tok-avg').textContent = fmtK(totalAvg);
+
+      const agentCls = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
+      const modelShortT = m => {
+        if (!m) return '<span class="text-gray-700">—</span>';
+        if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+        if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+        if (m.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+        return m.split('/').pop();
+      };
+
+      const tbody = document.getElementById('tok-job-body');
+      if (jobStats.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No data for this range</td></tr>';
+      } else {
+        const maxTokens = jobStats[0].tokens;
+        tbody.innerHTML = jobStats.map(j => {
+          const barPct = Math.round((j.tokens / maxTokens) * 100);
+          const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
+          const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name)}</td>
+            <td class="px-4 py-2.5 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${j.agent||'—'}</span></td>
+            <td class="px-4 py-2.5 text-xs">${modelShortT(j.model)}</td>
+            <td class="px-4 py-2.5 text-right text-gray-400">${j.runs}</td>
+            <td class="px-4 py-2.5 text-right text-white font-medium">${fmtK(j.tokens)}</td>
+            <td class="px-4 py-2.5 text-right text-gray-400">${fmtK(j.avg)}</td>
+            <td class="px-4 py-2.5 text-right text-yellow-400">${costStr}</td>
+            <td class="px-4 py-2.5" style="min-width:100px;">
+              <div class="bg-gray-800 rounded-full h-1.5">
+                <div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div>
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      // Efficiency insights
+      const insights = [];
+      jobStats.forEach(j => {
+        if (j.avg > 80000) insights.push({ level: 'warn', msg: `<strong>${esc(j.name)}</strong> averages ${fmtK(j.avg)} tokens/run — high context load. Consider reducing frequency or adding an early-exit check.` });
+        if (j.runs > 20 && j.avg < 5000) insights.push({ level: 'ok', msg: `<strong>${esc(j.name)}</strong> is efficient at ${fmtK(j.avg)} avg tokens/run across ${j.runs} runs.` });
+        if (j.name === 'portal-data-refresh' && j.runs > 30) insights.push({ level: 'info', msg: `<strong>portal-data-refresh</strong> runs every minute (${j.runs}x today). Consider reducing to every 2-5 min to cut ~${fmtK(Math.round(j.tokens*0.6))} tokens/day.` });
+      });
+      if (insights.length === 0) insights.push({ level: 'ok', msg: 'No efficiency issues detected.' });
+
+      document.getElementById('tok-insights').innerHTML = insights.map(i => {
+        const icon = i.level === 'warn' ? '⚠️' : i.level === 'ok' ? '✅' : 'ℹ️';
+        const cls = i.level === 'warn' ? 'text-yellow-400' : i.level === 'ok' ? 'text-green-400' : 'text-blue-400';
+        return `<div class="flex gap-2"><span>${icon}</span><span class="${cls}">${i.msg}</span></div>`;
+      }).join('');
     }
 
     function onDeckClick() {

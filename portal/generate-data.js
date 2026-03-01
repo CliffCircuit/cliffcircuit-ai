@@ -270,6 +270,25 @@ async function main() {
   };
 
   // ── Assemble ───────────────────────────────────────────────────
+  // ── Token Usage / Cost History ───────────────────────────────
+  let costs = {};
+  try {
+    const { execSync } = require('child_process');
+    const cutoff30d = Date.now() - 30 * 86400000;
+    // Collect in parallel using Promise.all
+    const cronIds = jobs.map(j => ({ id: j.id, name: j.name, model: j.payload?.model }));
+    await Promise.all(cronIds.map(async ({ id }) => {
+      try {
+        const raw = execSync(`openclaw cron runs --id ${id}`, { encoding: 'utf8', timeout: 10000 }).trim();
+        const runsData = JSON.parse(raw);
+        const entries = (runsData.entries || [])
+          .filter(e => (e.runAtMs || 0) >= cutoff30d && e.usage)
+          .map(e => ({ ts: e.runAtMs, tokens: e.usage.total_tokens || 0, status: e.status }));
+        if (entries.length) costs[id] = entries;
+      } catch(e) { /* skip */ }
+    }));
+  } catch(e) { console.warn('Could not collect token history:', e.message); }
+
   // ── Gateway Health ────────────────────────────────────────────
   let gateway = { reachable: null, latencyMs: null, version: null, error: null };
   try {
@@ -341,6 +360,7 @@ async function main() {
     disk,
     stats,
     gateway,
+    costs,
   };
 
   // ── Write + Push ───────────────────────────────────────────────
