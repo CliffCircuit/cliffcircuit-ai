@@ -1081,7 +1081,12 @@
       const days = { '0':'Sun','1':'Mon','2':'Tue','3':'Wed','4':'Thu','5':'Fri','6':'Sat' };
       const months = { '1':'Jan','2':'Feb','3':'Mar','4':'Apr','5':'May','6':'Jun','7':'Jul','8':'Aug','9':'Sep','10':'Oct','11':'Nov','12':'Dec' };
 
-      // Every X hours
+      // Every X minutes (*/N * * * *)
+      if (min.startsWith('*/') && hour === '*') {
+        const m = min.slice(2);
+        return `Every ${m} min`;
+      }
+      // Every X hours at specific minute
       if (hour.startsWith('*/')) {
         const h = hour.slice(2);
         return `Every ${h}h` + (min !== '0' ? ` at :${min.padStart(2,'0')}` : '');
