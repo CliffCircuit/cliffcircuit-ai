@@ -1039,6 +1039,7 @@
       if (pdf==='today') dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=todayStart && new Date(i.publishedAt)<=todayEnd);
       else if (pdf==='yesterday') dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=yStart && new Date(i.publishedAt)<yEnd);
       else dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=new Date(Date.now()-parseInt(pdf)*60*60*1000));
+      dateFiltered.sort((a,b) => new Date(b.publishedAt) - new Date(a.publishedAt));
       const items = dateFiltered.filter(i => {
         const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
         const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
