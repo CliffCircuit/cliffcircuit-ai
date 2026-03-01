@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T10:50:10.334Z",
+  "generatedAt": "2026-03-01T10:56:58.753Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -376,6 +376,32 @@
         "keywordInFirst100Words": true
       },
       "cliffNotes": "Angle: plumbers lose emergency leads not from bad service but from physical unavailability during jobs. Real failure moment: first auto-reply workflow had no triage — generated noise across all missed calls, not just real leads. Fixed with two-question triage (emergency vs scheduled, then actively happening vs can wait). Key differentiator: 72-hour post-job follow-up taps the post-emergency mindset when homeowners are most receptive. The dispatcher section (avoiding false emergency dispatches) is a practical angle shop owners will immediately recognize."
+    },
+    {
+      "id": "20260301-105400-cleaning",
+      "status": "draft",
+      "createdAt": "2026-03-01T10:54:00.000Z",
+      "publishAfter": "2026-03-01T16:54:00.000Z",
+      "title": "Cleaning clients don't cancel. They drift — and an AI catches it.",
+      "slug": "cleaning-service-silent-churn",
+      "excerpt": "House cleaning clients are the politest churners in any service business. They don't complain. They don't cancel. They just quietly stop rebooking — and by the time you notice, they've been with someone else for six weeks. I mapped where the drift actually starts, and what three messages at the right moment can do about it.",
+      "wordCount": 1820,
+      "tweetHook": "House cleaning clients don't cancel.\n\nThey just stop rebooking — no complaint, no explanation, no goodbye.\n\nBy the time you notice the gap in the schedule, they've been with someone else for six weeks.\n\nHere's the drift pattern, and the 3-message fix:\n\nARTICLE_URL_PLACEHOLDER",
+      "heroImagePrompt": "Isometric illustration of a tidy living room with a cleaning kit — mop, bucket, spray bottles — sitting unused by the door, a smartphone nearby showing an empty booking calendar with days crossing off, soft warm home lighting, no people, no text, clean geometric style, vivid colors",
+      "seoTitle": "Cleaning clients don't cancel. They drift. Here's the fix.",
+      "seoDescription": "Residential cleaning companies lose recurring clients silently — no cancellation, no complaint. Here's how to spot the drift before it becomes churn, and automate the fix.",
+      "selfEditChecklist": {
+        "excerptLength": true,
+        "h2Headers": true,
+        "noCorporateSpeak": true,
+        "realMomentIncluded": true,
+        "tweetHookReady": true,
+        "seoTitleUnder60": true,
+        "keywordInFirst100Words": true
+      },
+      "cliffNotes": "Angle: cleaning churn is invisible because clients are polite — they drift rather than cancel. Real failure moment: naive frequency-alert had too many false positives; fixed with per-client history context to set dynamic thresholds. Unexpected insight: the graceful-exit third message outperforms discount follow-ups by keeping lapsed clients warm for referrals. Data cleanup framing is honest — this is the actual prerequisite most operators skip.",
+      "heroImage": "/blog/images/cleaning-service-silent-churn.png",
+      "heroImageGenerated": true
     }
   ],
   "crons": [
@@ -383,39 +409,24 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "5m ago",
-      "lastRunMs": 1772361926068,
-      "nextRun": "in 0m",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772362200016,
+      "nextRun": "in 2m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13149
-    },
-    {
-      "name": "samantha-draft",
-      "schedule": "every",
-      "status": "ok",
-      "lastRun": "2h ago",
-      "lastRunMs": 1772355244571,
-      "nextRun": "in 4m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
-      "lastRunTokens": 46934
+      "lastRunTokens": 13076
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "5m ago",
+      "lastRun": "12m ago",
       "lastRunMs": 1772361900018,
-      "nextRun": "in 10m",
+      "nextRun": "in 3m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -453,6 +464,21 @@
       "thinking": null,
       "description": "Checks both @CliffCircuit and @timharris707 on X/Twitter — tracks follower counts, recent post engagement, mentions, and any replies that need a response.",
       "lastRunTokens": 98955
+    },
+    {
+      "name": "samantha-draft",
+      "schedule": "every",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772362444595,
+      "nextRun": "in 2h",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
+      "lastRunTokens": 43901
     },
     {
       "name": "pipeline-health-check",
@@ -598,9 +624,9 @@
       "jobName": "social-monitoring"
     },
     "samantha": {
-      "totalTokens": 46934,
-      "inputTokens": 12,
-      "outputTokens": 12575,
+      "totalTokens": 43901,
+      "inputTokens": 10,
+      "outputTokens": 6636,
       "jobName": "samantha-draft"
     },
     "main": {
@@ -612,22 +638,22 @@
   },
   "sessions": [
     {
-      "label": "Telegram",
-      "key": "agent:main:teleg...624734",
-      "used": 36000,
-      "limit": 200000,
-      "pct": 18,
-      "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772362211001
-    },
-    {
       "label": "Main",
       "key": "agent:main:main",
       "used": 36000,
       "limit": 200000,
       "pct": 18,
       "model": "claude-opus-4-6",
-      "lastActiveAt": 1772362151001
+      "lastActiveAt": 1772362559388
+    },
+    {
+      "label": "Telegram",
+      "key": "agent:main:teleg...624734",
+      "used": 42000,
+      "limit": 200000,
+      "pct": 21,
+      "model": "claude-sonnet-4-6",
+      "lastActiveAt": 1772362559388
     }
   ],
   "sites": [
