@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T20:04:27.778Z",
+  "generatedAt": "2026-03-01T20:06:23.380Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -1019,7 +1019,10 @@
     },
     {
       "id": "20260301-104300-electrician",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T12:06:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T15:36:00-08:00",
       "createdAt": "2026-03-01T10:43:00-08:00",
       "title": "The permit silence that costs electricians their best referrals",
       "slug": "electrician-permit-communication-gap",
@@ -1044,7 +1047,10 @@
     },
     {
       "id": "20260301-104301-physicaltherapy",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "poor_title",
+      "rejectionNote": "Title is 67 characters — exceeds the 60-character limit. Samantha needs to shorten significantly. Suggested direction: 'PT dropouts: AI spots the signal at session 3' (48 chars) or 'PT patients quit at session 6. AI catches it at 3' (48 chars). The title is currently too long and uses multiple ideas; tighten to a single clear claim.",
+      "rejectedAt": "2026-03-01T12:06:00-08:00",
       "createdAt": "2026-03-01T10:43:00-08:00",
       "title": "PT patients quit at session 6. An AI sees it coming at session 3.",
       "slug": "physical-therapy-care-plan-dropout",
@@ -1069,7 +1075,10 @@
     },
     {
       "id": "20260301-104302-doggrooming",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "poor_title",
+      "rejectionNote": "Title is 70 characters — exceeds the 60-character limit. Samantha needs to tighten significantly. Suggested direction: 'Dog groomers: the 8-week rebooking gap' (39 chars) or 'Groomers lose regulars in the 8-week gap' (40 chars). Remove 'Here's the fix' — keep the title focused on the problem and the window, not the solution.",
+      "rejectedAt": "2026-03-01T12:06:00-08:00",
       "createdAt": "2026-03-01T10:43:00-08:00",
       "title": "Dog groomers lose regular clients in the 8-week gap. Here's the fix.",
       "slug": "dog-grooming-rebooking-gap",
@@ -1094,7 +1103,10 @@
     },
     {
       "id": "20260301-104303-flooring",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "poor_title",
+      "rejectionNote": "Title is 69 characters — exceeds the 60-character limit. The two-part structure is clear but needs tightening. Suggested direction: 'Flooring customers decide day 3. Contractors call day 10' (55 chars) or 'Flooring: customers decide in 3 days. You call in 10' (51 chars). Current version works as a headline but is too long for the constraint.",
+      "rejectedAt": "2026-03-01T12:06:00-08:00",
       "createdAt": "2026-03-01T10:43:00-08:00",
       "title": "Flooring customers decide on day 3. Most contractors call on day 10.",
       "slug": "flooring-contractor-estimate-follow-up",
@@ -1119,7 +1131,10 @@
     },
     {
       "id": "20260301-104304-autodetail",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "poor_title",
+      "rejectionNote": "Title is 74 characters — exceeds the 60-character limit significantly. The 'An AI makes sure' framing is wordier than needed; focus on the business problem instead. Suggested direction: 'Detail shops do great work once. They lose the repeat booking' (59 chars) or 'Auto detail shops: great work once, no repeat system' (51 chars). The core tension is clear but title is bloated.",
+      "rejectedAt": "2026-03-01T12:06:00-08:00",
       "createdAt": "2026-03-01T10:43:00-08:00",
       "title": "Detail shops do great work once. An AI makes sure they get called back.",
       "slug": "auto-detail-repeat-booking-gap",
@@ -1149,7 +1164,7 @@
       "schedule": "* * * * *",
       "status": "ok",
       "lastRun": "2m ago",
-      "lastRunMs": 1772395360218,
+      "lastRunMs": 1772395455372,
       "nextRun": "in 1m",
       "agent": "scout",
       "consecutiveErrors": 0,
@@ -1157,22 +1172,7 @@
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13068
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "0 */2 * * *",
-      "status": "error",
-      "lastRun": "1h ago",
-      "lastRunMs": 1772391809288,
-      "nextRun": "in 0m",
-      "agent": "main",
-      "consecutiveErrors": 1,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": "low",
-      "description": "## STEP 0 — SELF-HEALING CLEANUP (run first, always)",
-      "lastRunTokens": 103182
+      "lastRunTokens": 13080
     },
     {
       "name": "social-monitoring",
@@ -1180,7 +1180,7 @@
       "status": "ok",
       "lastRun": "4h ago",
       "lastRunMs": 1772381300055,
-      "nextRun": "in 3m",
+      "nextRun": "in 1m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -1193,9 +1193,9 @@
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "4m ago",
+      "lastRun": "6m ago",
       "lastRunMs": 1772395200013,
-      "nextRun": "in 11m",
+      "nextRun": "in 9m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -1210,7 +1210,7 @@
       "status": "ok",
       "lastRun": "1h ago",
       "lastRunMs": 1772390608875,
-      "nextRun": "in 39m",
+      "nextRun": "in 37m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
@@ -1225,7 +1225,7 @@
       "status": "ok",
       "lastRun": "4h ago",
       "lastRunMs": 1772380903656,
-      "nextRun": "in 56m",
+      "nextRun": "in 54m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "498ea0a9-f2c2-49f2-bd78-73c683af9d82",
@@ -1238,9 +1238,9 @@
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "ok",
-      "lastRun": "1m ago",
+      "lastRun": "3m ago",
       "lastRunMs": 1772395405636,
-      "nextRun": "in 58m",
+      "nextRun": "in 56m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -1248,6 +1248,21 @@
       "thinking": null,
       "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
       "lastRunTokens": 66967
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "0 */2 * * *",
+      "status": "error",
+      "lastRun": "1m ago",
+      "lastRunMs": 1772395489896,
+      "nextRun": "in 2h",
+      "agent": "main",
+      "consecutiveErrors": 2,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": "low",
+      "description": "## STEP 0 — SELF-HEALING CLEANUP (run first, always)",
+      "lastRunTokens": 74550
     },
     {
       "name": "samantha-cliff-tweets",
@@ -1268,7 +1283,7 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "1m ago",
+      "lastRun": "3m ago",
       "lastRunMs": 1772395377330,
       "nextRun": "in 4h",
       "agent": "scout",
@@ -1377,28 +1392,28 @@
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "main": {
-      "totalTokens": 103182,
-      "inputTokens": 87,
-      "outputTokens": 6352,
-      "jobName": "cliff-article-review"
-    },
     "samantha": {
       "totalTokens": 92582,
       "inputTokens": 19,
       "outputTokens": 28822,
       "jobName": "samantha-draft"
+    },
+    "main": {
+      "totalTokens": 80197,
+      "inputTokens": 81,
+      "outputTokens": 2584,
+      "jobName": "morning-check-in"
     }
   },
   "sessions": [
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 61000,
+      "used": 81000,
       "limit": 200000,
-      "pct": 31,
+      "pct": 41,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772395468403
+      "lastActiveAt": 1772395583988
     },
     {
       "label": "Main",
@@ -1407,7 +1422,7 @@
       "limit": 200000,
       "pct": 31,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772395408403
+      "lastActiveAt": 1772395523988
     }
   ],
   "sites": [
