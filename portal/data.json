@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T13:00:47.624Z",
+  "generatedAt": "2026-03-01T13:05:15.850Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -212,7 +212,10 @@
     },
     {
       "id": "20260301-035513-pool",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "missing_htmlContent",
+      "rejectionNote": "htmlContent field is empty or missing. Article body must be written and populated before approval.",
+      "rejectedAt": "2026-03-01T05:00:00-08:00",
       "createdAt": "2026-03-01T03:55:13Z",
       "publishAfter": "2026-03-01T09:55:13Z",
       "title": "The $2K/month leak in every pool route — and the AI that plugs it",
@@ -234,7 +237,10 @@
     },
     {
       "id": "20260301-035513-pest",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "missing_htmlContent",
+      "rejectionNote": "htmlContent field is empty or missing. Article body must be written and populated before approval.",
+      "rejectedAt": "2026-03-01T05:00:00-08:00",
       "createdAt": "2026-03-01T03:55:13Z",
       "publishAfter": "2026-03-01T09:55:13Z",
       "title": "Pest control loses half its leads before lunch. Here's the AI fix.",
@@ -256,7 +262,10 @@
     },
     {
       "id": "20260301-035513-dental",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "missing_htmlContent",
+      "rejectionNote": "htmlContent field is empty or missing. Article body must be written and populated before approval.",
+      "rejectedAt": "2026-03-01T05:00:00-08:00",
       "createdAt": "2026-03-01T03:55:13Z",
       "publishAfter": "2026-03-01T09:55:13Z",
       "title": "Why dental no-shows are predictable — and how to automate the fix",
@@ -278,7 +287,10 @@
     },
     {
       "id": "20260301-040600-autorepair",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T05:00:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T08:24:00-08:00",
       "createdAt": "2026-03-01T04:09:29.059Z",
       "publishAfter": "2026-03-01T10:09:29.059Z",
       "title": "Auto repair shops ghost customers. An AI follow-up agent doesn't.",
@@ -305,7 +317,10 @@
     },
     {
       "id": "20260301-20260301045555-landscaping",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T05:00:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T09:12:00-08:00",
       "createdAt": "2026-03-01T04:55:55.001Z",
       "publishAfter": "2026-03-01T10:55:55.001Z",
       "title": "Landscaping companies lose their best accounts in October. An AI sees it coming.",
@@ -332,7 +347,10 @@
     },
     {
       "id": "20260301-1772348178643-restaurant",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T05:00:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T10:00:00-08:00",
       "createdAt": "2026-03-01T06:56:18.643Z",
       "publishAfter": "2026-03-01T12:56:18.643Z",
       "title": "Most restaurants ignore their guest list. AI doesn't.",
@@ -359,7 +377,10 @@
     },
     {
       "id": "20260301-085400-plumbing",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T05:00:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T10:48:00-08:00",
       "createdAt": "2026-03-01T08:54:00Z",
       "publishAfter": "2026-03-01T14:54:00Z",
       "title": "Plumbers miss emergency calls while they're on jobs. An AI doesn't.",
@@ -386,7 +407,10 @@
     },
     {
       "id": "20260301-105400-cleaning",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T05:00:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T11:36:00-08:00",
       "createdAt": "2026-03-01T10:54:00.000Z",
       "publishAfter": "2026-03-01T16:54:00.000Z",
       "title": "Cleaning clients don't cancel. They drift — and an AI catches it.",
@@ -576,46 +600,46 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "6m ago",
-      "lastRunMs": 1772369700023,
-      "nextRun": "in 1m",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772370035799,
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13086
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "30m ago",
-      "lastRunMs": 1772368250704,
-      "nextRun": "in 1m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": null,
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 59264
+      "lastRunTokens": 13079
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "16m ago",
-      "lastRunMs": 1772369100019,
-      "nextRun": "in 1m",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772370000028,
+      "nextRun": "in 10m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
       "model": "anthropic/claude-sonnet-4-6",
       "thinking": null,
       "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 53701
+      "lastRunTokens": 53665
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "ok",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772370052898,
+      "nextRun": "in 25m",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": null,
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": 62477
     },
     {
       "name": "samantha-draft",
@@ -623,7 +647,7 @@
       "status": "ok",
       "lastRun": "1h ago",
       "lastRunMs": 1772365940051,
-      "nextRun": "in 52m",
+      "nextRun": "in 47m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
@@ -696,7 +720,7 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "59m ago",
+      "lastRun": "1h ago",
       "lastRunMs": 1772366498739,
       "nextRun": "in 3h",
       "agent": "scout",
@@ -711,7 +735,7 @@
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
-      "lastRun": "54m ago",
+      "lastRun": "58m ago",
       "lastRunMs": 1772366826419,
       "nextRun": "in 3h",
       "agent": "scout",
@@ -805,20 +829,29 @@
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "main": {
-      "totalTokens": 59264,
-      "inputTokens": 6,
-      "outputTokens": 2067,
-      "jobName": "cliff-article-review"
-    },
     "samantha": {
       "totalTokens": 62707,
       "inputTokens": 12,
       "outputTokens": 12106,
       "jobName": "samantha-draft"
+    },
+    "main": {
+      "totalTokens": 62477,
+      "inputTokens": 14,
+      "outputTokens": 5114,
+      "jobName": "cliff-article-review"
     }
   },
   "sessions": [
+    {
+      "label": "Telegram",
+      "key": "agent:main:teleg...624734",
+      "used": 28000,
+      "limit": 200000,
+      "pct": 14,
+      "model": "claude-sonnet-4-6",
+      "lastActiveAt": 1772370256495
+    },
     {
       "label": "Main",
       "key": "agent:main:main",
@@ -826,16 +859,7 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772369688227
-    },
-    {
-      "label": "Telegram",
-      "key": "agent:main:teleg...624734",
-      "used": 27000,
-      "limit": 200000,
-      "pct": 14,
-      "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772369568227
+      "lastActiveAt": 1772370256495
     }
   ],
   "sites": [
