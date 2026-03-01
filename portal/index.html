@@ -1829,7 +1829,8 @@
 
       // Context dot — green <70%, yellow 70-89%, red 90%+
       const sessions = d.sessions || [];
-      const mainSession = sessions.find(s => s.label === 'Telegram' || s.label === 'Main');
+      // Use highest context session — that's the one most likely to need attention
+      const mainSession = sessions.length ? sessions.reduce((a,b) => (b.pct||0) > (a.pct||0) ? b : a) : null;
       const pct = mainSession ? mainSession.pct : 0;
       const ctxDot = document.getElementById('nav-ctx-dot');
       const ctxLabel = ctxDot?.nextElementSibling;
