@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T16:03:48.408Z",
+  "generatedAt": "2026-03-01T16:11:05.640Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -662,7 +662,10 @@
     },
     {
       "id": "20260301-075200-weddingvenue",
-      "status": "draft",
+      "status": "rejected",
+      "rejectionReason": "poor_title",
+      "rejectionNote": "Title is 76 characters — exceeds the 60-character limit. Samantha needs to shorten it significantly. Suggested direction: 'Wedding venues lose tours to the 2-week decision window' (56 chars) or 'Venues follow up once. Couples decide in 2 weeks.' (49 chars). Title must be specific, under 60 chars, and match the article's core thesis (follow-up gap in the 2-week decision window).",
+      "rejectedAt": "2026-03-01T08:06:00-08:00",
       "createdAt": "2026-03-01T07:52:00-08:00",
       "title": "Wedding venues follow up once. Couples decide in 2 weeks. Here's the AI fix.",
       "slug": "wedding-venue-booking-follow-up-gap",
@@ -687,7 +690,9 @@
     },
     {
       "id": "tim-20260302-1",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T08:06:00-08:00",
+      "approvedBy": "cliff-cron",
       "account": "timharris707",
       "createdAt": "2026-03-01T08:01:00-08:00",
       "scheduledFor": "2026-03-02T08:00:00-08:00",
@@ -696,7 +701,9 @@
     },
     {
       "id": "tim-20260302-2",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T08:06:00-08:00",
+      "approvedBy": "cliff-cron",
       "account": "timharris707",
       "createdAt": "2026-03-01T08:01:00-08:00",
       "scheduledFor": "2026-03-02T11:00:00-08:00",
@@ -705,7 +712,9 @@
     },
     {
       "id": "tim-20260302-3",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T08:06:00-08:00",
+      "approvedBy": "cliff-cron",
       "account": "timharris707",
       "createdAt": "2026-03-01T08:01:00-08:00",
       "scheduledFor": "2026-03-02T13:00:00-08:00",
@@ -714,7 +723,9 @@
     },
     {
       "id": "tim-20260302-4",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T08:06:00-08:00",
+      "approvedBy": "cliff-cron",
       "account": "timharris707",
       "createdAt": "2026-03-01T08:01:00-08:00",
       "scheduledFor": "2026-03-02T16:00:00-08:00",
@@ -723,7 +734,9 @@
     },
     {
       "id": "tim-20260302-5",
-      "status": "draft",
+      "status": "approved",
+      "approvedAt": "2026-03-01T08:06:00-08:00",
+      "approvedBy": "cliff-cron",
       "account": "timharris707",
       "createdAt": "2026-03-01T08:01:00-08:00",
       "scheduledFor": "2026-03-02T19:00:00-08:00",
@@ -733,102 +746,12 @@
   ],
   "crons": [
     {
-      "name": "samantha-tim-posts",
-      "schedule": "0 8,13,18 * * *",
-      "status": "ok",
-      "lastRun": "14h ago",
-      "lastRunMs": 1772330461770,
-      "nextRun": "in 4m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "498ea0a9-f2c2-49f2-bd78-73c683af9d82",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Posts scheduled content to @timharris707 on X — pulls from Tim's approved post queue and publishes at the right time.",
-      "lastRunTokens": 22688
-    },
-    {
-      "name": "portal-data-refresh",
-      "schedule": "*/5 * * * *",
-      "status": "ok",
-      "lastRun": "6m ago",
-      "lastRunMs": 1772380662875,
-      "nextRun": "in 4m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13132
-    },
-    {
-      "name": "samantha-cliff-tweets",
-      "schedule": "0 8,15 * * *",
-      "status": "error",
-      "lastRun": "5h ago",
-      "lastRunMs": 1772363884290,
-      "nextRun": "in 4m",
-      "agent": "samantha",
-      "consecutiveErrors": 1,
-      "id": "8cd72f3d-03b2-4160-81b2-bae92ee72620",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Posts scheduled tweets to @CliffCircuit on X — pulls from the approved content queue and publishes Cliff's voice content on schedule.",
-      "lastRunTokens": 48352
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "33m ago",
-      "lastRunMs": 1772379055962,
-      "nextRun": "in 4m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": null,
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 65601
-    },
-    {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "19m ago",
-      "lastRunMs": 1772379900015,
-      "nextRun": "in 4m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 61184
-    },
-    {
-      "name": "morning-check-in",
-      "schedule": "0 8 * * *",
-      "status": "ok",
-      "lastRun": "1d ago",
-      "lastRunMs": 1772294400021,
-      "nextRun": "in 4m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "fbd92dff-ce46-48d2-8bfd-6893c75b1031",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Sends Tim a good morning briefing — covers the day's calendar events, any urgent emails, weather if relevant, and a quick summary of what happened overnight.",
-      "lastRunTokens": 23830
-    },
-    {
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
       "lastRun": "4h ago",
       "lastRunMs": 1772366498739,
-      "nextRun": "in 3m",
+      "nextRun": "in 10m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
@@ -841,9 +764,9 @@
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "error",
-      "lastRun": "58m ago",
+      "lastRun": "1h ago",
       "lastRunMs": 1772377560904,
-      "nextRun": "in 1m",
+      "nextRun": "in 8m",
       "agent": "main",
       "consecutiveErrors": 1,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -853,12 +776,27 @@
       "lastRunTokens": null
     },
     {
+      "name": "portal-data-refresh",
+      "schedule": "*/5 * * * *",
+      "status": "ok",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772381014531,
+      "nextRun": "in 6m",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
+      "lastRunTokens": 13155
+    },
+    {
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
       "lastRun": "4h ago",
       "lastRunMs": 1772366826419,
-      "nextRun": "in 3m",
+      "nextRun": "in 4m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -868,12 +806,42 @@
       "lastRunTokens": 13904
     },
     {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "10m ago",
+      "lastRunMs": 1772380849790,
+      "nextRun": "in 4m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 62211
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "error",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772381179988,
+      "nextRun": "in 19m",
+      "agent": "main",
+      "consecutiveErrors": 1,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": null,
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": null
+    },
+    {
       "name": "weekly-report",
       "schedule": "0 9 * * 0",
       "status": "idle",
       "lastRun": null,
       "lastRunMs": null,
-      "nextRun": "in 56m",
+      "nextRun": "in 49m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "bbbd846b-ecb6-420f-822b-4c95e69a6d4d",
@@ -886,7 +854,7 @@
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "11m ago",
+      "lastRun": "19m ago",
       "lastRunMs": 1772380340089,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -896,6 +864,36 @@
       "thinking": "low",
       "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
       "lastRunTokens": 74266
+    },
+    {
+      "name": "samantha-tim-posts",
+      "schedule": "0 8,13,18 * * *",
+      "status": "ok",
+      "lastRun": "9m ago",
+      "lastRunMs": 1772380903656,
+      "nextRun": "in 5h",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "498ea0a9-f2c2-49f2-bd78-73c683af9d82",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Posts scheduled content to @timharris707 on X — pulls from Tim's approved post queue and publishes at the right time.",
+      "lastRunTokens": 68508
+    },
+    {
+      "name": "samantha-cliff-tweets",
+      "schedule": "0 8,15 * * *",
+      "status": "error",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772381033370,
+      "nextRun": "in 7h",
+      "agent": "samantha",
+      "consecutiveErrors": 2,
+      "id": "8cd72f3d-03b2-4160-81b2-bae92ee72620",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Posts scheduled tweets to @CliffCircuit on X — pulls from the approved content queue and publishes Cliff's voice content on schedule.",
+      "lastRunTokens": 70027
     },
     {
       "name": "evening-check",
@@ -943,6 +941,21 @@
       "lastRunTokens": 22772
     },
     {
+      "name": "morning-check-in",
+      "schedule": "0 8 * * *",
+      "status": "ok",
+      "lastRun": "11m ago",
+      "lastRunMs": 1772380800014,
+      "nextRun": "in 1d",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "fbd92dff-ce46-48d2-8bfd-6893c75b1031",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Sends Tim a good morning briefing — covers the day's calendar events, any urgent emails, weather if relevant, and a quick summary of what happened overnight.",
+      "lastRunTokens": 80197
+    },
+    {
       "name": "tim-thread-3-draft",
       "schedule": "at",
       "status": "idle",
@@ -959,23 +972,23 @@
     }
   ],
   "agentTokens": {
-    "samantha": {
-      "totalTokens": 74266,
-      "inputTokens": 12,
-      "outputTokens": 13286,
-      "jobName": "samantha-draft"
-    },
     "scout": {
       "totalTokens": 39443,
       "inputTokens": 14,
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
+    "samantha": {
+      "totalTokens": 74266,
+      "inputTokens": 12,
+      "outputTokens": 13286,
+      "jobName": "samantha-draft"
+    },
     "main": {
-      "totalTokens": 65601,
-      "inputTokens": 8,
-      "outputTokens": 1681,
-      "jobName": "cliff-article-review"
+      "totalTokens": 80197,
+      "inputTokens": 81,
+      "outputTokens": 2584,
+      "jobName": "morning-check-in"
     }
   },
   "sessions": [
@@ -986,16 +999,16 @@
       "limit": 200000,
       "pct": 86,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772380849016
+      "lastActiveAt": 1772381406250
     },
     {
       "label": "Main",
       "key": "agent:main:main",
       "used": 27000,
       "limit": 200000,
-      "pct": 13,
+      "pct": 14,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772380669016
+      "lastActiveAt": 1772381046250
     }
   ],
   "sites": [
@@ -1028,7 +1041,7 @@
   ],
   "twitter": {
     "cliffFollowers": 7,
-    "cliffPosts": 34,
+    "cliffPosts": 36,
     "timFollowers": 5,
     "timPosts": 12,
     "cliffGrowthToday": 0,
