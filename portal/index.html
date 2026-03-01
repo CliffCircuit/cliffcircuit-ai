@@ -1071,7 +1071,7 @@
     function humanCron(expr) {
       if (!expr || expr === '—') return '—';
       // Handle "every Xh" / "every 2h" style
-      if (expr.startsWith('every')) return expr;
+      if (expr.startsWith('every')) return expr.replace(/^every\s*(\d+)h$/, 'Every $1h').replace(/^every\s*(\d+)m$/, 'Every $1 min') || expr;
       // Handle "in Xd" next run style
       if (expr.startsWith('in ')) return expr;
       // Parse cron: min hour dom mon dow
