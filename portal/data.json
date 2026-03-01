@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T14:30:57.769Z",
+  "generatedAt": "2026-03-01T14:35:11.940Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -623,7 +623,7 @@
     },
     {
       "id": "20260301-055200-moving",
-      "status": "draft",
+      "status": "approved",
       "createdAt": "2026-03-01T05:52:00-08:00",
       "title": "Moving companies bleed jobs between booking and moving day.",
       "slug": "moving-company-booking-cancellation-gap",
@@ -644,7 +644,10 @@
         "seoTitleUnder60": true,
         "keywordInFirst100Words": true
       },
-      "cliffNotes": "Angle: moving companies have TWO revenue gaps — quote response time AND the booking-to-move-day communication silence that causes cancellations. First failure moment: fully automated pre-move sequence read like airline confirmation templates — a Phoenix mover told me immediately it lacked human feel. Fixed with specific job detail in each message. Key differentiator: segmenting cancellation rate by booking lead time (most operators don't track this). Referral layer is underused in moving — everyone tells their network about a move. Fresh vertical, different emotional register from all the home service trades covered previously."
+      "cliffNotes": "Angle: moving companies have TWO revenue gaps — quote response time AND the booking-to-move-day communication silence that causes cancellations. First failure moment: fully automated pre-move sequence read like airline confirmation templates — a Phoenix mover told me immediately it lacked human feel. Fixed with specific job detail in each message. Key differentiator: segmenting cancellation rate by booking lead time (most operators don't track this). Referral layer is underused in moving — everyone tells their network about a move. Fresh vertical, different emotional register from all the home service trades covered previously.",
+      "approvedAt": "2026-03-01T06:31:00-08:00",
+      "approvedBy": "cliff-cron",
+      "scheduledFor": "2026-03-01T12:24:00-08:00"
     }
   ],
   "crons": [
@@ -652,54 +655,54 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "6m ago",
-      "lastRunMs": 1772375100018,
-      "nextRun": "in 1m",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772375445857,
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13142
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "error",
-      "lastRun": "30m ago",
-      "lastRunMs": 1772373666116,
-      "nextRun": "in 1m",
-      "agent": "main",
-      "consecutiveErrors": 1,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": null,
-      "thinking": null,
-      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": null
+      "lastRunTokens": 13098
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "16m ago",
-      "lastRunMs": 1772374500028,
-      "nextRun": "in 1m",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772375400022,
+      "nextRun": "in 10m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
       "model": "anthropic/claude-sonnet-4-6",
       "thinking": null,
       "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 58986
+      "lastRunTokens": 59280
+    },
+    {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "ok",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772375462429,
+      "nextRun": "in 25m",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": null,
+      "thinking": null,
+      "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
+      "lastRunTokens": 65970
     },
     {
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "ok",
-      "lastRun": "7h ago",
+      "lastRun": "8h ago",
       "lastRunMs": 1772348603915,
-      "nextRun": "in 32m",
+      "nextRun": "in 28m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -712,7 +715,7 @@
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "38m ago",
+      "lastRun": "43m ago",
       "lastRunMs": 1772373140077,
       "nextRun": "in 1h",
       "agent": "samantha",
@@ -772,9 +775,9 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "2h ago",
+      "lastRun": "3h ago",
       "lastRunMs": 1772366498739,
-      "nextRun": "in 2h",
+      "nextRun": "in 1h",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
@@ -888,22 +891,13 @@
       "jobName": "samantha-draft"
     },
     "main": {
-      "totalTokens": 43203,
-      "inputTokens": 52,
-      "outputTokens": 3689,
-      "jobName": "pipeline-health-check"
+      "totalTokens": 65970,
+      "inputTokens": 7,
+      "outputTokens": 3444,
+      "jobName": "cliff-article-review"
     }
   },
   "sessions": [
-    {
-      "label": "Telegram",
-      "key": "agent:main:teleg...624734",
-      "used": 147000,
-      "limit": 200000,
-      "pct": 74,
-      "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772375158382
-    },
     {
       "label": "Main",
       "key": "agent:main:main",
@@ -911,7 +905,16 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772375158382
+      "lastActiveAt": 1772375532553
+    },
+    {
+      "label": "Telegram",
+      "key": "agent:main:teleg...624734",
+      "used": 159000,
+      "limit": 200000,
+      "pct": 79,
+      "model": "claude-sonnet-4-6",
+      "lastActiveAt": 1772375532553
     }
   ],
   "sites": [
