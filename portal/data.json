@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T07:06:02.044Z",
+  "generatedAt": "2026-03-01T07:16:50.508Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -354,28 +354,16 @@
   ],
   "crons": [
     {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "3m ago",
-      "nextRun": "in 9m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "description": "You are Samantha, Cliff's content studio agent. This is PHASE 2: PUBLISH. Read AGENTS.md in your workspace (/workspace/samantha/).",
-      "lastRunTokens": 31401
-    },
-    {
       "name": "nightly-git-backup",
       "schedule": "30 23 * * *",
       "status": "ok",
       "lastRun": "1d ago",
-      "nextRun": "in 24m",
+      "nextRun": "in 13m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "248701de-21b3-4c1a-86b6-164a8de04ca3",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "Nightly git backup: cd /Users/openclaw/.openclaw/workspace && git add -A && git commit -m \"Nightly backup: 2026-02-24\" && git push origin main",
       "lastRunTokens": 15376
     },
@@ -383,25 +371,41 @@
       "name": "portal-data-refresh",
       "schedule": "*/30 7-23 * * *",
       "status": "ok",
-      "lastRun": "3m ago",
-      "nextRun": "in 24m",
+      "lastRun": "14m ago",
+      "nextRun": "in 13m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "model": null,
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "Run this command: node /Users/openclaw/.openclaw/workspace/cliffcircuit-portal/generate-data.js",
       "lastRunTokens": 21176
+    },
+    {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "2m ago",
+      "nextRun": "in 13m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "You are Samantha, Cliff's content studio agent. This is PHASE 2: PUBLISH. Read AGENTS.md in your workspace (/workspace/samantha/).",
+      "lastRunTokens": 31497
     },
     {
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
       "lastRun": "3h ago",
-      "nextRun": "in 55m",
+      "nextRun": "in 44m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "Check GitHub for CliffCircuit organization: review any new issues or pull requests, check repository activity, flag any items requiring Tim's attention or approval, monitor for security alerts or impo",
       "lastRunTokens": 24069
     },
@@ -410,11 +414,12 @@
       "schedule": "5 */4 * * *",
       "status": "ok",
       "lastRun": "3h ago",
-      "nextRun": "in 1h",
+      "nextRun": "in 50m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "You are Cliff. Monitor X/Twitter activity for @CliffCircuit and @timharris707.",
       "lastRunTokens": 26786
     },
@@ -422,12 +427,13 @@
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "12m ago",
+      "lastRun": "23m ago",
       "nextRun": "in 2h",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
       "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
       "description": "You are Samantha, Cliff's content studio agent. This is PHASE 1: DRAFT. Read AGENTS.md, SOUL.md, and CLIFF_VOICE.md in your workspace (/workspace/samantha/), then follow the PHASE 1 instructions exact",
       "lastRunTokens": 38121
     },
@@ -435,12 +441,13 @@
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "ok",
-      "lastRun": "3m ago",
+      "lastRun": "13m ago",
       "nextRun": "in 8h",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "You are Cliff. Run a comprehensive pipeline health check and report results to me (this is self-reporting — I am Cliff). Check everything and output a clean report.",
       "lastRunTokens": 43203
     },
@@ -454,6 +461,7 @@
       "consecutiveErrors": 0,
       "id": "498ea0a9-f2c2-49f2-bd78-73c683af9d82",
       "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
       "description": "You are Samantha, Cliff's content studio agent. This is PHASE 3: TIM POSTS. Read TIM_VOICE.md in your workspace (/workspace/samantha/) before doing anything else — it is mandatory. Then draft 5 posts ",
       "lastRunTokens": 22688
     },
@@ -467,6 +475,7 @@
       "consecutiveErrors": 0,
       "id": "fbd92dff-ce46-48d2-8bfd-6893c75b1031",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "Generate daily morning briefing for Tim Harris: Review overnight X activity for @CliffCircuit and @timharris707, check replies/mentions needing response, review scheduled posts for today, flag any err",
       "lastRunTokens": 23830
     },
@@ -480,6 +489,7 @@
       "consecutiveErrors": 0,
       "id": "bbbd846b-ecb6-420f-822b-4c95e69a6d4d",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": "low",
       "description": "Generate weekly report for Tim: Review past 7 days on @CliffCircuit and @timharris707 - follower growth stats, top performing posts by engagement, reply and mention summary, any viral moments, content",
       "lastRunTokens": null
     },
@@ -489,10 +499,11 @@
       "status": "idle",
       "lastRun": null,
       "nextRun": "in 16h",
-      "agent": "main",
+      "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "8cd72f3d-03b2-4160-81b2-bae92ee72620",
-      "model": null,
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
       "description": "You are Samantha, Cliff's content studio agent. This is PHASE 4: CLIFF STANDALONE TWEETS. Read AGENTS.md and CLIFF_VOICE.md in your workspace (/workspace/samantha/) before doing anything else.",
       "lastRunTokens": null
     },
@@ -506,6 +517,7 @@
       "consecutiveErrors": 0,
       "id": "fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5",
       "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
       "description": "Generate evening summary for Tim: Review today's X activity on @CliffCircuit and @timharris707, summarize posts published and engagement received, list any replies needing response, flag any pending i",
       "lastRunTokens": 29370
     },
@@ -513,12 +525,13 @@
       "name": "nightly-extraction",
       "schedule": "0 23 * * *",
       "status": "ok",
-      "lastRun": "6m ago",
+      "lastRun": "17m ago",
       "nextRun": "in 1d",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "763a67ae-49b6-4bd7-82ad-5cac8510352a",
       "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
       "description": "Review today's conversations and extract durable facts. For each entity file under /Users/openclaw/.openclaw/workspace/knowledge-graph/: READ the existing file first, then APPEND new facts only — neve",
       "lastRunTokens": 39443
     },
@@ -532,22 +545,23 @@
       "consecutiveErrors": 0,
       "id": "586ef3eb-f39e-4a5a-97d6-ab45b29a9f32",
       "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "high",
       "description": "You are Samantha, Cliff's content studio agent. This is a special one-time job: draft a long-form X thread for @timharris707 titled '30 Days With CliffCircuit'.",
       "lastRunTokens": null
     }
   ],
   "agentTokens": {
-    "samantha": {
-      "totalTokens": 38121,
-      "inputTokens": 9,
-      "outputTokens": 7230,
-      "jobName": "samantha-draft"
-    },
     "main": {
       "totalTokens": 43203,
       "inputTokens": 52,
       "outputTokens": 3689,
       "jobName": "pipeline-health-check"
+    },
+    "samantha": {
+      "totalTokens": 38121,
+      "inputTokens": 9,
+      "outputTokens": 7230,
+      "jobName": "samantha-draft"
     }
   },
   "sites": [
