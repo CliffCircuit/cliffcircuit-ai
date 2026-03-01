@@ -271,6 +271,13 @@
       </div>
 
       <div class="mb-8">
+        <h2 class="text-base font-semibold text-white mb-4">Live Sessions</h2>
+        <div id="live-sessions-list" class="space-y-3">
+          <div class="text-gray-600 text-sm">Loading...</div>
+        </div>
+      </div>
+
+      <div class="mb-8">
         <h2 class="text-base font-semibold text-white mb-4">Cron Jobs</h2>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
@@ -396,11 +403,8 @@
               <span class="pill bg-blue-950 text-blue-300">Cloudflare</span>
             </div>
 
-            <!-- Live Sessions -->
-            <div id="cliff-sessions" class="mb-3 hidden">
-              <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Live Sessions</div>
-              <div id="cliff-sessions-list" class="space-y-2"></div>
-            </div>
+            <!-- Live Sessions moved to System Health tab -->
+            <div id="cliff-sessions" class="hidden"></div>
             <!-- Job errors -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
               <span id="cliff-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
@@ -1092,6 +1096,36 @@
     }
 
     function renderHealth(d) {
+      // Live Sessions
+      const sessions = d.sessions || [];
+      const sessionsEl = document.getElementById('live-sessions-list');
+      if (sessionsEl) {
+        if (sessions.length === 0) {
+          sessionsEl.innerHTML = '<div class="text-gray-600 text-sm">No active sessions</div>';
+        } else {
+          sessionsEl.innerHTML = sessions.map(s => {
+            const barColor = s.pct >= 75 ? '#ef4444' : s.pct >= 50 ? '#facc15' : '#34d399';
+            const pctColor = s.pct >= 75 ? 'text-red-400' : s.pct >= 50 ? 'text-yellow-400' : 'text-green-400';
+            const dotColor = s.pct >= 75 ? 'bg-red-400' : s.pct >= 50 ? 'bg-yellow-400' : 'bg-green-400';
+            const status = s.pct >= 75 ? 'Reset soon' : s.pct >= 50 ? 'Getting there' : 'Healthy';
+            const age = s.lastActiveAt ? timeAgo(s.lastActiveAt) : '—';
+            return `<div class="card p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-white font-semibold text-sm">${esc(s.label)}</span>
+                <span class="${pctColor} font-semibold text-sm">${s.pct}% &mdash; <span class="inline-block w-2 h-2 rounded-full ${dotColor} mr-1"></span>${status}</span>
+              </div>
+              <div class="bg-gray-700 rounded-full h-1.5 mb-2">
+                <div class="h-1.5 rounded-full transition-all" style="width:${s.pct}%;background:${barColor}"></div>
+              </div>
+              <div class="flex justify-between text-xs text-gray-500">
+                <span>${Math.round(s.used/1000)}k / ${Math.round(s.limit/1000)}k tokens</span>
+                <span class="session-age" data-ts="${s.lastActiveAt||''}">${age}</span>
+              </div>
+            </div>`;
+          }).join('');
+        }
+      }
+
       const crons = d.crons||[];
       const errs = crons.filter(c=>c.status==='error').length;
       const dot = document.getElementById('system-dot');
