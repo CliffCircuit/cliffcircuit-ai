@@ -507,25 +507,34 @@
     function fmtScheduled(item) {
       const s = item.scheduledFor;
       const account = item.account || 'cliffcircuit';
-      // Tim posts have HH:MM scheduled times
+
       if (s) {
-        const m = s.match(/^(\d{1,2}):(\d{2})$/);
-        if (m) {
-          const h = parseInt(m[1]), min = m[2];
+        // HH:MM format (e.g. "08:00")
+        const hmMatch = s.match(/^(\d{1,2}):(\d{2})$/);
+        if (hmMatch) {
+          const h = parseInt(hmMatch[1]), min = hmMatch[2];
           const ampm = h >= 12 ? 'PM' : 'AM';
           const h12 = h % 12 || 12;
-          // Check if this time has passed today
-          const ptNow = new Date(Date.now() - 8*60*60*1000);
-          const ptH = ptNow.getUTCHours(), ptM = ptNow.getUTCMinutes();
-          const isPast = (h < ptH) || (h === ptH && parseInt(min) <= ptM);
-          const timeStr = `${h12}:${min} ${ampm} PT`;
-          return isPast
-            ? `<span class="text-gray-500">${timeStr} <span class="text-xs">(overdue)</span></span>`
-            : `<span class="text-green-400">${timeStr}</span>`;
+          return `<span class="text-green-400">${h12}:${min} ${ampm} PT</span>`;
         }
-        if (s.includes('T')) return relTime(s);
+
+        // Full ISO timestamp (e.g. "2026-03-01T08:00:00-08:00")
+        if (s.includes('T')) {
+          const d = new Date(s);
+          const now = Date.now();
+          const isPast = d.getTime() < now;
+          // Format as "Sun Mar 1, 8:00 AM" 
+          const formatted = d.toLocaleString('en-US', {
+            weekday: 'short', month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles'
+          }) + ' PT';
+          return isPast
+            ? `<span class="text-gray-500 text-xs">${formatted} <span class="opacity-60">(overdue)</span></span>`
+            : `<span class="text-green-400 text-xs">${formatted}</span>`;
+        }
       }
-      // Articles — show "Next publish cycle"
+
+      // Articles with no scheduled time
       if (account !== 'timharris707') return '<span class="text-gray-500 text-xs">Next publish cycle</span>';
       return '—';
     }
