@@ -373,10 +373,11 @@
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1" id="cliff-ctx-title">Live Session</div>
                 <div id="cliff-ctx-bar-wrap" class="hidden">
-                  <div class="flex justify-between items-center">
-                    <span id="cliff-ctx-pct" class="text-white text-sm font-semibold"></span>
+                  <div id="cliff-ctx-top" class="text-white text-sm font-semibold mb-0"></div>
+                  <div class="flex justify-between items-center text-xs mt-1 mb-1">
+                    <span id="cliff-ctx-label" class="text-gray-400"></span>
+                    <span id="cliff-ctx-pct" class="font-semibold"></span>
                   </div>
-                  <div class="text-gray-500 text-xs mb-1" id="cliff-ctx-label"></div>
                   <div class="bg-gray-700 rounded-full h-1.5">
                     <div id="cliff-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
                   </div>
@@ -473,10 +474,11 @@
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1" id="samantha-ctx-title">Live Session</div>
                 <div id="samantha-ctx-bar-wrap" class="hidden">
-                  <div class="flex justify-between items-center">
-                    <span id="samantha-ctx-pct" class="text-white text-sm font-semibold"></span>
+                  <div id="samantha-ctx-top" class="text-white text-sm font-semibold mb-0"></div>
+                  <div class="flex justify-between items-center text-xs mt-1 mb-1">
+                    <span id="samantha-ctx-label" class="text-gray-400"></span>
+                    <span id="samantha-ctx-pct" class="font-semibold"></span>
                   </div>
-                  <div class="text-gray-500 text-xs mb-1" id="samantha-ctx-label"></div>
                   <div class="bg-gray-700 rounded-full h-1.5">
                     <div id="samantha-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
                   </div>
@@ -864,8 +866,10 @@
           if (el('ctx-title')) el('ctx-title').textContent = 'Live Session';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-          if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy'); el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
-          if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
+          if (el('ctx-top')) el('ctx-top').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy');
+          if (el('ctx-top')) el('ctx-top').className = `text-sm font-semibold mb-0 ${pctColor}`;
+          if (el('ctx-label')) { el('ctx-label').textContent = tokLabel; }
+          if (el('ctx-pct')) { el('ctx-pct').textContent = ''; }
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = snapshotAge(generatedTs); if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs; }
         } else {
@@ -879,13 +883,15 @@
             const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
             const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
             const tokLabel = (tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens) + ' tokens';
+            const MAX_TOK_LABEL = Math.round(MAX_TOKENS/1000) + 'K tokens';
             if (el('ctx-title')) el('ctx-title').textContent = 'Last Run';
             if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
             if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-            if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
+            if (el('ctx-top')) { el('ctx-top').textContent = MAX_TOK_LABEL; el('ctx-top').className = 'text-white text-sm font-semibold mb-0'; }
             if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
+            if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold ${pctColor}`; }
             if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
-            if (el('ctx-sublabel')) el('ctx-sublabel').textContent = 'Last run usage';
+            if (el('ctx-sublabel')) el('ctx-sublabel').textContent = 'last run usage';
           }
         }
 
