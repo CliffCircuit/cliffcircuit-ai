@@ -186,9 +186,9 @@
           </div>
 
           <!-- MIDDLE: On Deck — next piece of content scheduled -->
-          <div class="card overflow-hidden flex-shrink-0" style="width:260px; background: linear-gradient(135deg, #0f172a 0%, #0d1f1a 100%);">
+          <div class="card overflow-hidden flex-shrink-0 cursor-pointer hover:border-teal-800 transition-colors" id="on-deck-card" style="width:260px; background: linear-gradient(135deg, #0f172a 0%, #0d1f1a 100%); border-color: #1f2937;" onclick="onDeckClick()">
             <div class="p-6 flex flex-col h-full">
-              <div class="text-xs font-semibold text-teal-400 uppercase tracking-widest mb-4">On Deck</div>
+              <div class="flex items-center justify-between mb-4"><div class="text-xs font-semibold text-teal-400 uppercase tracking-widest">On Deck</div><span class="text-xs text-gray-600 hover:text-teal-400 transition-colors" id="on-deck-view-hint">view →</span></div>
               <!-- Next item preview -->
               <div id="on-deck-empty" class="text-gray-600 text-sm">Nothing scheduled</div>
               <div id="on-deck-content" class="hidden flex-1 flex flex-col">
@@ -1187,6 +1187,11 @@
       return expr;
     }
 
+    function onDeckClick() {
+      const card = document.getElementById('on-deck-card');
+      if (card && card.dataset.itemId) openDetail(card.dataset.itemId);
+    }
+
     function toggleJobs(agent) {
       const list = document.getElementById(agent+'-jobs-list');
       const toggle = document.getElementById(agent+'-jobs-toggle');
@@ -1459,6 +1464,8 @@
         document.getElementById('on-deck-queued').textContent = queuedAgo;
         onDeckEmpty.classList.add('hidden');
         onDeckContent.classList.remove('hidden');
+        const onDeckCard = document.getElementById('on-deck-card');
+        if (onDeckCard) onDeckCard.dataset.itemId = nextItem.id;
       } else if (onDeckEmpty) {
         onDeckEmpty.classList.remove('hidden');
         if (onDeckContent) onDeckContent.classList.add('hidden');
