@@ -467,19 +467,18 @@
                 <div class="text-gray-600 text-xs">deep reasoning</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
-                <div class="text-xs text-gray-500 mb-1">Context Window</div>
-                <div class="text-white text-sm font-semibold">200K tokens</div>
-                <div id="samantha-ctx-bar-wrap" class="mt-2 hidden">
-                  <div class="flex justify-between text-xs mb-1">
-                    <span id="samantha-ctx-label" class="text-gray-400"></span>
-                    <span id="samantha-ctx-pct" class="font-semibold"></span>
+                <div class="text-xs text-gray-500 mb-1">Live Session</div>
+                <div id="samantha-ctx-bar-wrap" class="hidden">
+                  <div class="flex justify-between items-center">
+                    <span id="samantha-ctx-pct" class="text-white text-sm font-semibold"></span>
                   </div>
+                  <div class="text-gray-500 text-xs mb-1" id="samantha-ctx-label"></div>
                   <div class="bg-gray-700 rounded-full h-1.5">
                     <div id="samantha-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
                   </div>
-                  <div class="text-gray-600 text-xs mt-1">last run usage</div>
+                  <div class="text-gray-600 text-xs mt-1" id="samantha-ctx-sublabel">—</div>
                 </div>
-                <div id="samantha-ctx-none" class="text-gray-600 text-xs">~150K words</div>
+                <div id="samantha-ctx-none" class="text-gray-600 text-xs">No active session</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
@@ -865,7 +864,7 @@
           if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
           if (el('ctx-sublabel')) {
-            el('ctx-sublabel').textContent = 'Updated ' + snapshotAge(generatedTs);
+            el('ctx-sublabel').textContent = snapshotAge(generatedTs);
             if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs;
           }
         }
@@ -1364,7 +1363,7 @@
             if (mins < 1) label = 'just now';
             else if (mins < 60) label = mins + 'm ago';
             else { const hrs = Math.round(mins/60); label = hrs < 24 ? hrs + 'h ago' : new Date(ts).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}); }
-            sub.textContent = 'Updated ' + label;
+            sub.textContent = label;
           }
         }, 60000);
   </script>
