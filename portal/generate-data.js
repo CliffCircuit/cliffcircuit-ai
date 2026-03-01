@@ -260,6 +260,24 @@ async function main() {
   };
 
   // ── Assemble ───────────────────────────────────────────────────
+  // ── Gateway Health ────────────────────────────────────────────
+  let gateway = { reachable: null, latencyMs: null, version: null, error: null };
+  try {
+    const gRaw = run('openclaw status --json');
+    if (gRaw) {
+      const gData = JSON.parse(gRaw);
+      const gw = gData.gateway || {};
+      const svc = gData.gatewayService || {};
+      gateway = {
+        reachable: gw.reachable ?? null,
+        latencyMs: gw.connectLatencyMs ?? null,
+        version: gw.self?.version ?? null,
+        error: gw.error ?? null,
+        running: svc.runtimeShort?.includes('running') ?? null,
+      };
+    }
+  } catch(e) { gateway.error = e.message; }
+
   const data = {
     generatedAt: new Date().toISOString(),
     auth: {
@@ -312,6 +330,7 @@ async function main() {
     twitter,
     disk,
     stats,
+    gateway,
   };
 
   // ── Write + Push ───────────────────────────────────────────────

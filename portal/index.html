@@ -351,6 +351,11 @@
         <div id="system-dot" class="w-3 h-3 rounded-full bg-gray-500"></div>
         <span id="system-text" class="font-semibold">Checking...</span>
         <span id="system-sub" class="text-gray-500 text-sm"></span>
+        <div class="ml-auto flex items-center gap-2">
+          <div id="gw-dot" class="w-2 h-2 rounded-full bg-gray-600"></div>
+          <span id="gw-label" class="text-xs text-gray-500">Gateway</span>
+          <span id="gw-latency" class="text-xs text-gray-700"></span>
+        </div>
       </div>
 
       <div class="mb-8">
@@ -1508,6 +1513,28 @@
     }
 
     function renderHealth(d) {
+      // Gateway health
+      const gw = d.gateway || {};
+      const gwDot = document.getElementById('gw-dot');
+      const gwLabel = document.getElementById('gw-label');
+      const gwLatency = document.getElementById('gw-latency');
+      if (gwDot && gwLabel) {
+        if (gw.reachable === true) {
+          gwDot.style.background = '#22c55e';
+          gwLabel.textContent = 'Gateway OK';
+          gwLabel.style.color = '#4b5563';
+          if (gwLatency && gw.latencyMs != null) gwLatency.textContent = gw.latencyMs + 'ms';
+        } else if (gw.reachable === false) {
+          gwDot.style.background = '#ef4444';
+          gwDot.style.animation = 'pulse 1s infinite';
+          gwLabel.textContent = 'Gateway Down';
+          gwLabel.style.color = '#f87171';
+        } else {
+          gwDot.style.background = '#6b7280';
+          gwLabel.textContent = 'Gateway';
+        }
+      }
+
       // Live Sessions
       const sessions = d.sessions || [];
       const sessionsEl = document.getElementById('live-sessions-list');
