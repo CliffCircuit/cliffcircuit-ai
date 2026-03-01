@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T12:05:11.643Z",
+  "generatedAt": "2026-03-01T12:10:12.061Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -592,8 +592,8 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "4m ago",
-      "lastRunMs": 1772366436283,
+      "lastRun": "5m ago",
+      "lastRunMs": 1772366700024,
       "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
@@ -601,30 +601,15 @@
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13073
-    },
-    {
-      "name": "social-monitoring",
-      "schedule": "5 */4 * * *",
-      "status": "ok",
-      "lastRun": "4h ago",
-      "lastRunMs": 1772352426412,
-      "nextRun": "in 2m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Checks both @CliffCircuit and @timharris707 on X/Twitter — tracks follower counts, recent post engagement, mentions, and any replies that need a response.",
-      "lastRunTokens": 98955
+      "lastRunTokens": 13088
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "5m ago",
+      "lastRun": "10m ago",
       "lastRunMs": 1772366400017,
-      "nextRun": "in 10m",
+      "nextRun": "in 5m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -637,9 +622,9 @@
       "name": "cliff-article-review",
       "schedule": "*/30 * * * *",
       "status": "ok",
-      "lastRun": "4m ago",
+      "lastRun": "9m ago",
       "lastRunMs": 1772366452108,
-      "nextRun": "in 25m",
+      "nextRun": "in 20m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
@@ -652,7 +637,7 @@
       "name": "samantha-draft",
       "schedule": "every",
       "status": "ok",
-      "lastRun": "13m ago",
+      "lastRun": "18m ago",
       "lastRunMs": 1772365940051,
       "nextRun": "in 2h",
       "agent": "samantha",
@@ -697,7 +682,7 @@
       "name": "samantha-cliff-tweets",
       "schedule": "0 8,15 * * *",
       "status": "error",
-      "lastRun": "47m ago",
+      "lastRun": "52m ago",
       "lastRunMs": 1772363884290,
       "nextRun": "in 4h",
       "agent": "samantha",
@@ -727,7 +712,7 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "3m ago",
+      "lastRun": "8m ago",
       "lastRunMs": 1772366498739,
       "nextRun": "in 4h",
       "agent": "scout",
@@ -737,6 +722,21 @@
       "thinking": null,
       "description": "Monitors the CliffCircuit GitHub org every 4 hours — checks for new issues, pull requests, security alerts, and failed deployments. Flags anything that needs Tim's attention.",
       "lastRunTokens": 32962
+    },
+    {
+      "name": "social-monitoring",
+      "schedule": "5 */4 * * *",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772366826419,
+      "nextRun": "in 4h",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Checks both @CliffCircuit and @timharris707 on X/Twitter — tracks follower counts, recent post engagement, mentions, and any replies that need a response.",
+      "lastRunTokens": 13904
     },
     {
       "name": "weekly-report",
@@ -816,10 +816,10 @@
   ],
   "agentTokens": {
     "scout": {
-      "totalTokens": 98955,
-      "inputTokens": 129,
-      "outputTokens": 3660,
-      "jobName": "social-monitoring"
+      "totalTokens": 39443,
+      "inputTokens": 14,
+      "outputTokens": 8098,
+      "jobName": "nightly-extraction"
     },
     "samantha": {
       "totalTokens": 62707,
@@ -838,11 +838,11 @@
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 117000,
+      "used": 137000,
       "limit": 200000,
-      "pct": 58,
+      "pct": 68,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772366592260
+      "lastActiveAt": 1772367012670
     },
     {
       "label": "Main",
@@ -851,7 +851,7 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772366592260
+      "lastActiveAt": 1772366952670
     }
   ],
   "sites": [
