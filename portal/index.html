@@ -518,6 +518,26 @@
         </table>
       </div>
 
+      <!-- Session breakdown -->
+      <div class="card overflow-hidden mb-8">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-white">Session Breakdown</h3>
+          <span class="text-xs text-gray-600">Individual runs, newest first</span>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Time</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Job</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Status</th>
+          </tr></thead>
+          <tbody id="tok-session-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
       <!-- Efficiency flags -->
       <div class="card p-5 mb-8">
         <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
@@ -1345,6 +1365,52 @@
                 <div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div>
               </div>
             </td>
+          </tr>`;
+        }).join('');
+      }
+
+      // Session breakdown — flat chronological list of all runs
+      const allSessions = [];
+      jobs.forEach(j => {
+        const history = (costs[j.id] || []).filter(e => e.ts >= cutoff);
+        history.forEach(e => {
+          allSessions.push({
+            ts: e.ts,
+            job: j.name,
+            agent: j.agent,
+            model: j.model,
+            tokens: e.tokens,
+            status: e.status,
+            rate: modelRate(j.model)
+          });
+        });
+      });
+      allSessions.sort((a,b) => b.ts - a.ts); // newest first
+
+      const sessBody = document.getElementById('tok-session-body');
+      if (allSessions.length === 0) {
+        sessBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions for this range</td></tr>';
+      } else {
+        const fmtTime = ts => {
+          const d = new Date(ts);
+          return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' });
+        };
+        const statusBadge = s => {
+          if (s === 'ok') return '<span class="text-green-400 text-xs">ok</span>';
+          if (s === 'error') return '<span class="text-red-400 text-xs">error</span>';
+          return '<span class="text-gray-500 text-xs">' + (s||'—') + '</span>';
+        };
+        sessBody.innerHTML = allSessions.map(s => {
+          const cost = s.tokens * s.rate / 1000;
+          const costStr = cost >= 0.01 ? '$'+cost.toFixed(3) : '<$0.01';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTime(s.ts)}</td>
+            <td class="px-4 py-2 text-gray-300 text-xs">${esc(s.job)}</td>
+            <td class="px-4 py-2 text-xs"><span class="${agentCls[s.agent]||'text-gray-400'}">${agentName[s.agent]||s.agent||'—'}</span></td>
+            <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
+            <td class="px-4 py-2 text-right text-white font-medium text-xs">${fmtK(s.tokens)}</td>
+            <td class="px-4 py-2 text-right text-yellow-400 text-xs">${costStr}</td>
+            <td class="px-4 py-2 text-xs">${statusBadge(s.status)}</td>
           </tr>`;
         }).join('');
       }
