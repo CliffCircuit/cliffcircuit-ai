@@ -232,8 +232,14 @@
 
       <!-- Rejected items -->
       <div class="mb-6" id="rejected-section">
-        <h2 class="text-base font-semibold text-white mb-1">Rejected</h2>
-        <p class="text-xs text-gray-600 mb-4">Items I reviewed and cut — kept here for your visibility.</p>
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Rejected</h2>
+          <div class="flex gap-1" id="rej-filter-btns">
+            <button onclick="setRejFilter('all')" id="rf-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+            <button onclick="setRejFilter('cliff')" id="rf-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+            <button onclick="setRejFilter('tim')" id="rf-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+          </div>
+        </div>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
@@ -844,6 +850,27 @@
       document.getElementById('tab-marketing-content').classList.remove('hidden');
     }
 
+    // Rejected filter
+    function setRejFilter(f) {
+      ['all','cliff','tim'].forEach(k => {
+        document.getElementById('rf-'+k).className = (k===f?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700';
+      });
+      renderRejected(f);
+    }
+    function renderRejected(f) {
+      const items = (window._allRejected||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707'));
+      const rejBody = document.getElementById('rejected-body');
+      rejBody.innerHTML = items.length === 0
+        ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Nothing rejected</td></tr>`
+        : items.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
+            <td class="px-3 py-1 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-3 py-1 text-gray-500 text-xs">${i.type==='tweet'?'Tweet':'Article'}</td>
+            <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
+            <td class="px-3 py-1 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td>
+            <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
+          </tr>`).join('');
+    }
+
     // Tweet queue filter
     let _tweetFilter = 'all';
     function setTweetFilter(f) {
@@ -1173,16 +1200,8 @@
       renderTweetQueue('all');
 
       // Rejected section
-      const rejBody = document.getElementById('rejected-body');
-      rejBody.innerHTML = rejected.length === 0
-        ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Nothing rejected yet</td></tr>'
-        : rejected.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
-            <td class="px-3 py-1 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
-            <td class="px-3 py-1 text-gray-500 text-xs">${i.type==='tweet'?'Tweet':'Article'}</td>
-            <td class="px-3 py-1 text-gray-500">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-            <td class="px-3 py-1 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td>
-            <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
-          </tr>`).join('');
+      window._allRejected = rejected;
+      renderRejected('all');
 
       // Last 48h window
       const cutoff = new Date(Date.now() - 48*60*60*1000);
