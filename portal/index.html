@@ -586,7 +586,7 @@
         sessionStorage.setItem('cc_auth','1');
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
-        loadAndRender();
+        loadAndRender().then(() => restoreTab());
       } else {
         const el = document.getElementById('login-error');
         el.textContent = 'Incorrect password';
@@ -601,7 +601,7 @@
       if (sessionStorage.getItem('cc_auth') === '1') {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
-        loadAndRender();
+        loadAndRender().then(() => restoreTab());
       }
     });
 
@@ -661,6 +661,14 @@
         document.getElementById('tab-'+n).className = (n===t?'tab-active':'tab-inactive')+' py-4 text-sm font-medium';
       });
       document.getElementById('tab-'+t+'-content').classList.remove('hidden');
+      location.hash = t;
+    }
+
+    function restoreTab() {
+      const tab = location.hash.replace('#','');
+      if (['marketing','health','agents'].includes(tab)) {
+        switchTab(tab);
+      }
     }
 
     function toggleJobs(agent) {
