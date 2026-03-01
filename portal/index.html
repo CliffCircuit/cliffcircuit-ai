@@ -157,7 +157,7 @@
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Item</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Account</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Status</th>
-              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Scheduled</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Scheduled <span class="normal-case font-normal text-gray-600">(Pacific)</span></th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">In Queue</th>
             </tr></thead>
             <tbody id="queue-body"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
@@ -268,6 +268,33 @@
     </div>
   </div>
 
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeDetail()">
+    <div class="absolute inset-0 bg-black opacity-70"></div>
+    <div class="relative card w-full max-w-lg max-h-screen overflow-y-auto" style="z-index:1">
+      <div class="p-6">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <div id="modal-account" class="text-xs text-gray-500 mb-1"></div>
+            <h3 id="modal-title" class="text-white font-semibold text-lg leading-snug"></h3>
+          </div>
+          <button onclick="closeDetail()" class="text-gray-500 hover:text-white ml-4 text-xl leading-none">✕</button>
+        </div>
+        <div class="flex items-center gap-3 mb-4">
+          <div id="modal-status"></div>
+          <div id="modal-scheduled" class="text-xs text-gray-400"></div>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4 mb-4">
+          <p id="modal-body" class="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap"></p>
+        </div>
+        <div class="flex items-center justify-between">
+          <div id="modal-link"></div>
+          <div id="modal-id" class="text-xs text-gray-700 font-mono"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Default password is "cliffcircuit" — override via data.json auth.passwordHash
     const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
@@ -359,10 +386,10 @@
       const qb = document.getElementById('queue-body');
       qb.innerHTML = active.length === 0
         ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Queue is clear ✓</td></tr>'
-        : active.map(i=>`<tr class="article-row border-b border-gray-900">
-            <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''}</td>
+        : active.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail(${JSON.stringify(JSON.stringify(i))})">
+            <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
             <td class="px-4 py-3 text-gray-400">${i.account==='timharris707'?'👤 Tim':'🤖 Cliff'}</td>
-            <td class="px-4 py-3"><span class="pill status-${i.status}">${i.status}</span></td>
+            <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
             <td class="px-4 py-3">${fmtScheduled(i)}</td>
             <td class="px-4 py-3 text-gray-500 text-xs">${ago(i.createdAt)}</td>
           </tr>`).join('');
@@ -500,6 +527,42 @@
       set('stat-tim2', stats.timPostsToday??'—');
     }
 
+    function fmtStatus(s) {
+      const labels = { draft: 'Pending Review', approved: 'Approved', published: 'Posted', error: 'Error', rejected: 'Rejected' };
+      return labels[s] || s;
+    }
+
+    function openDetail(jsonStr) {
+      const item = JSON.parse(jsonStr);
+      const isTimPost = item.account === 'timharris707';
+      const title = item.title || (isTimPost ? '@TimHarris707 Post' : 'Queue Item');
+      const body = item.tweetText || item.excerpt || '(No preview available)';
+      const scheduled = item.scheduledFor ? fmtScheduled(item) : null;
+
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-account').textContent = isTimPost ? '👤 @TimHarris707' : '🤖 @CliffCircuit';
+      document.getElementById('modal-status').innerHTML = `<span class="pill status-${item.status}">${fmtStatus(item.status)}</span>`;
+      document.getElementById('modal-scheduled').innerHTML = scheduled ? `Scheduled: ${scheduled}` : '';
+      document.getElementById('modal-body').textContent = body;
+      document.getElementById('modal-id').textContent = item.id || '';
+
+      // Show article link if published
+      const linkEl = document.getElementById('modal-link');
+      if (item.slug) {
+        linkEl.innerHTML = `<a href="https://shopcliffmart.com/blog/${esc(item.slug)}" target="_blank" class="text-indigo-400 hover:underline text-sm">Read article →</a>`;
+      } else if (item.tweetId) {
+        linkEl.innerHTML = `<a href="https://x.com/i/status/${esc(item.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-sm">View on X →</a>`;
+      } else {
+        linkEl.innerHTML = '';
+      }
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeDetail() {
+      document.getElementById('detail-modal').classList.add('hidden');
+    }
+
     function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function fmt(n){if(n==null)return'—';return Number(n).toLocaleString();}
@@ -515,7 +578,7 @@
           const h = parseInt(hmMatch[1]), min = hmMatch[2];
           const ampm = h >= 12 ? 'PM' : 'AM';
           const h12 = h % 12 || 12;
-          return `<span class="text-green-400">${h12}:${min} ${ampm} PT</span>`;
+          return `<span class="text-green-400">${h12}:${min} ${ampm}</span>`;
         }
 
         // Full ISO timestamp (e.g. "2026-03-01T08:00:00-08:00")
@@ -525,7 +588,7 @@
           const isPast = d.getTime() < now;
           const timeStr = d.toLocaleString('en-US', {
             hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles'
-          }) + ' PT';
+          });
           // Get PT dates for comparison
           const ptNow = new Date(now - 8*60*60*1000);
           const ptD   = new Date(d.getTime() - 8*60*60*1000);
