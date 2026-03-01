@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T13:50:11.973Z",
+  "generatedAt": "2026-03-01T13:57:48.007Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -605,6 +605,31 @@
       "approvedAt": "2026-03-01T12:00:00.000Z",
       "approvedBy": "cliff-cron",
       "scheduledFor": "2026-03-01T07:36:00-08:00"
+    },
+    {
+      "id": "20260301-055200-moving",
+      "status": "draft",
+      "createdAt": "2026-03-01T05:52:00-08:00",
+      "title": "Moving companies bleed jobs between booking and moving day.",
+      "slug": "moving-company-booking-cancellation-gap",
+      "excerpt": "Moving customers don't cancel because they found a cheaper mover. They cancel because nobody called in the three weeks between booking and moving day, life got complicated, and the competitor who followed up in 24 hours felt more trustworthy. I mapped where the cancellations actually come from. Here's what prevents most of them.",
+      "wordCount": 1780,
+      "tweetHook": "Moving companies lose jobs they already booked.\n\nNot to cheaper bids — to silence. Three weeks between confirmation and moving day with no contact, and the customer starts wondering if they should just go with someone else.\n\nHere's the two-gap problem and the fix:\n\nARTICLE_URL_PLACEHOLDER",
+      "heroImagePrompt": "Isometric illustration of a moving truck parked outside a suburban house with cardboard boxes stacked on the lawn, a large calendar on the wall behind the scene showing dates counting down with X marks, a smartphone floating above showing unanswered messages and missed calls, warm afternoon golden light, clean geometric editorial style, vibrant colors, no people visible, NO TEXT OF ANY KIND in the image",
+      "heroImage": "/blog/images/moving-company-booking-cancellation-gap.png",
+      "heroImageGenerated": true,
+      "seoTitle": "Moving jobs cancel after booking. Here's the AI fix.",
+      "seoDescription": "Moving companies lose booked jobs to silence — no communication in the weeks before the move, and customers quietly cancel. Here's the two-gap problem and how AI closes it.",
+      "selfEditChecklist": {
+        "excerptLength": true,
+        "h2Headers": true,
+        "noCorporateSpeak": true,
+        "realMomentIncluded": true,
+        "tweetHookReady": true,
+        "seoTitleUnder60": true,
+        "keywordInFirst100Words": true
+      },
+      "cliffNotes": "Angle: moving companies have TWO revenue gaps — quote response time AND the booking-to-move-day communication silence that causes cancellations. First failure moment: fully automated pre-move sequence read like airline confirmation templates — a Phoenix mover told me immediately it lacked human feel. Fixed with specific job detail in each message. Key differentiator: segmenting cancellation rate by booking lead time (most operators don't track this). Referral layer is underused in moving — everyone tells their network about a move. Fresh vertical, different emotional register from all the home service trades covered previously."
     }
   ],
   "crons": [
@@ -612,39 +637,24 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "4m ago",
-      "lastRunMs": 1772372760475,
-      "nextRun": "in 0m",
+      "lastRun": "8m ago",
+      "lastRunMs": 1772373000016,
+      "nextRun": "in 3m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13117
-    },
-    {
-      "name": "samantha-draft",
-      "schedule": "every",
-      "status": "ok",
-      "lastRun": "2h ago",
-      "lastRunMs": 1772365940051,
-      "nextRun": "in 2m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
-      "lastRunTokens": 62707
+      "lastRunTokens": 13104
     },
     {
       "name": "cliff-article-review",
       "schedule": "*/30 * * * *",
       "status": "ok",
-      "lastRun": "17m ago",
+      "lastRun": "25m ago",
       "lastRunMs": 1772371964279,
-      "nextRun": "in 10m",
+      "nextRun": "in 2m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
@@ -657,9 +667,9 @@
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "ok",
-      "lastRun": "5m ago",
+      "lastRun": "13m ago",
       "lastRunMs": 1772372700027,
-      "nextRun": "in 10m",
+      "nextRun": "in 2m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -682,6 +692,21 @@
       "thinking": null,
       "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
       "lastRunTokens": 43203
+    },
+    {
+      "name": "samantha-draft",
+      "schedule": "every",
+      "status": "ok",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772373140077,
+      "nextRun": "in 2h",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Runs the Samantha content drafting agent — generates new blog article drafts and queues them for review and publishing.",
+      "lastRunTokens": 66129
     },
     {
       "name": "samantha-tim-posts",
@@ -841,28 +866,28 @@
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "samantha": {
-      "totalTokens": 62707,
-      "inputTokens": 12,
-      "outputTokens": 12106,
-      "jobName": "samantha-draft"
-    },
     "main": {
       "totalTokens": 60302,
       "inputTokens": 6,
       "outputTokens": 2523,
       "jobName": "cliff-article-review"
+    },
+    "samantha": {
+      "totalTokens": 66129,
+      "inputTokens": 11,
+      "outputTokens": 10963,
+      "jobName": "samantha-draft"
     }
   },
   "sessions": [
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 101000,
+      "used": 113000,
       "limit": 200000,
-      "pct": 51,
+      "pct": 56,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772373012592
+      "lastActiveAt": 1772373408615
     },
     {
       "label": "Main",
@@ -871,7 +896,7 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772373012592
+      "lastActiveAt": 1772373408615
     }
   ],
   "sites": [
