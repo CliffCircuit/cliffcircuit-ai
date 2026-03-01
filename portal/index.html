@@ -783,7 +783,7 @@
           btn.textContent = '✓ Done';
           setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
           // Wait a beat for GitHub Pages to see the commit, then reload data
-          setTimeout(() => loadAndRender(), 1800);
+          setTimeout(() => loadAndRender().then(() => restoreTab()), 1800);
         } else {
           throw new Error('Server error');
         }
@@ -791,7 +791,7 @@
         // Server unreachable (e.g. accessing portal remotely) — just reload existing data
         btn.textContent = '↻ Refresh';
         btn.disabled = false;
-        loadAndRender();
+        loadAndRender().then(() => restoreTab());
       }
     }
 
