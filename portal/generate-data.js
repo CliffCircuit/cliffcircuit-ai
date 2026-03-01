@@ -350,7 +350,8 @@ async function main() {
               }
             }
             if (item.slug && item.htmlContent) {
-              const heroImg = item.heroImage ? `<img src="https://shopcliffmart.com${item.heroImage}" style="width:100%;border-radius:8px;margin-bottom:1.5rem;" onerror="this.style.display='none'">` : '';
+              const slug = item.heroImage ? item.heroImage.split('/').pop() : null;
+              const heroImg = slug ? `<img src="https://cliffcircuit.ai/portal/images/${slug}" style="width:100%;border-radius:8px;margin-bottom:1.5rem;aspect-ratio:16/9;object-fit:contain;background:#111;" onerror="this.src='https://shopcliffmart.com${item.heroImage}';this.onerror=null;">` : '';
               const previewHtml = `<!DOCTYPE html>
 <html>
 <head>
