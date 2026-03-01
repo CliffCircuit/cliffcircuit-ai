@@ -192,7 +192,6 @@
             <button onclick="setTweetFilter('tim')" id="tf-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
           </div>
         </div>
-        <p class="text-xs text-gray-600 mb-4">Standalone tweets queued for posting. All times Pacific.</p>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
@@ -221,6 +220,7 @@
           <table class="w-full text-sm">
             <thead><tr class="border-b border-gray-800">
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Post</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Type</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Published</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">View</th>
@@ -880,9 +880,10 @@
       const items = (window._allRecentPosts||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707'));
       const rpb = document.getElementById('recent-posts-body');
       rpb.innerHTML = items.length === 0
-        ? `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No posts in last 48h</td></tr>`
+        ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No posts in last 48h</td></tr>`
         : items.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
             <td class="px-3 py-1 text-gray-400 font-medium">${esc((i.title||i.tweetText||i.id).slice(0,70))}${(i.title||i.tweetText||'').length>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
+            <td class="px-3 py-1 text-gray-500 text-xs">${i.type==='tweet'?'Tweet':'Article'}</td>
             <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
             <td class="px-3 py-1 text-gray-400 text-xs whitespace-nowrap">${relTime(i.publishedAt)}</td>
             <td class="px-3 py-1">${i.tweetId?`<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">View →</a>`:i.slug?`<a href="https://shopcliffmart.com/blog/${esc(i.slug)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">Read →</a>`:'<span class="text-gray-600 text-xs">—</span>'}</td>
