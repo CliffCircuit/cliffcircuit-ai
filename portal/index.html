@@ -185,6 +185,41 @@
             </div>
           </div>
 
+          <!-- MIDDLE: On Deck — next piece of content scheduled -->
+          <div class="card overflow-hidden flex-shrink-0" style="width:260px; background: linear-gradient(135deg, #0f172a 0%, #0d1f1a 100%);">
+            <div class="p-6 flex flex-col h-full">
+              <div class="text-xs font-semibold text-teal-400 uppercase tracking-widest mb-4">On Deck</div>
+              <!-- Next item preview -->
+              <div id="on-deck-empty" class="text-gray-600 text-sm">Nothing scheduled</div>
+              <div id="on-deck-content" class="hidden flex-1 flex flex-col">
+                <!-- Type + Account badges -->
+                <div class="flex items-center gap-2 mb-3">
+                  <span id="on-deck-type-badge" class="pill bg-indigo-950 text-indigo-300">Article</span>
+                  <span id="on-deck-acct-badge" class="pill bg-gray-800 text-gray-300">@Cliff</span>
+                </div>
+                <!-- Preview text -->
+                <div id="on-deck-text" class="text-white text-sm font-medium leading-snug mb-4" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">—</div>
+                <!-- Divider -->
+                <div class="border-t border-teal-900 mb-4"></div>
+                <!-- Meta -->
+                <div class="space-y-2 mt-auto">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">Scheduled</span>
+                    <span id="on-deck-scheduled" class="text-xs font-semibold text-teal-400">—</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">In queue</span>
+                    <span id="on-deck-queued" class="text-xs text-gray-400">—</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">Status</span>
+                    <span id="on-deck-status" class="pill status-approved">Approved</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- RIGHT: Recent Posts — combined total + Cliff/Tim breakdown -->
           <div class="card overflow-hidden flex-1" style="background: linear-gradient(135deg, #0f172a 0%, #0d1a1a 100%);">
             <div class="px-6 pt-5 pb-6 h-full flex flex-col">
@@ -1399,6 +1434,35 @@
       set('metric-articles-today', approved24Articles.length);
       set('metric-tweets-today', approved24Tweets.length);
       set('metric-next-publish', nextPublish);
+
+      // On Deck card
+      const onDeckEmpty = document.getElementById('on-deck-empty');
+      const onDeckContent = document.getElementById('on-deck-content');
+      if (nextItem && onDeckContent) {
+        const isTweet = nextItem.type==='tweet' || (!nextItem.type && !nextItem.title && !nextItem.slug && nextItem.tweetText);
+        const isTimPost = nextItem.account === 'timharris707';
+        const preview = (nextItem.title || nextItem.tweetText || '').slice(0, 120);
+        const acctLabel = isTimPost ? '@TimHarris707' : '@CliffCircuit';
+        const acctCls = isTimPost ? 'pill bg-purple-950 text-purple-300' : 'pill bg-teal-950 text-teal-300';
+        const typeCls = isTweet ? 'pill bg-blue-950 text-blue-300' : 'pill bg-indigo-950 text-indigo-300';
+        const schedDate = new Date(nextItem.scheduledFor);
+        const schedStr = schedDate.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles'}) + ' PT';
+        const diff = schedDate - Date.now();
+        const diffStr = diff <= 0 ? 'Now' : diff < 3600000 ? Math.floor(diff/60000)+'m' : Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m';
+        const queuedAgo = nextItem.createdAt ? timeAgo(nextItem.createdAt) : '—';
+        document.getElementById('on-deck-type-badge').className = typeCls;
+        document.getElementById('on-deck-type-badge').textContent = isTweet ? 'Tweet' : 'Article';
+        document.getElementById('on-deck-acct-badge').className = acctCls;
+        document.getElementById('on-deck-acct-badge').textContent = acctLabel;
+        document.getElementById('on-deck-text').textContent = preview + (preview.length >= 120 ? '...' : '');
+        document.getElementById('on-deck-scheduled').textContent = schedStr + ' (' + diffStr + ')';
+        document.getElementById('on-deck-queued').textContent = queuedAgo;
+        onDeckEmpty.classList.add('hidden');
+        onDeckContent.classList.remove('hidden');
+      } else if (onDeckEmpty) {
+        onDeckEmpty.classList.remove('hidden');
+        if (onDeckContent) onDeckContent.classList.add('hidden');
+      }
       set('metric-articles-48h', articles48.length);
       set('metric-cliff-tweets-48h', cliffTweets48.length);
       set('metric-tim-posts-48h', timPosts48.length);
