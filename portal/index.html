@@ -415,6 +415,7 @@
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Thinking</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
@@ -513,6 +514,7 @@
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Thinking</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
@@ -554,6 +556,7 @@
           <span id="job-modal-status" class="pill"></span>
           <span id="job-modal-schedule" class="pill bg-gray-800 text-gray-300"></span>
           <span id="job-modal-model" class="pill bg-indigo-950 text-indigo-300"></span>
+          <span id="job-modal-thinking" class="pill bg-gray-800 text-gray-300"></span>
         </div>
         <div class="bg-gray-900 rounded-lg p-4 mb-4">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">What it does</div>
@@ -841,6 +844,17 @@
           if (!window._jobMap) window._jobMap = {};
           info.jobs.forEach(j => { window._jobMap[j.name] = j; });
 
+          const thinkingBadge = t => {
+            if (!t) return '<span class="text-gray-700">—</span>';
+            const map = {
+              low:    { label: 'Low',    cls: 'text-blue-400' },
+              medium: { label: 'Medium', cls: 'text-yellow-400' },
+              high:   { label: 'High',   cls: 'text-orange-400' },
+            };
+            const v = map[t] || { label: t, cls: 'text-gray-400' };
+            return `<span class="${v.cls}">${v.label}</span>`;
+          };
+
           const modelShort = m => {
             if (!m) return '<span class="text-gray-700">—</span>';
             if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
@@ -862,6 +876,7 @@
               <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')} <span class="text-gray-600 text-xs">→</span></td>
               <td class="px-4 py-2.5 text-gray-400">${esc(humanCron(j.schedule||'—'))}</td>
               <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
+              <td class="px-4 py-2.5 text-xs">${thinkingBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRun || '—'}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.nextRun || '—'}</td>
@@ -1200,6 +1215,9 @@
       document.getElementById('job-modal-status').className = `pill status-${j.status||'idle'}`;
       document.getElementById('job-modal-schedule').textContent = '🕐 ' + humanCron(j.schedule || '—');
       document.getElementById('job-modal-model').textContent = '🤖 ' + modelShortText(j.model);
+      const thinkEl = document.getElementById('job-modal-thinking');
+      thinkEl.textContent = j.thinking ? '🧠 Thinking: ' + j.thinking : '';
+      thinkEl.classList.toggle('hidden', !j.thinking);
       document.getElementById('job-modal-desc').textContent = j.description || 'No description available.';
       document.getElementById('job-modal-last').textContent = j.lastRun || '—';
       document.getElementById('job-modal-next').textContent = j.nextRun || '—';
