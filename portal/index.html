@@ -1359,8 +1359,12 @@
     }
 
     function onDeckClick() {
-      const card = document.getElementById('on-deck-card');
-      if (card && card.dataset.itemId) openDetail(card.dataset.itemId);
+      // Always resolve the next item live — never use a cached ID that may be stale
+      const allItems = window._pendingAll || [];
+      const next = allItems
+        .filter(i => i.status === 'approved' && i.scheduledFor)
+        .sort((a,b) => new Date(a.scheduledFor) - new Date(b.scheduledFor))[0];
+      if (next) openDetail(next.id);
     }
 
     function toggleJobs(agent) {
