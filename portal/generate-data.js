@@ -354,6 +354,27 @@ async function main() {
         return sessions;
       } catch(e) { return []; }
     })(),
+    sessionHistory: (() => {
+      try {
+        const raw = run('openclaw status --json');
+        const d = JSON.parse(raw);
+        const recent = (d.sessions || {}).recent || [];
+        return recent.map(s => ({
+          sessionId: s.sessionId,
+          key: s.key,
+          agentId: s.agentId,
+          kind: s.kind,
+          model: s.model,
+          totalTokens: s.totalTokens || 0,
+          inputTokens: s.inputTokens || 0,
+          outputTokens: s.outputTokens || 0,
+          cacheRead: s.cacheRead || 0,
+          percentUsed: s.percentUsed || 0,
+          updatedAt: s.updatedAt,
+          thinkingLevel: s.thinkingLevel || null,
+        }));
+      } catch(e) { return []; }
+    })(),
     sites,
     credentials,
     twitter,
