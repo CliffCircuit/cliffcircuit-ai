@@ -33,7 +33,6 @@
   <div id="login-screen" class="min-h-screen flex items-center justify-center">
     <div class="card p-8 w-full max-w-sm">
       <div class="text-center mb-6">
-        <div class="text-3xl mb-2">🧗</div>
         <h1 class="text-xl font-bold text-white">CliffCircuit Portal</h1>
         <p class="text-gray-500 text-sm mt-1">Private — Tim + Cliff only</p>
       </div>
@@ -52,7 +51,6 @@
   <div id="portal" class="hidden min-h-screen">
     <nav class="border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 bg-gray-950 z-10">
       <div class="flex items-center gap-3">
-        <span class="text-xl">🧗</span>
         <span class="font-bold text-white">CliffCircuit Portal</span>
         <span class="pill bg-indigo-900 text-indigo-300 ml-1">PRIVATE</span>
       </div>
@@ -65,8 +63,8 @@
 
     <div class="border-b border-gray-800 px-6 bg-gray-950">
       <div class="flex gap-6 max-w-7xl mx-auto">
-        <button onclick="switchTab('marketing')" id="tab-marketing" class="tab-active py-4 text-sm font-medium">📣 Marketing</button>
-        <button onclick="switchTab('health')" id="tab-health" class="tab-inactive py-4 text-sm font-medium">❤️ System Health</button>
+        <button onclick="switchTab('marketing')" id="tab-marketing" class="tab-active py-4 text-sm font-medium">Marketing</button>
+        <button onclick="switchTab('health')" id="tab-health" class="tab-inactive py-4 text-sm font-medium">System Health</button>
       </div>
     </div>
 
@@ -80,7 +78,7 @@
         <div class="card p-5">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-              <span class="text-lg">🤖</span>
+              <img src="https://pbs.twimg.com/profile_images/2026134754689736704/HEaSEt1K_normal.jpg" class="w-8 h-8 rounded-full" alt="@CliffCircuit">
               <a href="https://x.com/CliffCircuit" target="_blank" class="font-semibold text-white hover:text-indigo-400">@CliffCircuit</a>
             </div>
             <span id="cliff-since" class="text-gray-600 text-xs"></span>
@@ -101,7 +99,7 @@
         <div class="card p-5">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-              <span class="text-lg">👤</span>
+              <img src="https://pbs.twimg.com/profile_images/2026148940652134400/VV7OqiuJ_normal.jpg" class="w-8 h-8 rounded-full" alt="@TimHarris707">
               <a href="https://x.com/timharris707" target="_blank" class="font-semibold text-white hover:text-purple-400">@TimHarris707</a>
             </div>
             <span id="tim-since" class="text-gray-600 text-xs"></span>
@@ -153,7 +151,7 @@
       <div class="mb-8">
         <h2 class="text-xl font-bold text-white mb-6">Tweet Queue</h2>
         <!-- Pending Articles -->
-        <h2 class="text-base font-semibold text-white mb-1">📝 Pending Articles</h2>
+        <h2 class="text-base font-semibold text-white mb-1">Pending Articles</h2>
         <p class="text-xs text-gray-600 mb-4">CliffCircuit blog posts awaiting publication. Tweet goes out automatically when article publishes.</p>
         <div class="card overflow-hidden mb-8">
           <table class="w-full text-sm">
@@ -167,7 +165,7 @@
         </div>
 
         <!-- Scheduled Tweets -->
-        <h2 class="text-base font-semibold text-white mb-1">🐦 Scheduled Tweets</h2>
+        <h2 class="text-base font-semibold text-white mb-1">Scheduled Tweets</h2>
         <p class="text-xs text-gray-600 mb-4">@TimHarris707 standalone posts queued for posting. All times Pacific.</p>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
@@ -184,7 +182,7 @@
 
       <!-- Rejected items -->
       <div class="mb-6" id="rejected-section">
-        <h2 class="text-base font-semibold text-white mb-1">🚫 Rejected</h2>
+        <h2 class="text-base font-semibold text-white mb-1">Rejected</h2>
         <p class="text-xs text-gray-600 mb-4">Items I reviewed and cut — kept here for your visibility.</p>
         <div class="card overflow-hidden">
           <table class="w-full text-sm">
@@ -233,7 +231,7 @@
       <!-- Goal tracker -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-sm font-semibold text-white">🎯 Goal: @CliffCircuit → 1,000 followers by March 31</span>
+          <span class="text-sm font-semibold text-white">Goal: @CliffCircuit → 1,000 followers by March 31</span>
           <span id="goal-pct" class="text-gray-400 text-sm font-mono">—%</span>
         </div>
         <div class="bg-gray-800 rounded-full h-3">
@@ -447,7 +445,7 @@
         ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Nothing rejected yet ✓</td></tr>'
         : rejected.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail(${JSON.stringify(JSON.stringify(i))})">
             <td class="px-4 py-3 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
-            <td class="px-4 py-3 text-gray-500">${i.account==='timharris707'?'👤 Tim':'🤖 Cliff'}</td>
+            <td class="px-4 py-3 text-gray-500">${i.account==='timharris707'?'Tim':'Cliff'}</td>
             <td class="px-4 py-3 text-red-400 text-xs">${esc(i.rejectedReason||'No reason noted')}</td>
             <td class="px-4 py-3 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
           </tr>`).join('');
@@ -598,7 +596,7 @@
       const scheduled = item.scheduledFor ? fmtScheduled(item) : null;
 
       document.getElementById('modal-title').textContent = title;
-      document.getElementById('modal-account').textContent = isTimPost ? '👤 @TimHarris707' : '🤖 @CliffCircuit';
+      document.getElementById('modal-account').textContent = isTimPost ? '@TimHarris707' : '@CliffCircuit';
       document.getElementById('modal-status').innerHTML = `<span class="pill status-${item.status}">${fmtStatus(item.status)}</span>`;
       document.getElementById('modal-scheduled').innerHTML = scheduled ? `Scheduled: ${scheduled}` : '';
       document.getElementById('modal-body').textContent = body;
