@@ -158,7 +158,7 @@
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Account</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Status</th>
               <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Scheduled</th>
-              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">Age</th>
+              <th class="text-left px-4 py-3 text-gray-500 text-xs uppercase">In Queue</th>
             </tr></thead>
             <tbody id="queue-body"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
@@ -363,7 +363,7 @@
             <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''}</td>
             <td class="px-4 py-3 text-gray-400">${i.account==='timharris707'?'👤 Tim':'🤖 Cliff'}</td>
             <td class="px-4 py-3"><span class="pill status-${i.status}">${i.status}</span></td>
-            <td class="px-4 py-3 text-gray-400">${fmtScheduled(i.scheduledFor)}</td>
+            <td class="px-4 py-3">${fmtScheduled(i)}</td>
             <td class="px-4 py-3 text-gray-500 text-xs">${ago(i.createdAt)}</td>
           </tr>`).join('');
 
@@ -403,18 +403,23 @@
       }
 
       // Growth badges
-      function growthBadge(today, week, allTime) {
-        const badges = [];
+      function growthBadge(todayDelta, weekDelta, allTimeDelta, currentVal, trackingSince) {
         function badge(val, label) {
           if (val == null) return '';
-          const sign = val >= 0 ? '+' : '';
+          const sign = val > 0 ? '+' : '';
           const color = val > 0 ? 'bg-green-900 text-green-400' : val < 0 ? 'bg-red-900 text-red-400' : 'bg-gray-800 text-gray-500';
-          return `<span class="pill ${color} text-xs">${sign}${val} ${label}</span>`;
+          return `<span class="pill ${color}">${sign}${val} ${label}</span>`;
         }
-        return badge(today,'today') + badge(week,'this week') + badge(allTime,'all time');
+        // If we have deltas, show them
+        if (todayDelta != null) {
+          return badge(todayDelta, 'today') + badge(weekDelta, 'this week') + badge(allTimeDelta, 'all time');
+        }
+        // First day — just show "tracking started" message
+        const since = trackingSince ? trackingSince : 'today';
+        return `<span class="pill bg-gray-800 text-gray-500">Tracking since ${since}</span>`;
       }
-      document.getElementById('cliff-growth-row').innerHTML = growthBadge(tw.cliffGrowthToday, tw.cliffGrowthWeek, tw.cliffGrowthAllTime);
-      document.getElementById('tim-growth-row').innerHTML = growthBadge(tw.timGrowthToday, tw.timGrowthWeek, tw.timGrowthAllTime);
+      document.getElementById('cliff-growth-row').innerHTML = growthBadge(tw.cliffGrowthToday, tw.cliffGrowthWeek, tw.cliffGrowthAllTime, tw.cliffFollowers, tw.trackingSince);
+      document.getElementById('tim-growth-row').innerHTML = growthBadge(tw.timGrowthToday, tw.timGrowthWeek, tw.timGrowthAllTime, tw.timFollowers, tw.trackingSince);
 
       // Goal bar
       const goal = 1000, curr = tw.cliffFollowers || 0;
@@ -499,19 +504,30 @@
     function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function fmt(n){if(n==null)return'—';return Number(n).toLocaleString();}
     function ago(iso){if(!iso)return'—';const m=(Date.now()-new Date(iso))/60000;if(m<60)return Math.round(m)+'m ago';if(m<1440)return Math.round(m/60)+'h ago';return Math.round(m/1440)+'d ago';}
-    function fmtScheduled(s) {
-      if (!s) return '—';
-      // If it's HH:MM format, convert to 12-hour PT display
-      const m = s.match(/^(\d{1,2}):(\d{2})$/);
-      if (m) {
-        const h = parseInt(m[1]), min = m[2];
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        return `${h12}:${min} ${ampm} PT`;
+    function fmtScheduled(item) {
+      const s = item.scheduledFor;
+      const account = item.account || 'cliffcircuit';
+      // Tim posts have HH:MM scheduled times
+      if (s) {
+        const m = s.match(/^(\d{1,2}):(\d{2})$/);
+        if (m) {
+          const h = parseInt(m[1]), min = m[2];
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const h12 = h % 12 || 12;
+          // Check if this time has passed today
+          const ptNow = new Date(Date.now() - 8*60*60*1000);
+          const ptH = ptNow.getUTCHours(), ptM = ptNow.getUTCMinutes();
+          const isPast = (h < ptH) || (h === ptH && parseInt(min) <= ptM);
+          const timeStr = `${h12}:${min} ${ampm} PT`;
+          return isPast
+            ? `<span class="text-gray-500">${timeStr} <span class="text-xs">(overdue)</span></span>`
+            : `<span class="text-green-400">${timeStr}</span>`;
+        }
+        if (s.includes('T')) return relTime(s);
       }
-      // If it's a full ISO timestamp
-      if (s.includes('T')) return relTime(s);
-      return s;
+      // Articles — show "Next publish cycle"
+      if (account !== 'timharris707') return '<span class="text-gray-500 text-xs">Next publish cycle</span>';
+      return '—';
     }
     function relTime(iso) {
       if (!iso) return '—';
