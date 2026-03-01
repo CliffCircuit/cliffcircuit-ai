@@ -56,7 +56,7 @@
       </div>
       <div class="flex items-center gap-4">
         <span id="last-updated" class="text-gray-500 text-xs"></span>
-        <button onclick="loadAndRender()" class="text-gray-400 hover:text-white text-xs border border-gray-700 rounded px-3 py-1">↻ Refresh</button>
+        <button onclick="triggerRefresh(this)" class="text-gray-400 hover:text-white text-xs border border-gray-700 rounded px-3 py-1">↻ Refresh</button>
         <button onclick="logout()" class="text-gray-500 hover:text-red-400 text-xs">Sign out</button>
       </div>
     </nav>
@@ -387,6 +387,30 @@
         DATA = await r.json();
         return DATA;
       } catch { return null; }
+    }
+
+    const REFRESH_SERVER = 'http://127.0.0.1:3031';
+
+    async function triggerRefresh(btn) {
+      const orig = btn.textContent;
+      btn.textContent = '⏳ Refreshing…';
+      btn.disabled = true;
+      try {
+        const r = await fetch(REFRESH_SERVER + '/refresh', { method: 'POST' });
+        if (r.ok) {
+          btn.textContent = '✓ Done';
+          setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
+          // Wait a beat for GitHub Pages to see the commit, then reload data
+          setTimeout(() => loadAndRender(), 1800);
+        } else {
+          throw new Error('Server error');
+        }
+      } catch(e) {
+        // Server unreachable (e.g. accessing portal remotely) — just reload existing data
+        btn.textContent = '↻ Refresh';
+        btn.disabled = false;
+        loadAndRender();
+      }
     }
 
     async function loadAndRender() {
