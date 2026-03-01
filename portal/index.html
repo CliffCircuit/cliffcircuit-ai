@@ -849,13 +849,25 @@
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
           const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
 
-          const snapshotTime = d.generatedAt ? new Date(d.generatedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}) : '—';
+          const generatedTs = d.generatedAt ? new Date(d.generatedAt).getTime() : null;
+          function snapshotAge(ts) {
+            if (!ts) return '—';
+            const mins = Math.round((Date.now() - ts) / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return mins + 'm ago';
+            const hrs = Math.round(mins / 60);
+            if (hrs < 24) return hrs + 'h ago';
+            return new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+          }
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
           if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy'); el('ctx-pct').className = `text-sm font-semibold ${pctColor}`; }
           if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
-          if (el('ctx-sublabel')) el('ctx-sublabel').textContent = 'Snapshot at ' + snapshotTime;
+          if (el('ctx-sublabel')) {
+            el('ctx-sublabel').textContent = 'Updated ' + snapshotAge(generatedTs);
+            if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs;
+          }
         }
 
         // Status dot — if any errors, show yellow warning
@@ -1343,6 +1355,17 @@
             const ts = parseInt(el.dataset.ts);
             if (ts) el.textContent = timeAgo(ts);
           });
+          // Also tick snapshot age sublabel
+          const sub = document.getElementById('cliff-ctx-sublabel');
+          if (sub && sub.dataset.ts) {
+            const ts = parseInt(sub.dataset.ts);
+            const mins = Math.round((Date.now() - ts) / 60000);
+            let label;
+            if (mins < 1) label = 'just now';
+            else if (mins < 60) label = mins + 'm ago';
+            else { const hrs = Math.round(mins/60); label = hrs < 24 ? hrs + 'h ago' : new Date(ts).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}); }
+            sub.textContent = 'Updated ' + label;
+          }
         }, 60000);
   </script>
 </body>
