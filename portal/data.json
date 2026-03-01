@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T23:09:10.117Z",
+  "generatedAt": "2026-03-01T23:10:23.690Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -1557,42 +1557,27 @@
   ],
   "crons": [
     {
-      "name": "pipeline-health-check",
-      "schedule": "0 7-23 * * *",
-      "status": "ok",
-      "lastRun": "51m ago",
-      "lastRunMs": 1772403461189,
-      "nextRun": "in 6m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
-      "lastRunTokens": 80599
-    },
-    {
       "name": "portal-data-refresh",
       "schedule": "* * * * *",
       "status": "ok",
-      "lastRun": "5m ago",
-      "lastRunMs": 1772406204144,
-      "nextRun": "in 5m",
+      "lastRun": "1m ago",
+      "lastRunMs": 1772406527194,
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13151
+      "lastRunTokens": 13093
     },
     {
       "name": "samantha-publish",
       "schedule": "*/15 * * * *",
       "status": "error",
-      "lastRun": "9m ago",
+      "lastRun": "10m ago",
       "lastRunMs": 1772406000013,
-      "nextRun": "in 6m",
+      "nextRun": "in 5m",
       "agent": "samantha",
       "consecutiveErrors": 1,
       "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
@@ -1607,7 +1592,7 @@
       "status": "ok",
       "lastRun": "3h ago",
       "lastRunMs": 1772395377330,
-      "nextRun": "in 52m",
+      "nextRun": "in 51m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
@@ -1617,12 +1602,27 @@
       "lastRunTokens": 28594
     },
     {
+      "name": "pipeline-health-check",
+      "schedule": "0 7-23 * * *",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772406415140,
+      "nextRun": "in 53m",
+      "agent": "main",
+      "consecutiveErrors": 0,
+      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
+      "lastRunTokens": 67064
+    },
+    {
       "name": "cliff-article-review",
       "schedule": "0 */2 * * *",
       "status": "ok",
-      "lastRun": "2m ago",
+      "lastRun": "3m ago",
       "lastRunMs": 1772406393857,
-      "nextRun": "in 55m",
+      "nextRun": "in 54m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
@@ -1637,7 +1637,7 @@
       "status": "ok",
       "lastRun": "3h ago",
       "lastRunMs": 1772395638692,
-      "nextRun": "in 58m",
+      "nextRun": "in 57m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -1650,7 +1650,7 @@
       "name": "samantha-draft",
       "schedule": "every 2h",
       "status": "error",
-      "lastRun": "39m ago",
+      "lastRun": "40m ago",
       "lastRunMs": 1772404181838,
       "nextRun": "in 1h",
       "agent": "samantha",
@@ -1725,7 +1725,7 @@
       "name": "samantha-cliff-tweets",
       "schedule": "0 8,15 * * *",
       "status": "error",
-      "lastRun": "5m ago",
+      "lastRun": "6m ago",
       "lastRunMs": 1772406239480,
       "nextRun": "in 17h",
       "agent": "samantha",
@@ -1783,12 +1783,6 @@
     }
   ],
   "agentTokens": {
-    "main": {
-      "totalTokens": 80599,
-      "inputTokens": 52,
-      "outputTokens": 4516,
-      "jobName": "pipeline-health-check"
-    },
     "scout": {
       "totalTokens": 39443,
       "inputTokens": 14,
@@ -1800,18 +1794,15 @@
       "inputTokens": 37,
       "outputTokens": 9830,
       "jobName": "samantha-publish"
+    },
+    "main": {
+      "totalTokens": 80197,
+      "inputTokens": 81,
+      "outputTokens": 2584,
+      "jobName": "morning-check-in"
     }
   },
   "sessions": [
-    {
-      "label": "Telegram",
-      "key": "agent:main:teleg...624734",
-      "used": 149000,
-      "limit": 200000,
-      "pct": 74,
-      "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772406550708
-    },
     {
       "label": "Main",
       "key": "agent:main:main",
@@ -1819,21 +1810,56 @@
       "limit": 200000,
       "pct": 31,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772406370708
+      "lastActiveAt": 1772406564334
+    },
+    {
+      "label": "Telegram",
+      "key": "agent:main:teleg...624734",
+      "used": 149000,
+      "limit": 200000,
+      "pct": 74,
+      "model": "claude-sonnet-4-6",
+      "lastActiveAt": 1772406504334
     }
   ],
   "conversationSessions": [
     {
-      "sessionId": "d4dfe2f7-1940-4554-971c-9ae8ec9381ab",
+      "sessionId": "5e2a86c5-d71b-457a-a923-7015f238ff36",
       "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13151,
+      "totalTokens": 13093,
       "inputTokens": 33,
-      "outputTokens": 452,
+      "outputTokens": 396,
       "percentUsed": 0,
-      "updatedAt": 1772406527197,
+      "updatedAt": 1772406600014,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "5e2a86c5-d71b-457a-a923-7015f238ff36",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:5e2a86c5-d71b-457a-a923-7015f238ff36",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13093,
+      "inputTokens": 33,
+      "outputTokens": 396,
+      "percentUsed": 0,
+      "updatedAt": 1772406600014,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
+      "key": "agent:main:main",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 62548,
+      "inputTokens": 3,
+      "outputTokens": 8,
+      "percentUsed": 0,
+      "updatedAt": 1772406557969,
       "thinkingLevel": null
     },
     {
@@ -1842,9 +1868,9 @@
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13151,
+      "totalTokens": 13093,
       "inputTokens": 33,
-      "outputTokens": 452,
+      "outputTokens": 396,
       "percentUsed": 0,
       "updatedAt": 1772406527197,
       "thinkingLevel": null
@@ -1925,19 +1951,6 @@
       "outputTokens": 4735,
       "percentUsed": 0,
       "updatedAt": 1772406393860,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
-      "key": "agent:main:main",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 62548,
-      "inputTokens": 3,
-      "outputTokens": 8,
-      "percentUsed": 0,
-      "updatedAt": 1772406342711,
       "thinkingLevel": null
     },
     {
@@ -8417,17 +8430,45 @@
   ],
   "sessionHistory": [
     {
-      "sessionId": "d4dfe2f7-1940-4554-971c-9ae8ec9381ab",
+      "sessionId": "5e2a86c5-d71b-457a-a923-7015f238ff36",
       "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13151,
+      "totalTokens": 13093,
       "inputTokens": 33,
-      "outputTokens": 452,
-      "cacheRead": 37743,
+      "outputTokens": 396,
+      "cacheRead": 37677,
       "percentUsed": 7,
-      "updatedAt": 1772406527197,
+      "updatedAt": 1772406600014,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "5e2a86c5-d71b-457a-a923-7015f238ff36",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:5e2a86c5-d71b-457a-a923-7015f238ff36",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13093,
+      "inputTokens": 33,
+      "outputTokens": 396,
+      "cacheRead": 37677,
+      "percentUsed": 7,
+      "updatedAt": 1772406600014,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
+      "key": "agent:main:main",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 62548,
+      "inputTokens": 3,
+      "outputTokens": 8,
+      "cacheRead": 62460,
+      "percentUsed": 31,
+      "updatedAt": 1772406557969,
       "thinkingLevel": null
     },
     {
@@ -8436,10 +8477,10 @@
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13151,
+      "totalTokens": 13093,
       "inputTokens": 33,
-      "outputTokens": 452,
-      "cacheRead": 37743,
+      "outputTokens": 396,
+      "cacheRead": 37677,
       "percentUsed": 7,
       "updatedAt": 1772406527197,
       "thinkingLevel": null
@@ -8527,34 +8568,6 @@
       "percentUsed": 40,
       "updatedAt": 1772406393860,
       "thinkingLevel": null
-    },
-    {
-      "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
-      "key": "agent:main:main",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 62548,
-      "inputTokens": 3,
-      "outputTokens": 8,
-      "cacheRead": 62460,
-      "percentUsed": 31,
-      "updatedAt": 1772406342711,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "e1384233-5162-4df1-8c05-0fb1705b9182",
-      "key": "agent:samantha:cron:8cd72f3d-03b2-4160-81b2-bae92ee72620",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 66567,
-      "inputTokens": 9,
-      "outputTokens": 9175,
-      "cacheRead": 285692,
-      "percentUsed": 33,
-      "updatedAt": 1772406239480,
-      "thinkingLevel": null
     }
   ],
   "sites": [
@@ -8613,85 +8626,18 @@
   },
   "gateway": {
     "reachable": true,
-    "latencyMs": 6,
+    "latencyMs": 7,
     "version": "2026.2.26",
     "error": null,
     "running": true
   },
   "costs": {
-    "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
-      {
-        "ts": 1772403461189,
-        "tokens": 80599,
-        "status": "ok"
-      },
-      {
-        "ts": 1772399021457,
-        "tokens": 66957,
-        "status": "ok"
-      },
-      {
-        "ts": 1772395405636,
-        "tokens": 66967,
-        "status": "ok"
-      },
-      {
-        "ts": 1772391861122,
-        "tokens": 71091,
-        "status": "ok"
-      },
-      {
-        "ts": 1772388162534,
-        "tokens": 87016,
-        "status": "ok"
-      },
-      {
-        "ts": 1772384634554,
-        "tokens": 67274,
-        "status": "ok"
-      },
-      {
-        "ts": 1772348603915,
-        "tokens": 43203,
-        "status": "ok"
-      },
-      {
-        "ts": 1772341362540,
-        "tokens": 39074,
-        "status": "ok"
-      },
-      {
-        "ts": 1772337762543,
-        "tokens": 36353,
-        "status": "ok"
-      },
-      {
-        "ts": 1772334162542,
-        "tokens": 32478,
-        "status": "ok"
-      },
-      {
-        "ts": 1772330562540,
-        "tokens": 31693,
-        "status": "ok"
-      },
-      {
-        "ts": 1772323362540,
-        "tokens": 30548,
-        "status": "ok"
-      },
-      {
-        "ts": 1772319762543,
-        "tokens": 30284,
-        "status": "ok"
-      },
-      {
-        "ts": 1772316162533,
-        "tokens": 29661,
-        "status": "ok"
-      }
-    ],
     "785dc24f-e15b-420b-a7e5-0116f5e60e93": [
+      {
+        "ts": 1772406527194,
+        "tokens": 13093,
+        "status": "ok"
+      },
       {
         "ts": 1772406204144,
         "tokens": 13151,
@@ -8935,11 +8881,6 @@
       {
         "ts": 1772397063833,
         "tokens": 13119,
-        "status": "ok"
-      },
-      {
-        "ts": 1772396940013,
-        "tokens": 13100,
         "status": "ok"
       }
     ],
@@ -9314,6 +9255,83 @@
       {
         "ts": 1771963266959,
         "tokens": 16789,
+        "status": "ok"
+      }
+    ],
+    "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
+      {
+        "ts": 1772406415140,
+        "tokens": 67064,
+        "status": "ok"
+      },
+      {
+        "ts": 1772403461189,
+        "tokens": 80599,
+        "status": "ok"
+      },
+      {
+        "ts": 1772399021457,
+        "tokens": 66957,
+        "status": "ok"
+      },
+      {
+        "ts": 1772395405636,
+        "tokens": 66967,
+        "status": "ok"
+      },
+      {
+        "ts": 1772391861122,
+        "tokens": 71091,
+        "status": "ok"
+      },
+      {
+        "ts": 1772388162534,
+        "tokens": 87016,
+        "status": "ok"
+      },
+      {
+        "ts": 1772384634554,
+        "tokens": 67274,
+        "status": "ok"
+      },
+      {
+        "ts": 1772348603915,
+        "tokens": 43203,
+        "status": "ok"
+      },
+      {
+        "ts": 1772341362540,
+        "tokens": 39074,
+        "status": "ok"
+      },
+      {
+        "ts": 1772337762543,
+        "tokens": 36353,
+        "status": "ok"
+      },
+      {
+        "ts": 1772334162542,
+        "tokens": 32478,
+        "status": "ok"
+      },
+      {
+        "ts": 1772330562540,
+        "tokens": 31693,
+        "status": "ok"
+      },
+      {
+        "ts": 1772323362540,
+        "tokens": 30548,
+        "status": "ok"
+      },
+      {
+        "ts": 1772319762543,
+        "tokens": 30284,
+        "status": "ok"
+      },
+      {
+        "ts": 1772316162533,
+        "tokens": 29661,
         "status": "ok"
       }
     ],
