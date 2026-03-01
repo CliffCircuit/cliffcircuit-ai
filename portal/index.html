@@ -971,9 +971,9 @@
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = snapshotAge(generatedTs); if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs; }
         } else {
-          // No live session — fall back to last cron run token usage
-          const agentTokens = d.agentTokens || {};
-          const tokenData = agentTokens[agentId];
+          // No live session — fall back to most recently run job's token usage
+          const lastRunJob2 = info.jobs.filter(j => j.lastRunMs && j.lastRunTokens).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
+          const tokenData = lastRunJob2 ? { totalTokens: lastRunJob2.lastRunTokens } : null;
           if (tokenData && tokenData.totalTokens) {
             const MAX_TOKENS = 200000;
             const tokens = tokenData.totalTokens;
