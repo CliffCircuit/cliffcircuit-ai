@@ -1211,7 +1211,7 @@
       set('count-tim', timPosts.length);
 
       const rejected = q.filter(i=>i.status==='rejected');
-      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && (i.type==='tweet' || i.title || i.slug))
+      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
         .sort((a,b)=>new Date(a.scheduledFor||a.createdAt)-new Date(b.scheduledFor||b.createdAt));
 
       // Pending Articles table
