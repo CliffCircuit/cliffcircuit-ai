@@ -979,14 +979,18 @@
       const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
       const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(tomorrowStart.getDate()+1);
       const tomorrowEnd = new Date(todayEnd); tomorrowEnd.setDate(tomorrowEnd.getDate()+1);
-      const items = (window._pendingAll||[]).filter(i => {
+      // Drafts are always shown, pinned to top — unfilterable
+      const allItems = window._pendingAll||[];
+      const drafts = allItems.filter(i => i.status === 'draft');
+      const nonDrafts = allItems.filter(i => i.status !== 'draft').filter(i => {
         const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
         const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
         const sched = i.scheduledFor ? new Date(i.scheduledFor) : null;
-        const dateOk = df==='all' || !sched || (df==='today' && sched>=todayStart && sched<=todayEnd) || (df==='tomorrow' && sched>=tomorrowStart && sched<=tomorrowEnd);
+        const dateOk = df==='all' || (df==='today' && sched && sched>=todayStart && sched<=todayEnd) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
         return typeOk && acctOk && dateOk;
       });
+      const items = [...drafts, ...nonDrafts];
       const el = document.getElementById('unified-queue-body');
       if (!el) return;
       const qb = document.getElementById('queue-count-badge'); if(qb) qb.textContent = items.length;
