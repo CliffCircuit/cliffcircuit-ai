@@ -877,8 +877,8 @@
       const tf = window._queueTypeFilter||'all';
       const af = window._queueAcctFilter||'all';
       const items = (window._pendingAll||[]).filter(i => {
-        const isArticle = i.type!=='tweet' && (i.title||i.slug);
-        const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&i.type==='tweet');
+        const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
+        const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
         return typeOk && acctOk;
       });
@@ -887,12 +887,12 @@
       el.innerHTML = items.length === 0
         ? `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Queue is clear</td></tr>`
         : items.map(i=>{
-            const isArticle = i.type!=='tweet' && (i.title||i.slug);
+            const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
             const label = esc((i.title||i.tweetText||i.id).slice(0,70));
             const overflow = (i.title||i.tweetText||'').length>70?'…':'';
             return `<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
               <td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td>
-              <td class="px-3 py-1 text-gray-500 text-xs">${isArticle?'Article':'Tweet'}</td>
+              <td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
               <td class="px-3 py-1"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
               <td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td>
@@ -920,8 +920,8 @@
       const tf = window._postedTypeFilter||'all';
       const af = window._postedAcctFilter||'all';
       const items = (window._allRecentPosts||[]).filter(i => {
-        const isArticle = i.type!=='tweet' && (i.title||i.slug);
-        const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&i.type==='tweet');
+        const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
+        const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
         return typeOk && acctOk;
       });
@@ -930,7 +930,7 @@
       rpb.innerHTML = items.length === 0
         ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No posts in last 48h</td></tr>`
         : items.map(i=>{
-            const isArticle = i.type!=='tweet' && (i.title||i.slug);
+            const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
             const label = esc((i.title||i.tweetText||i.id).slice(0,70));
             const overflow = (i.title||i.tweetText||'').length>70?'…':'';
             const viewLink = i.tweetId
@@ -940,7 +940,7 @@
               : '<span class="text-gray-600 text-xs">—</span>';
             return `<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
               <td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td>
-              <td class="px-3 py-1 text-gray-500 text-xs">${isArticle?'Article':'Tweet'}</td>
+              <td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
               <td class="px-3 py-1 text-gray-400 text-xs whitespace-nowrap">${relTime(i.publishedAt)}</td>
               <td class="px-3 py-1">${viewLink}</td>
