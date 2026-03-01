@@ -158,31 +158,53 @@
             </div>
           </div>
 
-          <!-- RIGHT: Recent Posts scoreboard -->
-          <div class="card overflow-hidden flex-1" style="background: linear-gradient(135deg, #0f172a 0%, #0c1a10 100%);">
-            <div class="p-6 h-full flex flex-col">
-              <div class="text-xs font-semibold text-emerald-500 uppercase tracking-widest mb-4">Recent Posts <span class="text-gray-600 font-normal normal-case tracking-normal">· last 48 hours</span></div>
-              <!-- Big total -->
-              <div class="flex items-end gap-3 mb-5">
-                <div id="metric-total-48h" class="text-6xl font-bold text-white leading-none tracking-tight">—</div>
-                <div class="text-gray-500 text-sm mb-1 leading-tight">total<br>pieces out</div>
-              </div>
-              <!-- Breakdown -->
-              <div class="border-t border-gray-800 pt-4 grid grid-cols-3 gap-4 flex-1">
-                <div>
-                  <div id="metric-articles-48h" class="text-3xl font-bold text-emerald-400 leading-none">—</div>
-                  <div class="text-xs text-gray-500 mt-2">Articles</div>
+          <!-- RIGHT: Recent Posts scoreboard — split Cliff / Tim -->
+          <div class="flex gap-4 flex-1">
+
+            <!-- Cliff -->
+            <div class="card overflow-hidden flex-1" style="background: linear-gradient(135deg, #0f172a 0%, #0c1a10 100%);">
+              <div class="p-6 h-full flex flex-col">
+                <div class="flex items-center gap-2 mb-4">
+                  <img src="https://pbs.twimg.com/profile_images/2026134754689736704/HEaSEt1K_normal.jpg" class="w-6 h-6 rounded-full">
+                  <div class="text-xs font-semibold text-emerald-500 uppercase tracking-widest">Cliff <span class="text-gray-600 font-normal normal-case tracking-normal">· last 48h</span></div>
                 </div>
-                <div>
-                  <div id="metric-cliff-tweets-48h" class="text-3xl font-bold text-indigo-400 leading-none">—</div>
-                  <div class="text-xs text-gray-500 mt-2">Cliff Tweets</div>
+                <div class="flex items-end gap-3 mb-5">
+                  <div id="metric-total-48h" class="text-5xl font-bold text-white leading-none tracking-tight">—</div>
+                  <div class="text-gray-500 text-sm mb-1 leading-tight">total<br>out</div>
                 </div>
-                <div>
-                  <div id="metric-tim-posts-48h" class="text-3xl font-bold text-purple-400 leading-none">—</div>
-                  <div class="text-xs text-gray-500 mt-2">Tim Tweets</div>
+                <div class="border-t border-gray-800 pt-4 grid grid-cols-2 gap-4 flex-1">
+                  <div>
+                    <div id="metric-articles-48h" class="text-3xl font-bold text-emerald-400 leading-none">—</div>
+                    <div class="text-xs text-gray-500 mt-2">Articles</div>
+                  </div>
+                  <div>
+                    <div id="metric-cliff-tweets-48h" class="text-3xl font-bold text-indigo-400 leading-none">—</div>
+                    <div class="text-xs text-gray-500 mt-2">Tweets</div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Tim -->
+            <div class="card overflow-hidden flex-1" style="background: linear-gradient(135deg, #0f172a 0%, #1a0c2e 100%);">
+              <div class="p-6 h-full flex flex-col">
+                <div class="flex items-center gap-2 mb-4">
+                  <img src="https://pbs.twimg.com/profile_images/2026148940652134400/VV7OqiuJ_normal.jpg" class="w-6 h-6 rounded-full">
+                  <div class="text-xs font-semibold text-purple-400 uppercase tracking-widest">Tim <span class="text-gray-600 font-normal normal-case tracking-normal">· last 48h</span></div>
+                </div>
+                <div class="flex items-end gap-3 mb-5">
+                  <div id="metric-tim-posts-48h" class="text-5xl font-bold text-white leading-none tracking-tight">—</div>
+                  <div class="text-gray-500 text-sm mb-1 leading-tight">total<br>out</div>
+                </div>
+                <div class="border-t border-gray-800 pt-4 flex-1">
+                  <div>
+                    <div class="text-3xl font-bold text-purple-400 leading-none" id="metric-tim-tweets-48h-dup">—</div>
+                    <div class="text-xs text-gray-500 mt-2">Tweets</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -1277,7 +1299,8 @@
       set('metric-articles-48h', articles48.length);
       set('metric-cliff-tweets-48h', cliffTweets48.length);
       set('metric-tim-posts-48h', timPosts48.length);
-      set('metric-total-48h', pub48.length);
+      set('metric-total-48h', articles48.length + cliffTweets48.length);
+      set('metric-tim-tweets-48h-dup', timPosts48.length);
 
       const rejected = q.filter(i=>i.status==='rejected');
       const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
