@@ -400,6 +400,9 @@
 
     function renderMarketing(d) {
       const q = d.queue||[];
+      // Build lookup map so openDetail can find items by ID without embedding JSON in HTML attributes
+      window._queueMap = {};
+      q.forEach(i => { window._queueMap[i.id] = i; });
       // Use PT date, not UTC (PT is UTC-8)
       const ptNow = new Date(Date.now() - 8*60*60*1000);
       const today = ptNow.toISOString().slice(0,10);
@@ -422,7 +425,7 @@
       const aqb = document.getElementById('articles-queue-body');
       aqb.innerHTML = pendingArticles.length === 0
         ? '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-600">No articles pending — queue is clear ✓</td></tr>'
-        : pendingArticles.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail(${JSON.stringify(JSON.stringify(i))})">
+        : pendingArticles.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
             <td class="px-4 py-3 text-white font-medium">${esc(i.title||i.id)} <span class="text-gray-600 text-xs ml-1">→</span></td>
             <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
             <td class="px-4 py-3 text-gray-500 text-xs">${ago(i.createdAt)}</td>
@@ -432,7 +435,7 @@
       const tqb = document.getElementById('tweets-queue-body');
       tqb.innerHTML = pendingTweets.length === 0
         ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">No tweets scheduled — queue is clear ✓</td></tr>'
-        : pendingTweets.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail(${JSON.stringify(JSON.stringify(i))})">
+        : pendingTweets.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
             <td class="px-4 py-3 text-white font-medium">${esc(i.tweetText?.slice(0,70)||i.id)}${(i.tweetText?.length||0)>70?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
             <td class="px-4 py-3"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
             <td class="px-4 py-3">${fmtScheduled(i)}</td>
@@ -443,7 +446,7 @@
       const rejBody = document.getElementById('rejected-body');
       rejBody.innerHTML = rejected.length === 0
         ? '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600">Nothing rejected yet ✓</td></tr>'
-        : rejected.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail(${JSON.stringify(JSON.stringify(i))})">
+        : rejected.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
             <td class="px-4 py-3 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
             <td class="px-4 py-3 text-gray-500">${i.account==='timharris707'?'Tim':'Cliff'}</td>
             <td class="px-4 py-3 text-red-400 text-xs">${esc(i.rejectedReason||'No reason noted')}</td>
@@ -588,8 +591,9 @@
       return labels[s] || s;
     }
 
-    function openDetail(jsonStr) {
-      const item = JSON.parse(jsonStr);
+    function openDetail(id) {
+      const item = window._queueMap && window._queueMap[id];
+      if (!item) return;
       const isTimPost = item.account === 'timharris707';
       const title = item.title || (isTimPost ? '@TimHarris707 Post' : 'Queue Item');
       const body = item.tweetText || item.excerpt || '(No preview available)';
