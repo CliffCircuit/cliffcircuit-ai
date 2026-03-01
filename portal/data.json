@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T15:05:12.812Z",
+  "generatedAt": "2026-03-01T15:12:02.770Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -565,7 +565,7 @@
     },
     {
       "id": "20260301-1772365905019-painting",
-      "status": "approved",
+      "status": "published",
       "createdAt": "2026-03-01T11:51:45.019Z",
       "publishAfter": "2026-03-01T14:48:00Z",
       "title": "Painters quote 30 jobs a month and close 10. The follow-up gap explains the other 20.",
@@ -590,11 +590,16 @@
       "heroImage": "/blog/images/painting-contractors-estimate-follow-up-gap.png",
       "approvedAt": "2026-03-01T12:00:00.000Z",
       "approvedBy": "cliff-cron",
-      "scheduledFor": "2026-03-01T06:48:00-08:00"
+      "scheduledFor": "2026-03-01T06:48:00-08:00",
+      "publishedAt": "2026-03-01T15:11:23.687853+00:00",
+      "liveUrl": "https://shopcliffmart.com/blog/painting-contractors-estimate-follow-up-gap.html",
+      "tweetId": "2028125347171205394",
+      "tweetPosted": false,
+      "tweetError": "403 Authentication error"
     },
     {
       "id": "20260301-1772365990751-gym",
-      "status": "approved",
+      "status": "published",
       "createdAt": "2026-03-01T11:55:00.000Z",
       "publishAfter": "2026-03-01T15:36:00Z",
       "title": "Gym members ghost before they cancel. Here's the AI that catches them first.",
@@ -619,7 +624,10 @@
       "cliffNotes": "Angle: gym churn has a predictable 3-5 week warning period in the check-in data — almost no gym is watching it. First failure moment: naive 14-day no-show trigger had massive seasonal false positives (holidays, vacations). Fixed with per-member baseline comparison. Key differentiators: pause vs. cancel framing (economically better and philosophically better), milestone messages (30-40% response rate), early-win reinforcement for new members in first 60 days. Staff buy-in section addresses the 'I already do that' objection directly. Different vertical from all home services content — adds important variety.",
       "approvedAt": "2026-03-01T12:00:00.000Z",
       "approvedBy": "cliff-cron",
-      "scheduledFor": "2026-03-01T07:36:00-08:00"
+      "scheduledFor": "2026-03-01T07:36:00-08:00",
+      "publishedAt": "2026-03-01T15:09:10.284584+00:00",
+      "liveUrl": "https://shopcliffmart.com/blog/gym-member-churn-ai-early-warning.html",
+      "tweetId": "2028125373872152582"
     },
     {
       "id": "20260301-055200-moving",
@@ -655,61 +663,46 @@
       "name": "portal-data-refresh",
       "schedule": "*/5 * * * *",
       "status": "ok",
-      "lastRun": "10m ago",
-      "lastRunMs": 1772376900015,
-      "nextRun": "in 5m",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772377500032,
+      "nextRun": "in 2m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "model": "anthropic/claude-haiku-4-5",
       "thinking": null,
       "description": "Snapshots the current state of active sessions, cron jobs, content queue, Twitter stats, and site health — then publishes it to the CliffCircuit portal so the dashboard stays current.",
-      "lastRunTokens": 13072
+      "lastRunTokens": 13149
+    },
+    {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "error",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772377621544,
+      "nextRun": "in 3m",
+      "agent": "samantha",
+      "consecutiveErrors": 2,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 73223
     },
     {
       "name": "cliff-article-review",
       "schedule": "*/30 * * * *",
       "status": "ok",
-      "lastRun": "34m ago",
-      "lastRunMs": 1772375462429,
-      "nextRun": "in 5m",
+      "lastRun": "7m ago",
+      "lastRunMs": 1772377517377,
+      "nextRun": "in 18m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
       "model": null,
       "thinking": null,
       "description": "REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:",
-      "lastRunTokens": 65970
-    },
-    {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "20m ago",
-      "lastRunMs": 1772376300016,
-      "nextRun": "in 5m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 58770
-    },
-    {
-      "name": "pipeline-health-check",
-      "schedule": "0 7-23 * * *",
-      "status": "ok",
-      "lastRun": "8h ago",
-      "lastRunMs": 1772348603915,
-      "nextRun": "in 2m",
-      "agent": "main",
-      "consecutiveErrors": 0,
-      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
-      "lastRunTokens": 43203
+      "lastRunTokens": 63061
     },
     {
       "name": "samantha-draft",
@@ -717,7 +710,7 @@
       "status": "ok",
       "lastRun": "1h ago",
       "lastRunMs": 1772373140077,
-      "nextRun": "in 47m",
+      "nextRun": "in 40m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
@@ -732,7 +725,7 @@
       "status": "ok",
       "lastRun": "13h ago",
       "lastRunMs": 1772330461770,
-      "nextRun": "in 55m",
+      "nextRun": "in 48m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "498ea0a9-f2c2-49f2-bd78-73c683af9d82",
@@ -747,7 +740,7 @@
       "status": "error",
       "lastRun": "4h ago",
       "lastRunMs": 1772363884290,
-      "nextRun": "in 55m",
+      "nextRun": "in 48m",
       "agent": "samantha",
       "consecutiveErrors": 1,
       "id": "8cd72f3d-03b2-4160-81b2-bae92ee72620",
@@ -762,7 +755,7 @@
       "status": "ok",
       "lastRun": "23h ago",
       "lastRunMs": 1772294400021,
-      "nextRun": "in 55m",
+      "nextRun": "in 48m",
       "agent": "main",
       "consecutiveErrors": 0,
       "id": "fbd92dff-ce46-48d2-8bfd-6893c75b1031",
@@ -777,7 +770,7 @@
       "status": "ok",
       "lastRun": "3h ago",
       "lastRunMs": 1772366498739,
-      "nextRun": "in 56m",
+      "nextRun": "in 49m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
@@ -787,12 +780,27 @@
       "lastRunTokens": 32962
     },
     {
+      "name": "pipeline-health-check",
+      "schedule": "0 7-23 * * *",
+      "status": "error",
+      "lastRun": "6m ago",
+      "lastRunMs": 1772377560904,
+      "nextRun": "in 51m",
+      "agent": "main",
+      "consecutiveErrors": 1,
+      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
+      "lastRunTokens": null
+    },
+    {
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
       "lastRun": "3h ago",
       "lastRunMs": 1772366826419,
-      "nextRun": "in 1h",
+      "nextRun": "in 55m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -884,17 +892,17 @@
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
     },
-    "main": {
-      "totalTokens": 65970,
-      "inputTokens": 7,
-      "outputTokens": 3444,
-      "jobName": "cliff-article-review"
-    },
     "samantha": {
-      "totalTokens": 66129,
-      "inputTokens": 11,
-      "outputTokens": 10963,
-      "jobName": "samantha-draft"
+      "totalTokens": 73223,
+      "inputTokens": 23,
+      "outputTokens": 14685,
+      "jobName": "samantha-publish"
+    },
+    "main": {
+      "totalTokens": 63061,
+      "inputTokens": 6,
+      "outputTokens": 1912,
+      "jobName": "cliff-article-review"
     }
   },
   "sessions": [
@@ -905,7 +913,16 @@
       "limit": 200000,
       "pct": 13,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772376913413
+      "lastActiveAt": 1772377743381
+    },
+    {
+      "label": "Telegram",
+      "key": "agent:main:teleg...624734",
+      "used": 161000,
+      "limit": 200000,
+      "pct": 80,
+      "model": "claude-sonnet-4-6",
+      "lastActiveAt": 1772377743381
     }
   ],
   "sites": [
@@ -938,7 +955,7 @@
   ],
   "twitter": {
     "cliffFollowers": 7,
-    "cliffPosts": 32,
+    "cliffPosts": 34,
     "timFollowers": 5,
     "timPosts": 11,
     "cliffGrowthToday": 0,
@@ -959,7 +976,7 @@
     "percent": 6
   },
   "stats": {
-    "articlesToday": 4,
+    "articlesToday": 6,
     "timPostsToday": 0
   }
 }
