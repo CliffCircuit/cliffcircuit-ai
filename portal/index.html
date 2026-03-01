@@ -74,6 +74,52 @@
     <!-- MARKETING -->
     <div id="tab-marketing-content" class="hidden p-6 max-w-7xl mx-auto">
 
+      <!-- Twitter Growth Cards — top of page -->
+      <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🤖</span>
+              <a href="https://x.com/CliffCircuit" target="_blank" class="font-semibold text-white hover:text-indigo-400">@CliffCircuit</a>
+            </div>
+            <span id="cliff-since" class="text-gray-600 text-xs"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div id="cliff-followers" class="text-3xl font-bold text-indigo-400">—</div>
+              <div class="text-xs text-gray-500 mt-1">Followers</div>
+              <div id="cliff-growth-row" class="flex gap-2 mt-2 flex-wrap"></div>
+            </div>
+            <div>
+              <div id="cliff-posts-count" class="text-3xl font-bold text-indigo-300">—</div>
+              <div class="text-xs text-gray-500 mt-1">Total Posts</div>
+            </div>
+          </div>
+          <canvas id="sparkline-cliff" height="36" class="w-full opacity-60"></canvas>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">👤</span>
+              <a href="https://x.com/timharris707" target="_blank" class="font-semibold text-white hover:text-purple-400">@TimHarris707</a>
+            </div>
+            <span id="tim-since" class="text-gray-600 text-xs"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div id="tim-followers" class="text-3xl font-bold text-purple-400">—</div>
+              <div class="text-xs text-gray-500 mt-1">Followers</div>
+              <div id="tim-growth-row" class="flex gap-2 mt-2 flex-wrap"></div>
+            </div>
+            <div>
+              <div id="tim-posts-count" class="text-3xl font-bold text-purple-300">—</div>
+              <div class="text-xs text-gray-500 mt-1">Total Posts</div>
+            </div>
+          </div>
+          <canvas id="sparkline-tim" height="36" class="w-full opacity-60"></canvas>
+        </div>
+      </div>
+
       <div class="mb-8">
         <h2 class="text-base font-semibold text-white mb-4">Pipeline Overview</h2>
         <div class="flex items-stretch gap-2">
@@ -150,20 +196,19 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div class="card p-5">
-          <div class="flex items-center gap-2 mb-4"><span>🤖</span><span class="font-semibold">@CliffCircuit</span></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><div id="cliff-followers" class="text-2xl font-bold text-indigo-400">—</div><div class="text-xs text-gray-500">Followers</div></div>
-            <div><div id="cliff-posts-count" class="text-2xl font-bold text-indigo-400">—</div><div class="text-xs text-gray-500">Posts</div></div>
-          </div>
+      <!-- Goal tracker -->
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-white">🎯 Goal: @CliffCircuit → 1,000 followers by March 31</span>
+          <span id="goal-pct" class="text-gray-400 text-sm font-mono">—%</span>
         </div>
-        <div class="card p-5">
-          <div class="flex items-center gap-2 mb-4"><span>👤</span><span class="font-semibold">@TimHarris707</span></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><div id="tim-followers" class="text-2xl font-bold text-purple-400">—</div><div class="text-xs text-gray-500">Followers</div></div>
-            <div><div id="tim-posts-count" class="text-2xl font-bold text-purple-400">—</div><div class="text-xs text-gray-500">Posts</div></div>
-          </div>
+        <div class="bg-gray-800 rounded-full h-3">
+          <div id="goal-bar" class="bg-indigo-500 h-3 rounded-full transition-all" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between mt-2">
+          <span class="text-xs text-gray-600">0</span>
+          <span id="goal-label" class="text-xs text-gray-500"></span>
+          <span class="text-xs text-gray-600">1,000</span>
         </div>
       </div>
     </div>
@@ -352,6 +397,62 @@
       set('cliff-posts-count', fmt(tw.cliffPosts));
       set('tim-followers', fmt(tw.timFollowers));
       set('tim-posts-count', fmt(tw.timPosts));
+      if (tw.trackingSince) {
+        set('cliff-since', 'Since ' + tw.trackingSince);
+        set('tim-since', 'Since ' + tw.trackingSince);
+      }
+
+      // Growth badges
+      function growthBadge(today, week, allTime) {
+        const badges = [];
+        function badge(val, label) {
+          if (val == null) return '';
+          const sign = val >= 0 ? '+' : '';
+          const color = val > 0 ? 'bg-green-900 text-green-400' : val < 0 ? 'bg-red-900 text-red-400' : 'bg-gray-800 text-gray-500';
+          return `<span class="pill ${color} text-xs">${sign}${val} ${label}</span>`;
+        }
+        return badge(today,'today') + badge(week,'this week') + badge(allTime,'all time');
+      }
+      document.getElementById('cliff-growth-row').innerHTML = growthBadge(tw.cliffGrowthToday, tw.cliffGrowthWeek, tw.cliffGrowthAllTime);
+      document.getElementById('tim-growth-row').innerHTML = growthBadge(tw.timGrowthToday, tw.timGrowthWeek, tw.timGrowthAllTime);
+
+      // Goal bar
+      const goal = 1000, curr = tw.cliffFollowers || 0;
+      const pct = Math.min(100, Math.round(curr / goal * 100));
+      document.getElementById('goal-bar').style.width = pct + '%';
+      set('goal-pct', pct + '%');
+      const daysLeft = Math.ceil((new Date('2026-03-31') - new Date()) / 86400000);
+      set('goal-label', `${curr} / ${goal} · ${daysLeft} days left`);
+
+      // Sparklines
+      function drawSparkline(canvasId, data, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || !data || data.length < 2) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth || 300;
+        const w = canvas.width, h = canvas.height;
+        const min = Math.min(...data), max = Math.max(...data);
+        const range = max - min || 1;
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        data.forEach((v, i) => {
+          const x = (i / (data.length - 1)) * w;
+          const y = h - ((v - min) / range) * (h - 4) - 2;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        // Fill
+        ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+        ctx.fillStyle = color + '22';
+        ctx.fill();
+      }
+      setTimeout(() => {
+        drawSparkline('sparkline-cliff', tw.sparklineCliff, '#818cf8');
+        drawSparkline('sparkline-tim', tw.sparklineTim, '#a78bfa');
+      }, 100);
     }
 
     function renderHealth(d) {
