@@ -1548,18 +1548,9 @@
       // Article full body preview (strip HTML tags from tweetHook or use excerpt)
       const articleBodyEl = document.getElementById('modal-article-body');
       const articleTextEl = document.getElementById('modal-article-text');
-      if (isArticle && item.htmlContent) {
+      if (isArticle && item.slug) {
         articleBodyEl.classList.remove('hidden');
-        // Render excerpt preview from queue data (no fetch needed)
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(item.htmlContent, 'text/html');
-        const paras = Array.from(doc.querySelectorAll('p, h2, h3')).slice(0, 8);
-        articleTextEl.innerHTML = paras.length ? paras.map(el => {
-          if (el.tagName === 'H2' || el.tagName === 'H3') {
-            return `<p class="text-white font-semibold mt-3 mb-1">${el.textContent}</p>`;
-          }
-          return `<p>${el.textContent}</p>`;
-        }).join('') : `<p>${item.excerpt || ''}</p>`;
+        articleTextEl.innerHTML = item.excerpt ? `<p>${item.excerpt}</p>` : '<span class="text-gray-600 text-xs">No excerpt available</span>';
       } else {
         articleBodyEl.classList.add('hidden');
       }
@@ -1568,11 +1559,11 @@
       const linkEl = document.getElementById('modal-link');
       let links = [];
       if (item.slug) {
-        if (item.status === 'published' && item.liveUrl) {
-          links.push(`<a href="${esc(item.liveUrl)}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Open on Blog ↗</a>`);
-        } else if (item.htmlContent) {
-          links.push(`<button onclick="previewFullArticle()" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors cursor-pointer">Preview Full Article ↗</button>`);
-          window._previewItem = item;
+        if (item.status === 'published') {
+          const liveUrl = item.liveUrl || `https://shopcliffmart.com/blog/${item.slug}.html`;
+          links.push(`<a href="${esc(liveUrl)}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Open on Blog ↗</a>`);
+        } else {
+          links.push(`<a href="/portal/previews/${esc(item.slug)}.html" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Preview Full Article ↗</a>`);
         }
       }
       if (item.tweetId) {

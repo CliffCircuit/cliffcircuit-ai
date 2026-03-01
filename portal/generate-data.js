@@ -327,26 +327,53 @@ async function main() {
       fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
       console.log('Wrote data.json');
 
-      // Pre-push hero images for approved (unpublished) articles so portal previews work
+      // Pre-push hero images + article HTML for approved (unpublished) articles so portal previews work
       try {
         const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
         if (fs.existsSync(queuePath)) {
           const queue = JSON.parse(fs.readFileSync(queuePath));
-          const items = Array.isArray(queue) ? queue : Object.values(queue);
-          const approved = items.filter(i => i.status === 'approved' && i.heroImage);
+          const items = Array.isArray(queue) ? queue : queue.queue || Object.values(queue);
+          const approved = items.filter(i => i.status === 'approved');
+          // Images
           const imgDestDir = path.join(REPO_DIR, 'portal/images');
           fs.mkdirSync(imgDestDir, { recursive: true });
+          // Article HTML previews
+          const previewDestDir = path.join(REPO_DIR, 'portal/previews');
+          fs.mkdirSync(previewDestDir, { recursive: true });
           approved.forEach(item => {
-            const srcPath = `/Users/openclaw/.openclaw/workspace/cliffmart${item.heroImage}`;
-            const slug = path.basename(item.heroImage);
-            const destPath = path.join(imgDestDir, slug);
-            if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
-              fs.copyFileSync(srcPath, destPath);
-              console.log('Copied image:', slug);
+            if (item.heroImage) {
+              const srcPath = `/Users/openclaw/.openclaw/workspace/cliffmart${item.heroImage}`;
+              const slug = path.basename(item.heroImage);
+              const destPath = path.join(imgDestDir, slug);
+              if (fs.existsSync(srcPath)) {
+                fs.copyFileSync(srcPath, destPath);
+              }
+            }
+            if (item.slug && item.htmlContent) {
+              const heroImg = item.heroImage ? `<img src="https://shopcliffmart.com${item.heroImage}" style="width:100%;border-radius:8px;margin-bottom:1.5rem;" onerror="this.style.display='none'">` : '';
+              const previewHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>${(item.title||'').replace(/</g,'&lt;')}</title>
+  <link rel="stylesheet" href="https://shopcliffmart.com/styles.css">
+  <style>body{background:#0f172a;color:#e2e8f0;padding:2rem;max-width:860px;margin:0 auto;font-family:system-ui,sans-serif;}h1{color:#fff;font-size:1.8rem;margin-bottom:0.5rem;}h2{color:#fff;font-size:1.3rem;margin-top:2rem;}.excerpt{color:#94a3b8;font-style:italic;border-left:3px solid #334155;padding-left:1rem;margin-bottom:2rem;}.back{display:inline-block;margin-bottom:1.5rem;background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.85rem;text-decoration:none;}</style>
+</head>
+<body>
+  <a class="back" onclick="window.close()" href="javascript:history.back()">← Back</a>
+  ${heroImg}
+  <h1>${(item.title||'').replace(/</g,'&lt;')}</h1>
+  <p class="excerpt">${(item.excerpt||'').replace(/</g,'&lt;')}</p>
+  ${item.htmlContent}
+</body>
+</html>`;
+              fs.writeFileSync(path.join(previewDestDir, `${item.slug}.html`), previewHtml);
             }
           });
+          console.log('Pre-pushed images + previews for', approved.length, 'approved items');
         }
-      } catch(e) { console.warn('Image pre-push skipped:', e.message); }
+      } catch(e) { console.warn('Pre-push skipped:', e.message); }
       run(`cd ${REPO_DIR} && git config user.email "cliff@cliffcircuit.ai"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git config user.name "Cliff"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git add portal/`, { stdio: 'pipe' });
