@@ -155,7 +155,12 @@
                   <span id="metric-tweets-today" class="text-xl font-bold text-blue-400">—</span>
                 </div>
               </div>
-              <div class="text-gray-700 text-xs mt-3">next 24 hours</div>
+              <select id="queue-window-select" onchange="setQueueWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#4b5563;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;margin-top:0.75rem;">
+                  <option value="1">next 1 hour</option>
+                  <option value="12">next 12 hours</option>
+                  <option value="24" selected>next 24 hours</option>
+                  <option value="48">next 48 hours</option>
+                </select>
             </div>
           </div>
 
@@ -1291,10 +1296,11 @@
         return m < 60 ? m+'m' : Math.floor(m/60)+'h '+( m%60)+'m';
       })() : '—';
 
-      const next24 = new Date(Date.now() + 24*60*60*1000);
-      const approved24Articles = approved.filter(i=>(i.title||i.slug) && i.scheduledFor && new Date(i.scheduledFor) <= next24);
-      const approved24Tweets = approved.filter(i=>(i.type==='tweet'||i.tweetText) && i.scheduledFor && new Date(i.scheduledFor) <= next24);
-      const approved24All = approved.filter(i=>i.scheduledFor && new Date(i.scheduledFor) <= next24);
+      window._queueWindowHours = window._queueWindowHours || 24;
+      const nextWindow = new Date(Date.now() + window._queueWindowHours*60*60*1000);
+      const approved24Articles = approved.filter(i=>(i.title||i.slug) && i.scheduledFor && new Date(i.scheduledFor) <= nextWindow);
+      const approved24Tweets = approved.filter(i=>(i.type==='tweet'||i.tweetText) && i.scheduledFor && new Date(i.scheduledFor) <= nextWindow);
+      const approved24All = approved.filter(i=>i.scheduledFor && new Date(i.scheduledFor) <= nextWindow);
       set('metric-in-queue', approved24All.length);
       set('metric-articles-today', approved24Articles.length);
       set('metric-tweets-today', approved24Tweets.length);
@@ -1716,6 +1722,12 @@
             sub.textContent = label;
           }
         }, 60000);
+
+    // Global: called by Queue window dropdown
+    function setQueueWindow(hours) {
+      window._queueWindowHours = parseInt(hours);
+      if (window._lastData) renderMarketing(window._lastData);
+    }
 
     // Global: called by Recent Posts dropdown
     function setRecentWindow(hours) {
