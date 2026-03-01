@@ -212,11 +212,9 @@
       </div>
 
       <div class="mb-8">
-        <h2 class="text-xl font-bold text-white mb-6">Marketing Plan</h2>
-
         <!-- Unified Queue -->
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-base font-semibold text-white">Queue</h2>
+          <h2 class="text-base font-semibold text-white">Queue <span id="queue-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
           <div class="flex gap-2">
             <div class="flex gap-1" id="q-type-btns">
               <button onclick="setQueueFilter('type','all')" id="qt-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
@@ -248,7 +246,7 @@
       <!-- Unified Posted -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-base font-semibold text-white">Posted <span class="text-gray-500 font-normal text-sm">(last 48h)</span></h2>
+          <h2 class="text-base font-semibold text-white">Posted <span class="text-gray-500 font-normal text-sm">(last 48h)</span> <span id="posted-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
           <div class="flex gap-2">
             <div class="flex gap-1" id="p-type-btns">
               <button onclick="setPostedFilter('type','all')" id="pt-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
@@ -279,7 +277,7 @@
       <!-- Rejected items -->
       <div class="mb-6" id="rejected-section">
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-base font-semibold text-white">Rejected</h2>
+          <h2 class="text-base font-semibold text-white">Rejected <span id="rejected-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
           <div class="flex gap-1" id="rej-filter-btns">
             <button onclick="setRejFilter('all')" id="rf-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
             <button onclick="setRejFilter('cliff')" id="rf-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
@@ -943,6 +941,7 @@
       });
       const el = document.getElementById('unified-queue-body');
       if (!el) return;
+      const qb = document.getElementById('queue-count-badge'); if(qb) qb.textContent = items.length;
       el.innerHTML = items.length === 0
         ? `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Queue is clear</td></tr>`
         : items.map(i=>{
@@ -986,6 +985,7 @@
       });
       const rpb = document.getElementById('recent-posts-body');
       if (!rpb) return;
+      const pb = document.getElementById('posted-count-badge'); if(pb) pb.textContent = items.length;
       rpb.innerHTML = items.length === 0
         ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No posts in last 48h</td></tr>`
         : items.map(i=>{
