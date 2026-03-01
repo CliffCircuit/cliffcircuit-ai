@@ -364,19 +364,18 @@
                 <div class="text-gray-600 text-xs">fast + accurate</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
-                <div class="text-xs text-gray-500 mb-1">Context Window</div>
-                <div class="text-white text-sm font-semibold">200K tokens</div>
-                <div id="cliff-ctx-bar-wrap" class="mt-2 hidden">
-                  <div class="flex justify-between text-xs mb-1">
-                    <span id="cliff-ctx-label" class="text-gray-400"></span>
-                    <span id="cliff-ctx-pct" class="font-semibold"></span>
+                <div class="text-xs text-gray-500 mb-1">Live Session</div>
+                <div id="cliff-ctx-bar-wrap" class="hidden">
+                  <div class="flex justify-between items-center mb-1">
+                    <span id="cliff-ctx-label" class="text-white text-sm font-semibold"></span>
+                    <span id="cliff-ctx-pct" class="font-semibold text-sm"></span>
                   </div>
                   <div class="bg-gray-700 rounded-full h-1.5">
                     <div id="cliff-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
                   </div>
-                  <div class="text-gray-600 text-xs mt-1">last run usage</div>
+                  <div class="text-gray-600 text-xs mt-1">Telegram session</div>
                 </div>
-                <div id="cliff-ctx-none" class="text-gray-600 text-xs">~150K words</div>
+                <div id="cliff-ctx-none" class="text-gray-600 text-xs text-sm font-semibold">No active session</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
@@ -402,9 +401,8 @@
               <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Live Sessions</div>
               <div id="cliff-sessions-list" class="space-y-2"></div>
             </div>
-            <!-- Last activity -->
+            <!-- Job errors -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
-              <span>Last active: <span id="cliff-last-active" class="text-gray-300">—</span></span>
               <span id="cliff-job-errors" class="text-red-400 hidden">⚠ errors detected</span>
             </div>
           </div>
@@ -835,28 +833,26 @@
                 </div>
                 <div class="flex justify-between text-xs text-gray-600">
                   <span>${Math.round(s.used/1000)}k / ${Math.round(s.limit/1000)}k tokens</span>
-                  <span>${esc(s.age)}</span>
+                  <span class="session-age" data-ts="${s.lastActiveAt||''}">${s.lastActiveAt ? timeAgo(s.lastActiveAt) : '—'}</span>
                 </div>
               </div>`;
             }).join('');
           }
         }
 
-        // Context window usage bar
-        const MAX_TOKENS = 200000;
-        const agentTokens = d.agentTokens || {};
-        const tokenData = agentTokens[agentId];
-        if (tokenData && tokenData.totalTokens) {
-          const tokens = tokenData.totalTokens;
-          const pct = Math.round((tokens / MAX_TOKENS) * 100);
+        // Live session context bar (replaces last-run usage)
+        const sessions = (name === 'cliff') ? (d.sessions || []) : [];
+        const liveSession = sessions.find(s => s.label === 'Telegram') || sessions[0];
+        if (liveSession && liveSession.pct !== undefined) {
+          const pct = liveSession.pct;
           const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-          const tokLabel = tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens;
+          const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
 
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-          if (el('ctx-label')) el('ctx-label').textContent = tokLabel + ' tokens';
-          if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold ${pctColor}`; }
+          if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
+          if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold text-sm ${pctColor}`; }
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
         }
 
@@ -1332,6 +1328,20 @@
       }
       return d.toLocaleDateString([], {month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     }
+        // Live-tick session ages every minute
+        function timeAgo(ts) {
+          if (!ts) return '—';
+          const mins = Math.round((Date.now() - ts) / 60000);
+          if (mins < 1) return 'just now';
+          if (mins === 1) return '1m ago';
+          return mins + 'm ago';
+        }
+        setInterval(() => {
+          document.querySelectorAll('.session-age[data-ts]').forEach(el => {
+            const ts = parseInt(el.dataset.ts);
+            if (ts) el.textContent = timeAgo(ts);
+          });
+        }, 60000);
   </script>
 </body>
 </html>
