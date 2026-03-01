@@ -759,6 +759,8 @@
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab());
+        // Auto-refresh every 60 seconds
+        setInterval(() => loadAndRender().then(() => restoreTab()), 60000);
       }
     });
 
