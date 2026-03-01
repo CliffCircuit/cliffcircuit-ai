@@ -124,30 +124,45 @@
       </div>
 
       <div class="mb-8">
-        <h2 class="text-base font-semibold text-white mb-4">Pipeline Overview</h2>
-        <div class="flex items-stretch gap-2">
-          <div class="card p-5 flex-1 text-center">
-            <div id="count-draft" class="text-3xl font-bold text-yellow-400">—</div>
-            <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Draft</div>
-            <div class="text-xs text-gray-600 mt-1">Awaiting review</div>
+        <h2 class="text-base font-semibold text-white mb-3">Pipeline</h2>
+        <div class="grid grid-cols-4 gap-2 mb-2">
+          <div class="card p-4 text-center">
+            <div id="metric-in-queue" class="text-2xl font-bold text-yellow-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">In Queue</div>
           </div>
-          <div class="flex items-center text-gray-700 text-xl px-1">→</div>
-          <div class="card p-5 flex-1 text-center">
-            <div id="count-approved" class="text-3xl font-bold text-blue-400">—</div>
-            <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Approved</div>
-            <div class="text-xs text-gray-600 mt-1">Queued to ship</div>
+          <div class="card p-4 text-center">
+            <div id="metric-articles-today" class="text-2xl font-bold text-indigo-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">Articles Today</div>
           </div>
-          <div class="flex items-center text-gray-700 text-xl px-1">→</div>
-          <div class="card p-5 flex-1 text-center">
-            <div id="count-published" class="text-3xl font-bold text-green-400">—</div>
-            <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Live Today</div>
-            <div class="text-xs text-gray-600 mt-1">Articles on site</div>
+          <div class="card p-4 text-center">
+            <div id="metric-tweets-today" class="text-2xl font-bold text-blue-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">Tweets Today</div>
           </div>
-          <div class="flex items-center text-gray-700 text-xl px-1">+</div>
-          <div class="card p-5 flex-1 text-center">
-            <div id="count-tim" class="text-3xl font-bold text-purple-400">—</div>
-            <div class="text-xs text-gray-500 mt-1 uppercase tracking-wide">Tim Posts</div>
-            <div class="text-xs text-gray-600 mt-1">@TimHarris707 today</div>
+          <div class="card p-4 text-center">
+            <div id="metric-next-publish" class="text-2xl font-bold text-green-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">Next Publish</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2">
+          <div class="card p-4 text-center">
+            <div id="metric-articles-48h" class="text-2xl font-bold text-green-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">Articles (48h)</div>
+          </div>
+          <div class="card p-4 text-center">
+            <div id="metric-cliff-tweets-48h" class="text-2xl font-bold text-indigo-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">Cliff Tweets (48h)</div>
+          </div>
+          <div class="card p-4 text-center">
+            <div id="metric-tim-posts-48h" class="text-2xl font-bold text-purple-400">—</div>
+            <div class="text-xs text-gray-500 mt-1">Tim Posts (48h)</div>
+          </div>
+          <div class="card p-4 text-center">
+            <div id="metric-total-48h" class="text-2xl font-bold text-white">—</div>
+            <div class="text-xs text-gray-500 mt-1">Total Out (48h)</div>
+          </div>
+        </div>
+        <div class="hidden">
+          <div id="count-draft"></div><div id="count-approved"></div><div id="count-published"></div><div id="count-tim">
           </div>
         </div>
       </div>
@@ -1209,6 +1224,35 @@
       set('count-approved', approved.length);
       set('count-published', articles.length);
       set('count-tim', timPosts.length);
+
+      // New pipeline metrics
+      const cutoff48 = new Date(Date.now() - 48*60*60*1000);
+      const pub48 = q.filter(i=>i.status==='published' && i.publishedAt && new Date(i.publishedAt)>cutoff48);
+      const articles48 = pub48.filter(i=>i.type!=='tweet' && (i.title||i.slug));
+      const cliffTweets48 = pub48.filter(i=>i.type==='tweet' && i.account!=='timharris707');
+      const timPosts48 = pub48.filter(i=>i.account==='timharris707');
+
+      const todayPT = new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}).split(',')[0];
+      const approvedArticlesToday = approved.filter(i=>(i.title||i.slug) && i.scheduledFor && new Date(i.scheduledFor).toLocaleString('en-US',{timeZone:'America/Los_Angeles'}).startsWith(todayPT));
+      const approvedTweetsToday = approved.filter(i=>(i.type==='tweet'||i.tweetText) && i.scheduledFor && new Date(i.scheduledFor).toLocaleString('en-US',{timeZone:'America/Los_Angeles'}).startsWith(todayPT));
+
+      const allPending = q.filter(i=>i.status!=='published'&&i.status!=='rejected');
+      const nextItem = allPending.filter(i=>i.scheduledFor&&i.status==='approved').sort((a,b)=>new Date(a.scheduledFor)-new Date(b.scheduledFor))[0];
+      const nextPublish = nextItem ? (() => {
+        const diff = new Date(nextItem.scheduledFor) - Date.now();
+        if (diff <= 0) return 'Now';
+        const m = Math.floor(diff/60000);
+        return m < 60 ? m+'m' : Math.floor(m/60)+'h '+( m%60)+'m';
+      })() : '—';
+
+      set('metric-in-queue', allPending.length);
+      set('metric-articles-today', approvedArticlesToday.length + articles.length);
+      set('metric-tweets-today', approvedTweetsToday.length + cliffTweets48.filter(i=>new Date(i.publishedAt)>new Date(today)).length);
+      set('metric-next-publish', nextPublish);
+      set('metric-articles-48h', articles48.length);
+      set('metric-cliff-tweets-48h', cliffTweets48.length);
+      set('metric-tim-posts-48h', timPosts48.length);
+      set('metric-total-48h', pub48.length);
 
       const rejected = q.filter(i=>i.status==='rejected');
       const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
