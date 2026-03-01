@@ -66,6 +66,7 @@
         <button onclick="switchTab('marketing')" id="tab-marketing" class="tab-active py-4 text-sm font-medium">Marketing</button>
         <button onclick="switchTab('health')" id="tab-health" class="tab-inactive py-4 text-sm font-medium">System Health</button>
         <button onclick="switchTab('agents')" id="tab-agents" class="tab-inactive py-4 text-sm font-medium">Agents</button>
+        <button onclick="switchTab('ideas')" id="tab-ideas" class="tab-inactive py-4 text-sm font-medium">💡 Ideas</button>
       </div>
     </div>
 
@@ -323,6 +324,29 @@
     </div>
 
     <!-- AGENTS TAB -->
+    <div id="tab-ideas-content" class="hidden p-6 max-w-7xl mx-auto">
+      <h2 class="text-lg font-semibold text-white mb-1">Ideas & Backlog</h2>
+      <p class="text-gray-500 text-sm mb-6">Projects and features to build when the time is right.</p>
+
+      <div class="space-y-3">
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded-full">Portal</span>
+                <span class="text-xs text-gray-500">Added 2026-03-01</span>
+              </div>
+              <h3 class="text-white font-medium">Add Agent via UI</h3>
+              <p class="text-gray-400 text-sm mt-1">Provision a new agent directly from the portal — fill in name, persona, schedule, and hit a button. No terminal required. Needs a backend endpoint on the Mac mini to handle the provisioning (openclaw config, cron jobs, persona files).</p>
+            </div>
+            <span class="shrink-0 text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">Backlog</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <div id="tab-agents-content" class="hidden p-6 max-w-7xl mx-auto">
 
     <div class="mb-6">
@@ -801,7 +825,7 @@
     }
 
     function switchTab(t) {
-      ['marketing','health','agents'].forEach(n => {
+      ['marketing','health','agents','ideas'].forEach(n => {
         document.getElementById('tab-'+n+'-content').classList.add('hidden');
         document.getElementById('tab-'+n).className = (n===t?'tab-active':'tab-inactive')+' py-4 text-sm font-medium';
       });
@@ -811,7 +835,7 @@
 
     function restoreTab() {
       const tab = location.hash.replace('#','');
-      if (['marketing','health','agents'].includes(tab)) {
+      if (['marketing','health','agents','ideas'].includes(tab)) {
         switchTab(tab);
       }
     }
