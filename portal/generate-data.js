@@ -84,7 +84,17 @@ async function main() {
       const desc = j.description || msg.split(/\n/)[0].slice(0, 200) || '—';
       return {
         name: j.name,
-        schedule: j.schedule?.expr || j.schedule?.kind || '—',
+        schedule: (() => {
+          const s = j.schedule || {};
+          if (s.expr) return s.expr;
+          if (s.kind === 'every' && s.everyMs) {
+            const mins = s.everyMs / 60000;
+            if (mins < 60) return 'every ' + mins + 'm';
+            return 'every ' + Math.round(mins / 60) + 'h';
+          }
+          if (s.kind === 'at' && s.at) return 'at ' + s.at;
+          return s.kind || '—';
+        })(),
         status: status,
         lastRun: msAgo !== null ? fmtDuration(msAgo) + ' ago' : null,
         lastRunMs: lastMs || null,
