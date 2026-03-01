@@ -418,6 +418,7 @@
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Tokens</th>
             </tr></thead>
             <tbody id="cliff-jobs-body"></tbody>
           </table>
@@ -515,6 +516,7 @@
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Tokens</th>
             </tr></thead>
             <tbody id="samantha-jobs-body"></tbody>
           </table>
@@ -557,9 +559,10 @@
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">What it does</div>
           <p id="job-modal-desc" class="text-gray-200 text-sm leading-relaxed"></p>
         </div>
-        <div class="grid grid-cols-2 gap-3 text-xs text-gray-500">
+        <div class="grid grid-cols-3 gap-3 text-xs text-gray-500">
           <div>Last run: <span id="job-modal-last" class="text-gray-300"></span></div>
           <div>Next run: <span id="job-modal-next" class="text-gray-300"></span></div>
+          <div>Tokens: <span id="job-modal-tokens" class="text-gray-300"></span></div>
         </div>
       </div>
     </div>
@@ -846,6 +849,13 @@
             return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
           };
 
+          const fmtTokens = t => {
+            if (!t) return '<span class="text-gray-700">—</span>';
+            const k = (t/1000).toFixed(1);
+            const cls = t > 100000 ? 'text-red-400' : t > 50000 ? 'text-yellow-400' : 'text-green-400';
+            return `<span class="${cls} font-medium">${k}K</span>`;
+          };
+
           tbody.innerHTML = info.jobs.map(j => `
             <tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
               <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')} <span class="text-gray-600 text-xs">→</span></td>
@@ -854,6 +864,7 @@
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRun || '—'}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.nextRun || '—'}</td>
+              <td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens)}</td>
             </tr>`).join('');
         } else if (tbody) {
           tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
@@ -1191,6 +1202,8 @@
       document.getElementById('job-modal-desc').textContent = j.description || 'No description available.';
       document.getElementById('job-modal-last').textContent = j.lastRun || '—';
       document.getElementById('job-modal-next').textContent = j.nextRun || '—';
+      const t = j.lastRunTokens;
+      document.getElementById('job-modal-tokens').textContent = t ? (t/1000).toFixed(1) + 'K' : '—';
       document.getElementById('job-modal').classList.remove('hidden');
     }
 
