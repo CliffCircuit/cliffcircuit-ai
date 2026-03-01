@@ -204,7 +204,7 @@
                 <!-- Meta -->
                 <div class="space-y-2 mt-auto">
                   <div class="flex items-center justify-between">
-                    <span class="text-xs text-gray-500">Scheduled</span>
+                    <span class="text-xs text-gray-500">Posts in</span>
                     <span id="on-deck-scheduled" class="text-xs font-semibold text-teal-400">—</span>
                   </div>
                   <div class="flex items-center justify-between">
@@ -1460,7 +1460,7 @@
         document.getElementById('on-deck-acct-badge').className = acctCls;
         document.getElementById('on-deck-acct-badge').textContent = acctLabel;
         document.getElementById('on-deck-text').textContent = preview + (preview.length >= 120 ? '...' : '');
-        document.getElementById('on-deck-scheduled').textContent = schedStr + ' (' + diffStr + ')';
+        document.getElementById('on-deck-scheduled').textContent = diff <= 0 ? 'Now' : diffStr;
         document.getElementById('on-deck-queued').textContent = queuedAgo;
         onDeckEmpty.classList.add('hidden');
         onDeckContent.classList.remove('hidden');
