@@ -1626,12 +1626,24 @@
 
       function updateSummaryCards() {
         const fmtK2 = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n||0);
-        const cron = window._cronTotals || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
-        const sub  = window._subTotals  || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
-        const combIn  = cron.tokensIn  + sub.tokensIn;
-        const combOut = cron.tokensOut + sub.tokensOut;
-        const combCost = cron.cost + sub.cost;
-        const combSessions = cron.sessions + sub.sessions;
+        const src  = window._globalSource || 'all';
+        const cron = window._cronTotals   || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+        const sub  = window._subTotals    || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+        const cod  = window._codingTotals || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+        let combIn, combOut, combCost, combSessions;
+        if (src === 'crons') {
+          combIn = cron.tokensIn; combOut = cron.tokensOut; combCost = cron.cost; combSessions = cron.sessions;
+        } else if (src === 'subagents') {
+          combIn = sub.tokensIn;  combOut = sub.tokensOut;  combCost = sub.cost;  combSessions = sub.sessions;
+        } else if (src === 'coding') {
+          combIn = cod.tokensIn;  combOut = cod.tokensOut;  combCost = cod.cost;  combSessions = cod.sessions;
+        } else {
+          // all — combine everything
+          combIn       = cron.tokensIn  + sub.tokensIn  + cod.tokensIn;
+          combOut      = cron.tokensOut + sub.tokensOut + cod.tokensOut;
+          combCost     = cron.cost      + sub.cost      + cod.cost;
+          combSessions = cron.sessions  + sub.sessions  + cod.sessions;
+        }
         const avgIn  = combSessions ? Math.round(combIn  / combSessions) : 0;
         const avgOut = combSessions ? Math.round(combOut / combSessions) : 0;
         const el = id => document.getElementById(id);
@@ -1746,6 +1758,9 @@
         document.getElementById('db-sub-tokens').textContent = fmtK(toksIn) + ' / ' + fmtK(toksOut);
         const sub = document.getElementById('db-sub-tokens-sub');
         if (sub) sub.textContent = 'in / out';
+        // Store for combined summary cards
+        window._codingTotals = { tokensIn: toksIn, tokensOut: toksOut, cost, sessions: total };
+        updateSummaryCards();
       }
 
       // Populate task filter dropdown with unique task names (all time, so options don't disappear)
