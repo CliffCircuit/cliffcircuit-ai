@@ -307,6 +307,42 @@ async function main() {
     }
   } catch(e) { gateway.error = e.message; }
 
+  // ── Subagent Sessions + Exec Events from DB ───────────────
+  let subagentSessions = { total: 0, activeCount: 0, totalCostUsd: 0, totalTokens: 0, items: [] };
+  let execEvents = { total: 0, failureCount: 0, items: [] };
+  try {
+    const Database = require('better-sqlite3');
+    const db = new Database('/Users/openclaw/.openclaw/workspace/portal-data.db', { readonly: true });
+
+    const sessions = db.prepare('SELECT * FROM subagent_sessions ORDER BY started_at DESC LIMIT 50').all();
+    const totalSessions = db.prepare('SELECT COUNT(*) as c FROM subagent_sessions').get().c;
+    const activeCount = db.prepare("SELECT COUNT(*) as c FROM subagent_sessions WHERE status = 'running'").get().c;
+    const totalCostDb = db.prepare('SELECT SUM(estimated_cost_usd) as s FROM subagent_sessions').get().s || 0;
+    const totalTokensDb = db.prepare('SELECT SUM(tokens_total) as s FROM subagent_sessions').get().s || 0;
+
+    const execItems = db.prepare('SELECT * FROM exec_events ORDER BY started_at DESC LIMIT 100').all();
+    const totalExec = db.prepare('SELECT COUNT(*) as c FROM exec_events').get().c;
+    const failCount = db.prepare('SELECT COUNT(*) as c FROM exec_events WHERE exit_code != 0').get().c;
+
+    subagentSessions = {
+      total: totalSessions,
+      activeCount,
+      totalCostUsd: Math.round(totalCostDb * 10000) / 10000,
+      totalTokens: totalTokensDb,
+      items: sessions
+    };
+
+    execEvents = {
+      total: totalExec,
+      failureCount: failCount,
+      items: execItems
+    };
+
+    db.close();
+  } catch(e) {
+    console.error('DB read failed:', e.message);
+  }
+
   const data = {
     generatedAt: new Date().toISOString(),
     auth: {
@@ -406,6 +442,8 @@ async function main() {
     stats,
     gateway,
     costs,
+    subagentSessions,
+    execEvents,
   };
 
   // ── Write + Push ───────────────────────────────────────────────
