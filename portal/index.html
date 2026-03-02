@@ -1147,6 +1147,17 @@
       try {
         const r = await fetch('/portal/data.json?t='+Date.now());
         DATA = await r.json();
+        // Merge live-data.json on top (fast session data)
+        try {
+          const lr = await fetch('/portal/live-data.json?t='+Date.now());
+          const live = await lr.json();
+          if (live && live.generatedAt) {
+            DATA.sessions = live.sessions || DATA.sessions;
+            DATA.conversationSessions = live.conversationSessions || DATA.conversationSessions;
+            DATA.sessionHistory = live.sessionHistory || DATA.sessionHistory;
+            DATA._liveGeneratedAt = live.generatedAt;
+          }
+        } catch { /* live-data.json optional */ }
         return DATA;
       } catch { return null; }
     }
@@ -1166,7 +1177,11 @@
       const d = await loadData();
       document.getElementById('loading').classList.add('hidden');
       if (!d) { showError(); return; }
-      document.getElementById('last-updated').textContent = d.generatedAt ? 'Updated '+new Date(d.generatedAt).toLocaleTimeString() : '';
+      const liveTs = d._liveGeneratedAt || d.generatedAt;
+      const fullTs = d.generatedAt;
+      const liveStr = liveTs ? new Date(liveTs).toLocaleTimeString() : '';
+      const fullStr = fullTs && fullTs !== liveTs ? ' (full: '+new Date(fullTs).toLocaleTimeString()+')' : '';
+      document.getElementById('last-updated').textContent = liveStr ? 'Live: '+liveStr+fullStr : '';
       renderMarketing(d);
       renderHealth(d);
       renderAgents(d);
