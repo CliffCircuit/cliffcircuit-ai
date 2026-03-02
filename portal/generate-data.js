@@ -418,7 +418,7 @@ async function main() {
     queue: cleanQueue,
     crons,
     agentTokens: crons._agentTokens || {},
-    ghWriteToken: keychain('github-cliffcircuit') || null,
+    ghWriteToken: null, // token served separately — never commit to repo
     agentConfigs,
     sessions: (() => {
       try {
@@ -514,40 +514,32 @@ async function main() {
     execEvents,
   };
 
-  // ── Write + Push ───────────────────────────────────────────────
+  // ── Write + Push (uses workspace repo directly — no clone needed) ───
+  const PORTAL_REPO = '/Users/openclaw/workspace/cliffcircuit-ai';
   const ghToken = keychain('github-cliffcircuit');
   if (ghToken) {
     try {
-      // Always use a fresh clone to avoid divergence issues
-      run(`rm -rf ${REPO_DIR}`, { stdio: 'pipe' });
-      run(`git clone https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git ${REPO_DIR}`, { stdio: 'pipe' });
-      // Write AFTER clone so the file isn't wiped
-      const outPath = path.join(REPO_DIR, 'portal/data.json');
-      fs.mkdirSync(path.join(REPO_DIR, 'portal'), { recursive: true });
+      const outPath = path.join(PORTAL_REPO, 'portal/data.json');
       fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
       console.log('Wrote data.json');
 
-      // Pre-push hero images + article HTML for approved (unpublished) articles so portal previews work
+      // Copy hero images + article HTML previews for approved items
       try {
         const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
         if (fs.existsSync(queuePath)) {
           const queue = JSON.parse(fs.readFileSync(queuePath));
           const items = Array.isArray(queue) ? queue : queue.queue || Object.values(queue);
           const approved = items.filter(i => i.status === 'approved');
-          // Images
-          const imgDestDir = path.join(REPO_DIR, 'portal/images');
+          const imgDestDir = path.join(PORTAL_REPO, 'portal/images');
           fs.mkdirSync(imgDestDir, { recursive: true });
-          // Article HTML previews
-          const previewDestDir = path.join(REPO_DIR, 'portal/previews');
+          const previewDestDir = path.join(PORTAL_REPO, 'portal/previews');
           fs.mkdirSync(previewDestDir, { recursive: true });
           approved.forEach(item => {
             if (item.heroImage) {
               const srcPath = `/Users/openclaw/.openclaw/workspace/cliffmart${item.heroImage}`;
               const slug = path.basename(item.heroImage);
               const destPath = path.join(imgDestDir, slug);
-              if (fs.existsSync(srcPath)) {
-                fs.copyFileSync(srcPath, destPath);
-              }
+              if (fs.existsSync(srcPath)) fs.copyFileSync(srcPath, destPath);
             }
             if (item.slug && item.htmlContent) {
               const slug = item.heroImage ? item.heroImage.split('/').pop() : null;
@@ -575,41 +567,54 @@ async function main() {
           console.log('Pre-pushed images + previews for', approved.length, 'approved items');
         }
       } catch(e) { console.warn('Pre-push skipped:', e.message); }
-      // ── Sync portal/goals.json → local daily-goals.json ──────────────────
-      const repoGoalsPath = path.join(REPO_DIR, 'portal/goals.json');
+
+      // ── Sync portal/goals.json → local daily-goals.json ──
+      const repoGoalsPath = path.join(PORTAL_REPO, 'portal/goals.json');
       if (fs.existsSync(repoGoalsPath)) {
         try {
           const goalsRaw = fs.readFileSync(repoGoalsPath, 'utf8');
           const goals = JSON.parse(goalsRaw);
-          const localGoalsPath = path.join(WORKSPACE, 'daily-goals.json');
-          fs.writeFileSync(localGoalsPath, JSON.stringify(goals, null, 2));
+          fs.writeFileSync(path.join(WORKSPACE, 'daily-goals.json'), JSON.stringify(goals, null, 2));
           console.log('Synced portal/goals.json → daily-goals.json');
         } catch(e) { console.warn('Goals sync failed:', e.message); }
       }
 
-      // ── Sync reschedule-signal.json → local (triggers cliff-scheduler) ──
-      const repoSignalPath = path.join(REPO_DIR, 'portal/reschedule-signal.json');
+      // ── Sync reschedule-signal.json → local ──
+      const repoSignalPath = path.join(PORTAL_REPO, 'portal/reschedule-signal.json');
       if (fs.existsSync(repoSignalPath)) {
         try {
           const signalRaw = fs.readFileSync(repoSignalPath, 'utf8');
           const signal = JSON.parse(signalRaw);
           const signalAge = Date.now() - new Date(signal.triggeredAt || 0).getTime();
           if (signalAge < 2 * 60 * 60 * 1000) {
-            const localSignalPath = path.join(WORKSPACE, 'reschedule-signal.json');
-            fs.writeFileSync(localSignalPath, signalRaw);
+            fs.writeFileSync(path.join(WORKSPACE, 'reschedule-signal.json'), signalRaw);
             console.log('Synced reschedule-signal (age:', Math.round(signalAge/60000), 'min)');
           }
         } catch(e) { console.warn('Reschedule signal sync failed:', e.message); }
       }
 
-      run(`cd ${REPO_DIR} && git config user.email "cliff@cliffcircuit.ai"`, { stdio: 'pipe' });
-      run(`cd ${REPO_DIR} && git config user.name "Cliff"`, { stdio: 'pipe' });
-      run(`cd ${REPO_DIR} && git add portal/`, { stdio: 'pipe' });
-      const status = run(`cd ${REPO_DIR} && git status --porcelain`);
+      // ── Git commit + push (with pull --rebase on conflict) ──
+      const { execSync } = require('child_process');
+      const gitOpts = { cwd: PORTAL_REPO, encoding: 'utf8', timeout: 60000 };
+      execSync('git config user.email "cliff@cliffcircuit.ai"', gitOpts);
+      execSync('git config user.name "Cliff"', gitOpts);
+      execSync('git add portal/', gitOpts);
+      const status = execSync('git status --porcelain', gitOpts).trim();
       if (status) {
-        run(`cd ${REPO_DIR} && git commit -m "chore: update portal data [${new Date().toISOString().slice(11,16)} UTC]"`, { stdio: 'pipe' });
-        run(`cd ${REPO_DIR} && git push https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git main`, { stdio: 'pipe' });
-        console.log('✅ Pushed to GitHub');
+        execSync(`git commit -m "chore: update portal data [${new Date().toISOString().slice(11,16)} UTC]"`, gitOpts);
+        let pushed = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            execSync(`git push https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git main`, gitOpts);
+            console.log('✅ Pushed to GitHub');
+            pushed = true;
+            break;
+          } catch(pushErr) {
+            console.log(`Push attempt ${attempt} failed, pulling and rebasing...`);
+            try { execSync(`git pull https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git main --rebase`, gitOpts); } catch(e) {}
+          }
+        }
+        if (!pushed) console.error('❌ Push failed after 3 attempts');
       } else {
         console.log('No changes to push');
       }
@@ -623,7 +628,4 @@ async function main() {
 
 main().catch(console.error);
 
-// Cleanup tmp dir on exit (success or failure)
-process.on('exit', () => { try { require('child_process').execSync(`rm -rf ${REPO_DIR}`); } catch(e) {} });
-process.on('SIGINT', () => process.exit(1));
-process.on('SIGTERM', () => process.exit(1));
+main().catch(console.error);
