@@ -745,8 +745,8 @@
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
-                <div class="text-indigo-400 text-sm font-semibold">Low</div>
-                <div class="text-gray-600 text-xs">fast + accurate</div>
+                <div id="cliff-thinking-level" class="text-indigo-400 text-sm font-semibold">Low</div>
+                <div id="cliff-thinking-desc" class="text-gray-600 text-xs">fast + accurate</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1" id="cliff-ctx-title">Live Session</div>
@@ -847,8 +847,8 @@
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
-                <div class="text-teal-400 text-sm font-semibold">Low</div>
-                <div class="text-gray-600 text-xs">lightweight reasoning</div>
+                <div id="samantha-thinking-level" class="text-teal-400 text-sm font-semibold">Low</div>
+                <div id="samantha-thinking-desc" class="text-gray-600 text-xs">lightweight reasoning</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1" id="samantha-ctx-title">Live Session</div>
@@ -948,8 +948,8 @@
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
-                <div class="text-gray-400 text-sm font-semibold">Off</div>
-                <div class="text-gray-600 text-xs">lean & fast</div>
+                <div id="scout-thinking-level" class="text-gray-400 text-sm font-semibold">Off</div>
+                <div id="scout-thinking-desc" class="text-gray-600 text-xs">lean <div class="text-gray-600 text-xs">lean & fast</div> fast</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1" id="scout-ctx-title">Last Run</div>
@@ -1936,6 +1936,27 @@
     }
 
     function renderAgents(d) {
+      // Populate agent thinking levels from config
+      const ac = d.agentConfigs || {};
+      const thinkingMeta = {
+        low: { color: 'text-teal-400', desc: 'lightweight reasoning' },
+        medium: { color: 'text-yellow-400', desc: 'balanced reasoning' },
+        high: { color: 'text-orange-400', desc: 'deep reasoning' },
+        off: { color: 'text-gray-400', desc: 'no reasoning' },
+      };
+      ['cliff', 'samantha', 'scout'].forEach(agent => {
+        const id = agent === 'cliff' ? 'main' : agent;
+        const cfg = ac[id] || ac[agent] || {};
+        const level = (cfg.thinking || 'off').toLowerCase();
+        const meta = thinkingMeta[level] || thinkingMeta.off;
+        const levelEl = document.getElementById(agent + '-thinking-level');
+        const descEl = document.getElementById(agent + '-thinking-desc');
+        if (levelEl) {
+          levelEl.textContent = level.charAt(0).toUpperCase() + level.slice(1);
+          levelEl.className = meta.color + ' text-sm font-semibold';
+        }
+        if (descEl) descEl.textContent = meta.desc;
+      });
       const crons = d.crons || [];
       const agentMap = {};
       crons.forEach(job => {

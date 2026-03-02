@@ -251,6 +251,38 @@ async function main() {
   twitter.sparklineCliff = growth.map(g => g.cliffFollowers ?? 0);
   twitter.sparklineTim = growth.map(g => g.timFollowers ?? 0);
 
+  // ── Agent Configs (thinking levels, models) ─────────────────────
+  const agentConfigs = {};
+  try {
+    const agentsRaw = run('openclaw config get agents.list');
+    const defaultThinking = run('openclaw config get agents.defaults.thinkingDefault') || 'off';
+    const defaultModel = run('openclaw config get agents.defaults.model.primary') || 'unknown';
+    const agents = JSON.parse(agentsRaw);
+    for (const a of agents) {
+      agentConfigs[a.id] = {
+        id: a.id,
+        name: a.name || a.id,
+        model: a.model || defaultModel,
+        thinking: defaultThinking,
+      };
+    }
+    // Check active sessions for runtime thinking level
+    const sessionsRaw = run('openclaw sessions --all-agents --json');
+    if (sessionsRaw) {
+      const sessData = JSON.parse(sessionsRaw);
+      const sessions = Array.isArray(sessData) ? sessData : (sessData.sessions || []);
+      for (const s of sessions) {
+        if (s.agentId && s.thinkingLevel && agentConfigs[s.agentId]) {
+          if (!agentConfigs[s.agentId]._lastUpdate || s.updatedAt > agentConfigs[s.agentId]._lastUpdate) {
+            agentConfigs[s.agentId].thinking = s.thinkingLevel;
+            agentConfigs[s.agentId]._lastUpdate = s.updatedAt;
+          }
+        }
+      }
+    }
+    for (const id in agentConfigs) delete agentConfigs[id]._lastUpdate;
+  } catch(e) { console.warn('Could not load agent configs:', e.message); }
+
   // ── Disk ───────────────────────────────────────────────────────
   let disk = {};
   try {
@@ -381,6 +413,7 @@ async function main() {
     queue: cleanQueue,
     crons,
     agentTokens: crons._agentTokens || {},
+    agentConfigs,
     sessions: (() => {
       try {
         const raw = run('openclaw sessions');
