@@ -623,12 +623,13 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Runs</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Duration</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Dur</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Total Cost</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Cost/Run</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
           </tr></thead>
-          <tbody id="grp-subagent-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+          <tbody id="grp-subagent-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
       </div>
 
@@ -1770,12 +1771,17 @@
 
         const body = document.getElementById('grp-subagent-body');
         if (sorted.length === 0) {
-          body.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
+          body.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
           return;
         }
         const fmtDurG = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
-        body.innerHTML = sorted.map(g => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium">${esc(g.task)}</td>
+        const maxCost = sorted[0] ? sorted[0].totalCost : 1;
+        body.innerHTML = sorted.map(g => {
+          const barPct = Math.round((g.totalCost / maxCost) * 100);
+          const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
+          const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls2[g.agent]||'text-gray-400'}">${esc(g.agent||'—')}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${modelShortT(g.model)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
@@ -1783,7 +1789,9 @@
           <td class="px-4 py-2 text-right text-white text-xs">${fmtK(g.tokensIn)} / ${fmtK(g.tokensOut)}</td>
           <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(2) : '<$0.01'}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
-        </tr>`).join('');
+          <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
+        </tr>`;
+        }).join('');
       }
 
       window.setSubPeriod = renderGrouped;
