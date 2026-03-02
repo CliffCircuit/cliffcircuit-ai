@@ -604,8 +604,8 @@
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Dur</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
           </tr></thead>
           <tbody id="grp-subagent-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
@@ -1406,6 +1406,7 @@
     function toggleDbSubagents() {
       window._dbSubShowAll = !window._dbSubShowAll;
       if (window._lastData) renderTokens(window._lastData);
+      renderGrouped();
     }
     // ── Global Filters ─────────────────────────────────────────────────────────
     window._globalRange  = 'today';
@@ -1661,8 +1662,8 @@
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${fmtDurG(Math.round(g.totalDur/g.runs))}</td>
           <td class="px-4 py-2 text-right text-white text-xs">${fmtK(g.tokensIn)} / ${fmtK(g.tokensOut)}</td>
-          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(2) : '<$0.01'}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
+          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(2) : '<$0.01'}</td>
           <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
         </tr>`;
         }).join('');
