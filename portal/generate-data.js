@@ -314,7 +314,7 @@ async function main() {
     const Database = require('better-sqlite3');
     const db = new Database('/Users/openclaw/.openclaw/workspace/portal-data.db', { readonly: true });
 
-    const sessions = db.prepare('SELECT * FROM subagent_sessions ORDER BY started_at DESC LIMIT 50').all();
+    const sessions = db.prepare('SELECT *, COALESCE(task_name, label) as display_name FROM subagent_sessions ORDER BY started_at DESC LIMIT 50').all();
     const totalSessions = db.prepare('SELECT COUNT(*) as c FROM subagent_sessions').get().c;
     const activeCount = db.prepare("SELECT COUNT(*) as c FROM subagent_sessions WHERE status = 'running'").get().c;
     const totalCostDb = db.prepare('SELECT SUM(estimated_cost_usd) as s FROM subagent_sessions').get().s || 0;
