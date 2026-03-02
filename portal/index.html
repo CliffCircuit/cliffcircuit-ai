@@ -1418,22 +1418,61 @@
     }
     function setGlobalAgent(a) {
       window._globalAgent = a;
+      // If a task is selected that doesn't belong to this agent, reset task
+      if (a !== 'all' && window._globalTask !== 'all') {
+        const validTasks = getTasksForAgent(a);
+        if (!validTasks.includes(window._globalTask)) {
+          window._globalTask = 'all';
+          const tSel = document.getElementById('global-task');
+          if (tSel) tSel.value = 'all';
+        }
+      }
       applyGlobalFilters();
     }
     function setGlobalTask(t) {
       window._globalTask = t;
+      // If an agent is selected that doesn't have this task, reset agent
+      if (t !== 'all' && window._globalAgent !== 'all') {
+        const validAgents = getAgentsForTask(t);
+        if (!validAgents.includes(window._globalAgent)) {
+          window._globalAgent = 'all';
+          const aSel = document.getElementById('global-agent');
+          if (aSel) aSel.value = 'all';
+        }
+      }
       applyGlobalFilters();
     }
+    function getTasksForAgent(agent) {
+      if (!window._agentTaskMap) return [];
+      return window._agentTaskMap[agent] || [];
+    }
+    function getAgentsForTask(task) {
+      if (!window._taskAgentMap) return [];
+      return window._taskAgentMap[task] || [];
+    }
     function applyGlobalFilters() {
-      // All sections always visible — task filter narrows within each section
+      // All sections always visible — task/agent filters narrow within each section
       if (window._lastData) renderTokens(window._lastData);
     }
     function populateTaskDropdown(taskNames) {
       const sel = document.getElementById('global-task');
       if (!sel) return;
       const cur = window._globalTask || 'all';
+      // Filter task list by current agent if one is selected
+      const agent = window._globalAgent || 'all';
+      const filtered = agent === 'all' ? taskNames : taskNames.filter(t => getTasksForAgent(agent).includes(t));
       sel.innerHTML = '<option value="all">All Tasks</option>' +
-        taskNames.map(t => `<option value="${t}"${t===cur?' selected':''}>${t}</option>`).join('');
+        filtered.map(t => `<option value="${t}"${t===cur?' selected':''}>${t}</option>`).join('');
+    }
+    function populateAgentDropdown(agentNames) {
+      const sel = document.getElementById('global-agent');
+      if (!sel) return;
+      const cur = window._globalAgent || 'all';
+      const task = window._globalTask || 'all';
+      const filtered = task === 'all' ? agentNames : agentNames.filter(a => getAgentsForTask(task).includes(a));
+      const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', 'claude-code': 'Claude Code' };
+      sel.innerHTML = '<option value="all">All Agents</option>' +
+        filtered.map(a => `<option value="${a}"${a===cur?' selected':''}>${labels[a]||a}</option>`).join('');
     }
 
     // legacy alias — kept so any old references still work
@@ -1500,7 +1539,38 @@
       const subTaskNames = [...new Set(allSubItems.map(s => s.display_name || s.task_name).filter(Boolean))];
       const cronTaskNames = jobStats.map(j => j.name);
       const allTaskNames = [...new Set([...cronTaskNames, ...subTaskNames])].sort();
+
+      // Build agent<->task maps for cascading filters
+      const agentTaskMap = {};
+      const taskAgentMap = {};
+      const agentNorm = a => {
+        if (!a) return 'cliff';
+        if (a === 'main' || a === 'cliff') return 'cliff';
+        return a.toLowerCase();
+      };
+      // From cron jobs
+      jobStats.forEach(j => {
+        const a = agentNorm(j.agent);
+        if (!agentTaskMap[a]) agentTaskMap[a] = [];
+        if (!agentTaskMap[a].includes(j.name)) agentTaskMap[a].push(j.name);
+        if (!taskAgentMap[j.name]) taskAgentMap[j.name] = [];
+        if (!taskAgentMap[j.name].includes(a)) taskAgentMap[j.name].push(a);
+      });
+      // From sub-agent sessions
+      allSubItems.forEach(s => {
+        const a = agentNorm(s.agent_type);
+        const t = s.display_name || s.task_name;
+        if (!t) return;
+        if (!agentTaskMap[a]) agentTaskMap[a] = [];
+        if (!agentTaskMap[a].includes(t)) agentTaskMap[a].push(t);
+        if (!taskAgentMap[t]) taskAgentMap[t] = [];
+        if (!taskAgentMap[t].includes(a)) taskAgentMap[t].push(a);
+      });
+      window._agentTaskMap = agentTaskMap;
+      window._taskAgentMap = taskAgentMap;
+      const allAgentNames = [...new Set(Object.keys(agentTaskMap))].sort();
       populateTaskDropdown(allTaskNames);
+      populateAgentDropdown(allAgentNames);
 
       // Apply task filter to per-job breakdown
       const filteredJobStats = taskFilter === 'all' ? jobStats : jobStats.filter(j => j.name === taskFilter);
@@ -1609,7 +1679,8 @@
         // This month = 1st of current month
         const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         return allDbItems.filter(s => {
-          if (taskF !== 'all' && (s.display_name || s.task_name || '') !== taskF) return false;
+          const globalTask = window._globalTask || 'all';
+          if (globalTask !== 'all' && (s.display_name || s.task_name || '') !== globalTask) return false;
           if (agent !== 'all') {
             const sa = (s.agent_type || '').toLowerCase();
             const agentMap2 = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
