@@ -462,20 +462,51 @@
 
     <!-- TOKEN USAGE TAB -->
     <div id="tab-tokens-content" class="hidden p-6 max-w-7xl mx-auto">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-lg font-semibold text-white mb-1">Token Usage</h2>
-          <p class="text-gray-500 text-sm">Consumption and cost estimates across all cron jobs</p>
+      <!-- Global Filter Bar -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-lg font-semibold text-white mb-1">Token Usage</h2>
+            <p class="text-gray-500 text-sm">Consumption and cost estimates across all agents and sessions</p>
+          </div>
         </div>
-        <div class="flex flex-wrap gap-1" id="token-range-btns">
-          <button onclick="setTokenRange('1h')"        id="tr-1h"        class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Last 1h</button>
-          <button onclick="setTokenRange('24h')"       id="tr-24h"       class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Last 24h</button>
-          <button onclick="setTokenRange('today')"     id="tr-today"     class="tf-active   text-xs px-3 py-1 rounded border border-gray-700">Today</button>
-          <button onclick="setTokenRange('yesterday')" id="tr-yesterday" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Yesterday</button>
-          <button onclick="setTokenRange('7d')"        id="tr-7d"        class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Last 7d</button>
-          <button onclick="setTokenRange('week')"      id="tr-week"      class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">This Week</button>
-          <button onclick="setTokenRange('30d')"       id="tr-30d"       class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Last 30d</button>
-          <button onclick="setTokenRange('month')"     id="tr-month"     class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">This Month</button>
+        <div class="flex flex-wrap gap-3 items-center p-4 rounded-lg border border-gray-800 bg-gray-900/50">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Time Range</span>
+            <select id="global-range" onchange="setGlobalRange(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="1h">Last 1 Hour</option>
+              <option value="24h">Last 24 Hours</option>
+              <option value="today" selected>Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="week">This Week</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+          <div class="w-px h-4 bg-gray-700"></div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Agent</span>
+            <select id="global-agent" onchange="setGlobalAgent(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all" selected>All Agents</option>
+              <option value="cliff">Cliff</option>
+              <option value="samantha">Samantha</option>
+              <option value="scout">Scout</option>
+              <option value="claude-code">Claude Code</option>
+            </select>
+          </div>
+          <div class="w-px h-4 bg-gray-700"></div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Source</span>
+            <select id="global-source" onchange="setGlobalSource(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all" selected>All Sources</option>
+              <option value="crons">Cron Jobs</option>
+              <option value="conversations">Conversations</option>
+              <option value="subagents">Sub-agent Sessions</option>
+              <option value="coding">Coding Sessions</option>
+            </select>
+          </div>
+          <div class="ml-auto text-xs text-gray-600 italic">Global filters affect all sections and summary totals</div>
         </div>
       </div>
 
@@ -504,7 +535,7 @@
       </div>
 
       <!-- Per-job breakdown -->
-      <div class="card overflow-hidden mb-8">
+      <div id="crons-section" class="card overflow-hidden mb-8">
         <div class="px-5 py-4 border-b border-gray-800">
           <h3 class="text-sm font-semibold text-white">Per-Job Breakdown</h3>
         </div>
@@ -524,7 +555,7 @@
       </div>
 
       <!-- Conversation Sessions -->
-      <div class="card overflow-hidden mb-8">
+      <div id="convs-section" class="card overflow-hidden mb-8">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <h3 class="text-sm font-semibold text-white">Conversation Sessions</h3>
           <span class="text-xs text-gray-600">Estimated — assumes ~150K tokens per session</span>
@@ -564,29 +595,13 @@
 
 
       <!-- Sub-agent Sessions — Grouped Summary -->
-      <div class="card overflow-hidden mb-6">
+      <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
             <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — runs, cost, and tokens per job type</p>
           </div>
-          <div class="flex gap-2">
-            <select id="sub-source-select" onchange="setSubSource(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all" selected>All Sources</option>
-              <option value="openclaw">OpenClaw</option>
-              <option value="claude-code">Claude Code</option>
-            </select>
-            <select id="sub-period-select" onchange="setSubPeriod(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="1h">Last 1 Hour</option>
-              <option value="1d">Last 24 Hours</option>
-              <option value="1w">Last 7 Days</option>
-              <option value="1mo">Last 30 Days</option>
-              <option value="today" selected>Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="thisweek">This Week</option>
-              <option value="thismonth">This Month</option>
-            </select>
-          </div>
+          <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
@@ -618,17 +633,22 @@
       </div>
 
       <!-- Sub-agent Coding Sessions (from DB) - Raw -->
-      <div class="card overflow-hidden mb-8">
+      <div id="coding-section" class="card overflow-hidden mb-8">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
             <h3 class="text-sm font-semibold text-white">Sub-agent Coding Sessions — Raw</h3>
             <p class="text-xs text-gray-600 mt-0.5">Individual session records from the SQLite database</p>
           </div>
           <div class="flex gap-2 items-center">
-            <select id="raw-task-filter" onchange="window.filterRawTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all">All Tasks</option>
-            </select>
-            <button id="db-subagent-toggle" onclick="toggleDbSubagents()" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Show All</button>
+            <div class="flex flex-col items-end gap-1">
+              <div class="flex gap-2 items-center">
+                <select id="raw-task-filter" onchange="window.filterRawTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+                  <option value="all">All Tasks</option>
+                </select>
+                <button id="db-subagent-toggle" onclick="toggleDbSubagents()" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Show All</button>
+              </div>
+              <span class="text-xs text-gray-600 italic">View filter · does not affect summary totals</span>
+            </div>
           </div>
         </div>
         <div class="grid grid-cols-4 gap-4 px-5 py-4 border-b border-gray-800">
@@ -1438,7 +1458,7 @@
     }
 
     // ── Token Usage Tab ──────────────────────────────────────────
-    window._tokenRange = 'today';
+    window._tokenRange = window._globalRange || 'today';
     function toggleDbSubagents() {
       window._dbSubShowAll = !window._dbSubShowAll;
       if (window._lastData) renderTokens(window._lastData);
@@ -1448,13 +1468,46 @@
       if (window._lastData) renderTokens(window._lastData);
     }
 
-    function setTokenRange(r) {
-      window._tokenRange = r;
-      ['1h','24h','today','yesterday','7d','week','30d','month'].forEach(k => {
-        document.getElementById('tr-'+k).className = (k===r?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700';
-      });
+    // ── Global Filters ─────────────────────────────────────────────────────────
+    window._globalRange  = 'today';
+    window._globalAgent  = 'all';
+    window._globalSource = 'all';
+
+    function setGlobalRange(r) {
+      window._globalRange = r;
+      window._tokenRange = r; // keep cron section in sync
+      const sel = document.getElementById('global-range');
+      if (sel) sel.value = r;
+      applyGlobalFilters();
+    }
+    function setGlobalAgent(a) {
+      window._globalAgent = a;
+      applyGlobalFilters();
+    }
+    function setGlobalSource(s) {
+      window._globalSource = s;
+      applyGlobalFilters();
+    }
+    function applyGlobalFilters() {
+      const src = window._globalSource || 'all';
+      // Show/hide sections based on Source filter
+      const showCrons  = src === 'all' || src === 'crons';
+      const showConvs  = src === 'all' || src === 'conversations';
+      const showSubs   = src === 'all' || src === 'subagents';
+      const showCoding = src === 'all' || src === 'coding';
+      const cronCard   = document.getElementById('crons-section');
+      const convCard   = document.getElementById('convs-section');
+      const subsCard   = document.getElementById('subs-section');
+      const codingCard = document.getElementById('coding-section');
+      if (cronCard)   cronCard.style.display   = showCrons   ? '' : 'none';
+      if (convCard)   convCard.style.display   = showConvs   ? '' : 'none';
+      if (subsCard)   subsCard.style.display   = showSubs    ? '' : 'none';
+      if (codingCard) codingCard.style.display = showCoding  ? '' : 'none';
       if (window._lastData) renderTokens(window._lastData);
     }
+
+    // legacy alias — kept so any old references still work
+    function setTokenRange(r) { setGlobalRange(r); }
 
     function renderTokens(d) {
       const range = window._tokenRange || 'today';
@@ -1486,7 +1539,15 @@
       };
 
       // Build per-job stats from costs data
+      const agentFilter = window._globalAgent || 'all';
       const jobStats = jobs.map(j => {
+        // Apply agent filter
+        if (agentFilter !== 'all') {
+          const ja = (j.agent || '').toLowerCase();
+          const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
+          const allowed = agentMap[agentFilter] || [agentFilter];
+          if (!allowed.some(a => ja.includes(a))) return { ...j, tokens: 0, runs: 0, avg: 0, cost: 0 };
+        }
         const history = (costs[j.id] || []).filter(e => e.ts >= cutoffStart && e.ts < cutoffEnd);
         const tokens = history.reduce((s,e) => s + (e.tokens||0), 0);
         const runs = history.length;
@@ -1647,10 +1708,11 @@
       window._allDbSubItems = allDbItems;
       window._subPeriod = window._subPeriod || 'today';
 
-      window._subSource = window._subSource || 'all';
-      window.setSubSource = function(src) { window._subSource = src; renderGrouped(window._subPeriod); };
-      function getSubPeriodItems(period) {
-        const src = window._subSource || 'all';
+      window.setSubSource = function(src) { renderGrouped(); }; // no-op, kept for compat
+      function getSubPeriodItems() {
+        const period = window._globalRange || 'today';
+        const src    = window._globalSource === 'coding' ? 'claude-code' : (window._globalSource === 'subagents' ? 'openclaw' : 'all');
+        const agent  = window._globalAgent || 'all';
         const now = new Date();
         const tod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const todayStart = tod.getTime();
@@ -1662,24 +1724,27 @@
         const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         return allDbItems.filter(s => {
           if (src !== 'all' && s.source !== src) return false;
+          if (agent !== 'all') {
+            const sa = (s.agent_type || '').toLowerCase();
+            const agentMap2 = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
+            const allowed2 = agentMap2[agent] || [agent];
+            if (!allowed2.some(a => sa.includes(a))) return false;
+          }
           const ts = s.started_at || 0;
-          if (period === '1h')       return ts >= now.getTime() - 3600000;
-          if (period === '1d')       return ts >= now.getTime() - 86400000;
-          if (period === '1w')       return ts >= now.getTime() - 7*86400000;
-          if (period === '1mo')      return ts >= now.getTime() - 30*86400000;
-          if (period === 'today')    return ts >= todayStart;
-          if (period === 'yesterday')return ts >= yestStart && ts < todayStart;
-          if (period === 'thisweek') return ts >= thisWeekStart;
-          if (period === 'thismonth')return ts >= thisMonthStart;
-          return true;
+          if (period === '1h')        return ts >= now.getTime() - 3600000;
+          if (period === '1d')        return ts >= now.getTime() - 86400000;
+          if (period === '1w')        return ts >= now.getTime() - 7*86400000;
+          if (period === '1mo')       return ts >= now.getTime() - 30*86400000;
+          if (period === 'today')     return ts >= todayStart;
+          if (period === 'yesterday') return ts >= yestStart && ts < todayStart;
+          if (period === 'week' || period === 'thisweek') return ts >= thisWeekStart;
+          if (period === 'month' || period === 'thismonth') return ts >= thisMonthStart;
+          return ts >= todayStart;
         });
       }
 
-      function renderGrouped(period) {
-        window._subPeriod = period;
-        const sel = document.getElementById('sub-period-select');
-        if (sel) sel.value = period;
-        const items = getSubPeriodItems(period);
+      function renderGrouped() {
+        const items = getSubPeriodItems();
         const agentCls2 = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400' };
 
         // Group by task_name / display_name
@@ -1722,7 +1787,7 @@
       }
 
       window.setSubPeriod = renderGrouped;
-      renderGrouped(window._subPeriod);
+      renderGrouped();
 
       // DB Sub-agent Coding Sessions — Raw
       const dbSub = d.subagentSessions || { total: 0, activeCount: 0, totalCostUsd: 0, totalTokens: 0, items: [] };
