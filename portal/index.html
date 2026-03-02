@@ -501,7 +501,6 @@
             <select id="global-source" onchange="setGlobalSource(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
               <option value="all" selected>All Sources</option>
               <option value="crons">Cron Jobs</option>
-              <option value="conversations">Conversations</option>
               <option value="subagents">Sub-agent Sessions</option>
               <option value="coding">Coding Sessions</option>
             </select>
@@ -553,46 +552,6 @@
           <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
       </div>
-
-      <!-- Conversation Sessions -->
-      <div id="convs-section" class="card overflow-hidden mb-8">
-        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-white">Conversation Sessions</h3>
-          <span class="text-xs text-gray-600">Estimated — assumes ~150K tokens per session</span>
-        </div>
-        <table class="w-full text-sm">
-          <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
-          </tr></thead>
-          <tbody id="tok-conv-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Session breakdown -->
-      <div class="card overflow-hidden mb-8">
-        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-white">Session Breakdown</h3>
-          <span class="text-xs text-gray-600">Individual runs, newest first</span>
-        </div>
-        <table class="w-full text-sm">
-          <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session ID</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Context Used</th>
-          </tr></thead>
-          <tbody id="tok-session-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
 
       <!-- Sub-agent Sessions — Grouped Summary -->
       <div id="subs-section" class="card overflow-hidden mb-6">
@@ -1493,15 +1452,12 @@
       const src = window._globalSource || 'all';
       // Show/hide sections based on Source filter
       const showCrons  = src === 'all' || src === 'crons';
-      const showConvs  = src === 'all' || src === 'conversations';
       const showSubs   = src === 'all' || src === 'subagents';
       const showCoding = src === 'all' || src === 'coding';
       const cronCard   = document.getElementById('crons-section');
-      const convCard   = document.getElementById('convs-section');
       const subsCard   = document.getElementById('subs-section');
       const codingCard = document.getElementById('coding-section');
       if (cronCard)   cronCard.style.display   = showCrons   ? '' : 'none';
-      if (convCard)   convCard.style.display   = showConvs   ? '' : 'none';
       if (subsCard)   subsCard.style.display   = showSubs    ? '' : 'none';
       if (codingCard) codingCard.style.display = showCoding  ? '' : 'none';
       if (window._lastData) renderTokens(window._lastData);
