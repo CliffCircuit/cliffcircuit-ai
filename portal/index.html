@@ -665,7 +665,12 @@
             <h3 class="text-sm font-semibold text-white">Sub-agent Coding Sessions — Raw</h3>
             <p class="text-xs text-gray-600 mt-0.5">Individual session records from the SQLite database</p>
           </div>
-          <button id="db-subagent-toggle" onclick="toggleDbSubagents()" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Show All</button>
+          <div class="flex gap-2 items-center">
+            <select id="raw-task-filter" onchange="window.filterRawTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all">All Tasks</option>
+            </select>
+            <button id="db-subagent-toggle" onclick="toggleDbSubagents()" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Show All</button>
+          </div>
         </div>
         <div class="grid grid-cols-4 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
@@ -687,7 +692,7 @@
         </div>
         <table class="w-full text-sm">
           <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Label</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Task</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Duration</th>
@@ -1826,7 +1831,7 @@
       window.setSubPeriod = renderGrouped;
       renderGrouped(window._subPeriod);
 
-      // DB Sub-agent Coding Sessions
+      // DB Sub-agent Coding Sessions — Raw
       const dbSub = d.subagentSessions || { total: 0, activeCount: 0, totalCostUsd: 0, totalTokens: 0, items: [] };
       document.getElementById('db-sub-total').textContent = dbSub.total;
       document.getElementById('db-sub-active').textContent = dbSub.activeCount;
@@ -1835,30 +1840,56 @@
 
       const dbSubBody = document.getElementById('db-subagent-body');
       window._dbSubShowAll = window._dbSubShowAll || false;
+      window._dbRawTaskFilter = window._dbRawTaskFilter || 'all';
       const dbSubItems = dbSub.items || [];
-      const dbSubVisible = window._dbSubShowAll ? dbSubItems : dbSubItems.slice(0, 20); // data.json now contains up to 500
-      if (dbSubItems.length === 0) {
-        dbSubBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No sub-agent sessions recorded yet</td></tr>';
-      } else {
-        const fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
-        const fmtTs = ts => ts ? new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' }) : '—';
-        const statusBadge = st => {
-          if (st === 'completed') return '<span class="pill status-ok">completed</span>';
-          if (st === 'running') return '<span class="pill status-approved">running</span>';
-          if (st === 'failed') return '<span class="pill status-error">failed</span>';
-          return '<span class="pill status-idle">' + esc(st || '—') + '</span>';
-        };
-        dbSubBody.innerHTML = dbSubVisible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}</td>
-          <td class="px-4 py-2 text-xs"><span class="${({'samantha':'text-teal-400','scout':'text-green-400','main':'text-indigo-400','cliff':'text-indigo-400'})[s.agent_type] || 'text-gray-400'}">${esc(s.agent_type || '—')}</span></td>
-          <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
-          <td class="px-4 py-2 text-gray-400 text-xs">${fmtDur(s.duration_ms)}</td>
-          <td class="px-4 py-2 text-right text-white text-xs">${fmtK(s.tokens_in||0)} / ${fmtK(s.tokens_out||0)}</td>
-          <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
-          <td class="px-4 py-2 text-xs">${statusBadge(s.status)}</td>
-          <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTs(s.started_at)}</td>
-        </tr>`).join('');
+
+      // Populate task filter dropdown with unique task names
+      const taskSel = document.getElementById('raw-task-filter');
+      if (taskSel) {
+        const currentFilter = taskSel.value || 'all';
+        const taskNames = [...new Set(dbSubItems.map(s => s.display_name || s.task_name || 'Unknown'))].sort();
+        taskSel.innerHTML = '<option value="all">All Tasks</option>' +
+          taskNames.map(t => `<option value="${esc(t)}"${t === currentFilter ? ' selected' : ''}>${esc(t)}</option>`).join('');
       }
+
+      const fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
+      const fmtTs = ts => ts ? new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' }) : '—';
+      const statusBadge = st => {
+        if (st === 'completed') return '<span class="pill status-ok">completed</span>';
+        if (st === 'running') return '<span class="pill status-approved">running</span>';
+        if (st === 'failed') return '<span class="pill status-error">failed</span>';
+        return '<span class="pill status-idle">' + esc(st || '—') + '</span>';
+      };
+
+      window.filterRawTask = function(val) {
+        window._dbRawTaskFilter = val;
+        renderRawTable();
+      };
+
+      function renderRawTable() {
+        const taskFilter = window._dbRawTaskFilter || 'all';
+        const filtered = taskFilter === 'all' ? dbSubItems
+          : dbSubItems.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
+        const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
+        if (filtered.length === 0) {
+          dbSubBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
+        } else {
+          dbSubBody.innerHTML = visible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}</td>
+            <td class="px-4 py-2 text-xs"><span class="${({'samantha':'text-teal-400','scout':'text-green-400','main':'text-indigo-400','cliff':'text-indigo-400','claude-code':'text-purple-400'})[s.agent_type] || 'text-gray-400'}">${esc(s.agent_type || '—')}</span></td>
+            <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
+            <td class="px-4 py-2 text-gray-400 text-xs">${fmtDur(s.duration_ms)}</td>
+            <td class="px-4 py-2 text-right text-white text-xs">${fmtK(s.tokens_in||0)} / ${fmtK(s.tokens_out||0)}</td>
+            <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
+            <td class="px-4 py-2 text-xs">${statusBadge(s.status)}</td>
+            <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTs(s.started_at)}</td>
+          </tr>`).join('');
+        }
+        const toggleBtn = document.getElementById('db-subagent-toggle');
+        if (filtered.length <= 20) toggleBtn.classList.add('hidden');
+        else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 20' : 'Show All (' + filtered.length + ' sessions)'; }
+      }
+      renderRawTable();
       const toggleBtn = document.getElementById('db-subagent-toggle');
       if (dbSubItems.length <= 20) toggleBtn.classList.add('hidden');
       else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 20' : 'Show All (' + dbSubItems.length + ' sessions)'; }
