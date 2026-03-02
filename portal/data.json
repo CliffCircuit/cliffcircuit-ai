@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-02T05:28:25.876Z",
+  "generatedAt": "2026-03-02T05:48:25.639Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -1883,10 +1883,10 @@
   "crons": [
     {
       "name": "portal-data-refresh",
-      "schedule": "every 2m",
+      "schedule": "every 10m",
       "status": "error",
-      "lastRun": "3m ago",
-      "lastRunMs": 1772429081358,
+      "lastRun": "10m ago",
+      "lastRunMs": 1772429877868,
       "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 1,
@@ -1897,57 +1897,12 @@
       "lastRunTokens": null
     },
     {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "12m ago",
-      "lastRunMs": 1772428557857,
-      "nextRun": "in 2m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 59868
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "10m ago",
-      "lastRunMs": 1772428699719,
-      "nextRun": "in 6m",
-      "agent": "cliff",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": "low",
-      "description": "## ⚡ EARLY EXIT CHECK — DO THIS FIRST",
-      "lastRunTokens": 77901
-    },
-    {
-      "name": "samantha-media",
-      "schedule": "every 30m",
-      "status": "ok",
-      "lastRun": "11m ago",
-      "lastRunMs": 1772428629165,
-      "nextRun": "in 19m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "f50b5756-82e2-4fd8-b8e4-d1b4045a1c20",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Samantha Media — generates DALL-E hero images for written drafts, pushes to git",
-      "lastRunTokens": 83530
-    },
-    {
       "name": "samantha-recycle-media",
       "schedule": "every 30m",
       "status": "ok",
-      "lastRun": "9m ago",
+      "lastRun": "29m ago",
       "lastRunMs": 1772428717017,
-      "nextRun": "in 21m",
+      "nextRun": "in 1m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "50708c6f-37b2-4f19-88a9-9ff56a732f7c",
@@ -1957,12 +1912,27 @@
       "lastRunTokens": 68817
     },
     {
+      "name": "portal-live-refresh",
+      "schedule": "every 2m",
+      "status": "ok",
+      "lastRun": "1m ago",
+      "lastRunMs": 1772430409330,
+      "nextRun": "in 1m",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Fast live session data refresh — context window, active sessions. No heavy calls.",
+      "lastRunTokens": 13443
+    },
+    {
       "name": "samantha-writer",
       "schedule": "every 2h",
       "status": "ok",
       "lastRun": "2h ago",
       "lastRunMs": 1772423886721,
-      "nextRun": "in 30m",
+      "nextRun": "in 10m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "845fff96-da1a-4ebd-b653-9b3007085dd3",
@@ -1977,7 +1947,7 @@
       "status": "idle",
       "lastRun": null,
       "lastRunMs": null,
-      "nextRun": "in 30m",
+      "nextRun": "in 10m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "43a6704d-8e77-448a-81d7-e7fda3ac7614",
@@ -1987,12 +1957,27 @@
       "lastRunTokens": null
     },
     {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772430300015,
+      "nextRun": "in 12m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 65765
+    },
+    {
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "ok",
-      "lastRun": "25m ago",
+      "lastRun": "45m ago",
       "lastRunMs": 1772427762529,
-      "nextRun": "in 35m",
+      "nextRun": "in 15m",
       "agent": "cliff",
       "consecutiveErrors": 0,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -2002,12 +1987,42 @@
       "lastRunTokens": 58066
     },
     {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "ok",
+      "lastRun": "14m ago",
+      "lastRunMs": 1772429647787,
+      "nextRun": "in 16m",
+      "agent": "cliff",
+      "consecutiveErrors": 0,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": "low",
+      "description": "## ⚡ EARLY EXIT CHECK — DO THIS FIRST",
+      "lastRunTokens": 22621
+    },
+    {
+      "name": "samantha-media",
+      "schedule": "every 30m",
+      "status": "ok",
+      "lastRun": "1m ago",
+      "lastRunMs": 1772430429182,
+      "nextRun": "in 29m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "f50b5756-82e2-4fd8-b8e4-d1b4045a1c20",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Samantha Media — generates DALL-E hero images for written drafts, pushes to git",
+      "lastRunTokens": 67487
+    },
+    {
       "name": "nightly-extraction",
       "schedule": "0 23 * * *",
       "status": "ok",
-      "lastRun": "22h ago",
+      "lastRun": "23h ago",
       "lastRunMs": 1772348400022,
-      "nextRun": "in 2h",
+      "nextRun": "in 1h",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "763a67ae-49b6-4bd7-82ad-5cac8510352a",
@@ -2035,9 +2050,9 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "1h ago",
+      "lastRun": "2h ago",
       "lastRunMs": 1772424066957,
-      "nextRun": "in 3h",
+      "nextRun": "in 2h",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "3bcb8b34-667b-42a6-a156-26bead73d717",
@@ -2050,9 +2065,9 @@
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
-      "lastRun": "1h ago",
+      "lastRun": "2h ago",
       "lastRunMs": 1772424650648,
-      "nextRun": "in 3h",
+      "nextRun": "in 2h",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "ca0f70f9-6972-494d-8910-4b65c58ddeae",
@@ -2065,9 +2080,9 @@
       "name": "samantha-tim-tweets",
       "schedule": "0 8,13,18 * * *",
       "status": "ok",
-      "lastRun": "3h ago",
+      "lastRun": "4h ago",
       "lastRunMs": 1772416857191,
-      "nextRun": "in 11h",
+      "nextRun": "in 10h",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "498ea0a9-f2c2-49f2-bd78-73c683af9d82",
@@ -2080,9 +2095,9 @@
       "name": "samantha-cliff-tweets",
       "schedule": "0 8,15 * * *",
       "status": "ok",
-      "lastRun": "3h ago",
+      "lastRun": "4h ago",
       "lastRunMs": 1772417305592,
-      "nextRun": "in 11h",
+      "nextRun": "in 10h",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "8cd72f3d-03b2-4160-81b2-bae92ee72620",
@@ -2095,9 +2110,9 @@
       "name": "morning-check-in",
       "schedule": "0 8 * * *",
       "status": "ok",
-      "lastRun": "13h ago",
+      "lastRun": "14h ago",
       "lastRunMs": 1772380800014,
-      "nextRun": "in 11h",
+      "nextRun": "in 10h",
       "agent": "cliff",
       "consecutiveErrors": 0,
       "id": "fbd92dff-ce46-48d2-8bfd-6893c75b1031",
@@ -2110,9 +2125,9 @@
       "name": "evening-check",
       "schedule": "0 18 * * *",
       "status": "ok",
-      "lastRun": "3h ago",
+      "lastRun": "4h ago",
       "lastRunMs": 1772416800015,
-      "nextRun": "in 21h",
+      "nextRun": "in 20h",
       "agent": "cliff",
       "consecutiveErrors": 0,
       "id": "fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5",
@@ -2125,7 +2140,7 @@
       "name": "weekly-report",
       "schedule": "0 9 * * 0",
       "status": "ok",
-      "lastRun": "12h ago",
+      "lastRun": "13h ago",
       "lastRunMs": 1772384400012,
       "nextRun": "in 6d",
       "agent": "cliff",
@@ -2142,7 +2157,7 @@
       "status": "idle",
       "lastRun": null,
       "lastRunMs": null,
-      "nextRun": "in 14d",
+      "nextRun": "in 13d",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "586ef3eb-f39e-4a5a-97d6-ab45b29a9f32",
@@ -2154,33 +2169,33 @@
   ],
   "agentTokens": {
     "samantha": {
-      "totalTokens": 83530,
-      "inputTokens": 174,
-      "outputTokens": 4399,
-      "jobName": "samantha-media"
-    },
-    "cliff": {
-      "totalTokens": 80197,
-      "inputTokens": 81,
-      "outputTokens": 2584,
-      "jobName": "morning-check-in"
+      "totalTokens": 78998,
+      "inputTokens": 9,
+      "outputTokens": 10390,
+      "jobName": "samantha-cliff-tweets"
     },
     "scout": {
       "totalTokens": 39443,
       "inputTokens": 14,
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
+    },
+    "cliff": {
+      "totalTokens": 80197,
+      "inputTokens": 81,
+      "outputTokens": 2584,
+      "jobName": "morning-check-in"
     }
   },
   "sessions": [
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 65000,
+      "used": 121000,
       "limit": 200000,
-      "pct": 33,
+      "pct": 60,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772429246534
+      "lastActiveAt": 1772430506238
     },
     {
       "label": "Main",
@@ -2189,73 +2204,21 @@
       "limit": 200000,
       "pct": 33,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772429246534
+      "lastActiveAt": 1772430506239
     }
   ],
   "conversationSessions": [
-    {
-      "sessionId": "c1b69f0d-eba3-494d-ae73-c8cf70421c68",
-      "key": "agent:samantha:telegram:direct:8386624734",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 32425,
-      "inputTokens": 4,
-      "outputTokens": 396,
-      "percentUsed": 0,
-      "updatedAt": 1772429292599,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "f3163116-f206-4c80-adb5-934322258362",
-      "key": "agent:samantha:main",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 0,
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "percentUsed": 0,
-      "updatedAt": 1772429284838,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13262,
-      "inputTokens": 43,
-      "outputTokens": 576,
-      "percentUsed": 0,
-      "updatedAt": 1772429277856,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13262,
-      "inputTokens": 43,
-      "outputTokens": 576,
-      "percentUsed": 0,
-      "updatedAt": 1772429277856,
-      "thinkingLevel": null
-    },
     {
       "sessionId": "d83dfb93-dcd4-4614-b805-2aaaf0287a92",
       "key": "agent:main:telegram:direct:8386624734",
       "agentId": "main",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 65270,
+      "totalTokens": 120615,
       "inputTokens": 3,
-      "outputTokens": 691,
+      "outputTokens": 126,
       "percentUsed": 0,
-      "updatedAt": 1772429235735,
+      "updatedAt": 1772430496686,
       "thinkingLevel": "low"
     },
     {
@@ -2268,7 +2231,319 @@
       "inputTokens": 3,
       "outputTokens": 8,
       "percentUsed": 0,
-      "updatedAt": 1772429235709,
+      "updatedAt": 1772430489804,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "d85e7619-cd6c-426b-8e8c-e7fb6f85b53d",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13110,
+      "inputTokens": 33,
+      "outputTokens": 430,
+      "percentUsed": 0,
+      "updatedAt": 1772430477882,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "d85e7619-cd6c-426b-8e8c-e7fb6f85b53d",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:d85e7619-cd6c-426b-8e8c-e7fb6f85b53d",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13110,
+      "inputTokens": 33,
+      "outputTokens": 430,
+      "percentUsed": 0,
+      "updatedAt": 1772430477882,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "c1b69f0d-eba3-494d-ae73-c8cf70421c68",
+      "key": "agent:samantha:telegram:direct:8386624734",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 34299,
+      "inputTokens": 3,
+      "outputTokens": 7,
+      "percentUsed": 0,
+      "updatedAt": 1772430439880,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "b3876066-7a22-4aed-8350-29a1f849b725",
+      "key": "agent:samantha:cron:f50b5756-82e2-4fd8-b8e4-d1b4045a1c20",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 67487,
+      "inputTokens": 36,
+      "outputTokens": 625,
+      "percentUsed": 0,
+      "updatedAt": 1772430429184,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "b3876066-7a22-4aed-8350-29a1f849b725",
+      "key": "agent:samantha:cron:f50b5756-82e2-4fd8-b8e4-d1b4045a1c20:run:b3876066-7a22-4aed-8350-29a1f849b725",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 67487,
+      "inputTokens": 36,
+      "outputTokens": 625,
+      "percentUsed": 0,
+      "updatedAt": 1772430429184,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
+      "key": "agent:scout:telegram:direct:8386624734",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 28547,
+      "inputTokens": 22,
+      "outputTokens": 432,
+      "percentUsed": 0,
+      "updatedAt": 1772430422622,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "201bde45-7271-44f8-a8a7-b22cede6c01a",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13443,
+      "inputTokens": 22,
+      "outputTokens": 273,
+      "percentUsed": 0,
+      "updatedAt": 1772430409330,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "201bde45-7271-44f8-a8a7-b22cede6c01a",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:201bde45-7271-44f8-a8a7-b22cede6c01a",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13443,
+      "inputTokens": 22,
+      "outputTokens": 273,
+      "percentUsed": 0,
+      "updatedAt": 1772430409330,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "68a004d0-2cae-45e3-b230-1cdb8d8b8c28",
+      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 65765,
+      "inputTokens": 13,
+      "outputTokens": 5803,
+      "percentUsed": 0,
+      "updatedAt": 1772430300016,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "68a004d0-2cae-45e3-b230-1cdb8d8b8c28",
+      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:68a004d0-2cae-45e3-b230-1cdb8d8b8c28",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 65765,
+      "inputTokens": 13,
+      "outputTokens": 5803,
+      "percentUsed": 0,
+      "updatedAt": 1772430300016,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "82314a54-85e3-4844-a4ed-870662da65e9",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:82314a54-85e3-4844-a4ed-870662da65e9",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 15227,
+      "inputTokens": 36,
+      "outputTokens": 628,
+      "percentUsed": 0,
+      "updatedAt": 1772430237966,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "c755cdca-4df5-404c-9c35-923d124dcdd6",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:c755cdca-4df5-404c-9c35-923d124dcdd6",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13435,
+      "inputTokens": 22,
+      "outputTokens": 268,
+      "percentUsed": 0,
+      "updatedAt": 1772430117954,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "0a2b7994-fe6c-458f-b93d-e1a502672203",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:0a2b7994-fe6c-458f-b93d-e1a502672203",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13435,
+      "inputTokens": 22,
+      "outputTokens": 287,
+      "percentUsed": 0,
+      "updatedAt": 1772429997939,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "301e88b3-922e-4ad3-9635-60c2020c4478",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:301e88b3-922e-4ad3-9635-60c2020c4478",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13110,
+      "inputTokens": 33,
+      "outputTokens": 430,
+      "percentUsed": 0,
+      "updatedAt": 1772429877870,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "9fe5f148-64f5-481c-b522-f42aab3574c9",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:9fe5f148-64f5-481c-b522-f42aab3574c9",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13435,
+      "inputTokens": 22,
+      "outputTokens": 287,
+      "percentUsed": 0,
+      "updatedAt": 1772429830087,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "740ff1a8-4749-467c-ab46-723864fc889e",
+      "key": "agent:scout:main",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "percentUsed": 0,
+      "updatedAt": 1772429819883,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "10512695-31cb-4379-ac5a-cb7b96a8eed9",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:10512695-31cb-4379-ac5a-cb7b96a8eed9",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13420,
+      "inputTokens": 22,
+      "outputTokens": 252,
+      "percentUsed": 0,
+      "updatedAt": 1772429710074,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "4c5cfc5a-29c0-4b5e-bdb8-8aa22215cbe8",
+      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 22621,
+      "inputTokens": 23,
+      "outputTokens": 324,
+      "percentUsed": 0,
+      "updatedAt": 1772429647789,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "4c5cfc5a-29c0-4b5e-bdb8-8aa22215cbe8",
+      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663:run:4c5cfc5a-29c0-4b5e-bdb8-8aa22215cbe8",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 22621,
+      "inputTokens": 23,
+      "outputTokens": 324,
+      "percentUsed": 0,
+      "updatedAt": 1772429647789,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "f9c5a811-11c0-4e7b-aac7-6b4e274748aa",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:f9c5a811-11c0-4e7b-aac7-6b4e274748aa",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 17160,
+      "inputTokens": 83,
+      "outputTokens": 1857,
+      "percentUsed": 0,
+      "updatedAt": 1772429590066,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "417fbdae-db2f-4ee3-bd1d-d79d4455e911",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:417fbdae-db2f-4ee3-bd1d-d79d4455e911",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 15620,
+      "inputTokens": 43,
+      "outputTokens": 1019,
+      "percentUsed": 0,
+      "updatedAt": 1772429470139,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "439762e6-a86b-4762-b58c-819634c46df6",
+      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:439762e6-a86b-4762-b58c-819634c46df6",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 68897,
+      "inputTokens": 9,
+      "outputTokens": 3372,
+      "percentUsed": 0,
+      "updatedAt": 1772429400013,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "f3163116-f206-4c80-adb5-934322258362",
+      "key": "agent:samantha:main",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "percentUsed": 0,
+      "updatedAt": 1772429333114,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13110,
+      "inputTokens": 33,
+      "outputTokens": 430,
+      "percentUsed": 0,
+      "updatedAt": 1772429277856,
       "thinkingLevel": null
     },
     {
@@ -2338,19 +2613,6 @@
     },
     {
       "sessionId": "d8a2f08e-b14e-4c5c-97f0-9d9822ec07f6",
-      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 77901,
-      "inputTokens": 125,
-      "outputTokens": 3892,
-      "percentUsed": 0,
-      "updatedAt": 1772428699721,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "d8a2f08e-b14e-4c5c-97f0-9d9822ec07f6",
       "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663:run:d8a2f08e-b14e-4c5c-97f0-9d9822ec07f6",
       "agentId": "main",
       "kind": "direct",
@@ -2364,19 +2626,6 @@
     },
     {
       "sessionId": "121042d4-be40-4a66-a3a7-7f2ec9c2173e",
-      "key": "agent:samantha:cron:f50b5756-82e2-4fd8-b8e4-d1b4045a1c20",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 83530,
-      "inputTokens": 174,
-      "outputTokens": 4399,
-      "percentUsed": 0,
-      "updatedAt": 1772428629166,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "121042d4-be40-4a66-a3a7-7f2ec9c2173e",
       "key": "agent:samantha:cron:f50b5756-82e2-4fd8-b8e4-d1b4045a1c20:run:121042d4-be40-4a66-a3a7-7f2ec9c2173e",
       "agentId": "samantha",
       "kind": "direct",
@@ -2386,19 +2635,6 @@
       "outputTokens": 4399,
       "percentUsed": 0,
       "updatedAt": 1772428629166,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "f82165e3-4209-4425-8412-4d8710fd8c44",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 59868,
-      "inputTokens": 9,
-      "outputTokens": 5107,
-      "percentUsed": 0,
-      "updatedAt": 1772428557858,
       "thinkingLevel": null
     },
     {
@@ -2711,19 +2947,6 @@
       "outputTokens": 431,
       "percentUsed": 0,
       "updatedAt": 1772424666058,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
-      "key": "agent:scout:telegram:direct:8386624734",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 23729,
-      "inputTokens": 22,
-      "outputTokens": 466,
-      "percentUsed": 0,
-      "updatedAt": 1772424665403,
       "thinkingLevel": null
     },
     {
@@ -8642,19 +8865,6 @@
       "thinkingLevel": null
     },
     {
-      "sessionId": "740ff1a8-4749-467c-ab46-723864fc889e",
-      "key": "agent:scout:main",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 0,
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "percentUsed": 0,
-      "updatedAt": 1772367371557,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "724f7483-1633-4a55-8aa6-735007c1210b",
       "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:724f7483-1633-4a55-8aa6-735007c1210b",
       "agentId": "scout",
@@ -9903,45 +10113,6 @@
       "thinkingLevel": null
     },
     {
-      "sessionId": "dabd8022-a7cb-4bee-9eda-c2df8d73ec5a",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:dabd8022-a7cb-4bee-9eda-c2df8d73ec5a",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 28556,
-      "inputTokens": 5,
-      "outputTokens": 1050,
-      "percentUsed": 0,
-      "updatedAt": 1772343900029,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "0ca46861-11b6-44b6-8542-136cbb1f1647",
-      "key": "agent:main:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:0ca46861-11b6-44b6-8542-136cbb1f1647",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 21029,
-      "inputTokens": 4,
-      "outputTokens": 133,
-      "percentUsed": 0,
-      "updatedAt": 1772343027503,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "cac65fc6-9c7e-4efc-9a5b-a6c30e7379ef",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:cac65fc6-9c7e-4efc-9a5b-a6c30e7379ef",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 28701,
-      "inputTokens": 5,
-      "outputTokens": 1237,
-      "percentUsed": 0,
-      "updatedAt": 1772343000028,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "f25f6f3b-a9b8-48ea-97da-d6def07e161f",
       "key": "agent:main:cron:b1cc0e0c-a76f-4a2c-8500-206228f8ce00",
       "agentId": "main",
@@ -9983,73 +10154,17 @@
   ],
   "sessionHistory": [
     {
-      "sessionId": "c1b69f0d-eba3-494d-ae73-c8cf70421c68",
-      "key": "agent:samantha:telegram:direct:8386624734",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 32425,
-      "inputTokens": 4,
-      "outputTokens": 396,
-      "cacheRead": 63930,
-      "percentUsed": 16,
-      "updatedAt": 1772429292599,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "f3163116-f206-4c80-adb5-934322258362",
-      "key": "agent:samantha:main",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 0,
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "cacheRead": 0,
-      "percentUsed": 0,
-      "updatedAt": 1772429284838,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13262,
-      "inputTokens": 43,
-      "outputTokens": 576,
-      "cacheRead": 50802,
-      "percentUsed": 7,
-      "updatedAt": 1772429277856,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:ab2977e1-b01c-49aa-863d-8010dcb4f7a7",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13262,
-      "inputTokens": 43,
-      "outputTokens": 576,
-      "cacheRead": 50802,
-      "percentUsed": 7,
-      "updatedAt": 1772429277856,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "d83dfb93-dcd4-4614-b805-2aaaf0287a92",
       "key": "agent:main:telegram:direct:8386624734",
       "agentId": "main",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 65270,
+      "totalTokens": 120615,
       "inputTokens": 3,
-      "outputTokens": 691,
-      "cacheRead": 65009,
-      "percentUsed": 33,
-      "updatedAt": 1772429235735,
+      "outputTokens": 126,
+      "cacheRead": 120246,
+      "percentUsed": 60,
+      "updatedAt": 1772430496686,
       "thinkingLevel": "low"
     },
     {
@@ -10061,65 +10176,121 @@
       "totalTokens": 65582,
       "inputTokens": 3,
       "outputTokens": 8,
-      "cacheRead": 65579,
+      "cacheRead": 64196,
       "percentUsed": 33,
-      "updatedAt": 1772429235709,
+      "updatedAt": 1772430489804,
       "thinkingLevel": null
     },
     {
-      "sessionId": "d8c49f03-501b-42fe-8d40-68f28bfbafce",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:d8c49f03-501b-42fe-8d40-68f28bfbafce",
+      "sessionId": "d85e7619-cd6c-426b-8e8c-e7fb6f85b53d",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13262,
-      "inputTokens": 43,
-      "outputTokens": 576,
-      "cacheRead": 50802,
+      "totalTokens": 13110,
+      "inputTokens": 33,
+      "outputTokens": 430,
+      "cacheRead": 37695,
       "percentUsed": 7,
-      "updatedAt": 1772429081359,
+      "updatedAt": 1772430477882,
       "thinkingLevel": null
     },
     {
-      "sessionId": "329a17df-53e1-49ef-abaf-ea6c066f5dca",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:329a17df-53e1-49ef-abaf-ea6c066f5dca",
+      "sessionId": "d85e7619-cd6c-426b-8e8c-e7fb6f85b53d",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:d85e7619-cd6c-426b-8e8c-e7fb6f85b53d",
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13262,
-      "inputTokens": 43,
-      "outputTokens": 576,
-      "cacheRead": 50802,
+      "totalTokens": 13110,
+      "inputTokens": 33,
+      "outputTokens": 430,
+      "cacheRead": 37695,
       "percentUsed": 7,
-      "updatedAt": 1772428961353,
+      "updatedAt": 1772430477882,
       "thinkingLevel": null
     },
     {
-      "sessionId": "1f24f19a-7807-4bf5-a09f-c6013c9a8e60",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:1f24f19a-7807-4bf5-a09f-c6013c9a8e60",
-      "agentId": "scout",
+      "sessionId": "c1b69f0d-eba3-494d-ae73-c8cf70421c68",
+      "key": "agent:samantha:telegram:direct:8386624734",
+      "agentId": "samantha",
       "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13676,
-      "inputTokens": 67,
-      "outputTokens": 911,
-      "cacheRead": 90696,
-      "percentUsed": 7,
-      "updatedAt": 1772428781344,
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 34299,
+      "inputTokens": 3,
+      "outputTokens": 7,
+      "cacheRead": 33330,
+      "percentUsed": 17,
+      "updatedAt": 1772430439880,
       "thinkingLevel": null
     },
     {
-      "sessionId": "aedf89c5-2f64-4a45-ba7f-95f287bdf334",
-      "key": "agent:samantha:cron:50708c6f-37b2-4f19-88a9-9ff56a732f7c",
+      "sessionId": "b3876066-7a22-4aed-8350-29a1f849b725",
+      "key": "agent:samantha:cron:f50b5756-82e2-4fd8-b8e4-d1b4045a1c20",
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 68817,
-      "inputTokens": 72,
-      "outputTokens": 1464,
-      "cacheRead": 271095,
+      "totalTokens": 67487,
+      "inputTokens": 36,
+      "outputTokens": 625,
+      "cacheRead": 67159,
       "percentUsed": 34,
-      "updatedAt": 1772428717018,
+      "updatedAt": 1772430429184,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "b3876066-7a22-4aed-8350-29a1f849b725",
+      "key": "agent:samantha:cron:f50b5756-82e2-4fd8-b8e4-d1b4045a1c20:run:b3876066-7a22-4aed-8350-29a1f849b725",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 67487,
+      "inputTokens": 36,
+      "outputTokens": 625,
+      "cacheRead": 67159,
+      "percentUsed": 34,
+      "updatedAt": 1772430429184,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
+      "key": "agent:scout:telegram:direct:8386624734",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 28547,
+      "inputTokens": 22,
+      "outputTokens": 432,
+      "cacheRead": 56081,
+      "percentUsed": 14,
+      "updatedAt": 1772430422622,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "201bde45-7271-44f8-a8a7-b22cede6c01a",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13443,
+      "inputTokens": 22,
+      "outputTokens": 273,
+      "cacheRead": 25798,
+      "percentUsed": 7,
+      "updatedAt": 1772430409330,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "201bde45-7271-44f8-a8a7-b22cede6c01a",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:201bde45-7271-44f8-a8a7-b22cede6c01a",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13443,
+      "inputTokens": 22,
+      "outputTokens": 273,
+      "cacheRead": 25798,
+      "percentUsed": 7,
+      "updatedAt": 1772430409330,
       "thinkingLevel": null
     }
   ],
@@ -10186,6 +10357,15 @@
   },
   "costs": {
     "785dc24f-e15b-420b-a7e5-0116f5e60e93": [
+      {
+        "ts": 1772429277855,
+        "tokens": 13110,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 430,
+        "status": "ok"
+      },
       {
         "ts": 1772428961353,
         "tokens": 13262,
@@ -10590,27 +10770,150 @@
         "tokensCacheWrite": 0,
         "tokensOut": 440,
         "status": "ok"
-      },
+      }
+    ],
+    "50708c6f-37b2-4f19-88a9-9ff56a732f7c": [
       {
-        "ts": 1772410933567,
-        "tokens": 13648,
-        "tokensInput": 67,
+        "ts": 1772428717017,
+        "tokens": 68817,
+        "tokensInput": 72,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 949,
+        "tokensOut": 1464,
         "status": "ok"
       },
       {
-        "ts": 1772410260013,
-        "tokens": 14312,
-        "tokensInput": 85,
+        "ts": 1772426751963,
+        "tokens": 96157,
+        "tokensInput": 86,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 1387,
+        "tokensOut": 1798,
+        "status": "ok"
+      },
+      {
+        "ts": 1772424632499,
+        "tokens": 68745,
+        "tokensInput": 72,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1307,
+        "status": "ok"
+      },
+      {
+        "ts": 1772422485995,
+        "tokens": 85168,
+        "tokensInput": 132,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2873,
+        "status": "error"
+      },
+      {
+        "ts": 1772420293170,
+        "tokens": 68893,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1314,
+        "status": "ok"
+      },
+      {
+        "ts": 1772418493157,
+        "tokens": 98055,
+        "tokensInput": 61,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1198,
+        "status": "ok"
+      }
+    ],
+    "03ee763f-f9fa-4138-b4bb-b7e5b48c0e10": [
+      {
+        "ts": 1772430409330,
+        "tokens": 13443,
+        "tokensInput": 22,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 273,
+        "status": "ok"
+      },
+      {
+        "ts": 1772430237965,
+        "tokens": 15227,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 628,
+        "status": "ok"
+      },
+      {
+        "ts": 1772430117952,
+        "tokens": 13435,
+        "tokensInput": 22,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 268,
+        "status": "ok"
+      },
+      {
+        "ts": 1772429830086,
+        "tokens": 13435,
+        "tokensInput": 22,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 287,
+        "status": "ok"
+      },
+      {
+        "ts": 1772429710073,
+        "tokens": 13420,
+        "tokensInput": 22,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 252,
+        "status": "ok"
+      },
+      {
+        "ts": 1772429470052,
+        "tokens": 15620,
+        "tokensInput": 43,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1019,
+        "status": "error"
+      }
+    ],
+    "845fff96-da1a-4ebd-b653-9b3007085dd3": [
+      {
+        "ts": 1772423886721,
+        "tokens": 28597,
+        "tokensInput": 13,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5672,
         "status": "ok"
       }
     ],
     "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1": [
+      {
+        "ts": 1772430300015,
+        "tokens": 65765,
+        "tokensInput": 13,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5803,
+        "status": "ok"
+      },
+      {
+        "ts": 1772429400012,
+        "tokens": 68897,
+        "tokensInput": 9,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3372,
+        "status": "ok"
+      },
       {
         "ts": 1772428557857,
         "tokens": 59868,
@@ -11024,27 +11327,200 @@
         "tokensCacheWrite": 0,
         "tokensOut": 4175,
         "status": "ok"
-      },
+      }
+    ],
+    "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
       {
-        "ts": 1772385300017,
-        "tokens": 82185,
-        "tokensInput": 7,
+        "ts": 1772427762529,
+        "tokens": 58066,
+        "tokensInput": 80,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 3565,
+        "tokensOut": 5182,
         "status": "ok"
       },
       {
-        "ts": 1772384437287,
-        "tokens": 82898,
-        "tokensInput": 9,
+        "ts": 1772424296696,
+        "tokens": 36175,
+        "tokensInput": 66,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 4485,
+        "tokensOut": 4119,
+        "status": "ok"
+      },
+      {
+        "ts": 1772420562535,
+        "tokens": 80996,
+        "tokensInput": 108,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5276,
+        "status": "ok"
+      },
+      {
+        "ts": 1772416965462,
+        "tokens": 72146,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3968,
+        "status": "ok"
+      },
+      {
+        "ts": 1772413362535,
+        "tokens": 35193,
+        "tokensInput": 93,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5655,
+        "status": "ok"
+      },
+      {
+        "ts": 1772406415140,
+        "tokens": 67064,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2910,
+        "status": "ok"
+      },
+      {
+        "ts": 1772403461189,
+        "tokens": 80599,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4516,
+        "status": "ok"
+      },
+      {
+        "ts": 1772399021457,
+        "tokens": 66957,
+        "tokensInput": 66,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5103,
+        "status": "ok"
+      },
+      {
+        "ts": 1772395405636,
+        "tokens": 66967,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4487,
+        "status": "ok"
+      },
+      {
+        "ts": 1772391861122,
+        "tokens": 71091,
+        "tokensInput": 88,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 6197,
+        "status": "ok"
+      },
+      {
+        "ts": 1772388162534,
+        "tokens": 87016,
+        "tokensInput": 121,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4645,
+        "status": "ok"
+      },
+      {
+        "ts": 1772384634554,
+        "tokens": 67274,
+        "tokensInput": 51,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3431,
+        "status": "ok"
+      },
+      {
+        "ts": 1772348603915,
+        "tokens": 43203,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3689,
+        "status": "ok"
+      },
+      {
+        "ts": 1772341362540,
+        "tokens": 39074,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2247,
+        "status": "ok"
+      },
+      {
+        "ts": 1772337762543,
+        "tokens": 36353,
+        "tokensInput": 92,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4854,
+        "status": "ok"
+      },
+      {
+        "ts": 1772334162542,
+        "tokens": 32478,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2589,
+        "status": "ok"
+      },
+      {
+        "ts": 1772330562540,
+        "tokens": 31693,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2536,
+        "status": "ok"
+      },
+      {
+        "ts": 1772323362540,
+        "tokens": 30548,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2515,
+        "status": "ok"
+      },
+      {
+        "ts": 1772319762543,
+        "tokens": 30284,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3246,
+        "status": "ok"
+      },
+      {
+        "ts": 1772316162533,
+        "tokens": 29661,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2803,
         "status": "ok"
       }
     ],
     "9d407dd0-af2b-4bf5-97f2-ae5d006a8663": [
+      {
+        "ts": 1772429647787,
+        "tokens": 22621,
+        "tokensInput": 23,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 324,
+        "status": "ok"
+      },
       {
         "ts": 1772428699719,
         "tokens": 77901,
@@ -11327,6 +11803,15 @@
     ],
     "f50b5756-82e2-4fd8-b8e4-d1b4045a1c20": [
       {
+        "ts": 1772430429182,
+        "tokens": 67487,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 625,
+        "status": "ok"
+      },
+      {
         "ts": 1772428629165,
         "tokens": 83530,
         "tokensInput": 174,
@@ -11387,255 +11872,6 @@
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
         "tokensOut": 1335,
-        "status": "ok"
-      }
-    ],
-    "50708c6f-37b2-4f19-88a9-9ff56a732f7c": [
-      {
-        "ts": 1772428717017,
-        "tokens": 68817,
-        "tokensInput": 72,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1464,
-        "status": "ok"
-      },
-      {
-        "ts": 1772426751963,
-        "tokens": 96157,
-        "tokensInput": 86,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1798,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424632499,
-        "tokens": 68745,
-        "tokensInput": 72,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1307,
-        "status": "ok"
-      },
-      {
-        "ts": 1772422485995,
-        "tokens": 85168,
-        "tokensInput": 132,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2873,
-        "status": "error"
-      },
-      {
-        "ts": 1772420293170,
-        "tokens": 68893,
-        "tokensInput": 36,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1314,
-        "status": "ok"
-      },
-      {
-        "ts": 1772418493157,
-        "tokens": 98055,
-        "tokensInput": 61,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1198,
-        "status": "ok"
-      }
-    ],
-    "845fff96-da1a-4ebd-b653-9b3007085dd3": [
-      {
-        "ts": 1772423886721,
-        "tokens": 28597,
-        "tokensInput": 13,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 5672,
-        "status": "ok"
-      }
-    ],
-    "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
-      {
-        "ts": 1772427762529,
-        "tokens": 58066,
-        "tokensInput": 80,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 5182,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424296696,
-        "tokens": 36175,
-        "tokensInput": 66,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4119,
-        "status": "ok"
-      },
-      {
-        "ts": 1772420562535,
-        "tokens": 80996,
-        "tokensInput": 108,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 5276,
-        "status": "ok"
-      },
-      {
-        "ts": 1772416965462,
-        "tokens": 72146,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3968,
-        "status": "ok"
-      },
-      {
-        "ts": 1772413362535,
-        "tokens": 35193,
-        "tokensInput": 93,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 5655,
-        "status": "ok"
-      },
-      {
-        "ts": 1772406415140,
-        "tokens": 67064,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2910,
-        "status": "ok"
-      },
-      {
-        "ts": 1772403461189,
-        "tokens": 80599,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4516,
-        "status": "ok"
-      },
-      {
-        "ts": 1772399021457,
-        "tokens": 66957,
-        "tokensInput": 66,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 5103,
-        "status": "ok"
-      },
-      {
-        "ts": 1772395405636,
-        "tokens": 66967,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4487,
-        "status": "ok"
-      },
-      {
-        "ts": 1772391861122,
-        "tokens": 71091,
-        "tokensInput": 88,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 6197,
-        "status": "ok"
-      },
-      {
-        "ts": 1772388162534,
-        "tokens": 87016,
-        "tokensInput": 121,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4645,
-        "status": "ok"
-      },
-      {
-        "ts": 1772384634554,
-        "tokens": 67274,
-        "tokensInput": 51,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3431,
-        "status": "ok"
-      },
-      {
-        "ts": 1772348603915,
-        "tokens": 43203,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3689,
-        "status": "ok"
-      },
-      {
-        "ts": 1772341362540,
-        "tokens": 39074,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2247,
-        "status": "ok"
-      },
-      {
-        "ts": 1772337762543,
-        "tokens": 36353,
-        "tokensInput": 92,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4854,
-        "status": "ok"
-      },
-      {
-        "ts": 1772334162542,
-        "tokens": 32478,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2589,
-        "status": "ok"
-      },
-      {
-        "ts": 1772330562540,
-        "tokens": 31693,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2536,
-        "status": "ok"
-      },
-      {
-        "ts": 1772323362540,
-        "tokens": 30548,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2515,
-        "status": "ok"
-      },
-      {
-        "ts": 1772319762543,
-        "tokens": 30284,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3246,
-        "status": "ok"
-      },
-      {
-        "ts": 1772316162533,
-        "tokens": 29661,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2803,
         "status": "ok"
       }
     ],
