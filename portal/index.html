@@ -544,7 +544,7 @@
             <div id="cron-total-runs" class="text-2xl font-bold text-white">—</div>
           </div>
           <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Est. Cost (USD)</div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Cost (USD)</div>
             <div id="cron-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
           </div>
           <div>
@@ -559,9 +559,9 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Runs</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
           </tr></thead>
           <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
@@ -600,7 +600,7 @@
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Dur</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Total Cost</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
           </tr></thead>
@@ -1482,10 +1482,12 @@
         }
         const history = (costs[j.id] || []).filter(e => e.ts >= cutoffStart && e.ts < cutoffEnd);
         const tokens = history.reduce((s,e) => s + (e.tokens||0), 0);
+        const tokensIn = history.reduce((s,e) => s + (e.tokensIn||0), 0);
+        const tokensOut = history.reduce((s,e) => s + (e.tokensOut||0), 0);
         const runs = history.length;
         const rate = modelRate(j.model);
         const cost = tokens * rate / 1000;
-        return { ...j, tokens, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
+        return { ...j, tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
       }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
 
       const totalTokens = jobStats.reduce((s,j) => s+j.tokens, 0);
@@ -1524,18 +1526,24 @@
         'portal-data-refresh':    'Portal Data Refresh',
         'social-monitoring':      'Social Monitoring',
         'github-monitoring':      'GitHub Monitoring',
+        'cliff-article-review':   'Article Review',
+        'pipeline-health-check':  'Pipeline Health Check',
+        'morning-check-in':       'Morning Check-in',
+        'evening-check':          'Evening Check',
+        'weekly-report':          'Weekly Report',
       };
 
       // Update Per-Job summary cards
       const cronTotalRuns   = jobStats.reduce((s,j) => s+j.runs, 0);
       const cronTotalCost   = jobStats.reduce((s,j) => s+j.cost, 0);
-      const cronTotalTokens = jobStats.reduce((s,j) => s+j.tokens, 0);
+      const cronTotalTokensIn  = jobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
+      const cronTotalTokensOut = jobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
       const cronRunsEl   = document.getElementById('cron-total-runs');
       const cronCostEl   = document.getElementById('cron-total-cost');
       const cronToksEl   = document.getElementById('cron-total-tokens');
       if (cronRunsEl)  cronRunsEl.textContent  = cronTotalRuns;
       if (cronCostEl)  cronCostEl.textContent  = '$' + cronTotalCost.toFixed(2);
-      if (cronToksEl)  cronToksEl.textContent  = fmtK(cronTotalTokens);
+      if (cronToksEl)  cronToksEl.innerHTML    = fmtK(cronTotalTokensIn) + ' <span class="text-gray-500 text-xs font-normal">/ ' + fmtK(cronTotalTokensOut) + '</span>';
 
       const tbody = document.getElementById('tok-job-body');
       if (jobStats.length === 0) {
@@ -1552,7 +1560,7 @@
             <td class="px-4 py-1 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${agentName[j.agent]||j.agent||'—'}</span></td>
             <td class="px-4 py-1 text-xs">${modelShortT(j.model)}</td>
             <td class="px-4 py-1 text-right text-white text-xs font-bold">${j.runs}</td>
-            <td class="px-4 py-1 text-right text-white text-xs">${fmtK(j.tokens)}</td>
+            <td class="px-4 py-1 text-right text-white text-xs">${fmtK(j.tokensIn||0)} / ${fmtK(j.tokensOut||0)}</td>
             <td class="px-4 py-1 text-right text-gray-400 text-xs">${fmtK(j.avg)}</td>
             <td class="px-4 py-1 text-right text-yellow-400 text-xs font-semibold">${costStr}</td>
             <td class="px-4 py-1" style="min-width:80px;">

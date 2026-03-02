@@ -283,7 +283,7 @@ async function main() {
         const runsData = JSON.parse(raw);
         const entries = (runsData.entries || [])
           .filter(e => (e.runAtMs || 0) >= cutoff30d && e.usage)
-          .map(e => ({ ts: e.runAtMs, tokens: e.usage.total_tokens || 0, status: e.status }));
+          .map(e => ({ ts: e.runAtMs, tokens: e.usage.total_tokens || 0, tokensIn: e.usage.input_tokens || 0, tokensOut: e.usage.output_tokens || 0, status: e.status }));
         if (entries.length) costs[j.id] = entries;
       } catch(e) { /* skip this job */ }
     }
@@ -318,11 +318,13 @@ async function main() {
       'af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1':'Publish','785dc24f-e15b-420b-a7e5-0116f5e60e93':'Portal Data Refresh',
       '01a338f9-8be9-4ab8-82d9-a050f64bdaf6':'Pipeline Health Check','498ea0a9-f2c2-49f2-bd78-73c683af9d82':'Tim Posts',
       'fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5':'Evening Check','9d407dd0-af2b-4bf5-97f2-ae5d006a8663':'Article Review',
-      'df0efdc5-5e00-45d0-a2d1-11906a278a9f':'Draft Articles','9ce4365b-496c-42ef-941b-ff56b8aa1861':'Recycle Rejected',
+      'df0efdc5-5e00-45d0-a2d1-11906a278a9f':'Draft Articles (disabled)','9ce4365b-496c-42ef-941b-ff56b8aa1861':'Recycle Rejected (disabled)',
       '3bcb8b34-667b-42a6-a156-26bead73d717':'GitHub Monitoring','ca0f70f9-6972-494d-8910-4b65c58ddeae':'Social Monitoring',
       '763a67ae-49b6-4bd7-82ad-5cac8510352a':'Nightly Extraction','248701de-21b3-4c1a-86b6-164a8de04ca3':'Nightly Git Backup',
       '8cd72f3d-03b2-4160-81b2-bae92ee72620':'Cliff Tweets','fbd92dff-ce46-48d2-8bfd-6873c75b1031':'Morning Check-In',
       'bbbd846b-ecb6-420f-822b-4c95e69a6d4d':'Weekly Report','586ef3eb-f39e-4a5a-97d6-ab45b29a9f32':'Tim Thread Draft',
+      '845fff96-da1a-4ebd-b653-9b3007085dd3':'Writer','f50b5756-82e2-4fd8-b8e4-d1b4045a1c20':'Media',
+      '43a6704d-8e77-448a-81d7-e7fda3ac7614':'Recycle Writer','50708c6f-37b2-4f19-88a9-9ff56a732f7c':'Recycle Media',
     };
     const upd = _db2.prepare('UPDATE subagent_sessions SET task_name=? WHERE session_id=? AND task_name IS NULL');
     const rows2 = _db2.prepare('SELECT session_id, label FROM subagent_sessions WHERE task_name IS NULL').all();
