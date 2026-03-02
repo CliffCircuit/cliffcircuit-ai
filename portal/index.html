@@ -497,12 +497,9 @@
           </div>
           <div class="w-px h-4 bg-gray-700"></div>
           <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Source</span>
-            <select id="global-source" onchange="setGlobalSource(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all" selected>All Sources</option>
-              <option value="crons">Cron Jobs</option>
-              <option value="subagents">Sub-agent Sessions</option>
-              <option value="coding">Coding Sessions</option>
+            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Task</span>
+            <select id="global-task" onchange="setGlobalTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all" selected>All Tasks</option>
             </select>
           </div>
           <div class="ml-auto text-xs text-gray-600 italic">Global filters affect all sections and summary totals</div>
@@ -1410,7 +1407,7 @@
     // ── Global Filters ─────────────────────────────────────────────────────────
     window._globalRange  = 'today';
     window._globalAgent  = 'all';
-    window._globalSource = 'all';
+    window._globalTask   = 'all';
 
     function setGlobalRange(r) {
       window._globalRange = r;
@@ -1423,23 +1420,20 @@
       window._globalAgent = a;
       applyGlobalFilters();
     }
-    function setGlobalSource(s) {
-      window._globalSource = s;
+    function setGlobalTask(t) {
+      window._globalTask = t;
       applyGlobalFilters();
     }
     function applyGlobalFilters() {
-      const src = window._globalSource || 'all';
-      // Show/hide sections based on Source filter
-      const showCrons  = src === 'all' || src === 'crons';
-      const showSubs   = src === 'all' || src === 'subagents';
-      const showCoding = src === 'all' || src === 'coding';
-      const cronCard   = document.getElementById('crons-section');
-      const subsCard   = document.getElementById('subs-section');
-      const codingCard = document.getElementById('coding-section');
-      if (cronCard)   cronCard.style.display   = showCrons   ? '' : 'none';
-      if (subsCard)   subsCard.style.display   = showSubs    ? '' : 'none';
-      if (codingCard) codingCard.style.display = showCoding  ? '' : 'none';
+      // All sections always visible — task filter narrows within each section
       if (window._lastData) renderTokens(window._lastData);
+    }
+    function populateTaskDropdown(taskNames) {
+      const sel = document.getElementById('global-task');
+      if (!sel) return;
+      const cur = window._globalTask || 'all';
+      sel.innerHTML = '<option value="all">All Tasks</option>' +
+        taskNames.map(t => `<option value="${t}"${t===cur?' selected':''}>${t}</option>`).join('');
     }
 
     // legacy alias — kept so any old references still work
@@ -1479,6 +1473,7 @@
 
       // Build per-job stats from costs data
       const agentFilter = window._globalAgent || 'all';
+      const taskFilter  = window._globalTask  || 'all';
       const jobStats = jobs.map(j => {
         // Apply agent filter
         if (agentFilter !== 'all') {
@@ -1499,6 +1494,16 @@
         const cost = calcCost(p, tokInput, tokCacheRead, tokCacheWrite, tokensOut);
         return { ...j, tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
       }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
+
+      // Populate task dropdown from all known task names (cron jobs + sub-agent tasks)
+      const allSubItems = (d.subagentSessions || {}).items || [];
+      const subTaskNames = [...new Set(allSubItems.map(s => s.display_name || s.task_name).filter(Boolean))];
+      const cronTaskNames = jobStats.map(j => j.name);
+      const allTaskNames = [...new Set([...cronTaskNames, ...subTaskNames])].sort();
+      populateTaskDropdown(allTaskNames);
+
+      // Apply task filter to per-job breakdown
+      const filteredJobStats = taskFilter === 'all' ? jobStats : jobStats.filter(j => j.name === taskFilter);
 
       const totalTokens = jobStats.reduce((s,j) => s+j.tokens, 0);
       const totalTokensIn = jobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
@@ -1545,10 +1550,10 @@
       };
 
       // Update Per-Job summary cards
-      const cronTotalRuns   = jobStats.reduce((s,j) => s+j.runs, 0);
-      const cronTotalCost   = jobStats.reduce((s,j) => s+j.cost, 0);
-      const cronTotalTokensIn  = jobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
-      const cronTotalTokensOut = jobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
+      const cronTotalRuns   = filteredJobStats.reduce((s,j) => s+j.runs, 0);
+      const cronTotalCost   = filteredJobStats.reduce((s,j) => s+j.cost, 0);
+      const cronTotalTokensIn  = filteredJobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
+      const cronTotalTokensOut = filteredJobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
       const cronRunsEl   = document.getElementById('cron-total-runs');
       const cronCostEl   = document.getElementById('cron-total-cost');
       const cronToksEl   = document.getElementById('cron-total-tokens');
@@ -1560,8 +1565,8 @@
       if (jobStats.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No data for this range</td></tr>';
       } else {
-        const maxTokens = jobStats[0].tokens;
-        tbody.innerHTML = jobStats.map(j => {
+        const maxTokens = (filteredJobStats[0] || {tokens:1}).tokens;
+        tbody.innerHTML = filteredJobStats.map(j => {
           const barPct = Math.round((j.tokens / maxTokens) * 100);
           const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
           const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
@@ -1592,7 +1597,7 @@
       window.setSubSource = function(src) { renderGrouped(); }; // no-op, kept for compat
       function getSubPeriodItems() {
         const period = window._globalRange || 'today';
-        const src    = window._globalSource === 'coding' ? 'claude-code' : (window._globalSource === 'subagents' ? 'openclaw' : 'all');
+        const taskF  = window._globalTask || 'all';
         const agent  = window._globalAgent || 'all';
         const now = new Date();
         const tod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1604,7 +1609,7 @@
         // This month = 1st of current month
         const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         return allDbItems.filter(s => {
-          if (src !== 'all' && s.source !== src) return false;
+          if (taskF !== 'all' && (s.display_name || s.task_name || '') !== taskF) return false;
           if (agent !== 'all') {
             const sa = (s.agent_type || '').toLowerCase();
             const agentMap2 = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
@@ -1626,24 +1631,13 @@
 
       function updateSummaryCards() {
         const fmtK2 = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n||0);
-        const src  = window._globalSource || 'all';
+        // Combine cron + sub-agent grouped (raw = same data as grouped, don't double-count)
         const cron = window._cronTotals   || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
         const sub  = window._subTotals    || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
-        const cod  = window._codingTotals || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
-        let combIn, combOut, combCost, combSessions;
-        if (src === 'crons') {
-          combIn = cron.tokensIn; combOut = cron.tokensOut; combCost = cron.cost; combSessions = cron.sessions;
-        } else if (src === 'subagents') {
-          combIn = sub.tokensIn;  combOut = sub.tokensOut;  combCost = sub.cost;  combSessions = sub.sessions;
-        } else if (src === 'coding') {
-          combIn = cod.tokensIn;  combOut = cod.tokensOut;  combCost = cod.cost;  combSessions = cod.sessions;
-        } else {
-          // all — cron + sub-agent grouped only; raw is same data as grouped, don't double-count
-          combIn       = cron.tokensIn  + sub.tokensIn;
-          combOut      = cron.tokensOut + sub.tokensOut;
-          combCost     = cron.cost      + sub.cost;
-          combSessions = cron.sessions  + sub.sessions;
-        }
+        let combIn       = cron.tokensIn  + sub.tokensIn;
+        let combOut      = cron.tokensOut + sub.tokensOut;
+        let combCost     = cron.cost      + sub.cost;
+        let combSessions = cron.sessions  + sub.sessions;
         const avgIn  = combSessions ? Math.round(combIn  / combSessions) : 0;
         const avgOut = combSessions ? Math.round(combOut / combSessions) : 0;
         const el = id => document.getElementById(id);
