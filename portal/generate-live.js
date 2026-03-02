@@ -45,7 +45,7 @@ async function main() {
         if (key.includes('cron')) return;
         if (age.match(/\d+h ago/)) return;
         const minMatch = age.match(/^(\d+)m ago/);
-        if (minMatch && parseInt(minMatch[1]) > 10) return;
+        if (minMatch && parseInt(minMatch[1]) > 10 && !key.includes('teleg')) return;
         let label = 'Unknown';
         if (key.includes('teleg')) label = 'Telegram';
         else if (key === 'agent:main:main') label = 'Main';
