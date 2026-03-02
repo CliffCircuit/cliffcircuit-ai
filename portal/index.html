@@ -647,9 +647,10 @@
           <thead><tr class="border-b border-gray-800 bg-gray-900">
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Task</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Runs</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Duration</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Total Tokens</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Total Cost</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Cost/Run</th>
           </tr></thead>
@@ -1749,7 +1750,7 @@
       window._subPeriod = window._subPeriod || 'today';
 
       window._subSource = window._subSource || 'all';
-      function setSubSource(src) { window._subSource = src; renderGrouped(window._subPeriod); }
+      window.setSubSource = function(src) { window._subSource = src; renderGrouped(window._subPeriod); };
       function getSubPeriodItems(period) {
         const src = window._subSource || 'all';
         const now = new Date();
@@ -1787,17 +1788,18 @@
         const groups = {};
         for (const s of items) {
           const key = s.display_name || s.task_name || s.agent_type || 'Unknown';
-          if (!groups[key]) groups[key] = { task: key, agent: s.agent_type, runs: 0, totalDur: 0, totalTokens: 0, totalCost: 0 };
+          if (!groups[key]) groups[key] = { task: key, agent: s.agent_type, model: s.model, runs: 0, totalDur: 0, tokensIn: 0, tokensOut: 0, totalCost: 0 };
           groups[key].runs++;
           groups[key].totalDur += s.duration_ms || 0;
-          groups[key].totalTokens += s.tokens_total || 0;
+          groups[key].tokensIn += s.tokens_in || 0;
+          groups[key].tokensOut += s.tokens_out || 0;
           groups[key].totalCost += s.estimated_cost_usd || 0;
         }
 
         const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
         const totalRuns = sorted.reduce((s,r) => s + r.runs, 0);
         const totalCost = sorted.reduce((s,r) => s + r.totalCost, 0);
-        const totalTok = sorted.reduce((s,r) => s + r.totalTokens, 0);
+        const totalTok = sorted.reduce((s,r) => s + r.tokensIn + r.tokensOut, 0);
 
         document.getElementById('grp-sub-runs').textContent = totalRuns;
         document.getElementById('grp-sub-cost').textContent = '$' + totalCost.toFixed(2);
@@ -1812,9 +1814,10 @@
         body.innerHTML = sorted.map(g => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
           <td class="px-4 py-2 text-gray-200 text-xs font-medium">${esc(g.task)}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls2[g.agent]||'text-gray-400'}">${esc(g.agent||'—')}</span></td>
+          <td class="px-4 py-2 text-xs text-gray-400">${modelShortT(g.model)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${fmtDurG(Math.round(g.totalDur/g.runs))}</td>
-          <td class="px-4 py-2 text-right text-white text-xs">${fmtK(g.totalTokens)}</td>
+          <td class="px-4 py-2 text-right text-white text-xs">${fmtK(g.tokensIn)} / ${fmtK(g.tokensOut)}</td>
           <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(2) : '<$0.01'}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
         </tr>`).join('');
