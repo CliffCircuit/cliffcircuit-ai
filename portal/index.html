@@ -1511,10 +1511,9 @@
       const fmtK = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
       const rangeLabel = {'1h':'last 1 hour','24h':'last 24 hours','today':'today','yesterday':'yesterday','7d':'last 7 days','week':'this week','30d':'last 30 days','month':'this month'}[range] || range;
 
-      document.getElementById('tok-total').innerHTML = fmtK(totalTokensIn) + ' / ' + fmtK(totalTokensOut);
-      document.getElementById('tok-cost').textContent = '$' + totalCost.toFixed(2);
-      document.getElementById('tok-runs').textContent = totalRuns;
-      document.getElementById('tok-avg').innerHTML = fmtK(totalAvgIn) + ' / ' + fmtK(totalAvgOut);
+      // Store cron totals for combined summary
+      window._cronTotals = { tokensIn: totalTokensIn, tokensOut: totalTokensOut, cost: totalCost, sessions: totalRuns };
+      updateSummaryCards();
 
       const agentCls = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
       const agentName = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
@@ -1625,7 +1624,24 @@
         });
       }
 
-      function renderGrouped() {
+      function updateSummaryCards() {
+        const fmtK2 = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n||0);
+        const cron = window._cronTotals || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+        const sub  = window._subTotals  || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+        const combIn  = cron.tokensIn  + sub.tokensIn;
+        const combOut = cron.tokensOut + sub.tokensOut;
+        const combCost = cron.cost + sub.cost;
+        const combSessions = cron.sessions + sub.sessions;
+        const avgIn  = combSessions ? Math.round(combIn  / combSessions) : 0;
+        const avgOut = combSessions ? Math.round(combOut / combSessions) : 0;
+        const el = id => document.getElementById(id);
+        if (el('tok-total'))    el('tok-total').innerHTML    = fmtK2(combIn) + ' / ' + fmtK2(combOut);
+        if (el('tok-cost'))     el('tok-cost').textContent   = '$' + combCost.toFixed(2);
+        if (el('tok-runs'))     el('tok-runs').textContent   = combSessions;
+        if (el('tok-avg'))      el('tok-avg').innerHTML      = fmtK2(avgIn) + ' / ' + fmtK2(avgOut);
+      }
+
+            function renderGrouped() {
         const items = getSubPeriodItems();
         const agentCls2 = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400' };
 
@@ -1650,6 +1666,9 @@
         document.getElementById('grp-sub-cost').textContent = '$' + totalCost.toFixed(2);
         document.getElementById('grp-sub-tokens').textContent = fmtK(totalTokIn) + ' / ' + fmtK(totalTokOut);
         document.getElementById('grp-sub-tokens-sub').textContent = 'in / out';
+        // Store sub-agent totals for combined summary
+        window._subTotals = { tokensIn: totalTokIn, tokensOut: totalTokOut, cost: totalCost, sessions: totalRuns };
+        updateSummaryCards();
 
         const body = document.getElementById('grp-subagent-body');
         if (sorted.length === 0) {
