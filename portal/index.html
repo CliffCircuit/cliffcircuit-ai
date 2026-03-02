@@ -1612,10 +1612,10 @@
             if (!allowed2.some(a => sa.includes(a))) return false;
           }
           const ts = s.started_at || 0;
-          if (period === '1h')        return ts >= now.getTime() - 3600000;
-          if (period === '1d')        return ts >= now.getTime() - 86400000;
-          if (period === '1w')        return ts >= now.getTime() - 7*86400000;
-          if (period === '1mo')       return ts >= now.getTime() - 30*86400000;
+          if (period === '1h'  || period === '1h')   return ts >= now.getTime() - 3600000;
+          if (period === '24h' || period === '1d')   return ts >= now.getTime() - 86400000;
+          if (period === '7d'  || period === '1w')   return ts >= now.getTime() - 7*86400000;
+          if (period === '30d' || period === '1mo')  return ts >= now.getTime() - 30*86400000;
           if (period === 'today')     return ts >= todayStart;
           if (period === 'yesterday') return ts >= yestStart && ts < todayStart;
           if (period === 'week' || period === 'thisweek') return ts >= thisWeekStart;
