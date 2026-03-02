@@ -554,7 +554,7 @@
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
             <div id="cron-total-tokens" class="text-xl font-bold text-indigo-400">—</div>
-            <div id="cron-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">across all jobs</div>
+            <div id="cron-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
         <table class="w-full text-sm">
@@ -1548,7 +1548,7 @@
       const cronToksEl   = document.getElementById('cron-total-tokens');
       if (cronRunsEl)  cronRunsEl.textContent  = cronTotalRuns;
       if (cronCostEl)  cronCostEl.textContent  = '$' + cronTotalCost.toFixed(2);
-      if (cronToksEl)  cronToksEl.innerHTML    = fmtK(cronTotalTokensIn) + ' <span class="text-gray-500 text-xs font-normal">/ ' + fmtK(cronTotalTokensOut) + '</span>';
+      if (cronToksEl)  cronToksEl.innerHTML    = fmtK(cronTotalTokensIn) + ' / ' + fmtK(cronTotalTokensOut);
 
       const tbody = document.getElementById('tok-job-body');
       if (jobStats.length === 0) {
