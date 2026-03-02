@@ -2015,7 +2015,7 @@
         const sessions = (name === 'cliff') ? (d.sessions || []) : [];
         const liveSession = sessions.find(s => s.label === 'Telegram') || sessions[0];
 
-        const generatedTs = d.generatedAt ? new Date(d.generatedAt).getTime() : null;
+        const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
           if (!ts) return '—';
           const mins = Math.round((Date.now() - ts) / 60000);
