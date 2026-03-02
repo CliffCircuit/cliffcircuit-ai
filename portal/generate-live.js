@@ -11,7 +11,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const REPO_DIR = '/tmp/cliffcircuit-live';
+const REPO_DIR = `/tmp/cliffcircuit-live-${process.pid}`;
 
 function run(cmd, opts = {}) {
   try {
@@ -165,3 +165,8 @@ async function main() {
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
+
+// Cleanup tmp dir on exit (success or failure)
+process.on('exit', () => { try { require('child_process').execSync(`rm -rf ${REPO_DIR}`); } catch(e) {} });
+process.on('SIGINT', () => process.exit(1));
+process.on('SIGTERM', () => process.exit(1));

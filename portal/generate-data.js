@@ -12,7 +12,7 @@ const https = require('https');
 
 const WORKSPACE = '/Users/openclaw/.openclaw/workspace';
 const QUEUE_FILE = path.join(WORKSPACE, 'samantha/content-queue.json');
-const REPO_DIR = '/tmp/cliffcircuit-data';
+const REPO_DIR = `/tmp/cliffcircuit-data-${process.pid}`;
 
 function run(cmd, opts = {}) {
   try {
@@ -622,3 +622,8 @@ async function main() {
 }
 
 main().catch(console.error);
+
+// Cleanup tmp dir on exit (success or failure)
+process.on('exit', () => { try { require('child_process').execSync(`rm -rf ${REPO_DIR}`); } catch(e) {} });
+process.on('SIGINT', () => process.exit(1));
+process.on('SIGTERM', () => process.exit(1));
