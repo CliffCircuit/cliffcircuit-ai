@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-02T06:04:02.312Z",
+  "generatedAt": "2026-03-02T06:08:26.848Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -1898,102 +1898,12 @@
   ],
   "crons": [
     {
-      "name": "samantha-writer",
-      "schedule": "every 2h",
-      "status": "ok",
-      "lastRun": "2h ago",
-      "lastRunMs": 1772423886721,
-      "nextRun": "in 5m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "845fff96-da1a-4ebd-b653-9b3007085dd3",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Samantha Writer — drafts article content in Cliff's voice, saves as written status awaiting image generation",
-      "lastRunTokens": 28597
-    },
-    {
-      "name": "samantha-recycle-writer",
-      "schedule": "every 4h",
-      "status": "idle",
-      "lastRun": null,
-      "lastRunMs": null,
-      "nextRun": "in 5m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "43a6704d-8e77-448a-81d7-e7fda3ac7614",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": "low",
-      "description": "Samantha Recycle Writer — rewrites content for rejected items (title, excerpt, body fixes)",
-      "lastRunTokens": null
-    },
-    {
-      "name": "portal-live-refresh",
-      "schedule": "every 2m",
-      "status": "ok",
-      "lastRun": "7m ago",
-      "lastRunMs": 1772431016772,
-      "nextRun": "in 5m",
-      "agent": "scout",
-      "consecutiveErrors": 0,
-      "id": "03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Fast live session data refresh — context window, active sessions. No heavy calls.",
-      "lastRunTokens": 13429
-    },
-    {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "19m ago",
-      "lastRunMs": 1772430300015,
-      "nextRun": "in 4m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 65765
-    },
-    {
-      "name": "pipeline-health-check",
-      "schedule": "0 7-23 * * *",
-      "status": "ok",
-      "lastRun": "1h ago",
-      "lastRunMs": 1772427762529,
-      "nextRun": "in 1m",
-      "agent": "cliff",
-      "consecutiveErrors": 0,
-      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": null,
-      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
-      "lastRunTokens": 58066
-    },
-    {
-      "name": "cliff-article-review",
-      "schedule": "*/30 * * * *",
-      "status": "ok",
-      "lastRun": "29m ago",
-      "lastRunMs": 1772429647787,
-      "nextRun": "in 1m",
-      "agent": "cliff",
-      "consecutiveErrors": 0,
-      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "model": "anthropic/claude-haiku-4-5",
-      "thinking": "low",
-      "description": "## ⚡ EARLY EXIT CHECK — DO THIS FIRST",
-      "lastRunTokens": 22621
-    },
-    {
       "name": "portal-data-refresh",
       "schedule": "every 10m",
       "status": "error",
-      "lastRun": "6m ago",
+      "lastRun": "10m ago",
       "lastRunMs": 1772431077893,
-      "nextRun": "in 4m",
+      "nextRun": "in 0m",
       "agent": "scout",
       "consecutiveErrors": 1,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
@@ -2003,12 +1913,42 @@
       "lastRunTokens": null
     },
     {
+      "name": "portal-live-refresh",
+      "schedule": "every 2m",
+      "status": "ok",
+      "lastRun": "2m ago",
+      "lastRunMs": 1772431558835,
+      "nextRun": "in 0m",
+      "agent": "scout",
+      "consecutiveErrors": 0,
+      "id": "03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Fast live session data refresh — context window, active sessions. No heavy calls.",
+      "lastRunTokens": 13440
+    },
+    {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "4m ago",
+      "lastRunMs": 1772431444066,
+      "nextRun": "in 7m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 59249
+    },
+    {
       "name": "samantha-media",
       "schedule": "every 30m",
       "status": "ok",
-      "lastRun": "16m ago",
+      "lastRun": "21m ago",
       "lastRunMs": 1772430429182,
-      "nextRun": "in 14m",
+      "nextRun": "in 9m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "f50b5756-82e2-4fd8-b8e4-d1b4045a1c20",
@@ -2021,9 +1961,9 @@
       "name": "samantha-recycle-media",
       "schedule": "every 30m",
       "status": "ok",
-      "lastRun": "15m ago",
+      "lastRun": "19m ago",
       "lastRunMs": 1772430517030,
-      "nextRun": "in 15m",
+      "nextRun": "in 11m",
       "agent": "samantha",
       "consecutiveErrors": 0,
       "id": "50708c6f-37b2-4f19-88a9-9ff56a732f7c",
@@ -2033,12 +1973,27 @@
       "lastRunTokens": 68302
     },
     {
+      "name": "cliff-article-review",
+      "schedule": "*/30 * * * *",
+      "status": "ok",
+      "lastRun": "2m ago",
+      "lastRunMs": 1772431553513,
+      "nextRun": "in 26m",
+      "agent": "cliff",
+      "consecutiveErrors": 0,
+      "id": "9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": "low",
+      "description": "## ⚡ EARLY EXIT CHECK — DO THIS FIRST",
+      "lastRunTokens": 22624
+    },
+    {
       "name": "nightly-extraction",
       "schedule": "0 23 * * *",
       "status": "ok",
       "lastRun": "23h ago",
       "lastRunMs": 1772348400022,
-      "nextRun": "in 56m",
+      "nextRun": "in 52m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "763a67ae-49b6-4bd7-82ad-5cac8510352a",
@@ -2046,6 +2001,21 @@
       "thinking": "low",
       "description": "Nightly extraction job — pulls and processes new data (transcripts, articles, or sources) into the knowledge graph for use by content agents.",
       "lastRunTokens": 39443
+    },
+    {
+      "name": "pipeline-health-check",
+      "schedule": "0 7-23 * * *",
+      "status": "ok",
+      "lastRun": "3m ago",
+      "lastRunMs": 1772431491069,
+      "nextRun": "in 55m",
+      "agent": "cliff",
+      "consecutiveErrors": 0,
+      "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
+      "model": "anthropic/claude-haiku-4-5",
+      "thinking": null,
+      "description": "Runs a full health check every 2 hours — verifies cron jobs are healthy, both websites are up, content queue isn't stuck, Twitter credentials are valid, and disk space is fine.",
+      "lastRunTokens": 73989
     },
     {
       "name": "nightly-git-backup",
@@ -2061,6 +2031,21 @@
       "thinking": null,
       "description": "Backs up the entire workspace to GitHub every night — commits all changed files and pushes to origin/main so nothing is ever lost between sessions.",
       "lastRunTokens": 22772
+    },
+    {
+      "name": "samantha-writer",
+      "schedule": "every 2h",
+      "status": "ok",
+      "lastRun": "8m ago",
+      "lastRunMs": 1772431197925,
+      "nextRun": "in 2h",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "845fff96-da1a-4ebd-b653-9b3007085dd3",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Samantha Writer — drafts article content in Cliff's voice, saves as written status awaiting image generation",
+      "lastRunTokens": 32200
     },
     {
       "name": "github-monitoring",
@@ -2091,6 +2076,21 @@
       "thinking": null,
       "description": "Checks both @CliffCircuit and @timharris707 on X/Twitter — tracks follower counts, recent post engagement, mentions, and any replies that need a response.",
       "lastRunTokens": 12970
+    },
+    {
+      "name": "samantha-recycle-writer",
+      "schedule": "every 4h",
+      "status": "ok",
+      "lastRun": "5m ago",
+      "lastRunMs": 1772431404378,
+      "nextRun": "in 4h",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "43a6704d-8e77-448a-81d7-e7fda3ac7614",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": "low",
+      "description": "Samantha Recycle Writer — rewrites content for rejected items (title, excerpt, body fixes)",
+      "lastRunTokens": 21843
     },
     {
       "name": "samantha-tim-tweets",
@@ -2184,17 +2184,17 @@
     }
   ],
   "agentTokens": {
-    "samantha": {
-      "totalTokens": 78998,
-      "inputTokens": 9,
-      "outputTokens": 10390,
-      "jobName": "samantha-cliff-tweets"
-    },
     "scout": {
       "totalTokens": 39443,
       "inputTokens": 14,
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
+    },
+    "samantha": {
+      "totalTokens": 78998,
+      "inputTokens": 9,
+      "outputTokens": 10390,
+      "jobName": "samantha-cliff-tweets"
     },
     "cliff": {
       "totalTokens": 80197,
@@ -2207,11 +2207,11 @@
     {
       "label": "Telegram",
       "key": "agent:main:teleg...624734",
-      "used": 60000,
+      "used": 75000,
       "limit": 200000,
-      "pct": 30,
+      "pct": 37,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772431322919
+      "lastActiveAt": 1772431707450
     },
     {
       "label": "Main",
@@ -2220,34 +2220,177 @@
       "limit": 200000,
       "pct": 33,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772431322919
+      "lastActiveAt": 1772431647450
     }
   ],
   "conversationSessions": [
+    {
+      "sessionId": "112b1437-3806-4296-b47e-1bef514a1367",
+      "key": "agent:main:telegram:direct:8386624734",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 74864,
+      "inputTokens": 3,
+      "outputTokens": 127,
+      "percentUsed": 0,
+      "updatedAt": 1772431679494,
+      "thinkingLevel": "low"
+    },
+    {
+      "sessionId": "930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13094,
+      "inputTokens": 33,
+      "outputTokens": 404,
+      "percentUsed": 0,
+      "updatedAt": 1772431677908,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13094,
+      "inputTokens": 33,
+      "outputTokens": 404,
+      "percentUsed": 0,
+      "updatedAt": 1772431677908,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
+      "key": "agent:main:main",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 65582,
+      "inputTokens": 3,
+      "outputTokens": 8,
+      "percentUsed": 0,
+      "updatedAt": 1772431673981,
+      "thinkingLevel": null
+    },
     {
       "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
       "key": "agent:scout:telegram:direct:8386624734",
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 29547,
+      "totalTokens": 29992,
       "inputTokens": 10,
-      "outputTokens": 362,
+      "outputTokens": 176,
       "percentUsed": 0,
-      "updatedAt": 1772431440916,
+      "updatedAt": 1772431570009,
       "thinkingLevel": null
     },
     {
-      "sessionId": "d0f75858-5fc3-452f-8b52-4881b02b8df6",
+      "sessionId": "bb0da50a-e0f4-48f7-9198-94e573da9cfd",
       "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
       "agentId": "scout",
       "kind": "direct",
       "model": "claude-haiku-4-5",
-      "totalTokens": 13471,
+      "totalTokens": 13440,
       "inputTokens": 22,
-      "outputTokens": 302,
+      "outputTokens": 265,
       "percentUsed": 0,
-      "updatedAt": 1772431430952,
+      "updatedAt": 1772431558836,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "bb0da50a-e0f4-48f7-9198-94e573da9cfd",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:bb0da50a-e0f4-48f7-9198-94e573da9cfd",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13440,
+      "inputTokens": 22,
+      "outputTokens": 265,
+      "percentUsed": 0,
+      "updatedAt": 1772431558836,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "1a2f766a-73d9-4132-9124-1c305d508942",
+      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 22624,
+      "inputTokens": 23,
+      "outputTokens": 273,
+      "percentUsed": 0,
+      "updatedAt": 1772431553515,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "1a2f766a-73d9-4132-9124-1c305d508942",
+      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663:run:1a2f766a-73d9-4132-9124-1c305d508942",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 22624,
+      "inputTokens": 23,
+      "outputTokens": 273,
+      "percentUsed": 0,
+      "updatedAt": 1772431553515,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "5864c7f7-9e4b-402b-acca-f650588533c1",
+      "key": "agent:main:cron:01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 73989,
+      "inputTokens": 111,
+      "outputTokens": 4500,
+      "percentUsed": 0,
+      "updatedAt": 1772431491070,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "5864c7f7-9e4b-402b-acca-f650588533c1",
+      "key": "agent:main:cron:01a338f9-8be9-4ab8-82d9-a050f64bdaf6:run:5864c7f7-9e4b-402b-acca-f650588533c1",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 73989,
+      "inputTokens": 111,
+      "outputTokens": 4500,
+      "percentUsed": 0,
+      "updatedAt": 1772431491070,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "ac4ec43a-43de-4eae-a231-b3028d59665e",
+      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 59249,
+      "inputTokens": 8,
+      "outputTokens": 2363,
+      "percentUsed": 0,
+      "updatedAt": 1772431444067,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "ac4ec43a-43de-4eae-a231-b3028d59665e",
+      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:ac4ec43a-43de-4eae-a231-b3028d59665e",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 59249,
+      "inputTokens": 8,
+      "outputTokens": 2363,
+      "percentUsed": 0,
+      "updatedAt": 1772431444067,
       "thinkingLevel": null
     },
     {
@@ -2303,32 +2446,6 @@
       "thinkingLevel": null
     },
     {
-      "sessionId": "112b1437-3806-4296-b47e-1bef514a1367",
-      "key": "agent:main:telegram:direct:8386624734",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 60331,
-      "inputTokens": 3,
-      "outputTokens": 163,
-      "percentUsed": 0,
-      "updatedAt": 1772431322206,
-      "thinkingLevel": "low"
-    },
-    {
-      "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
-      "key": "agent:main:main",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 65582,
-      "inputTokens": 3,
-      "outputTokens": 8,
-      "percentUsed": 0,
-      "updatedAt": 1772431322180,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "52b040fc-18c6-49db-bca8-a59984f3efd1",
       "key": "agent:samantha:cron:845fff96-da1a-4ebd-b653-9b3007085dd3",
       "agentId": "samantha",
@@ -2352,19 +2469,6 @@
       "outputTokens": 8816,
       "percentUsed": 0,
       "updatedAt": 1772431197927,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "9831ebd3-2ccb-4d0a-a7aa-b6faea905ceb",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13094,
-      "inputTokens": 33,
-      "outputTokens": 404,
-      "percentUsed": 0,
-      "updatedAt": 1772431077894,
       "thinkingLevel": null
     },
     {
@@ -2538,19 +2642,6 @@
     },
     {
       "sessionId": "68a004d0-2cae-45e3-b230-1cdb8d8b8c28",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 65765,
-      "inputTokens": 13,
-      "outputTokens": 5803,
-      "percentUsed": 0,
-      "updatedAt": 1772430300016,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "68a004d0-2cae-45e3-b230-1cdb8d8b8c28",
       "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:68a004d0-2cae-45e3-b230-1cdb8d8b8c28",
       "agentId": "samantha",
       "kind": "direct",
@@ -2651,19 +2742,6 @@
       "outputTokens": 252,
       "percentUsed": 0,
       "updatedAt": 1772429710074,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "4c5cfc5a-29c0-4b5e-bdb8-8aa22215cbe8",
-      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 22621,
-      "inputTokens": 23,
-      "outputTokens": 324,
-      "percentUsed": 0,
-      "updatedAt": 1772429647789,
       "thinkingLevel": null
     },
     {
@@ -2872,19 +2950,6 @@
       "outputTokens": 314,
       "percentUsed": 0,
       "updatedAt": 1772427847790,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "9206f809-d189-49f7-8ce5-ed18b6590ffd",
-      "key": "agent:main:cron:01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 58066,
-      "inputTokens": 80,
-      "outputTokens": 5182,
-      "percentUsed": 0,
-      "updatedAt": 1772427762531,
       "thinkingLevel": null
     },
     {
@@ -10233,45 +10298,6 @@
       "thinkingLevel": null
     },
     {
-      "sessionId": "f972070d-b450-4c0c-a930-878a3a298059",
-      "key": "agent:main:cron:01a338f9-8be9-4ab8-82d9-a050f64bdaf6:run:f972070d-b450-4c0c-a930-878a3a298059",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 39946,
-      "inputTokens": 38,
-      "outputTokens": 2984,
-      "percentUsed": 0,
-      "updatedAt": 1772344962549,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "6b7d181e-e8a5-42a6-8b87-e529b907d03c",
-      "key": "agent:main:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:6b7d181e-e8a5-42a6-8b87-e529b907d03c",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 21029,
-      "inputTokens": 4,
-      "outputTokens": 133,
-      "percentUsed": 0,
-      "updatedAt": 1772344836746,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "846b213d-b89e-4e21-a8d1-f91bf24a51de",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:846b213d-b89e-4e21-a8d1-f91bf24a51de",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 28629,
-      "inputTokens": 6,
-      "outputTokens": 1159,
-      "percentUsed": 0,
-      "updatedAt": 1772344800027,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "f25f6f3b-a9b8-48ea-97da-d6def07e161f",
       "key": "agent:main:cron:b1cc0e0c-a76f-4a2c-8500-206228f8ce00",
       "agentId": "main",
@@ -10313,130 +10339,46 @@
   ],
   "sessionHistory": [
     {
-      "sessionId": "ac4ec43a-43de-4eae-a231-b3028d59665e",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 65765,
-      "inputTokens": 13,
-      "outputTokens": 5803,
-      "cacheRead": 461190,
-      "percentUsed": 33,
-      "updatedAt": 1772431444067,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "ac4ec43a-43de-4eae-a231-b3028d59665e",
-      "key": "agent:samantha:cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1:run:ac4ec43a-43de-4eae-a231-b3028d59665e",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 65765,
-      "inputTokens": 13,
-      "outputTokens": 5803,
-      "cacheRead": 461190,
-      "percentUsed": 33,
-      "updatedAt": 1772431444067,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
-      "key": "agent:scout:telegram:direct:8386624734",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 29774,
-      "inputTokens": 10,
-      "outputTokens": 213,
-      "cacheRead": 29537,
-      "percentUsed": 15,
-      "updatedAt": 1772431444001,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "d0f75858-5fc3-452f-8b52-4881b02b8df6",
-      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13471,
-      "inputTokens": 22,
-      "outputTokens": 302,
-      "cacheRead": 25798,
-      "percentUsed": 7,
-      "updatedAt": 1772431430952,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "d0f75858-5fc3-452f-8b52-4881b02b8df6",
-      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:d0f75858-5fc3-452f-8b52-4881b02b8df6",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 13471,
-      "inputTokens": 22,
-      "outputTokens": 302,
-      "cacheRead": 25798,
-      "percentUsed": 7,
-      "updatedAt": 1772431430952,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "c1b69f0d-eba3-494d-ae73-c8cf70421c68",
-      "key": "agent:samantha:telegram:direct:8386624734",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 35634,
-      "inputTokens": 3,
-      "outputTokens": 7,
-      "cacheRead": 35171,
-      "percentUsed": 18,
-      "updatedAt": 1772431430947,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "d4bcb761-e5b9-48b9-b6a4-97d5d93ccd94",
-      "key": "agent:samantha:cron:43a6704d-8e77-448a-81d7-e7fda3ac7614",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 21843,
-      "inputTokens": 7,
-      "outputTokens": 1177,
-      "cacheRead": 100037,
-      "percentUsed": 11,
-      "updatedAt": 1772431404434,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "d4bcb761-e5b9-48b9-b6a4-97d5d93ccd94",
-      "key": "agent:samantha:cron:43a6704d-8e77-448a-81d7-e7fda3ac7614:run:d4bcb761-e5b9-48b9-b6a4-97d5d93ccd94",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 21843,
-      "inputTokens": 7,
-      "outputTokens": 1177,
-      "cacheRead": 100037,
-      "percentUsed": 11,
-      "updatedAt": 1772431404434,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "112b1437-3806-4296-b47e-1bef514a1367",
       "key": "agent:main:telegram:direct:8386624734",
       "agentId": "main",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 60331,
+      "totalTokens": 74864,
       "inputTokens": 3,
-      "outputTokens": 163,
-      "cacheRead": 60150,
-      "percentUsed": 30,
-      "updatedAt": 1772431322206,
+      "outputTokens": 127,
+      "cacheRead": 73455,
+      "percentUsed": 37,
+      "updatedAt": 1772431679494,
       "thinkingLevel": "low"
+    },
+    {
+      "sessionId": "930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13094,
+      "inputTokens": 33,
+      "outputTokens": 404,
+      "cacheRead": 37676,
+      "percentUsed": 7,
+      "updatedAt": 1772431677908,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13094,
+      "inputTokens": 33,
+      "outputTokens": 404,
+      "cacheRead": 37676,
+      "percentUsed": 7,
+      "updatedAt": 1772431677908,
+      "thinkingLevel": null
     },
     {
       "sessionId": "96766718-475a-497d-83e4-9ee4d376ab0b",
@@ -10449,7 +10391,91 @@
       "outputTokens": 8,
       "cacheRead": 64196,
       "percentUsed": 33,
-      "updatedAt": 1772431322180,
+      "updatedAt": 1772431673981,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
+      "key": "agent:scout:telegram:direct:8386624734",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 29992,
+      "inputTokens": 10,
+      "outputTokens": 176,
+      "cacheRead": 29764,
+      "percentUsed": 15,
+      "updatedAt": 1772431570009,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "bb0da50a-e0f4-48f7-9198-94e573da9cfd",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13440,
+      "inputTokens": 22,
+      "outputTokens": 265,
+      "cacheRead": 25798,
+      "percentUsed": 7,
+      "updatedAt": 1772431558836,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "bb0da50a-e0f4-48f7-9198-94e573da9cfd",
+      "key": "agent:scout:cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10:run:bb0da50a-e0f4-48f7-9198-94e573da9cfd",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 13440,
+      "inputTokens": 22,
+      "outputTokens": 265,
+      "cacheRead": 25798,
+      "percentUsed": 7,
+      "updatedAt": 1772431558836,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "1a2f766a-73d9-4132-9124-1c305d508942",
+      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 22624,
+      "inputTokens": 23,
+      "outputTokens": 273,
+      "cacheRead": 42956,
+      "percentUsed": 11,
+      "updatedAt": 1772431553515,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "1a2f766a-73d9-4132-9124-1c305d508942",
+      "key": "agent:main:cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663:run:1a2f766a-73d9-4132-9124-1c305d508942",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 22624,
+      "inputTokens": 23,
+      "outputTokens": 273,
+      "cacheRead": 42956,
+      "percentUsed": 11,
+      "updatedAt": 1772431553515,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "5864c7f7-9e4b-402b-acca-f650588533c1",
+      "key": "agent:main:cron:01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
+      "agentId": "main",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 73989,
+      "inputTokens": 111,
+      "outputTokens": 4500,
+      "cacheRead": 544994,
+      "percentUsed": 37,
+      "updatedAt": 1772431491070,
       "thinkingLevel": null
     }
   ],
@@ -10509,24 +10535,438 @@
   },
   "gateway": {
     "reachable": true,
-    "latencyMs": 9,
+    "latencyMs": 10,
     "version": "2026.2.26",
     "error": null,
     "running": true
   },
   "costs": {
-    "845fff96-da1a-4ebd-b653-9b3007085dd3": [
+    "785dc24f-e15b-420b-a7e5-0116f5e60e93": [
       {
-        "ts": 1772423886721,
-        "tokens": 28597,
-        "tokensInput": 13,
+        "ts": 1772430477881,
+        "tokens": 13094,
+        "tokensInput": 33,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 5672,
+        "tokensOut": 404,
+        "status": "ok"
+      },
+      {
+        "ts": 1772429277855,
+        "tokens": 13110,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 430,
+        "status": "ok"
+      },
+      {
+        "ts": 1772428961353,
+        "tokens": 13262,
+        "tokensInput": 43,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 576,
+        "status": "ok"
+      },
+      {
+        "ts": 1772427957854,
+        "tokens": 13676,
+        "tokensInput": 67,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 911,
+        "status": "ok"
+      },
+      {
+        "ts": 1772427668488,
+        "tokens": 13075,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 396,
+        "status": "ok"
+      },
+      {
+        "ts": 1772427348748,
+        "tokens": 13262,
+        "tokensInput": 43,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 624,
+        "status": "ok"
+      },
+      {
+        "ts": 1772426778511,
+        "tokens": 13825,
+        "tokensInput": 73,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1005,
+        "status": "ok"
+      },
+      {
+        "ts": 1772426259833,
+        "tokens": 13824,
+        "tokensInput": 73,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1171,
+        "status": "ok"
+      },
+      {
+        "ts": 1772425959828,
+        "tokens": 13350,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 673,
+        "status": "ok"
+      },
+      {
+        "ts": 1772425659815,
+        "tokens": 13082,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 386,
+        "status": "ok"
+      },
+      {
+        "ts": 1772425566091,
+        "tokens": 13128,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 428,
+        "status": "ok"
+      },
+      {
+        "ts": 1772425266079,
+        "tokens": 13144,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 413,
+        "status": "ok"
+      },
+      {
+        "ts": 1772424966065,
+        "tokens": 13081,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 397,
+        "status": "ok"
+      },
+      {
+        "ts": 1772424666050,
+        "tokens": 13116,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 431,
+        "status": "ok"
+      },
+      {
+        "ts": 1772424095967,
+        "tokens": 13609,
+        "tokensInput": 67,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 839,
+        "status": "ok"
+      },
+      {
+        "ts": 1772423780259,
+        "tokens": 13111,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 414,
+        "status": "ok"
+      },
+      {
+        "ts": 1772423480244,
+        "tokens": 13097,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 410,
+        "status": "ok"
+      },
+      {
+        "ts": 1772423180230,
+        "tokens": 13100,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 427,
+        "status": "ok"
+      },
+      {
+        "ts": 1772422880212,
+        "tokens": 13630,
+        "tokensInput": 67,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 890,
+        "status": "ok"
+      },
+      {
+        "ts": 1772422580200,
+        "tokens": 13101,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 386,
+        "status": "ok"
+      },
+      {
+        "ts": 1772421948765,
+        "tokens": 13928,
+        "tokensInput": 78,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1195,
+        "status": "ok"
+      },
+      {
+        "ts": 1772421648755,
+        "tokens": 13367,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 708,
+        "status": "ok"
+      },
+      {
+        "ts": 1772421048782,
+        "tokens": 13878,
+        "tokensInput": 73,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1052,
+        "status": "ok"
+      },
+      {
+        "ts": 1772420748768,
+        "tokens": 13086,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 422,
+        "status": "ok"
+      },
+      {
+        "ts": 1772420448755,
+        "tokens": 13083,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 393,
+        "status": "ok"
+      },
+      {
+        "ts": 1772419775372,
+        "tokens": 13950,
+        "tokensInput": 78,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1187,
+        "status": "ok"
+      },
+      {
+        "ts": 1772419475360,
+        "tokens": 13150,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 464,
+        "status": "ok"
+      },
+      {
+        "ts": 1772419175346,
+        "tokens": 13135,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 432,
+        "status": "ok"
+      },
+      {
+        "ts": 1772418875331,
+        "tokens": 13105,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 376,
+        "status": "ok"
+      },
+      {
+        "ts": 1772418575319,
+        "tokens": 13085,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 400,
+        "status": "ok"
+      },
+      {
+        "ts": 1772418275302,
+        "tokens": 13137,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 430,
+        "status": "ok"
+      },
+      {
+        "ts": 1772417975289,
+        "tokens": 13102,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 411,
+        "status": "ok"
+      },
+      {
+        "ts": 1772417675276,
+        "tokens": 13093,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 396,
+        "status": "ok"
+      },
+      {
+        "ts": 1772417375263,
+        "tokens": 13074,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 418,
+        "status": "ok"
+      },
+      {
+        "ts": 1772417075250,
+        "tokens": 13382,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 732,
+        "status": "ok"
+      },
+      {
+        "ts": 1772416548754,
+        "tokens": 13143,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 440,
+        "status": "ok"
+      },
+      {
+        "ts": 1772416042791,
+        "tokens": 13740,
+        "tokensInput": 73,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 978,
+        "status": "ok"
+      },
+      {
+        "ts": 1772415742778,
+        "tokens": 13141,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 457,
+        "status": "ok"
+      },
+      {
+        "ts": 1772415442764,
+        "tokens": 13125,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 456,
+        "status": "ok"
+      },
+      {
+        "ts": 1772414631875,
+        "tokens": 13692,
+        "tokensInput": 67,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 903,
+        "status": "ok"
+      },
+      {
+        "ts": 1772414331862,
+        "tokens": 13099,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 400,
+        "status": "ok"
+      },
+      {
+        "ts": 1772414014557,
+        "tokens": 13830,
+        "tokensInput": 73,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1070,
+        "status": "ok"
+      },
+      {
+        "ts": 1772413714543,
+        "tokens": 13120,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 443,
+        "status": "ok"
+      },
+      {
+        "ts": 1772413414529,
+        "tokens": 13111,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 429,
+        "status": "ok"
+      },
+      {
+        "ts": 1772413114516,
+        "tokens": 13088,
+        "tokensInput": 33,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 339,
         "status": "ok"
       }
     ],
     "03ee763f-f9fa-4138-b4bb-b7e5b48c0e10": [
+      {
+        "ts": 1772431558835,
+        "tokens": 13440,
+        "tokensInput": 22,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 265,
+        "status": "ok"
+      },
+      {
+        "ts": 1772431430951,
+        "tokens": 13471,
+        "tokensInput": 22,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 302,
+        "status": "ok"
+      },
       {
         "ts": 1772431016772,
         "tokens": 13429,
@@ -10628,6 +11068,15 @@
       }
     ],
     "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1": [
+      {
+        "ts": 1772431444066,
+        "tokens": 59249,
+        "tokensInput": 8,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2363,
+        "status": "ok"
+      },
       {
         "ts": 1772430300015,
         "tokens": 65765,
@@ -11050,200 +11499,157 @@
         "tokensCacheWrite": 0,
         "tokensOut": 4419,
         "status": "ok"
-      },
+      }
+    ],
+    "f50b5756-82e2-4fd8-b8e4-d1b4045a1c20": [
       {
-        "ts": 1772386200018,
-        "tokens": 82823,
-        "tokensInput": 8,
+        "ts": 1772430429182,
+        "tokens": 67487,
+        "tokensInput": 36,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 4175,
+        "tokensOut": 625,
+        "status": "ok"
+      },
+      {
+        "ts": 1772428629165,
+        "tokens": 83530,
+        "tokensInput": 174,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4399,
+        "status": "ok"
+      },
+      {
+        "ts": 1772426737399,
+        "tokens": 67570,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 793,
+        "status": "ok"
+      },
+      {
+        "ts": 1772424609833,
+        "tokens": 95453,
+        "tokensInput": 49,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 983,
+        "status": "ok"
+      },
+      {
+        "ts": 1772422473883,
+        "tokens": 68526,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 702,
+        "status": "ok"
+      },
+      {
+        "ts": 1772420363918,
+        "tokens": 65692,
+        "tokensInput": 74,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1240,
+        "status": "ok"
+      },
+      {
+        "ts": 1772418563904,
+        "tokens": 68347,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 600,
+        "status": "ok"
+      },
+      {
+        "ts": 1772416763891,
+        "tokens": 81202,
+        "tokensInput": 62,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1335,
         "status": "ok"
       }
     ],
-    "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
+    "50708c6f-37b2-4f19-88a9-9ff56a732f7c": [
       {
-        "ts": 1772427762529,
-        "tokens": 58066,
-        "tokensInput": 80,
+        "ts": 1772430517030,
+        "tokens": 68302,
+        "tokensInput": 73,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 5182,
+        "tokensOut": 1299,
         "status": "ok"
       },
       {
-        "ts": 1772424296696,
-        "tokens": 36175,
-        "tokensInput": 66,
+        "ts": 1772428717017,
+        "tokens": 68817,
+        "tokensInput": 72,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 4119,
+        "tokensOut": 1464,
         "status": "ok"
       },
       {
-        "ts": 1772420562535,
-        "tokens": 80996,
-        "tokensInput": 108,
+        "ts": 1772426751963,
+        "tokens": 96157,
+        "tokensInput": 86,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 5276,
+        "tokensOut": 1798,
         "status": "ok"
       },
       {
-        "ts": 1772416965462,
-        "tokens": 72146,
-        "tokensInput": 38,
+        "ts": 1772424632499,
+        "tokens": 68745,
+        "tokensInput": 72,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 3968,
+        "tokensOut": 1307,
         "status": "ok"
       },
       {
-        "ts": 1772413362535,
-        "tokens": 35193,
-        "tokensInput": 93,
+        "ts": 1772422485995,
+        "tokens": 85168,
+        "tokensInput": 132,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 5655,
+        "tokensOut": 2873,
+        "status": "error"
+      },
+      {
+        "ts": 1772420293170,
+        "tokens": 68893,
+        "tokensInput": 36,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1314,
         "status": "ok"
       },
       {
-        "ts": 1772406415140,
-        "tokens": 67064,
-        "tokensInput": 38,
+        "ts": 1772418493157,
+        "tokens": 98055,
+        "tokensInput": 61,
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
-        "tokensOut": 2910,
-        "status": "ok"
-      },
-      {
-        "ts": 1772403461189,
-        "tokens": 80599,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4516,
-        "status": "ok"
-      },
-      {
-        "ts": 1772399021457,
-        "tokens": 66957,
-        "tokensInput": 66,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 5103,
-        "status": "ok"
-      },
-      {
-        "ts": 1772395405636,
-        "tokens": 66967,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4487,
-        "status": "ok"
-      },
-      {
-        "ts": 1772391861122,
-        "tokens": 71091,
-        "tokensInput": 88,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 6197,
-        "status": "ok"
-      },
-      {
-        "ts": 1772388162534,
-        "tokens": 87016,
-        "tokensInput": 121,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4645,
-        "status": "ok"
-      },
-      {
-        "ts": 1772384634554,
-        "tokens": 67274,
-        "tokensInput": 51,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3431,
-        "status": "ok"
-      },
-      {
-        "ts": 1772348603915,
-        "tokens": 43203,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3689,
-        "status": "ok"
-      },
-      {
-        "ts": 1772341362540,
-        "tokens": 39074,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2247,
-        "status": "ok"
-      },
-      {
-        "ts": 1772337762543,
-        "tokens": 36353,
-        "tokensInput": 92,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4854,
-        "status": "ok"
-      },
-      {
-        "ts": 1772334162542,
-        "tokens": 32478,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2589,
-        "status": "ok"
-      },
-      {
-        "ts": 1772330562540,
-        "tokens": 31693,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2536,
-        "status": "ok"
-      },
-      {
-        "ts": 1772323362540,
-        "tokens": 30548,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2515,
-        "status": "ok"
-      },
-      {
-        "ts": 1772319762543,
-        "tokens": 30284,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 3246,
-        "status": "ok"
-      },
-      {
-        "ts": 1772316162533,
-        "tokens": 29661,
-        "tokensInput": 38,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2803,
+        "tokensOut": 1198,
         "status": "ok"
       }
     ],
     "9d407dd0-af2b-4bf5-97f2-ae5d006a8663": [
+      {
+        "ts": 1772431553513,
+        "tokens": 22624,
+        "tokensInput": 23,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 273,
+        "status": "ok"
+      },
       {
         "ts": 1772429647787,
         "tokens": 22621,
@@ -11533,552 +11939,6 @@
         "status": "ok"
       }
     ],
-    "785dc24f-e15b-420b-a7e5-0116f5e60e93": [
-      {
-        "ts": 1772430477881,
-        "tokens": 13094,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 404,
-        "status": "ok"
-      },
-      {
-        "ts": 1772429277855,
-        "tokens": 13110,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 430,
-        "status": "ok"
-      },
-      {
-        "ts": 1772428961353,
-        "tokens": 13262,
-        "tokensInput": 43,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 576,
-        "status": "ok"
-      },
-      {
-        "ts": 1772427957854,
-        "tokens": 13676,
-        "tokensInput": 67,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 911,
-        "status": "ok"
-      },
-      {
-        "ts": 1772427668488,
-        "tokens": 13075,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 396,
-        "status": "ok"
-      },
-      {
-        "ts": 1772427348748,
-        "tokens": 13262,
-        "tokensInput": 43,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 624,
-        "status": "ok"
-      },
-      {
-        "ts": 1772426778511,
-        "tokens": 13825,
-        "tokensInput": 73,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1005,
-        "status": "ok"
-      },
-      {
-        "ts": 1772426259833,
-        "tokens": 13824,
-        "tokensInput": 73,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1171,
-        "status": "ok"
-      },
-      {
-        "ts": 1772425959828,
-        "tokens": 13350,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 673,
-        "status": "ok"
-      },
-      {
-        "ts": 1772425659815,
-        "tokens": 13082,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 386,
-        "status": "ok"
-      },
-      {
-        "ts": 1772425566091,
-        "tokens": 13128,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 428,
-        "status": "ok"
-      },
-      {
-        "ts": 1772425266079,
-        "tokens": 13144,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 413,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424966065,
-        "tokens": 13081,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 397,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424666050,
-        "tokens": 13116,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 431,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424095967,
-        "tokens": 13609,
-        "tokensInput": 67,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 839,
-        "status": "ok"
-      },
-      {
-        "ts": 1772423780259,
-        "tokens": 13111,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 414,
-        "status": "ok"
-      },
-      {
-        "ts": 1772423480244,
-        "tokens": 13097,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 410,
-        "status": "ok"
-      },
-      {
-        "ts": 1772423180230,
-        "tokens": 13100,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 427,
-        "status": "ok"
-      },
-      {
-        "ts": 1772422880212,
-        "tokens": 13630,
-        "tokensInput": 67,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 890,
-        "status": "ok"
-      },
-      {
-        "ts": 1772422580200,
-        "tokens": 13101,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 386,
-        "status": "ok"
-      },
-      {
-        "ts": 1772421948765,
-        "tokens": 13928,
-        "tokensInput": 78,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1195,
-        "status": "ok"
-      },
-      {
-        "ts": 1772421648755,
-        "tokens": 13367,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 708,
-        "status": "ok"
-      },
-      {
-        "ts": 1772421048782,
-        "tokens": 13878,
-        "tokensInput": 73,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1052,
-        "status": "ok"
-      },
-      {
-        "ts": 1772420748768,
-        "tokens": 13086,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 422,
-        "status": "ok"
-      },
-      {
-        "ts": 1772420448755,
-        "tokens": 13083,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 393,
-        "status": "ok"
-      },
-      {
-        "ts": 1772419775372,
-        "tokens": 13950,
-        "tokensInput": 78,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1187,
-        "status": "ok"
-      },
-      {
-        "ts": 1772419475360,
-        "tokens": 13150,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 464,
-        "status": "ok"
-      },
-      {
-        "ts": 1772419175346,
-        "tokens": 13135,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 432,
-        "status": "ok"
-      },
-      {
-        "ts": 1772418875331,
-        "tokens": 13105,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 376,
-        "status": "ok"
-      },
-      {
-        "ts": 1772418575319,
-        "tokens": 13085,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 400,
-        "status": "ok"
-      },
-      {
-        "ts": 1772418275302,
-        "tokens": 13137,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 430,
-        "status": "ok"
-      },
-      {
-        "ts": 1772417975289,
-        "tokens": 13102,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 411,
-        "status": "ok"
-      },
-      {
-        "ts": 1772417675276,
-        "tokens": 13093,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 396,
-        "status": "ok"
-      },
-      {
-        "ts": 1772417375263,
-        "tokens": 13074,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 418,
-        "status": "ok"
-      },
-      {
-        "ts": 1772417075250,
-        "tokens": 13382,
-        "tokensInput": 52,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 732,
-        "status": "ok"
-      },
-      {
-        "ts": 1772416548754,
-        "tokens": 13143,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 440,
-        "status": "ok"
-      },
-      {
-        "ts": 1772416042791,
-        "tokens": 13740,
-        "tokensInput": 73,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 978,
-        "status": "ok"
-      },
-      {
-        "ts": 1772415742778,
-        "tokens": 13141,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 457,
-        "status": "ok"
-      },
-      {
-        "ts": 1772415442764,
-        "tokens": 13125,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 456,
-        "status": "ok"
-      },
-      {
-        "ts": 1772414631875,
-        "tokens": 13692,
-        "tokensInput": 67,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 903,
-        "status": "ok"
-      },
-      {
-        "ts": 1772414331862,
-        "tokens": 13099,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 400,
-        "status": "ok"
-      },
-      {
-        "ts": 1772414014557,
-        "tokens": 13830,
-        "tokensInput": 73,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1070,
-        "status": "ok"
-      },
-      {
-        "ts": 1772413714543,
-        "tokens": 13120,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 443,
-        "status": "ok"
-      },
-      {
-        "ts": 1772413414529,
-        "tokens": 13111,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 429,
-        "status": "ok"
-      },
-      {
-        "ts": 1772413114516,
-        "tokens": 13088,
-        "tokensInput": 33,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 339,
-        "status": "ok"
-      }
-    ],
-    "f50b5756-82e2-4fd8-b8e4-d1b4045a1c20": [
-      {
-        "ts": 1772430429182,
-        "tokens": 67487,
-        "tokensInput": 36,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 625,
-        "status": "ok"
-      },
-      {
-        "ts": 1772428629165,
-        "tokens": 83530,
-        "tokensInput": 174,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 4399,
-        "status": "ok"
-      },
-      {
-        "ts": 1772426737399,
-        "tokens": 67570,
-        "tokensInput": 36,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 793,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424609833,
-        "tokens": 95453,
-        "tokensInput": 49,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 983,
-        "status": "ok"
-      },
-      {
-        "ts": 1772422473883,
-        "tokens": 68526,
-        "tokensInput": 36,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 702,
-        "status": "ok"
-      },
-      {
-        "ts": 1772420363918,
-        "tokens": 65692,
-        "tokensInput": 74,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1240,
-        "status": "ok"
-      },
-      {
-        "ts": 1772418563904,
-        "tokens": 68347,
-        "tokensInput": 36,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 600,
-        "status": "ok"
-      },
-      {
-        "ts": 1772416763891,
-        "tokens": 81202,
-        "tokensInput": 62,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1335,
-        "status": "ok"
-      }
-    ],
-    "50708c6f-37b2-4f19-88a9-9ff56a732f7c": [
-      {
-        "ts": 1772430517030,
-        "tokens": 68302,
-        "tokensInput": 73,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1299,
-        "status": "ok"
-      },
-      {
-        "ts": 1772428717017,
-        "tokens": 68817,
-        "tokensInput": 72,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1464,
-        "status": "ok"
-      },
-      {
-        "ts": 1772426751963,
-        "tokens": 96157,
-        "tokensInput": 86,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1798,
-        "status": "ok"
-      },
-      {
-        "ts": 1772424632499,
-        "tokens": 68745,
-        "tokensInput": 72,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1307,
-        "status": "ok"
-      },
-      {
-        "ts": 1772422485995,
-        "tokens": 85168,
-        "tokensInput": 132,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 2873,
-        "status": "error"
-      },
-      {
-        "ts": 1772420293170,
-        "tokens": 68893,
-        "tokensInput": 36,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1314,
-        "status": "ok"
-      },
-      {
-        "ts": 1772418493157,
-        "tokens": 98055,
-        "tokensInput": 61,
-        "tokensCacheRead": 0,
-        "tokensCacheWrite": 0,
-        "tokensOut": 1198,
-        "status": "ok"
-      }
-    ],
     "763a67ae-49b6-4bd7-82ad-5cac8510352a": [
       {
         "ts": 1772348400022,
@@ -12144,6 +12004,197 @@
         "status": "ok"
       }
     ],
+    "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
+      {
+        "ts": 1772431491069,
+        "tokens": 73989,
+        "tokensInput": 111,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4500,
+        "status": "ok"
+      },
+      {
+        "ts": 1772427762529,
+        "tokens": 58066,
+        "tokensInput": 80,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5182,
+        "status": "ok"
+      },
+      {
+        "ts": 1772424296696,
+        "tokens": 36175,
+        "tokensInput": 66,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4119,
+        "status": "ok"
+      },
+      {
+        "ts": 1772420562535,
+        "tokens": 80996,
+        "tokensInput": 108,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5276,
+        "status": "ok"
+      },
+      {
+        "ts": 1772416965462,
+        "tokens": 72146,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3968,
+        "status": "ok"
+      },
+      {
+        "ts": 1772413362535,
+        "tokens": 35193,
+        "tokensInput": 93,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5655,
+        "status": "ok"
+      },
+      {
+        "ts": 1772406415140,
+        "tokens": 67064,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2910,
+        "status": "ok"
+      },
+      {
+        "ts": 1772403461189,
+        "tokens": 80599,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4516,
+        "status": "ok"
+      },
+      {
+        "ts": 1772399021457,
+        "tokens": 66957,
+        "tokensInput": 66,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5103,
+        "status": "ok"
+      },
+      {
+        "ts": 1772395405636,
+        "tokens": 66967,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4487,
+        "status": "ok"
+      },
+      {
+        "ts": 1772391861122,
+        "tokens": 71091,
+        "tokensInput": 88,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 6197,
+        "status": "ok"
+      },
+      {
+        "ts": 1772388162534,
+        "tokens": 87016,
+        "tokensInput": 121,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4645,
+        "status": "ok"
+      },
+      {
+        "ts": 1772384634554,
+        "tokens": 67274,
+        "tokensInput": 51,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3431,
+        "status": "ok"
+      },
+      {
+        "ts": 1772348603915,
+        "tokens": 43203,
+        "tokensInput": 52,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3689,
+        "status": "ok"
+      },
+      {
+        "ts": 1772341362540,
+        "tokens": 39074,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2247,
+        "status": "ok"
+      },
+      {
+        "ts": 1772337762543,
+        "tokens": 36353,
+        "tokensInput": 92,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 4854,
+        "status": "ok"
+      },
+      {
+        "ts": 1772334162542,
+        "tokens": 32478,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2589,
+        "status": "ok"
+      },
+      {
+        "ts": 1772330562540,
+        "tokens": 31693,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2536,
+        "status": "ok"
+      },
+      {
+        "ts": 1772323362540,
+        "tokens": 30548,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2515,
+        "status": "ok"
+      },
+      {
+        "ts": 1772319762543,
+        "tokens": 30284,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 3246,
+        "status": "ok"
+      },
+      {
+        "ts": 1772316162533,
+        "tokens": 29661,
+        "tokensInput": 38,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 2803,
+        "status": "ok"
+      }
+    ],
     "248701de-21b3-4c1a-86b6-164a8de04ca3": [
       {
         "ts": 1772350200015,
@@ -12179,6 +12230,26 @@
         "tokensCacheRead": 0,
         "tokensCacheWrite": 0,
         "tokensOut": 779,
+        "status": "ok"
+      }
+    ],
+    "845fff96-da1a-4ebd-b653-9b3007085dd3": [
+      {
+        "ts": 1772431197925,
+        "tokens": 32200,
+        "tokensInput": 11,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 8816,
+        "status": "ok"
+      },
+      {
+        "ts": 1772423886721,
+        "tokens": 28597,
+        "tokensInput": 13,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 5672,
         "status": "ok"
       }
     ],
@@ -12888,6 +12959,17 @@
         "status": "ok"
       }
     ],
+    "43a6704d-8e77-448a-81d7-e7fda3ac7614": [
+      {
+        "ts": 1772431404378,
+        "tokens": 21843,
+        "tokensInput": 7,
+        "tokensCacheRead": 0,
+        "tokensCacheWrite": 0,
+        "tokensOut": 1177,
+        "status": "ok"
+      }
+    ],
     "498ea0a9-f2c2-49f2-bd78-73c683af9d82": [
       {
         "ts": 1772416857191,
@@ -13089,11 +13171,106 @@
     ]
   },
   "subagentSessions": {
-    "total": 630,
+    "total": 635,
     "activeCount": 0,
-    "totalCostUsd": 381.532,
-    "totalTokens": 167036790,
+    "totalCostUsd": 384.5753,
+    "totalTokens": 168729339,
     "items": [
+      {
+        "session_id": "930fd74e-bf9c-4a31-801e-fe5808dfddf4",
+        "label": "portal-data-refresh",
+        "agent_type": "scout",
+        "task_description": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Sunday, March 1st, 2026 — 10:07 P",
+        "model": "claude-haiku-4-5",
+        "started_at": 1772431677989,
+        "ended_at": 1772431691110,
+        "duration_ms": 13121,
+        "tokens_in": 25598,
+        "tokens_out": 297,
+        "tokens_total": 25895,
+        "estimated_cost_usd": 0.0068,
+        "status": "completed",
+        "parent_session_id": null,
+        "task_name": null,
+        "source": "openclaw",
+        "display_name": "portal-data-refresh"
+      },
+      {
+        "session_id": "bb0da50a-e0f4-48f7-9198-94e573da9cfd",
+        "label": "portal-live-refresh",
+        "agent_type": "scout",
+        "task_description": "[cron:03ee763f-f9fa-4138-b4bb-b7e5b48c0e10 portal-live-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-live.js\nCurrent time: Sunday, March 1st, 2026 — 10:05 P",
+        "model": "claude-haiku-4-5",
+        "started_at": 1772431558885,
+        "ended_at": 1772431566913,
+        "duration_ms": 8028,
+        "tokens_in": 26661,
+        "tokens_out": 265,
+        "tokens_total": 26926,
+        "estimated_cost_usd": 0.007,
+        "status": "completed",
+        "parent_session_id": null,
+        "task_name": null,
+        "source": "openclaw",
+        "display_name": "portal-live-refresh"
+      },
+      {
+        "session_id": "1a2f766a-73d9-4132-9124-1c305d508942",
+        "label": "cliff-article-review",
+        "agent_type": "cliff",
+        "task_description": "[cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663 cliff-article-review] ## ⚡ EARLY EXIT CHECK — DO THIS FIRST\nRun: node /Users/openclaw/.openclaw/workspace/samantha/review-precheck.js\n\nIf exit code is 0: out",
+        "model": "claude-haiku-4-5",
+        "started_at": 1772431553556,
+        "ended_at": 1772431557309,
+        "duration_ms": 3753,
+        "tokens_in": 44993,
+        "tokens_out": 273,
+        "tokens_total": 45266,
+        "estimated_cost_usd": 0.0116,
+        "status": "completed",
+        "parent_session_id": null,
+        "task_name": null,
+        "source": "openclaw",
+        "display_name": "cliff-article-review"
+      },
+      {
+        "session_id": "5864c7f7-9e4b-402b-acca-f650588533c1",
+        "label": "pipeline-health-check",
+        "agent_type": "cliff",
+        "task_description": "[cron:01a338f9-8be9-4ab8-82d9-a050f64bdaf6 pipeline-health-check] You are Cliff. Run a comprehensive pipeline health check and report results to me (this is self-reporting — I am Cliff). Check everyth",
+        "model": "claude-haiku-4-5",
+        "started_at": 1772431491106,
+        "ended_at": 1772431548723,
+        "duration_ms": 57617,
+        "tokens_in": 598486,
+        "tokens_out": 4500,
+        "tokens_total": 602986,
+        "estimated_cost_usd": 0.1552,
+        "status": "completed",
+        "parent_session_id": null,
+        "task_name": null,
+        "source": "openclaw",
+        "display_name": "pipeline-health-check"
+      },
+      {
+        "session_id": "ac4ec43a-43de-4eae-a231-b3028d59665e",
+        "label": "samantha-publish",
+        "agent_type": "samantha",
+        "task_description": "[cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1 samantha-publish] You are Samantha, Cliff's content studio agent. This is PHASE 2: PUBLISH. Read AGENTS.md in your workspace (/workspace/samantha/).\n\nDo thre",
+        "model": "claude-sonnet-4-6",
+        "started_at": 1772431444092,
+        "ended_at": 1772431491044,
+        "duration_ms": 46952,
+        "tokens_in": 339881,
+        "tokens_out": 2363,
+        "tokens_total": 342244,
+        "estimated_cost_usd": 1.0551,
+        "status": "completed",
+        "parent_session_id": null,
+        "task_name": null,
+        "source": "openclaw",
+        "display_name": "samantha-publish"
+      },
       {
         "session_id": "d0f75858-5fc3-452f-8b52-4881b02b8df6",
         "label": "portal-live-refresh",
@@ -13272,12 +13449,12 @@
         "task_description": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one ",
         "model": "claude-sonnet-4-6",
         "started_at": 1772430536308,
-        "ended_at": 1772431415556,
-        "duration_ms": 879248,
-        "tokens_in": 3596139,
-        "tokens_out": 17648,
-        "tokens_total": 3613787,
-        "estimated_cost_usd": 11.0531,
+        "ended_at": 1772431679477,
+        "duration_ms": 1143169,
+        "tokens_in": 4183144,
+        "tokens_out": 19720,
+        "tokens_total": 4202864,
+        "estimated_cost_usd": 12.8452,
         "status": "completed",
         "parent_session_id": null,
         "task_name": null,
@@ -22493,101 +22670,6 @@
         "tokens_out": 319,
         "tokens_total": 38976,
         "estimated_cost_usd": 0.0101,
-        "status": "completed",
-        "parent_session_id": null,
-        "task_name": null,
-        "source": "openclaw",
-        "display_name": "portal-data-refresh"
-      },
-      {
-        "session_id": "55809178-23f9-4bc3-8b22-bd274375d237",
-        "label": "portal-data-refresh",
-        "agent_type": "scout",
-        "task_description": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/.openclaw/workspace/cliffcircuit-portal/generate-data.js\nCurrent time: Sunday, March 1st, 2026 — ",
-        "model": "claude-haiku-4-5",
-        "started_at": 1772368500058,
-        "ended_at": 1772368515490,
-        "duration_ms": 15432,
-        "tokens_in": 38698,
-        "tokens_out": 394,
-        "tokens_total": 39092,
-        "estimated_cost_usd": 0.0102,
-        "status": "completed",
-        "parent_session_id": null,
-        "task_name": null,
-        "source": "openclaw",
-        "display_name": "portal-data-refresh"
-      },
-      {
-        "session_id": "68bc9e8c-22f1-4575-b9e5-a504821ba1b8",
-        "label": "cliff-article-review",
-        "agent_type": "cliff",
-        "task_description": "[cron:9d407dd0-af2b-4bf5-97f2-ae5d006a8663 cliff-article-review] REVIEW + SCHEDULE TASK: Read /Users/openclaw/.openclaw/workspace/samantha/content-queue.json and do the following:\n\n## STEP 1 — REVIEW ",
-        "model": "claude-sonnet-4-6",
-        "started_at": 1772368250737,
-        "ended_at": 1772368283285,
-        "duration_ms": 32548,
-        "tokens_in": 196136,
-        "tokens_out": 2067,
-        "tokens_total": 198203,
-        "estimated_cost_usd": 0.6194,
-        "status": "completed",
-        "parent_session_id": null,
-        "task_name": null,
-        "source": "openclaw",
-        "display_name": "cliff-article-review"
-      },
-      {
-        "session_id": "734c56ae-28ef-4d79-82df-1e6f19eab856",
-        "label": "portal-data-refresh",
-        "agent_type": "scout",
-        "task_description": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/.openclaw/workspace/cliffcircuit-portal/generate-data.js\nCurrent time: Sunday, March 1st, 2026 — ",
-        "model": "claude-haiku-4-5",
-        "started_at": 1772368232274,
-        "ended_at": 1772368250682,
-        "duration_ms": 18408,
-        "tokens_in": 38748,
-        "tokens_out": 410,
-        "tokens_total": 39158,
-        "estimated_cost_usd": 0.0102,
-        "status": "completed",
-        "parent_session_id": null,
-        "task_name": null,
-        "source": "openclaw",
-        "display_name": "portal-data-refresh"
-      },
-      {
-        "session_id": "5603306e-118f-4117-af05-cad3289f8e7d",
-        "label": "samantha-publish",
-        "agent_type": "samantha",
-        "task_description": "[cron:af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1 samantha-publish] You are Samantha, Cliff's content studio agent. This is PHASE 2: PUBLISH. Read AGENTS.md in your workspace (/workspace/samantha/).\n\nDo thre",
-        "model": "claude-sonnet-4-6",
-        "started_at": 1772368200076,
-        "ended_at": 1772368232220,
-        "duration_ms": 32144,
-        "tokens_in": 120037,
-        "tokens_out": 1962,
-        "tokens_total": 121999,
-        "estimated_cost_usd": 0.3895,
-        "status": "completed",
-        "parent_session_id": null,
-        "task_name": null,
-        "source": "openclaw",
-        "display_name": "samantha-publish"
-      },
-      {
-        "session_id": "60a11d0c-eafc-4742-a3e0-21547686077d",
-        "label": "portal-data-refresh",
-        "agent_type": "scout",
-        "task_description": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/.openclaw/workspace/cliffcircuit-portal/generate-data.js\nCurrent time: Sunday, March 1st, 2026 — ",
-        "model": "claude-haiku-4-5",
-        "started_at": 1772367900062,
-        "ended_at": 1772367921128,
-        "duration_ms": 21066,
-        "tokens_in": 38794,
-        "tokens_out": 432,
-        "tokens_total": 39226,
-        "estimated_cost_usd": 0.0102,
         "status": "completed",
         "parent_session_id": null,
         "task_name": null,
