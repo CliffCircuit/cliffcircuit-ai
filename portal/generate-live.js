@@ -11,7 +11,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const REPO_DIR = '/tmp/cliffcircuit-ai';
+const REPO_DIR = '/tmp/cliffcircuit-live';
 
 function run(cmd, opts = {}) {
   try {

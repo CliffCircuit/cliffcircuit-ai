@@ -12,7 +12,7 @@ const https = require('https');
 
 const WORKSPACE = '/Users/openclaw/.openclaw/workspace';
 const QUEUE_FILE = path.join(WORKSPACE, 'samantha/content-queue.json');
-const REPO_DIR = '/tmp/cliffcircuit-ai';
+const REPO_DIR = '/tmp/cliffcircuit-data';
 
 function run(cmd, opts = {}) {
   try {
