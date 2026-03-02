@@ -557,6 +557,53 @@
         </table>
       </div>
 
+      <!-- Sub-agent Coding Sessions -->
+      <div class="card overflow-hidden mb-8">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Sub-agent Coding Sessions</h3>
+            <p class="text-xs text-gray-600 mt-0.5">Spawned Claude Code / Codex / ACP agents — each is an isolated session</p>
+          </div>
+          <span class="text-xs text-gray-600">Actual tokens from session history</span>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session ID</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Label / Task</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">When</th>
+          </tr></thead>
+          <tbody id="tok-subagent-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+        <div id="tok-subagent-summary" class="px-5 py-3 border-t border-gray-800 text-xs text-gray-600"></div>
+      </div>
+
+      <!-- One-off Exec / Direct Sessions -->
+      <div class="card overflow-hidden mb-8">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">One-off &amp; Direct Sessions</h3>
+            <p class="text-xs text-gray-600 mt-0.5">Short runs — manual evals, quick lookups, exec-triggered agents</p>
+          </div>
+          <span class="text-xs text-gray-600">Under 10K tokens each</span>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session ID</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Type</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Est. Cost</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">When</th>
+          </tr></thead>
+          <tbody id="tok-exec-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+        <div id="tok-exec-summary" class="px-5 py-3 border-t border-gray-800 text-xs text-gray-600"></div>
+      </div>
+
       <!-- Efficiency flags -->
       <div class="card p-5 mb-8">
         <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
@@ -1483,6 +1530,82 @@
             <td class="px-4 py-2">${ctxBar}</td>
           </tr>`;
         }).join('');
+      }
+
+      // Sub-agent Coding Sessions
+      const subagentSessions = (d.sessionHistory || [])
+        .filter(s => s.key && s.key.includes('subagent'))
+        .sort((a,b) => b.updatedAt - a.updatedAt);
+      const subBody = document.getElementById('tok-subagent-body');
+      const subSummary = document.getElementById('tok-subagent-summary');
+      if (subagentSessions.length === 0) {
+        subBody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">No sub-agent sessions found in this range</td></tr>';
+        subSummary.textContent = '';
+      } else {
+        const fmtTime = ts => new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' });
+        const subLabel = s => {
+          const parts = (s.key || '').split(':');
+          // Try to extract a human label from the key
+          const idx = parts.findIndex(p => p === 'subagent');
+          if (idx >= 0 && parts[idx+1]) return parts[idx+1].slice(0,32);
+          return s.sessionId ? s.sessionId.slice(0,8) + '...' : '—';
+        };
+        subBody.innerHTML = subagentSessions.map(s => {
+          const cost = s.totalTokens * modelRate(s.model) / 1000;
+          const costStr = cost >= 0.01 ? '\$' + cost.toFixed(3) : '<\/bin/zsh.01';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-2 text-gray-600 text-xs font-mono">${s.sessionId ? s.sessionId.slice(0,8) : '—'}</td>
+            <td class="px-4 py-2 text-gray-300 text-xs">${esc(subLabel(s))}</td>
+            <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
+            <td class="px-4 py-2 text-right text-white font-medium text-xs">${fmtK(s.totalTokens)}</td>
+            <td class="px-4 py-2 text-right text-yellow-400 text-xs">${costStr}</td>
+            <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTime(s.updatedAt)}</td>
+          </tr>`;
+        }).join('');
+        const subTotal = subagentSessions.reduce((s,r) => s + r.totalTokens, 0);
+        const subCost = subagentSessions.reduce((s,r) => s + r.totalTokens * modelRate(r.model) / 1000, 0);
+        subSummary.textContent = `${subagentSessions.length} sub-agent session${subagentSessions.length!==1?'s':''} — ${fmtK(subTotal)} total tokens — est. \$${subCost.toFixed(3)}`;
+      }
+
+      // One-off & Direct Sessions (short, non-cron, non-subagent, under 10K tokens)
+      const oneoffSessions = (d.sessionHistory || [])
+        .filter(s => {
+          if (!s.key) return false;
+          if (s.key.includes('subagent')) return false;
+          if (s.key.includes('cron:')) return false;
+          return (s.totalTokens || 0) < 10000;
+        })
+        .sort((a,b) => b.updatedAt - a.updatedAt);
+      const execBody = document.getElementById('tok-exec-body');
+      const execSummary = document.getElementById('tok-exec-summary');
+      const sessionTypeLabel = key => {
+        if (!key) return '—';
+        if (key.includes('telegram')) return '<span class="text-blue-400">Telegram</span>';
+        if (key.includes('discord')) return '<span class="text-indigo-400">Discord</span>';
+        if (key === 'agent:main:main') return '<span class="text-gray-400">Direct</span>';
+        return '<span class="text-gray-500">' + key.split(':').slice(-1)[0].slice(0,14) + '</span>';
+      };
+      if (oneoffSessions.length === 0) {
+        execBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No one-off sessions found</td></tr>';
+        execSummary.textContent = '';
+      } else {
+        const fmtTime2 = ts => new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' });
+        execBody.innerHTML = oneoffSessions.map(s => {
+          const cost = s.totalTokens * modelRate(s.model) / 1000;
+          const costStr = cost >= 0.01 ? '\$' + cost.toFixed(3) : '<\/bin/zsh.01';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-2 text-gray-600 text-xs font-mono">${s.sessionId ? s.sessionId.slice(0,8) : '—'}</td>
+            <td class="px-4 py-2 text-xs">${sessionTypeLabel(s.key)}</td>
+            <td class="px-4 py-2 text-xs"><span class="${agentCls[s.agentId]||'text-gray-400'}">${agentName[s.agentId]||s.agentId||'—'}</span></td>
+            <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
+            <td class="px-4 py-2 text-right text-white font-medium text-xs">${fmtK(s.totalTokens)}</td>
+            <td class="px-4 py-2 text-right text-yellow-400 text-xs">${costStr}</td>
+            <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTime2(s.updatedAt)}</td>
+          </tr>`;
+        }).join('');
+        const exTotal = oneoffSessions.reduce((s,r) => s + r.totalTokens, 0);
+        const exCost = oneoffSessions.reduce((s,r) => s + r.totalTokens * modelRate(r.model) / 1000, 0);
+        execSummary.textContent = `${oneoffSessions.length} session${oneoffSessions.length!==1?'s':''} — ${fmtK(exTotal)} total tokens — est. \$${exCost.toFixed(3)}`;
       }
 
       // Efficiency insights
