@@ -274,7 +274,7 @@
                 <div class="text-base font-bold text-white">Modify Plan</div>
                 <button onclick="flipToRecent()" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:0.7rem;padding:2px 10px;border-radius:4px;cursor:pointer;" onmouseover="this.style.color='#e2e8f0'" onmouseout="this.style.color='#94a3b8'">← Back</button>
               </div>
-              <div class="text-xs text-gray-500 mb-5">Set daily volume goals. Takes effect immediately — Samantha will respect these limits for the rest of today.</div>
+              <div class="text-xs text-gray-500 mb-5">Set daily volume goals. Samantha will respect these limits based on when they take effect.</div>
               <div class="flex flex-1 items-center gap-0">
                 <!-- Cliff goals -->
                 <div class="flex-1 flex flex-col items-center justify-center gap-5 px-6">
@@ -301,9 +301,18 @@
                   </div>
                 </div>
               </div>
-              <div class="flex justify-end gap-3 mt-5">
-                <span id="goal-save-status" class="text-xs text-gray-500 self-center"></span>
-                <button onclick="saveGoals()" style="background:#166534;border:1px solid #16a34a;color:#4ade80;font-size:0.85rem;font-weight:600;padding:8px 24px;border-radius:6px;cursor:pointer;" onmouseover="this.style.background='#14532d'" onmouseout="this.style.background='#166534'">Save</button>
+              <div class="flex justify-between items-center mt-5">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500">Takes effect:</span>
+                  <select id="goal-takes-effect" style="background:#0f172a;border:1px solid #334155;color:#94a3b8;font-size:0.75rem;padding:4px 8px;border-radius:6px;cursor:pointer;outline:none;">
+                    <option value="today" selected>Current Day (Immediately)</option>
+                    <option value="tomorrow">Tomorrow</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span id="goal-save-status" class="text-xs text-gray-500"></span>
+                  <button onclick="saveGoals()" style="background:#166534;border:1px solid #16a34a;color:#4ade80;font-size:0.85rem;font-weight:600;padding:8px 24px;border-radius:6px;cursor:pointer;" onmouseover="this.style.background='#14532d'" onmouseout="this.style.background='#166534'">Save</button>
+                </div>
               </div>
             </div>
           </div>
@@ -2842,6 +2851,7 @@
       document.getElementById('rp-back').classList.remove('hidden');
       document.getElementById('rp-back').classList.add('flex');
       document.getElementById('goal-save-status').textContent = '';
+      const te = document.getElementById('goal-takes-effect'); if (te) te.value = goals.takesEffect || 'today';
     }
 
     function flipToRecent() {
@@ -2851,10 +2861,12 @@
     }
 
     function saveGoals() {
+      const takesEffect = document.getElementById('goal-takes-effect')?.value || 'today';
       const goals = {
         cliffArticles: parseInt(document.getElementById('goal-cliff-articles').value) || 12,
         cliffTweets: parseInt(document.getElementById('goal-cliff-tweets').value) || 6,
         timTweets: parseInt(document.getElementById('goal-tim-tweets').value) || 5,
+        takesEffect,
         savedAt: new Date().toISOString(),
         savedBy: 'tim'
       };
