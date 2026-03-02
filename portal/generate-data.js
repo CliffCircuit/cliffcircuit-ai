@@ -418,6 +418,7 @@ async function main() {
     queue: cleanQueue,
     crons,
     agentTokens: crons._agentTokens || {},
+    ghWriteToken: keychain('github-cliffcircuit') || null,
     agentConfigs,
     sessions: (() => {
       try {
