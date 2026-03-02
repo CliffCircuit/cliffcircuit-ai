@@ -48,7 +48,12 @@ async function main() {
   let queue = [];
   try {
     const raw = fs.readFileSync(QUEUE_FILE, 'utf8');
-    queue = JSON.parse(raw).queue || [];
+    const parsed = JSON.parse(raw);
+    if (!parsed.queue || !Array.isArray(parsed.queue)) {
+      console.error("ABORT: content-queue.json missing .queue array (keys:", Object.keys(parsed).slice(0,5).join(","), "). Not overwriting data.json.");
+      process.exit(1);
+    }
+    queue = parsed.queue;
   } catch (e) {
     console.warn('Could not read queue:', e.message);
   }
