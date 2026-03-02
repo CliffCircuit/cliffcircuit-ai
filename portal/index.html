@@ -1855,8 +1855,15 @@
         const globalFiltered = getDbSubFiltered();
         updateDbSubCards(globalFiltered);
         const taskFilter = window._dbRawTaskFilter || 'all';
-        const filtered = taskFilter === 'all' ? globalFiltered
-          : globalFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
+        const globalTask = window._globalTask || 'all';
+        // Apply global task filter first, then local raw task filter
+        const globalTaskFiltered = globalTask === 'all' ? globalFiltered
+          : globalFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === globalTask);
+        const filtered = taskFilter === 'all' ? globalTaskFiltered
+          : globalTaskFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
+
+
+
         const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
         if (filtered.length === 0) {
           dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
