@@ -1548,14 +1548,14 @@
           const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
           const taskLabel = cronTaskMap[j.name] ? `<div class="text-gray-600 text-xs mt-0.5">→ ${cronTaskMap[j.name]}</div>` : '';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-            <td class="px-4 py-2.5 text-xs font-bold text-gray-200">${esc(j.name)}${taskLabel}</td>
-            <td class="px-4 py-2.5 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${agentName[j.agent]||j.agent||'—'}</span></td>
-            <td class="px-4 py-2.5 text-xs">${modelShortT(j.model)}</td>
-            <td class="px-4 py-2.5 text-right text-white text-xs font-bold">${j.runs}</td>
-            <td class="px-4 py-2.5 text-right text-white text-xs">${fmtK(j.tokens)}</td>
-            <td class="px-4 py-2.5 text-right text-gray-400 text-xs">${fmtK(j.avg)}</td>
-            <td class="px-4 py-2.5 text-right text-yellow-400 text-xs font-semibold">${costStr}</td>
-            <td class="px-4 py-2.5" style="min-width:80px;">
+            <td class="px-4 py-1 text-xs font-bold text-gray-200">${esc(j.name)}${taskLabel}</td>
+            <td class="px-4 py-1 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${agentName[j.agent]||j.agent||'—'}</span></td>
+            <td class="px-4 py-1 text-xs">${modelShortT(j.model)}</td>
+            <td class="px-4 py-1 text-right text-white text-xs font-bold">${j.runs}</td>
+            <td class="px-4 py-1 text-right text-white text-xs">${fmtK(j.tokens)}</td>
+            <td class="px-4 py-1 text-right text-gray-400 text-xs">${fmtK(j.avg)}</td>
+            <td class="px-4 py-1 text-right text-yellow-400 text-xs font-semibold">${costStr}</td>
+            <td class="px-4 py-1" style="min-width:80px;">
               <div class="bg-gray-800 rounded-full h-1.5">
                 <div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div>
               </div>
