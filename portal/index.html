@@ -611,16 +611,23 @@
             <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — runs, cost, and tokens per job type</p>
           </div>
-          <select id="sub-period-select" onchange="setSubPeriod(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-            <option value="1h">Last 1 Hour</option>
-            <option value="1d">Last 24 Hours</option>
-            <option value="1w">Last 7 Days</option>
-            <option value="1mo">Last 30 Days</option>
-            <option value="today" selected>Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="thisweek">This Week</option>
-            <option value="thismonth">This Month</option>
-          </select>
+          <div class="flex gap-2">
+            <select id="sub-source-select" onchange="setSubSource(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all" selected>All Sources</option>
+              <option value="openclaw">OpenClaw</option>
+              <option value="claude-code">Claude Code</option>
+            </select>
+            <select id="sub-period-select" onchange="setSubPeriod(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="1h">Last 1 Hour</option>
+              <option value="1d">Last 24 Hours</option>
+              <option value="1w">Last 7 Days</option>
+              <option value="1mo">Last 30 Days</option>
+              <option value="today" selected>Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="thisweek">This Week</option>
+              <option value="thismonth">This Month</option>
+            </select>
+          </div>
         </div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
@@ -1741,7 +1748,10 @@
       window._allDbSubItems = allDbItems;
       window._subPeriod = window._subPeriod || 'today';
 
+      window._subSource = window._subSource || 'all';
+      function setSubSource(src) { window._subSource = src; renderGrouped(window._subPeriod); }
       function getSubPeriodItems(period) {
+        const src = window._subSource || 'all';
         const now = new Date();
         const tod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const todayStart = tod.getTime();
@@ -1752,6 +1762,7 @@
         // This month = 1st of current month
         const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         return allDbItems.filter(s => {
+          if (src !== 'all' && s.source !== src) return false;
           const ts = s.started_at || 0;
           if (period === '1h')       return ts >= now.getTime() - 3600000;
           if (period === '1d')       return ts >= now.getTime() - 86400000;
