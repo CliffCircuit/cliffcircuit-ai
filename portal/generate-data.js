@@ -308,8 +308,8 @@ async function main() {
   } catch(e) { gateway.error = e.message; }
 
   // ── Subagent Sessions + Exec Events from DB ───────────────
-  // Auto-sync: run seed script to pick up any new sessions before reading
-  try { require('child_process').execSync('node /Users/openclaw/.openclaw/workspace/portal-db-seed.js', { stdio: 'ignore' }); } catch(e) {}
+  // NOTE: seed script removed from hot path (was scanning 570+ JSONL files on every run, causing hangs)
+  // DB is updated by OpenClaw's own session tracking; seed runs separately if needed
   // Auto-apply task_name mapping
   try {
     const _db2 = new (require('better-sqlite3'))('/Users/openclaw/.openclaw/workspace/portal-data.db');
