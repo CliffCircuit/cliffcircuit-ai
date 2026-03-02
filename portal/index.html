@@ -611,11 +611,16 @@
             <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — runs, cost, and tokens per job type</p>
           </div>
-          <div class="flex gap-2">
-            <button onclick="setSubPeriod('today')" id="sub-btn-today" class="text-xs px-3 py-1 rounded border border-indigo-500 text-indigo-400 hover:text-white transition-colors">Today</button>
-            <button onclick="setSubPeriod('yesterday')" id="sub-btn-yesterday" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Yesterday</button>
-            <button onclick="setSubPeriod('all')" id="sub-btn-all" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">All Time</button>
-          </div>
+          <select id="sub-period-select" onchange="setSubPeriod(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+            <option value="1h">Last 1 Hour</option>
+            <option value="1d">Last 24 Hours</option>
+            <option value="1w">Last 7 Days</option>
+            <option value="1mo">Last 30 Days</option>
+            <option value="today" selected>Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="thisweek">This Week</option>
+            <option value="thismonth">This Month</option>
+          </select>
         </div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
@@ -1738,24 +1743,32 @@
 
       function getSubPeriodItems(period) {
         const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const tod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todayStart = tod.getTime();
         const yestStart = todayStart - 86400000;
+        // This week = Sunday of current week
+        const dow = tod.getDay();
+        const thisWeekStart = todayStart - dow * 86400000;
+        // This month = 1st of current month
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
         return allDbItems.filter(s => {
           const ts = s.started_at || 0;
-          if (period === 'today') return ts >= todayStart;
-          if (period === 'yesterday') return ts >= yestStart && ts < todayStart;
+          if (period === '1h')       return ts >= now.getTime() - 3600000;
+          if (period === '1d')       return ts >= now.getTime() - 86400000;
+          if (period === '1w')       return ts >= now.getTime() - 7*86400000;
+          if (period === '1mo')      return ts >= now.getTime() - 30*86400000;
+          if (period === 'today')    return ts >= todayStart;
+          if (period === 'yesterday')return ts >= yestStart && ts < todayStart;
+          if (period === 'thisweek') return ts >= thisWeekStart;
+          if (period === 'thismonth')return ts >= thisMonthStart;
           return true;
         });
       }
 
       function renderGrouped(period) {
         window._subPeriod = period;
-        ['today','yesterday','all'].forEach(p => {
-          const btn = document.getElementById('sub-btn-' + p);
-          if (btn) btn.className = p === period
-            ? 'text-xs px-3 py-1 rounded border border-indigo-500 text-indigo-400 hover:text-white transition-colors'
-            : 'text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors';
-        });
+        const sel = document.getElementById('sub-period-select');
+        if (sel) sel.value = period;
         const items = getSubPeriodItems(period);
         const agentCls2 = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400' };
 
