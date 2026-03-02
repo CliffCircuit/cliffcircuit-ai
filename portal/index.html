@@ -1638,11 +1638,11 @@
         } else if (src === 'coding') {
           combIn = cod.tokensIn;  combOut = cod.tokensOut;  combCost = cod.cost;  combSessions = cod.sessions;
         } else {
-          // all — combine everything
-          combIn       = cron.tokensIn  + sub.tokensIn  + cod.tokensIn;
-          combOut      = cron.tokensOut + sub.tokensOut + cod.tokensOut;
-          combCost     = cron.cost      + sub.cost      + cod.cost;
-          combSessions = cron.sessions  + sub.sessions  + cod.sessions;
+          // all — cron + sub-agent grouped only; raw is same data as grouped, don't double-count
+          combIn       = cron.tokensIn  + sub.tokensIn;
+          combOut      = cron.tokensOut + sub.tokensOut;
+          combCost     = cron.cost      + sub.cost;
+          combSessions = cron.sessions  + sub.sessions;
         }
         const avgIn  = combSessions ? Math.round(combIn  / combSessions) : 0;
         const avgOut = combSessions ? Math.round(combOut / combSessions) : 0;
