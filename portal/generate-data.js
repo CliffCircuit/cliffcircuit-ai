@@ -16,7 +16,7 @@ const REPO_DIR = '/tmp/cliffcircuit-ai';
 
 function run(cmd, opts = {}) {
   try {
-    return execSync(cmd, { encoding: 'utf8', ...opts }).trim();
+    return execSync(cmd, { encoding: 'utf8', timeout: 12000, ...opts }).trim();
   } catch (e) {
     return null;
   }
@@ -338,6 +338,8 @@ async function main() {
   let subagentSessions = { total: 0, activeCount: 0, totalCostUsd: 0, totalTokens: 0, items: [] };
   let execEvents = { total: 0, failureCount: 0, items: [] };
   try {
+    // Incremental DB sync — only scans JSONL files modified since last run (~50ms)
+    try { require('child_process').execSync('node /Users/openclaw/.openclaw/workspace/portal-db-sync.js', { timeout: 15000, stdio: 'pipe' }); } catch(e) { console.error('sync warn:', e.message); }
     const Database = require('better-sqlite3');
     const db = new Database('/Users/openclaw/.openclaw/workspace/portal-data.db', { readonly: true });
 
