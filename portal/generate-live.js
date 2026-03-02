@@ -118,6 +118,22 @@ async function main() {
     sessionHistory,
   };
 
+
+  // ── Goals sync — read portal/goals.json → write to workspace ──
+  try {
+    const goalsPath = path.join(REPO_DIR, 'portal/goals.json');
+    if (fs.existsSync(goalsPath)) {
+      const goals = JSON.parse(fs.readFileSync(goalsPath, 'utf8'));
+      const workspaceGoals = '/Users/openclaw/.openclaw/workspace/daily-goals.json';
+      const existing = fs.existsSync(workspaceGoals) ? JSON.parse(fs.readFileSync(workspaceGoals, 'utf8')) : {};
+      if (goals.savedAt !== existing.savedAt) {
+        fs.writeFileSync(workspaceGoals, JSON.stringify(goals, null, 2));
+        console.log('✓ Updated daily-goals.json from portal/goals.json');
+      }
+      liveData.goals = goals;
+    }
+  } catch(e) { console.warn('Goals sync skipped:', e.message); }
+
   // Push to GitHub
   const ghToken = keychain('github-cliffcircuit');
   if (!ghToken) { console.error('No GitHub token'); process.exit(1); }
