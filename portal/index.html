@@ -1868,7 +1868,6 @@
 
       function renderRawTable() {
         const globalFiltered = getDbSubFiltered();
-        updateDbSubCards(globalFiltered);
         const taskFilter = window._dbRawTaskFilter || 'all';
         const globalTask = window._globalTask || 'all';
         // Apply global task filter first, then local raw task filter
@@ -1876,6 +1875,8 @@
           : globalFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === globalTask);
         const filtered = taskFilter === 'all' ? globalTaskFiltered
           : globalTaskFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
+        // Cards reflect same filtered set (includes global task filter)
+        updateDbSubCards(globalTaskFiltered);
 
 
 
