@@ -611,14 +611,10 @@
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-4 gap-4 px-5 py-4 border-b border-gray-800">
+        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
             <div id="db-sub-total" class="text-2xl font-bold text-white">—</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Active Now</div>
-            <div id="db-sub-active" class="text-2xl font-bold text-green-400">—</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
@@ -1723,17 +1719,52 @@
 
       // DB Sub-agent Coding Sessions — Raw
       const dbSub = d.subagentSessions || { total: 0, activeCount: 0, totalCostUsd: 0, totalTokens: 0, items: [] };
-      document.getElementById('db-sub-total').textContent = dbSub.total;
-      document.getElementById('db-sub-active').textContent = dbSub.activeCount;
-      document.getElementById('db-sub-cost').textContent = '$' + (dbSub.totalCostUsd || 0).toFixed(2);
-      document.getElementById('db-sub-tokens').textContent = fmtK(dbSub.totalTokens || 0);
-
       const dbSubBody = document.getElementById('db-subagent-body');
       window._dbSubShowAll = window._dbSubShowAll || false;
       window._dbRawTaskFilter = window._dbRawTaskFilter || 'all';
       const dbSubItems = dbSub.items || [];
 
-      // Populate task filter dropdown with unique task names
+      function getDbSubFiltered() {
+        const range  = window._globalRange || 'today';
+        const agent  = window._globalAgent || 'all';
+        const now    = Date.now();
+        const n      = new Date();
+        const todayStart    = new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+        const yestStart     = todayStart - 86400000;
+        const weekStart     = todayStart - n.getDay() * 86400000;
+        const monthStart    = new Date(n.getFullYear(), n.getMonth(), 1).getTime();
+        return dbSubItems.filter(s => {
+          // Time filter
+          const ts = s.started_at || 0;
+          if (range === '1h')        { if (ts < now - 3600000) return false; }
+          else if (range === '24h')  { if (ts < now - 86400000) return false; }
+          else if (range === 'today'){ if (ts < todayStart) return false; }
+          else if (range === 'yesterday') { if (ts < yestStart || ts >= todayStart) return false; }
+          else if (range === '7d')   { if (ts < now - 7*86400000) return false; }
+          else if (range === 'week') { if (ts < weekStart) return false; }
+          else if (range === '30d')  { if (ts < now - 30*86400000) return false; }
+          else if (range === 'month'){ if (ts < monthStart) return false; }
+          // Agent filter
+          if (agent !== 'all') {
+            const sa = (s.agent_type || '').toLowerCase();
+            const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
+            const allowed = agentMap[agent] || [agent];
+            if (!allowed.some(a => sa.includes(a))) return false;
+          }
+          return true;
+        });
+      }
+
+      function updateDbSubCards(filtered) {
+        const total = filtered.length;
+        const cost  = filtered.reduce((s,x) => s + (x.estimated_cost_usd || 0), 0);
+        const toks  = filtered.reduce((s,x) => s + (x.tokens_in || 0) + (x.tokens_out || 0), 0);
+        document.getElementById('db-sub-total').textContent  = total;
+        document.getElementById('db-sub-cost').textContent   = '$' + cost.toFixed(2);
+        document.getElementById('db-sub-tokens').textContent = fmtK(toks);
+      }
+
+      // Populate task filter dropdown with unique task names (all time, so options don't disappear)
       const taskSel = document.getElementById('raw-task-filter');
       if (taskSel) {
         const currentFilter = taskSel.value || 'all';
@@ -1757,9 +1788,11 @@
       };
 
       function renderRawTable() {
+        const globalFiltered = getDbSubFiltered();
+        updateDbSubCards(globalFiltered);
         const taskFilter = window._dbRawTaskFilter || 'all';
-        const filtered = taskFilter === 'all' ? dbSubItems
-          : dbSubItems.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
+        const filtered = taskFilter === 'all' ? globalFiltered
+          : globalFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
         const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
         if (filtered.length === 0) {
           dbSubBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
@@ -1780,9 +1813,7 @@
         else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 20' : 'Show All (' + filtered.length + ' sessions)'; }
       }
       renderRawTable();
-      const toggleBtn = document.getElementById('db-subagent-toggle');
-      if (dbSubItems.length <= 20) toggleBtn.classList.add('hidden');
-      else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 20' : 'Show All (' + dbSubItems.length + ' sessions)'; }
+      // toggle btn handled inside renderRawTable
 
       // DB Exec Events
       const dbExec = d.execEvents || { total: 0, failureCount: 0, items: [] };
