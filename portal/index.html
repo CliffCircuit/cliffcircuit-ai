@@ -1466,13 +1466,16 @@
       const cutoffStart = Array.isArray(cutoff) ? cutoff[0] : cutoff;
 
       // Model cost rates (per 1k tokens, blended in/out)
-      const modelRate = m => {
-        if (!m) return 0.003;
-        if (m.includes('haiku')) return 0.0004;
-        if (m.includes('sonnet')) return 0.003;
-        if (m.includes('opus')) return 0.015;
-        return 0.003;
+      // Per-bucket pricing (per 1M tokens)
+      const modelPricing = m => {
+        if (!m) return { input: 3.0, cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
+        if (m.includes('haiku'))  return { input: 0.80, cacheRead: 0.08, cacheWrite: 1.0,  output: 4.0  };
+        if (m.includes('sonnet')) return { input: 3.0,  cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
+        if (m.includes('opus'))   return { input: 15.0, cacheRead: 1.50, cacheWrite: 18.75,output: 75.0 };
+        return { input: 3.0, cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
       };
+      const calcCost = (p, tokInput, tokCacheRead, tokCacheWrite, tokOut) =>
+        (tokInput * p.input + tokCacheRead * p.cacheRead + tokCacheWrite * p.cacheWrite + tokOut * p.output) / 1e6;
 
       // Build per-job stats from costs data
       const agentFilter = window._globalAgent || 'all';
@@ -1485,12 +1488,15 @@
           if (!allowed.some(a => ja.includes(a))) return { ...j, tokens: 0, runs: 0, avg: 0, cost: 0 };
         }
         const history = (costs[j.id] || []).filter(e => e.ts >= cutoffStart && e.ts < cutoffEnd);
-        const tokens = history.reduce((s,e) => s + (e.tokens||0), 0);
-        const tokensIn = history.reduce((s,e) => s + (e.tokensIn||0), 0);
-        const tokensOut = history.reduce((s,e) => s + (e.tokensOut||0), 0);
+        const tokens      = history.reduce((s,e) => s + (e.tokens||0), 0);
+        const tokInput     = history.reduce((s,e) => s + (e.tokensInput||0), 0);
+        const tokCacheRead = history.reduce((s,e) => s + (e.tokensCacheRead||0), 0);
+        const tokCacheWrite= history.reduce((s,e) => s + (e.tokensCacheWrite||0), 0);
+        const tokensOut    = history.reduce((s,e) => s + (e.tokensOut||0), 0);
+        const tokensIn     = tokens - tokensOut; // all input including cache
         const runs = history.length;
-        const rate = modelRate(j.model);
-        const cost = tokens * rate / 1000;
+        const p = modelPricing(j.model);
+        const cost = calcCost(p, tokInput, tokCacheRead, tokCacheWrite, tokensOut);
         return { ...j, tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
       }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
 

@@ -283,7 +283,7 @@ async function main() {
         const runsData = JSON.parse(raw);
         const entries = (runsData.entries || [])
           .filter(e => (e.runAtMs || 0) >= cutoff30d && e.usage)
-          .map(e => ({ ts: e.runAtMs, tokens: e.usage.total_tokens || 0, tokensIn: (e.usage.total_tokens || 0) - (e.usage.output_tokens || 0), tokensOut: e.usage.output_tokens || 0, status: e.status }));
+          .map(e => ({ ts: e.runAtMs, tokens: e.usage.total_tokens || 0, tokensInput: e.usage.input_tokens || 0, tokensCacheRead: e.usage.cache_read_input_tokens || 0, tokensCacheWrite: e.usage.cache_creation_input_tokens || 0, tokensOut: e.usage.output_tokens || 0, status: e.status }));
         if (entries.length) costs[j.id] = entries;
       } catch(e) { /* skip this job */ }
     }
