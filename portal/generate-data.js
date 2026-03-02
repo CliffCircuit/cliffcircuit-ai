@@ -574,6 +574,33 @@ async function main() {
           console.log('Pre-pushed images + previews for', approved.length, 'approved items');
         }
       } catch(e) { console.warn('Pre-push skipped:', e.message); }
+      // ── Sync portal/goals.json → local daily-goals.json ──────────────────
+      const repoGoalsPath = path.join(REPO_DIR, 'portal/goals.json');
+      if (fs.existsSync(repoGoalsPath)) {
+        try {
+          const goalsRaw = fs.readFileSync(repoGoalsPath, 'utf8');
+          const goals = JSON.parse(goalsRaw);
+          const localGoalsPath = path.join(WORKSPACE, 'daily-goals.json');
+          fs.writeFileSync(localGoalsPath, JSON.stringify(goals, null, 2));
+          console.log('Synced portal/goals.json → daily-goals.json');
+        } catch(e) { console.warn('Goals sync failed:', e.message); }
+      }
+
+      // ── Sync reschedule-signal.json → local (triggers cliff-scheduler) ──
+      const repoSignalPath = path.join(REPO_DIR, 'portal/reschedule-signal.json');
+      if (fs.existsSync(repoSignalPath)) {
+        try {
+          const signalRaw = fs.readFileSync(repoSignalPath, 'utf8');
+          const signal = JSON.parse(signalRaw);
+          const signalAge = Date.now() - new Date(signal.triggeredAt || 0).getTime();
+          if (signalAge < 2 * 60 * 60 * 1000) {
+            const localSignalPath = path.join(WORKSPACE, 'reschedule-signal.json');
+            fs.writeFileSync(localSignalPath, signalRaw);
+            console.log('Synced reschedule-signal (age:', Math.round(signalAge/60000), 'min)');
+          }
+        } catch(e) { console.warn('Reschedule signal sync failed:', e.message); }
+      }
+
       run(`cd ${REPO_DIR} && git config user.email "cliff@cliffcircuit.ai"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git config user.name "Cliff"`, { stdio: 'pipe' });
       run(`cd ${REPO_DIR} && git add portal/`, { stdio: 'pipe' });

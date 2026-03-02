@@ -2897,6 +2897,20 @@
           })
         }).then(r => r.json()).then(r => {
           if (r.content) window._goalsSha = r.content.sha;
+          // Also write reschedule-signal.json so cliff-scheduler rebuilds schedule
+          const signal = { triggeredAt: new Date().toISOString(), goals, takesEffect: takesEffect };
+          const signalContent = btoa(JSON.stringify(signal, null, 2));
+          fetch('https://api.github.com/repos/CliffCircuit/cliffcircuit-ai/contents/portal/reschedule-signal.json', {
+            method: 'PUT',
+            headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: 'reschedule signal ' + new Date().toISOString().slice(0,16),
+              content: signalContent,
+              sha: window._rescheduleSignalSha || undefined
+            })
+          }).then(r2 => r2.json()).then(r2 => {
+            if (r2.content) window._rescheduleSignalSha = r2.content.sha;
+          }).catch(() => {});
           document.getElementById('goal-save-status').textContent = '✓ Saved & synced';
         }).catch(() => {
           document.getElementById('goal-save-status').textContent = '✓ Saved locally';
