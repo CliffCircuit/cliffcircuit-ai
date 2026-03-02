@@ -558,13 +558,13 @@
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
             <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
-            <p class="text-xs text-gray-600 mt-0.5">Grouped by task — runs, cost, and tokens per job type</p>
+            <p class="text-xs text-gray-600 mt-0.5">Grouped by task — sessions, cost, and tokens per job type</p>
           </div>
           <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Runs</div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
             <div id="grp-sub-runs" class="text-2xl font-bold text-white">—</div>
           </div>
           <div>
@@ -573,7 +573,8 @@
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="grp-sub-tokens" class="text-2xl font-bold text-indigo-400">—</div>
+            <div id="grp-sub-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="grp-sub-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
         <table class="w-full text-sm">
@@ -581,7 +582,7 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Task</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Runs</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg Dur</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Total Cost</th>
@@ -622,7 +623,8 @@
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="db-sub-tokens" class="text-2xl font-bold text-indigo-400">—</div>
+            <div id="db-sub-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="db-sub-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
         <table class="w-full text-sm">
@@ -1582,11 +1584,12 @@
         const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
         const totalRuns = sorted.reduce((s,r) => s + r.runs, 0);
         const totalCost = sorted.reduce((s,r) => s + r.totalCost, 0);
-        const totalTok = sorted.reduce((s,r) => s + r.tokensIn + r.tokensOut, 0);
-
+        const totalTokIn  = sorted.reduce((s,r) => s + r.tokensIn, 0);
+        const totalTokOut = sorted.reduce((s,r) => s + r.tokensOut, 0);
         document.getElementById('grp-sub-runs').textContent = totalRuns;
         document.getElementById('grp-sub-cost').textContent = '$' + totalCost.toFixed(2);
-        document.getElementById('grp-sub-tokens').textContent = fmtK(totalTok);
+        document.getElementById('grp-sub-tokens').textContent = fmtK(totalTokIn) + ' / ' + fmtK(totalTokOut);
+        document.getElementById('grp-sub-tokens-sub').textContent = 'in / out';
 
         const body = document.getElementById('grp-subagent-body');
         if (sorted.length === 0) {
@@ -1655,12 +1658,15 @@
       }
 
       function updateDbSubCards(filtered) {
-        const total = filtered.length;
-        const cost  = filtered.reduce((s,x) => s + (x.estimated_cost_usd || 0), 0);
-        const toks  = filtered.reduce((s,x) => s + (x.tokens_in || 0) + (x.tokens_out || 0), 0);
+        const total   = filtered.length;
+        const cost    = filtered.reduce((s,x) => s + (x.estimated_cost_usd || 0), 0);
+        const toksIn  = filtered.reduce((s,x) => s + (x.tokens_in  || 0), 0);
+        const toksOut = filtered.reduce((s,x) => s + (x.tokens_out || 0), 0);
         document.getElementById('db-sub-total').textContent  = total;
         document.getElementById('db-sub-cost').textContent   = '$' + cost.toFixed(2);
-        document.getElementById('db-sub-tokens').textContent = fmtK(toks);
+        document.getElementById('db-sub-tokens').textContent = fmtK(toksIn) + ' / ' + fmtK(toksOut);
+        const sub = document.getElementById('db-sub-tokens-sub');
+        if (sub) sub.textContent = 'in / out';
       }
 
       // Populate task filter dropdown with unique task names (all time, so options don't disappear)
