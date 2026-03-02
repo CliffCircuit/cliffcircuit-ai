@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-02T00:21:21.433Z",
+  "generatedAt": "2026-03-02T00:22:38.030Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -1599,27 +1599,12 @@
   ],
   "crons": [
     {
-      "name": "samantha-publish",
-      "schedule": "*/15 * * * *",
-      "status": "ok",
-      "lastRun": "21m ago",
-      "lastRunMs": 1772409600011,
-      "nextRun": "in 6m",
-      "agent": "samantha",
-      "consecutiveErrors": 0,
-      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
-      "model": "anthropic/claude-sonnet-4-6",
-      "thinking": null,
-      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
-      "lastRunTokens": 65270
-    },
-    {
       "name": "portal-data-refresh",
       "schedule": "* * * * *",
       "status": "ok",
-      "lastRun": "10m ago",
+      "lastRun": "11m ago",
       "lastRunMs": 1772410260013,
-      "nextRun": "in 0m",
+      "nextRun": "in 1m",
       "agent": "scout",
       "consecutiveErrors": 0,
       "id": "785dc24f-e15b-420b-a7e5-0116f5e60e93",
@@ -1634,7 +1619,7 @@
       "status": "error",
       "lastRun": "2h ago",
       "lastRunMs": 1772404181838,
-      "nextRun": "in 9m",
+      "nextRun": "in 7m",
       "agent": "samantha",
       "consecutiveErrors": 1,
       "id": "df0efdc5-5e00-45d0-a2d1-11906a278a9f",
@@ -1644,12 +1629,27 @@
       "lastRunTokens": null
     },
     {
+      "name": "samantha-publish",
+      "schedule": "*/15 * * * *",
+      "status": "ok",
+      "lastRun": "2m ago",
+      "lastRunMs": 1772410835947,
+      "nextRun": "in 8m",
+      "agent": "samantha",
+      "consecutiveErrors": 0,
+      "id": "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1",
+      "model": "anthropic/claude-sonnet-4-6",
+      "thinking": null,
+      "description": "Publishes Samantha's drafted content — takes approved posts from the queue and pushes them live to the blog and social channels.",
+      "lastRunTokens": 74015
+    },
+    {
       "name": "pipeline-health-check",
       "schedule": "0 7-23 * * *",
       "status": "error",
-      "lastRun": "15m ago",
+      "lastRun": "17m ago",
       "lastRunMs": 1772409944582,
-      "nextRun": "in 42m",
+      "nextRun": "in 40m",
       "agent": "main",
       "consecutiveErrors": 1,
       "id": "01a338f9-8be9-4ab8-82d9-a050f64bdaf6",
@@ -1692,7 +1692,7 @@
       "name": "cliff-article-review",
       "schedule": "0 */2 * * *",
       "status": "ok",
-      "lastRun": "17m ago",
+      "lastRun": "19m ago",
       "lastRunMs": 1772409812083,
       "nextRun": "in 2h",
       "agent": "main",
@@ -1707,7 +1707,7 @@
       "name": "samantha-recycle",
       "schedule": "every 4h",
       "status": "error",
-      "lastRun": "51m ago",
+      "lastRun": "52m ago",
       "lastRunMs": 1772407805925,
       "nextRun": "in 3h",
       "agent": "samantha",
@@ -1722,7 +1722,7 @@
       "name": "github-monitoring",
       "schedule": "0 */4 * * *",
       "status": "ok",
-      "lastRun": "16m ago",
+      "lastRun": "17m ago",
       "lastRunMs": 1772409916563,
       "nextRun": "in 4h",
       "agent": "scout",
@@ -1737,7 +1737,7 @@
       "name": "social-monitoring",
       "schedule": "5 */4 * * *",
       "status": "ok",
-      "lastRun": "13m ago",
+      "lastRun": "15m ago",
       "lastRunMs": 1772410064603,
       "nextRun": "in 4h",
       "agent": "scout",
@@ -1840,17 +1840,17 @@
     }
   ],
   "agentTokens": {
-    "samantha": {
-      "totalTokens": 66567,
-      "inputTokens": 9,
-      "outputTokens": 9175,
-      "jobName": "samantha-cliff-tweets"
-    },
     "scout": {
       "totalTokens": 39443,
       "inputTokens": 14,
       "outputTokens": 8098,
       "jobName": "nightly-extraction"
+    },
+    "samantha": {
+      "totalTokens": 74015,
+      "inputTokens": 10,
+      "outputTokens": 5554,
+      "jobName": "samantha-publish"
     },
     "main": {
       "totalTokens": 83682,
@@ -1865,9 +1865,9 @@
       "key": "agent:main:main",
       "used": 63000,
       "limit": 200000,
-      "pct": 31,
+      "pct": 32,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772410822030
+      "lastActiveAt": 1772410958622
     },
     {
       "label": "Telegram",
@@ -1876,7 +1876,7 @@
       "limit": 200000,
       "pct": 30,
       "model": "claude-sonnet-4-6",
-      "lastActiveAt": 1772410522030
+      "lastActiveAt": 1772410538622
     }
   ],
   "conversationSessions": [
@@ -1886,11 +1886,37 @@
       "agentId": "main",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 62896,
+      "totalTokens": 63340,
       "inputTokens": 3,
       "outputTokens": 8,
       "percentUsed": 0,
-      "updatedAt": 1772410836621,
+      "updatedAt": 1772410957219,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "66b4721f-4ff9-440b-a449-523af43bb667",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 14312,
+      "inputTokens": 85,
+      "outputTokens": 1387,
+      "percentUsed": 0,
+      "updatedAt": 1772410933568,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "66b4721f-4ff9-440b-a449-523af43bb667",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:66b4721f-4ff9-440b-a449-523af43bb667",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 14312,
+      "inputTokens": 85,
+      "outputTokens": 1387,
+      "percentUsed": 0,
+      "updatedAt": 1772410933568,
       "thinkingLevel": null
     },
     {
@@ -1899,9 +1925,9 @@
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 65270,
-      "inputTokens": 28,
-      "outputTokens": 7979,
+      "totalTokens": 74015,
+      "inputTokens": 10,
+      "outputTokens": 5554,
       "percentUsed": 0,
       "updatedAt": 1772410835948,
       "thinkingLevel": null
@@ -1912,9 +1938,9 @@
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 65270,
-      "inputTokens": 28,
-      "outputTokens": 7979,
+      "totalTokens": 74015,
+      "inputTokens": 10,
+      "outputTokens": 5554,
       "percentUsed": 0,
       "updatedAt": 1772410835948,
       "thinkingLevel": null
@@ -1931,19 +1957,6 @@
       "percentUsed": 0,
       "updatedAt": 1772410550664,
       "thinkingLevel": "low"
-    },
-    {
-      "sessionId": "3615d150-5125-4ce5-b4d5-069792f836db",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 14312,
-      "inputTokens": 85,
-      "outputTokens": 1387,
-      "percentUsed": 0,
-      "updatedAt": 1772410260014,
-      "thinkingLevel": null
     },
     {
       "sessionId": "3615d150-5125-4ce5-b4d5-069792f836db",
@@ -8791,12 +8804,40 @@
       "agentId": "main",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 62896,
+      "totalTokens": 63340,
       "inputTokens": 3,
       "outputTokens": 8,
-      "cacheRead": 62803,
-      "percentUsed": 31,
-      "updatedAt": 1772410836621,
+      "cacheRead": 63201,
+      "percentUsed": 32,
+      "updatedAt": 1772410957219,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "66b4721f-4ff9-440b-a449-523af43bb667",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 14312,
+      "inputTokens": 85,
+      "outputTokens": 1387,
+      "cacheRead": 146043,
+      "percentUsed": 7,
+      "updatedAt": 1772410933568,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "66b4721f-4ff9-440b-a449-523af43bb667",
+      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:66b4721f-4ff9-440b-a449-523af43bb667",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 14312,
+      "inputTokens": 85,
+      "outputTokens": 1387,
+      "cacheRead": 146043,
+      "percentUsed": 7,
+      "updatedAt": 1772410933568,
       "thinkingLevel": null
     },
     {
@@ -8805,11 +8846,11 @@
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 65270,
-      "inputTokens": 28,
-      "outputTokens": 7979,
-      "cacheRead": 1456126,
-      "percentUsed": 33,
+      "totalTokens": 74015,
+      "inputTokens": 10,
+      "outputTokens": 5554,
+      "cacheRead": 325098,
+      "percentUsed": 37,
       "updatedAt": 1772410835948,
       "thinkingLevel": null
     },
@@ -8819,11 +8860,11 @@
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 65270,
-      "inputTokens": 28,
-      "outputTokens": 7979,
-      "cacheRead": 1456126,
-      "percentUsed": 33,
+      "totalTokens": 74015,
+      "inputTokens": 10,
+      "outputTokens": 5554,
+      "cacheRead": 325098,
+      "percentUsed": 37,
       "updatedAt": 1772410835948,
       "thinkingLevel": null
     },
@@ -8840,20 +8881,6 @@
       "percentUsed": 30,
       "updatedAt": 1772410550664,
       "thinkingLevel": "low"
-    },
-    {
-      "sessionId": "3615d150-5125-4ce5-b4d5-069792f836db",
-      "key": "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 14312,
-      "inputTokens": 85,
-      "outputTokens": 1387,
-      "cacheRead": 146043,
-      "percentUsed": 7,
-      "updatedAt": 1772410260014,
-      "thinkingLevel": null
     },
     {
       "sessionId": "3615d150-5125-4ce5-b4d5-069792f836db",
@@ -8909,20 +8936,6 @@
       "cacheRead": 37662,
       "percentUsed": 7,
       "updatedAt": 1772410078173,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "0bc19ba1-3ea4-4a14-aa0f-0b15e6721c08",
-      "key": "agent:scout:telegram:direct:8386624734",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 22335,
-      "inputTokens": 22,
-      "outputTokens": 528,
-      "cacheRead": 42927,
-      "percentUsed": 11,
-      "updatedAt": 1772410077867,
       "thinkingLevel": null
     }
   ],
@@ -8982,244 +8995,12 @@
   },
   "gateway": {
     "reachable": true,
-    "latencyMs": 7,
+    "latencyMs": 6,
     "version": "2026.2.26",
     "error": null,
     "running": true
   },
   "costs": {
-    "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1": [
-      {
-        "ts": 1772409600011,
-        "tokens": 65270,
-        "status": "ok"
-      },
-      {
-        "ts": 1772408744782,
-        "tokens": 74853,
-        "status": "ok"
-      },
-      {
-        "ts": 1772407878116,
-        "tokens": 72444,
-        "status": "error"
-      },
-      {
-        "ts": 1772406900011,
-        "tokens": 74211,
-        "status": "error"
-      },
-      {
-        "ts": 1772406000013,
-        "tokens": 83204,
-        "status": "error"
-      },
-      {
-        "ts": 1772405100001,
-        "tokens": 70595,
-        "status": "ok"
-      },
-      {
-        "ts": 1772403342697,
-        "tokens": 59934,
-        "status": "ok"
-      },
-      {
-        "ts": 1772401532048,
-        "tokens": 81729,
-        "status": "error"
-      },
-      {
-        "ts": 1772400600013,
-        "tokens": 83029,
-        "status": "ok"
-      },
-      {
-        "ts": 1772400084482,
-        "tokens": 96778,
-        "status": "error"
-      },
-      {
-        "ts": 1772399700014,
-        "tokens": 62416,
-        "status": "error"
-      },
-      {
-        "ts": 1772398749991,
-        "tokens": 85828,
-        "status": "ok"
-      },
-      {
-        "ts": 1772397000013,
-        "tokens": 93374,
-        "status": "ok"
-      },
-      {
-        "ts": 1772396100014,
-        "tokens": 65736,
-        "status": "ok"
-      },
-      {
-        "ts": 1772395200013,
-        "tokens": 69357,
-        "status": "ok"
-      },
-      {
-        "ts": 1772394300013,
-        "tokens": 93030,
-        "status": "ok"
-      },
-      {
-        "ts": 1772393400014,
-        "tokens": 92967,
-        "status": "ok"
-      },
-      {
-        "ts": 1772392500012,
-        "tokens": 66742,
-        "status": "ok"
-      },
-      {
-        "ts": 1772391600011,
-        "tokens": 67427,
-        "status": "error"
-      },
-      {
-        "ts": 1772391373548,
-        "tokens": 95139,
-        "status": "ok"
-      },
-      {
-        "ts": 1772389800006,
-        "tokens": 82047,
-        "status": "ok"
-      },
-      {
-        "ts": 1772388900014,
-        "tokens": 82282,
-        "status": "ok"
-      },
-      {
-        "ts": 1772388000014,
-        "tokens": 82218,
-        "status": "ok"
-      },
-      {
-        "ts": 1772387100015,
-        "tokens": 82964,
-        "status": "ok"
-      },
-      {
-        "ts": 1772386200018,
-        "tokens": 82823,
-        "status": "ok"
-      },
-      {
-        "ts": 1772385300017,
-        "tokens": 82185,
-        "status": "ok"
-      },
-      {
-        "ts": 1772384437287,
-        "tokens": 82898,
-        "status": "ok"
-      },
-      {
-        "ts": 1772383500014,
-        "tokens": 74150,
-        "status": "ok"
-      },
-      {
-        "ts": 1772382600015,
-        "tokens": 89816,
-        "status": "error"
-      },
-      {
-        "ts": 1772381700016,
-        "tokens": 67339,
-        "status": "ok"
-      },
-      {
-        "ts": 1772380849790,
-        "tokens": 62211,
-        "status": "ok"
-      },
-      {
-        "ts": 1772379900015,
-        "tokens": 61184,
-        "status": "ok"
-      },
-      {
-        "ts": 1772379000014,
-        "tokens": 59459,
-        "status": "ok"
-      },
-      {
-        "ts": 1772378100017,
-        "tokens": 59596,
-        "status": "ok"
-      },
-      {
-        "ts": 1772377621544,
-        "tokens": 73223,
-        "status": "error"
-      },
-      {
-        "ts": 1772376300016,
-        "tokens": 58770,
-        "status": "ok"
-      },
-      {
-        "ts": 1772375400022,
-        "tokens": 59280,
-        "status": "ok"
-      },
-      {
-        "ts": 1772374500028,
-        "tokens": 58986,
-        "status": "ok"
-      },
-      {
-        "ts": 1772374065780,
-        "tokens": 59043,
-        "status": "ok"
-      },
-      {
-        "ts": 1772373962841,
-        "tokens": 57017,
-        "status": "ok"
-      },
-      {
-        "ts": 1772373883499,
-        "tokens": 57134,
-        "status": "ok"
-      },
-      {
-        "ts": 1772373600020,
-        "tokens": 56850,
-        "status": "ok"
-      },
-      {
-        "ts": 1772372700027,
-        "tokens": 52328,
-        "status": "ok"
-      },
-      {
-        "ts": 1772371800017,
-        "tokens": 69733,
-        "status": "ok"
-      },
-      {
-        "ts": 1772370000028,
-        "tokens": 53665,
-        "status": "ok"
-      },
-      {
-        "ts": 1772369100019,
-        "tokens": 53701,
-        "status": "ok"
-      }
-    ],
     "785dc24f-e15b-420b-a7e5-0116f5e60e93": [
       {
         "ts": 1772410260013,
@@ -9562,6 +9343,238 @@
         "ts": 1772308779460,
         "tokens": 34360,
         "status": "error"
+      }
+    ],
+    "af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1": [
+      {
+        "ts": 1772410835947,
+        "tokens": 74015,
+        "status": "ok"
+      },
+      {
+        "ts": 1772409600011,
+        "tokens": 65270,
+        "status": "ok"
+      },
+      {
+        "ts": 1772408744782,
+        "tokens": 74853,
+        "status": "ok"
+      },
+      {
+        "ts": 1772407878116,
+        "tokens": 72444,
+        "status": "error"
+      },
+      {
+        "ts": 1772406900011,
+        "tokens": 74211,
+        "status": "error"
+      },
+      {
+        "ts": 1772406000013,
+        "tokens": 83204,
+        "status": "error"
+      },
+      {
+        "ts": 1772405100001,
+        "tokens": 70595,
+        "status": "ok"
+      },
+      {
+        "ts": 1772403342697,
+        "tokens": 59934,
+        "status": "ok"
+      },
+      {
+        "ts": 1772401532048,
+        "tokens": 81729,
+        "status": "error"
+      },
+      {
+        "ts": 1772400600013,
+        "tokens": 83029,
+        "status": "ok"
+      },
+      {
+        "ts": 1772400084482,
+        "tokens": 96778,
+        "status": "error"
+      },
+      {
+        "ts": 1772399700014,
+        "tokens": 62416,
+        "status": "error"
+      },
+      {
+        "ts": 1772398749991,
+        "tokens": 85828,
+        "status": "ok"
+      },
+      {
+        "ts": 1772397000013,
+        "tokens": 93374,
+        "status": "ok"
+      },
+      {
+        "ts": 1772396100014,
+        "tokens": 65736,
+        "status": "ok"
+      },
+      {
+        "ts": 1772395200013,
+        "tokens": 69357,
+        "status": "ok"
+      },
+      {
+        "ts": 1772394300013,
+        "tokens": 93030,
+        "status": "ok"
+      },
+      {
+        "ts": 1772393400014,
+        "tokens": 92967,
+        "status": "ok"
+      },
+      {
+        "ts": 1772392500012,
+        "tokens": 66742,
+        "status": "ok"
+      },
+      {
+        "ts": 1772391600011,
+        "tokens": 67427,
+        "status": "error"
+      },
+      {
+        "ts": 1772391373548,
+        "tokens": 95139,
+        "status": "ok"
+      },
+      {
+        "ts": 1772389800006,
+        "tokens": 82047,
+        "status": "ok"
+      },
+      {
+        "ts": 1772388900014,
+        "tokens": 82282,
+        "status": "ok"
+      },
+      {
+        "ts": 1772388000014,
+        "tokens": 82218,
+        "status": "ok"
+      },
+      {
+        "ts": 1772387100015,
+        "tokens": 82964,
+        "status": "ok"
+      },
+      {
+        "ts": 1772386200018,
+        "tokens": 82823,
+        "status": "ok"
+      },
+      {
+        "ts": 1772385300017,
+        "tokens": 82185,
+        "status": "ok"
+      },
+      {
+        "ts": 1772384437287,
+        "tokens": 82898,
+        "status": "ok"
+      },
+      {
+        "ts": 1772383500014,
+        "tokens": 74150,
+        "status": "ok"
+      },
+      {
+        "ts": 1772382600015,
+        "tokens": 89816,
+        "status": "error"
+      },
+      {
+        "ts": 1772381700016,
+        "tokens": 67339,
+        "status": "ok"
+      },
+      {
+        "ts": 1772380849790,
+        "tokens": 62211,
+        "status": "ok"
+      },
+      {
+        "ts": 1772379900015,
+        "tokens": 61184,
+        "status": "ok"
+      },
+      {
+        "ts": 1772379000014,
+        "tokens": 59459,
+        "status": "ok"
+      },
+      {
+        "ts": 1772378100017,
+        "tokens": 59596,
+        "status": "ok"
+      },
+      {
+        "ts": 1772377621544,
+        "tokens": 73223,
+        "status": "error"
+      },
+      {
+        "ts": 1772376300016,
+        "tokens": 58770,
+        "status": "ok"
+      },
+      {
+        "ts": 1772375400022,
+        "tokens": 59280,
+        "status": "ok"
+      },
+      {
+        "ts": 1772374500028,
+        "tokens": 58986,
+        "status": "ok"
+      },
+      {
+        "ts": 1772374065780,
+        "tokens": 59043,
+        "status": "ok"
+      },
+      {
+        "ts": 1772373962841,
+        "tokens": 57017,
+        "status": "ok"
+      },
+      {
+        "ts": 1772373883499,
+        "tokens": 57134,
+        "status": "ok"
+      },
+      {
+        "ts": 1772373600020,
+        "tokens": 56850,
+        "status": "ok"
+      },
+      {
+        "ts": 1772372700027,
+        "tokens": 52328,
+        "status": "ok"
+      },
+      {
+        "ts": 1772371800017,
+        "tokens": 69733,
+        "status": "ok"
+      },
+      {
+        "ts": 1772370000028,
+        "tokens": 53665,
+        "status": "ok"
       }
     ],
     "01a338f9-8be9-4ab8-82d9-a050f64bdaf6": [
