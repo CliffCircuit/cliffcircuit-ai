@@ -398,7 +398,31 @@
         </div>
       </div>
 
-      <!-- Rejected items -->
+      <!-- Post Failed items (X/Twitter API failures) -->
+      <div class="mb-6" id="post-failed-section">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Post Failed <span id="post-failed-count-badge" class="ml-2 text-xs font-semibold bg-red-900 text-red-400 rounded-full px-2 py-0.5">0</span></h2>
+          <div class="flex gap-1">
+            <button onclick="setPfFilter('all')" id="pff-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+            <button onclick="setPfFilter('cliff')" id="pff-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+            <button onclick="setPfFilter('tim')" id="pff-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Item</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Failure</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Failed</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Action</th>
+            </tr></thead>
+            <tbody id="post-failed-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rejected items (editorial rejects — our decision) -->
       <div class="mb-6" id="rejected-section">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-base font-semibold text-white">Rejected <span id="rejected-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
@@ -1264,6 +1288,54 @@
             <td class="px-3 py-1 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td>
             <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
           </tr>`).join('');
+    }
+
+    // Post Failed filter + render
+    function setPfFilter(f) {
+      ['all','cliff','tim'].forEach(k => {
+        document.getElementById('pff-'+k).className = (k===f?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700';
+      });
+      renderPostFailed(f);
+    }
+    function renderPostFailed(f) {
+      const items = (window._allPostFailed||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707')).sort((a,b) => new Date(b.postFailedAt||b.createdAt) - new Date(a.postFailedAt||a.createdAt));
+      const badge = document.getElementById('post-failed-count-badge');
+      if (badge) badge.textContent = (window._allPostFailed||[]).length;
+      const section = document.getElementById('post-failed-section');
+      if (section) section.style.display = (window._allPostFailed||[]).length === 0 ? 'none' : '';
+      const el = document.getElementById('post-failed-body');
+      if (!el) return;
+      el.innerHTML = items.length === 0
+        ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No post failures</td></tr>'
+        : items.map(i => {
+            const reasonLabel = {
+              'api_403': '403 — @mention blocked',
+              'api_429': '429 — Rate limited',
+              'api_401': '401 — Auth error',
+              'no_tweet_id': 'Never posted (no ID)',
+              'api_error': 'API error',
+              'rate_limited': 'Rate limited'
+            }[i.failureReason] || (i.failureReason || 'Unknown');
+            const note = i.failureNote ? (`<br><span class="text-gray-600 text-xs">${esc(i.failureNote.slice(0,80))}</span>`) : '';
+            return `<tr class="border-b border-gray-900">
+              <td class="px-3 py-1 text-gray-400 font-medium max-w-xs truncate" title="${esc(i.tweetText||i.title||i.id)}">${esc((i.tweetText||i.title||i.id).slice(0,65))}${(i.tweetText?.length||0)>65?'…':''}</td>
+              <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
+              <td class="px-3 py-1 text-xs"><span class="text-red-400">${reasonLabel}</span>${note}</td>
+              <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.postFailedAt||i.createdAt)}</td>
+              <td class="px-3 py-1 text-xs"><button onclick="requeueItem('${esc(i.id)}')" class="bg-indigo-900 hover:bg-indigo-800 text-indigo-300 text-xs px-2 py-0.5 rounded border border-indigo-700">Re-queue</button></td>
+            </tr>`;
+          }).join('');
+    }
+    async function requeueItem(id) {
+      if (!confirm('Re-queue this item for posting? It will go back to approved status.')) return;
+      try {
+        const res = await fetch('/portal/requeue', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id}) });
+        if (res.ok) { alert('Re-queued! Will post on next publish cycle.'); loadData(); }
+        else { alert('Re-queue failed — update manually in the queue file.'); }
+      } catch(e) {
+        // No server endpoint — show manual instructions
+        alert('To re-queue manually: set status=approved in content-queue.json for item: ' + id);
+      }
     }
 
     // Unified Queue filter (type + account)
@@ -2284,7 +2356,8 @@
       set('metric-combined-48h', articles48.length + cliffTweets48.length + timPosts48.length);
 
       const rejected = q.filter(i=>i.status==='rejected');
-      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
+      const postFailed = q.filter(i=>i.status==='post_failed');
+      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
         .sort((a,b)=>new Date(a.scheduledFor||a.createdAt)-new Date(b.scheduledFor||b.createdAt));
 
       // Pending Articles table
@@ -2293,6 +2366,10 @@
       window._queueTypeFilter = window._queueTypeFilter||'all';
       window._queueAcctFilter = window._queueAcctFilter||'all';
       renderQueueTable();
+
+      // Post Failed section
+      window._allPostFailed = postFailed;
+      renderPostFailed('all');
 
       // Rejected section
       window._allRejected = rejected;
@@ -2529,7 +2606,7 @@
     }
 
     function fmtStatus(s) {
-      const labels = { draft: 'Pending Review', approved: 'Approved', published: 'Posted', error: 'Error', rejected: 'Rejected' };
+      const labels = { draft: 'Pending Review', approved: 'Approved', published: 'Posted', error: 'Error', rejected: 'Rejected', post_failed: 'Post Failed' };
       return labels[s] || s;
     }
 
