@@ -3124,6 +3124,20 @@ function switchTab(t) {
         }).catch(() => {});
       } catch(e) {}
 
+      // Write goals to Mac Mini bridge (triggers scheduler reschedule)
+      fetch('https://api.cliffcircuit.ai/save-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliffArticles: goals.cliffArticles,
+          cliffTweets: goals.cliffTweets,
+          timTweets: goals.timTweets,
+          effectiveDate: takesEffect
+        })
+      }).then(r => r.json()).then(r => {
+        console.log('[goals] Mac Mini bridge:', r.ok ? 'synced ✓' : 'failed');
+      }).catch(e => console.warn('[goals] Mac Mini bridge unreachable:', e.message));
+
       // Write goals via secure Vercel API (token lives server-side, never in committed code)
       fetch('https://cliffcircuit-goals-api.vercel.app/api/save-goals', {
         method: 'POST',
