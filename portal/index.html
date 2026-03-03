@@ -41,8 +41,11 @@
       </div>
       <div id="login-error" class="hidden mb-4 text-red-400 text-sm text-center bg-red-950 rounded-lg p-2"></div>
       <form onsubmit="attemptLogin(event)">
-        <input id="password-input" type="password" placeholder="Password"
-          class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 mb-4" autofocus />
+        <div class="relative mb-4">
+          <input id="password-input" type="password" placeholder="Password"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 pr-16" autofocus />
+          <button type="button" id="pw-toggle" onclick="(function(){const i=document.getElementById('password-input'),b=document.getElementById('pw-toggle');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'Show':'Hide';}).call(this)" class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300 text-xs font-medium px-2 py-1 rounded">Show</button>
+        </div>
         <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg text-sm transition-colors">
           Enter Portal
         </button>
@@ -1318,7 +1321,7 @@
       const data = await loadData().catch(() => ({}));
       const correct = data?.auth?.passwordHash || DEFAULT_HASH;
       if (hash === correct) {
-        sessionStorage.setItem('cc_auth','1');
+        localStorage.setItem('cc_auth','1');
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab()).catch(e => console.error('render error:', e));
@@ -1336,12 +1339,12 @@
       }
     }
 
-    function logout() { sessionStorage.removeItem('cc_auth'); location.reload(); }
+    function logout() { localStorage.removeItem('cc_auth'); location.reload(); }
 
     // Script is near end of body, so DOMContentLoaded has already fired by the time we get here.
     // Run startup immediately rather than waiting for an event that's already passed.
     (function startPortal() {
-      if (sessionStorage.getItem('cc_auth') === '1') {
+      if (localStorage.getItem('cc_auth') === '1') {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
