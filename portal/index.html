@@ -1388,6 +1388,7 @@
     // If Realtime is subscribed and receiving events, the system is live.
     // No localhost polling needed — avoids Chrome's private network access prompt.
     function updateGatewayDot(ok, latencyMs) {
+      window._realtimeGwSet = true;
       const dots   = ['nav-gw-dot', 'gw-dot'].map(id => document.getElementById(id));
       const labels = ['nav-gw-label', 'gw-label'].map(id => document.getElementById(id));
       const lats   = ['nav-gw-latency', 'gw-latency'].map(id => document.getElementById(id));
@@ -1416,11 +1417,14 @@
           loadAndRender().then(() => restoreTab());
         })
         .subscribe((status) => {
+          // Supabase fires: SUBSCRIBING → SUBSCRIBED (or CHANNEL_ERROR / TIMED_OUT)
+          // Only update dot on terminal states — ignore intermediate ones
           if (status === 'SUBSCRIBED') {
             updateGatewayDot(true, Date.now() - start);
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             updateGatewayDot(false, null);
           }
+          // SUBSCRIBING, UNSUBSCRIBED etc → leave dot as-is
         });
     }
 
@@ -2740,8 +2744,11 @@ function switchTab(t) {
           if (label) label.textContent = 'Gateway';
         }
       }
-      applyGwState('gw-dot', 'gw-label', 'gw-latency');           // System Health banner
-      applyGwState('nav-gw-dot', 'nav-gw-label', 'nav-gw-latency'); // Nav bar
+      // Only apply static gateway state if Realtime hasn't already set it
+      if (!window._realtimeGwSet) {
+        applyGwState('gw-dot', 'gw-label', 'gw-latency');
+        applyGwState('nav-gw-dot', 'nav-gw-label', 'nav-gw-latency');
+      }
 
       // Live Sessions
       const sessions = d.sessions || [];
