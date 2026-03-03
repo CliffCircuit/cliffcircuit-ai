@@ -1571,7 +1571,7 @@
           DATA.sessions = live.sessions;
           DATA._liveGeneratedAt = live.generatedAt;
           if (live.agentConfigs) DATA.agentConfigs = live.agentConfigs;
-          if (live.crons && live.crons.length) DATA.crons = live.crons;
+          if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
           renderHealth(DATA);   // updates live-sessions-list in System Health tab
           renderAgents(DATA);   // updates context bars in Agents tab
           updateNavDots(DATA);
@@ -2165,7 +2165,17 @@ function switchTab(t) {
       // cron:name:... → just show the name
       if (key.startsWith('cron:')) {
         const m = key.match(/^cron:([^:]+)/);
-        return m && CRON_DISPLAY[m[1]] ? CRON_DISPLAY[m[1]] : (m ? m[1].replace(/-/g,' ') : 'Cron');
+        if (m && CRON_DISPLAY[m[1]]) return CRON_DISPLAY[m[1]];
+        return m ? m[1].replace(/-/g,' ') : 'Cron';
+      }
+      // agent:agent:cron:UUID:run:... → look up cron by UUID
+      const agentCronMatch = key.match(/^agent:([^:]+):cron:([^:]+)/);
+      if (agentCronMatch) {
+        const cronId = agentCronMatch[2];
+        const cronList = window._cronList || [];
+        const cron = cronList.find(c => c.id === cronId);
+        if (cron) return CRON_DISPLAY[cron.name] || cron.name.replace(/-/g,' ');
+        return 'Cron (UUID)';
       }
       // agent:main:telegram:direct:... → "Cliff — Telegram"
       const directMatch = key.match(/^agent:([^:]+):([^:]+):direct:/);
