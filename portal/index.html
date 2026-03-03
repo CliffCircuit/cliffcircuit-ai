@@ -1636,6 +1636,7 @@
       const d = await loadData();
       document.getElementById('loading').classList.add('hidden');
       if (!d) { showError(); return; }
+      if (d.crons && d.crons.length) window._cronList = d.crons;
       const liveTs = d._liveGeneratedAt || d.generatedAt;
       const fullTs = d.generatedAt;
       const liveStr = liveTs ? new Date(liveTs).toLocaleTimeString() : '';
