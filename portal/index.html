@@ -1432,7 +1432,26 @@
     setInterval(pollGatewayHealth, 10000);
     pollGatewayHealth();
 
-        function setupRealtime() {
+        // Poll live session data from api.cliffcircuit.ai every 10 seconds
+    async function pollLiveSessions() {
+      try {
+        const res = await fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now());
+        const live = await res.json();
+        if (!live || !live.sessions) return;
+        if (DATA) {
+          DATA.sessions = live.sessions;
+          DATA._liveGeneratedAt = live.generatedAt;
+          renderAgents(DATA);
+          updateNavDots(DATA);
+        }
+      } catch (e) {
+        // Non-fatal — session data is best-effort
+      }
+    }
+    setInterval(pollLiveSessions, 10000);
+    pollLiveSessions();
+
+    function setupRealtime() {
       const start = Date.now();
       _sb.channel('portal-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
