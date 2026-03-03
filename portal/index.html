@@ -1384,16 +1384,8 @@
     }
 
 
-    // Gateway health is inferred from the Supabase Realtime connection.
-    // If Realtime is subscribed and receiving events, the system is live.
-    // No localhost polling needed — avoids Chrome's private network access prompt.
-    function updateGatewayDot(ok, latencyMs) {
-      window._realtimeGwSet = true;
-      window._realtimeGwOk = ok;
-      window._realtimeGwLatency = latencyMs;
-      applyRealtimeGwState();
-    }
-
+    // Poll gateway health via gateway.cliffcircuit.ai (Cloudflare Tunnel → OpenClaw)
+    // This is a public HTTPS endpoint so no browser security prompts.
     function applyRealtimeGwState() {
       if (!window._realtimeGwSet) return;
       const ok = window._realtimeGwOk;
@@ -1412,6 +1404,33 @@
         if (l && latencyMs != null) l.textContent = latencyMs + 'ms';
       });
     }
+
+    async function pollGatewayHealth() {
+      const start = Date.now();
+      try {
+        await fetch('https://gateway.cliffcircuit.ai/', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+        const latency = Date.now() - start;
+        window._realtimeGwSet = true;
+        window._realtimeGwOk = true;
+        window._realtimeGwLatency = latency;
+      } catch (e) {
+        window._realtimeGwSet = true;
+        window._realtimeGwOk = false;
+        window._realtimeGwLatency = null;
+      }
+      applyRealtimeGwState();
+    }
+
+    function updateGatewayDot(ok, latencyMs) {
+      window._realtimeGwSet = true;
+      window._realtimeGwOk = ok;
+      window._realtimeGwLatency = latencyMs;
+      applyRealtimeGwState();
+    }
+
+    // Poll every 10 seconds — real gateway health, not inferred from Supabase
+    setInterval(pollGatewayHealth, 10000);
+    pollGatewayHealth();
 
         function setupRealtime() {
       const start = Date.now();
