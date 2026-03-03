@@ -797,7 +797,9 @@
                 <span class="text-xs text-gray-500">Spec added 2026-03-02</span>
               </div>
               <h3 class="text-white font-semibold text-base mb-2">Replace JSON File Pipeline with Real Database + API</h3>
-              <p class="text-gray-400 text-sm mb-4">The current content pipeline uses flat JSON files as its database. Every status change requires: edit JSON → run generate-data.js → git commit + push → wait for Cloudflare deploy → refresh browser. That's 3–4 minutes for what should be instant. It's fragile, has no audit trail, and concurrent writes can corrupt the file.</p>
+              <p class="text-gray-400 text-sm mb-3">The current content pipeline uses flat JSON files as its database. Every status change requires: edit JSON → run generate-data.js → git commit + push → wait for Cloudflare deploy → refresh browser. That's 3–4 minutes for what should be instant. It's fragile, has no audit trail, and concurrent writes can corrupt the file.</p>
+              <button id="spec-db-btn" onclick="toggleSpec('spec-db')" class="text-xs text-blue-400 hover:text-blue-300 mb-3 font-medium">▼ View Spec</button>
+              <div id="spec-db" class="hidden">
               <div class="text-gray-200 text-sm font-semibold mb-2">Proposed Architecture</div>
               <div class="space-y-2 mb-4">
                 <div class="bg-gray-800 rounded-lg p-3"><div class="text-gray-200 text-xs font-semibold mb-1">📦 Database</div><p class="text-gray-400 text-xs">SQLite on Mac Mini (or Cloudflare D1). Single source of truth for all content items, statuses, scheduled times, tweet IDs, audit history.</p></div>
@@ -814,6 +816,7 @@
                 <div class="bg-gray-800 rounded p-2"><div class="text-gray-400">Migration</div><div class="text-white font-semibold">1.5h</div></div>
               </div>
               <p class="text-gray-500 text-xs">~5–6 hours total. One focused session.</p>
+              </div><!-- end spec-db -->
             </div>
             <span class="shrink-0 text-xs bg-red-900 text-red-300 px-2 py-0.5 rounded-full font-semibold">Priority</span>
           </div>
@@ -828,8 +831,11 @@
                 <span class="text-xs text-gray-500">Spec added 2026-03-02</span>
               </div>
               <h3 class="text-white font-medium">Documentation Repository + Spec System</h3>
-              <p class="text-gray-400 text-sm mt-1 mb-2">Dedicated GitHub repo for architecture docs and decision records. Use this Ideas tab as the visual spec board — full write-ups live here before we build. When a spec is approved, it moves to "In Progress" with a link to the implementation.</p>
+              <button id="spec-doc-btn" onclick="toggleSpec('spec-doc')" class="text-xs text-blue-400 hover:text-blue-300 mb-2 mt-1 font-medium">▼ View Spec</button>
+              <div id="spec-doc" class="hidden">
+              <p class="text-gray-400 text-sm mb-2">Dedicated GitHub repo for architecture docs and decision records. Use this Ideas tab as the visual spec board — full write-ups live here before we build. When a spec is approved, it moves to "In Progress" with a link to the implementation.</p>
               <p class="text-gray-400 text-sm">Stack: Markdown files in GitHub + this Ideas tab as the visual layer. Every major system gets a SPEC.md before we touch code.</p>
+              </div><!-- end spec-doc -->
             </div>
             <span class="shrink-0 text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">Backlog</span>
           </div>
@@ -1597,7 +1603,16 @@
           }).join('');
     }
 
-    function switchTab(t) {
+    function toggleSpec(id) {
+  const el = document.getElementById(id);
+  const btn = document.getElementById(id + '-btn');
+  if (!el) return;
+  const hidden = el.classList.contains('hidden');
+  el.classList.toggle('hidden', !hidden);
+  if (btn) btn.textContent = hidden ? '▲ Collapse' : '▼ View Spec';
+}
+
+function switchTab(t) {
       ['marketing','health','agents','ideas','tokens'].forEach(n => {
         document.getElementById('tab-'+n+'-content').classList.add('hidden');
         document.getElementById('tab-'+n).className = (n===t?'tab-active':'tab-inactive')+' py-4 text-sm font-medium';
