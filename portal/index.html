@@ -2609,7 +2609,7 @@ function switchTab(t) {
         const a = job.agent || 'main';
         if (!agentMap[a]) agentMap[a] = { jobs: [], errors: 0 };
         agentMap[a].jobs.push(job);
-        if ((job.consecutiveErrors || 0) > 0) agentMap[a].errors++;
+        if (job.status === 'error') agentMap[a].errors++;
       });
 
       const agentIds = { 'cliff': 'cliff', 'samantha': 'samantha', 'scout': 'scout' };
@@ -2667,7 +2667,7 @@ function switchTab(t) {
         } else {
           // No live session — show largest job by token usage
           // Use most recently run job with duration as the "last job" display
-          const recentJob = info.jobs.filter(j => j.lastRunMs && !j.name.includes('message-check')).sort((a,b) => b.lastRunMs - a.lastRunMs)[0] || info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
+          const recentJob = info.jobs.filter(j => j.lastRunMs && !j.name.includes('message-check')).sort((a,b) => ((b.lastRunTokens||0)+(b.lastDurationMs||0)/1000) - ((a.lastRunTokens||0)+(a.lastDurationMs||0)/1000))[0] || info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
           const durMs = recentJob?.lastDurationMs || 0;
           if (recentJob && durMs) {
             const durSec = Math.round(durMs / 1000);
