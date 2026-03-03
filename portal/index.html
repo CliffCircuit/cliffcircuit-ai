@@ -2568,8 +2568,8 @@ function switchTab(t) {
               <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
               <td class="px-4 py-2.5 text-xs">${thinkingBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
-              <td class="px-4 py-2.5 text-gray-500">${j.lastRun || '—'}</td>
-              <td class="px-4 py-2.5 text-gray-500">${j.nextRun || '—'}</td>
+              <td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
+              <td class="px-4 py-2.5 text-gray-500">${j.nextRun ? timeAgo(j.nextRun) : '—'}</td>
               <td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens, j)}</td>
             </tr>`).join('');
         } else if (tbody) {
@@ -2914,7 +2914,7 @@ function switchTab(t) {
             <td class="px-4 py-2.5 text-xs">${modelShortH(c.model)}</td>
             <td class="px-4 py-2.5 text-xs">${thinkingBadgeH(c.thinking)}</td>
             <td class="px-4 py-2.5 text-xs">${statusDot(c.status)}</td>
-            <td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.lastRun||'—')}</td>
+            <td class="px-4 py-2.5 text-gray-500 text-xs">${c.lastRunMs ? timeAgo(c.lastRunMs) : (c.lastRun ? timeAgo(c.lastRun) : '—')}</td>
             <td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.nextRun||'—')}</td>
             <td class="px-4 py-2.5 text-xs">${fmtTokensH(c.lastRunTokens, c)}</td>
           </tr>`).join('');
