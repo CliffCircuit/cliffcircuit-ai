@@ -2065,8 +2065,38 @@ function switchTab(t) {
 
       const { data, error } = await query;
       if (error) { console.error('[token] session_snapshots error:', error); return; }
+      window._sbSessionRows = data || [];   // used by renderTokens grouped/raw sections
       renderAgentSessions(data || []);
     }
+
+    // Parse a session_key like "cron:samantha-draft:CRONID:run:TS" → task name
+    function cronTaskFromKey(key) {
+      if (!key) return null;
+      const m = key.match(/^cron:([^:]+):/);
+      return m ? m[1] : null;
+    }
+
+    // Map cron name to display label
+    const CRON_DISPLAY = {
+      'samantha-draft':         'Article Draft',
+      'samantha-publish':       'Publish',
+      'samantha-writer':        'Article Writer',
+      'samantha-media':         'Media / Images',
+      'samantha-cliff-tweets':  'Cliff Tweets',
+      'samantha-tim-tweets':    'Tim Posts',
+      'samantha-message-check': 'Message Check',
+      'samantha-recycle':       'Recycle Rejected',
+      'cliff-article-review':   'Article Review',
+      'cliff-message-check':    'Message Check',
+      'cliff-scheduler':        'Scheduler',
+      'scout-message-check':    'Message Check',
+      'portal-data-refresh':    'Portal Refresh',
+      'portal-live-refresh':    'Live Refresh',
+      'social-monitoring':      'Social Monitoring',
+      'github-monitoring':      'GitHub Monitoring',
+      'pipeline-health-check':  'Pipeline Health',
+      'nightly-extraction':     'Nightly Extraction',
+    };
 
     function renderAgentSessions(rows) {
       const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
@@ -2321,7 +2351,30 @@ function switchTab(t) {
 
       
       // ── Grouped Sub-agent Summary ─────────────────────────────
-      const allDbItems = (d.subagentSessions || {}).items || [];
+      // Use Supabase session_snapshots (cron rows) — live, no cron required.
+      // window._sbSessionRows is populated by loadAndRenderAgentSessions().
+      const sbRows = window._sbSessionRows || [];
+      const allDbItems = sbRows
+        .filter(r => r.session_key && r.session_key.startsWith('cron:'))
+        .map(r => {
+          const cronName = cronTaskFromKey(r.session_key);
+          const displayName = cronName ? (CRON_DISPLAY[cronName] || cronName.replace(/-/g,' ')) : 'Unknown';
+          const runMs = (() => { const m = r.session_key?.match(/:run:(\d+)$/); return m ? parseInt(m[1]) : null; })();
+          const durationMs = r.last_seen_at && r.first_seen_at
+            ? new Date(r.last_seen_at) - new Date(r.first_seen_at) : 0;
+          return {
+            display_name: displayName,
+            task_name:    cronName || 'unknown',
+            agent_type:   r.agent_id,
+            model:        r.model,
+            duration_ms:  durationMs,
+            tokens_in:    r.input_tokens  || 0,
+            tokens_out:   r.output_tokens || 0,
+            estimated_cost_usd: r.cost_total_usd || 0,
+            started_at:   runMs || (r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0),
+            label:        r.session_key,
+          };
+        });
       window._allDbSubItems = allDbItems;
       window._subPeriod = window._subPeriod || 'today';
 
@@ -2437,11 +2490,11 @@ function switchTab(t) {
       renderGrouped();
 
       // DB Sub-agent Coding Sessions — Raw
-      const dbSub = d.subagentSessions || { total: 0, activeCount: 0, totalCostUsd: 0, totalTokens: 0, items: [] };
+      // allDbItems is already populated from Supabase above (cron rows from session_snapshots)
       const dbSubBody = document.getElementById('db-subagent-body');
       window._dbSubShowAll = window._dbSubShowAll || false;
       window._dbRawTaskFilter = window._dbRawTaskFilter || 'all';
-      const dbSubItems = dbSub.items || [];
+      const dbSubItems = allDbItems;
 
       function getDbSubFiltered() {
         const range  = window._globalRange || 'today';
