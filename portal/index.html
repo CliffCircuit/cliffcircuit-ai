@@ -2340,7 +2340,7 @@
       // Use PT date, not UTC (PT is UTC-8)
       // TIMEZONE: User setting > data.json default > hardcoded fallback.
       // Future: make this per-account server config for multi-tenant use.
-      const DISPLAY_TZ = window._portalDisplayTz || (data.stats && data.stats.displayTz) || 'America/Los_Angeles';
+      const DISPLAY_TZ = window._portalDisplayTz || (d.stats && d.stats.displayTz) || 'America/Los_Angeles';
       const todayInTZ = new Date().toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }); // YYYY-MM-DD
       const isToday = (ts) => ts && new Date(ts).toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }) === todayInTZ;
       const drafts = q.filter(i=>i.status==='draft');
