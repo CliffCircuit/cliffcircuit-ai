@@ -773,7 +773,7 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cache R+W</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Duration</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
           </tr></thead>
@@ -2263,7 +2263,7 @@ function switchTab(t) {
         const aCls   = agentColor[r.agent_id] || 'text-gray-400';
         const aLbl   = agentLabel[r.agent_id] || fmtAgent(r.agent_id);
         const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
-        const cacheStr = fmtK((r.cache_read||0) + (r.cache_write||0));
+        const fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
         const friendlyName = sessionKeyToFriendly(r.session_key, r.session_id);
         const tokIn = (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0); // include cache
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
@@ -2271,7 +2271,7 @@ function switchTab(t) {
           <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
           <td class="px-4 py-1.5 text-xs">${modelShort(r.model)}</td>
           <td class="px-4 py-1.5 text-right text-xs text-white">${fmtK(tokIn)} / ${fmtK(r.output_tokens||0)}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-gray-500">${cacheStr}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-400">${fmtDur(r.duration_ms)}</td>
           <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
           <td class="px-4 py-1.5 text-right text-xs text-gray-600">${timeAgo(r.last_seen_at)}</td>
         </tr>`;
