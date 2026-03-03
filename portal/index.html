@@ -1399,8 +1399,10 @@
             DATA.sessions = live.sessions;
             DATA._liveGeneratedAt = live.generatedAt || DATA._liveGeneratedAt;
             DATA.agentConfigs = live.agentConfigs || {};
+            if (live.crons && live.crons.length) DATA.crons = live.crons;
             renderAgents(DATA);
             renderHealth(DATA);
+            updateNavDots(DATA);
             updateAgentStatusDots(live.sessions);
           }
         });
@@ -1503,6 +1505,7 @@
           DATA.sessions = live.sessions;
           DATA._liveGeneratedAt = live.generatedAt;
           if (live.agentConfigs) DATA.agentConfigs = live.agentConfigs;
+          if (live.crons && live.crons.length) DATA.crons = live.crons;
           renderHealth(DATA);   // updates live-sessions-list in System Health tab
           renderAgents(DATA);   // updates context bars in Agents tab
           updateNavDots(DATA);
@@ -2494,24 +2497,23 @@ function switchTab(t) {
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = snapshotAge(generatedTs); if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs; }
         } else {
           // No live session — show largest job by token usage
-          const largestJob = info.jobs.filter(j => j.lastRunTokens).sort((a,b) => b.lastRunTokens - a.lastRunTokens)[0];
-          const tokenData = largestJob ? { totalTokens: largestJob.lastRunTokens } : null;
-          if (tokenData && tokenData.totalTokens) {
-            const MAX_TOKENS = 200000;
-            const tokens = tokenData.totalTokens;
-            const pct = Math.round((tokens / MAX_TOKENS) * 100);
-            const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
-            const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-            const tokLabel = (tokens >= 1000 ? (tokens/1000).toFixed(1) + 'K' : tokens) + ' tokens';
-            const MAX_TOK_LABEL = Math.round(MAX_TOKENS/1000) + 'K tokens';
-            if (el('ctx-title')) el('ctx-title').textContent = 'Largest Job';
+          // Use most recently run job with duration as the "last job" display
+          const recentJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
+          const durMs = recentJob?.lastDurationMs || 0;
+          if (recentJob && durMs) {
+            const durSec = Math.round(durMs / 1000);
+            const durLabel = durSec >= 60 ? Math.round(durSec/60) + 'm ' + (durSec%60) + 's' : durSec + 's';
+            const MAX_DUR = 20 * 60 * 1000; // 20 min = full bar
+            const pct = Math.min(100, Math.round((durMs / MAX_DUR) * 100));
+            const barColor = '#6366f1'; // indigo — duration, not token %
+            if (el('ctx-title')) el('ctx-title').textContent = 'Last Job';
             if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
             if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-            if (el('ctx-top')) { el('ctx-top').textContent = MAX_TOK_LABEL; el('ctx-top').className = 'text-white text-sm font-semibold mb-0'; }
-            if (el('ctx-label')) el('ctx-label').textContent = tokLabel;
-            if (el('ctx-pct')) { el('ctx-pct').textContent = pct + '%'; el('ctx-pct').className = `font-semibold ${pctColor}`; }
+            if (el('ctx-top')) { el('ctx-top').textContent = recentJob.name; el('ctx-top').className = 'text-white text-sm font-semibold mb-0 truncate'; }
+            if (el('ctx-label')) el('ctx-label').textContent = 'Duration: ' + durLabel;
+            if (el('ctx-pct')) { el('ctx-pct').textContent = ''; }
             if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
-            if (el('ctx-sublabel')) el('ctx-sublabel').textContent = largestJob ? largestJob.name : 'last run usage';
+            if (el('ctx-sublabel')) { const ts = recentJob.lastRunMs; el('ctx-sublabel').textContent = timeAgo(ts); if(ts) el('ctx-sublabel').dataset.ts = ts; }
           }
         }
 
