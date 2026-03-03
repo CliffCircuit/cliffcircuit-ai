@@ -2452,7 +2452,7 @@ function switchTab(t) {
 
         // Find most recent lastRun using lastRunMs timestamp
         const lastRunJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
-        const lastActive = lastRunJob ? lastRunJob.lastRun : 'No recent runs';
+        const lastActive = lastRunJob ? timeAgo(lastRunJob.lastRunMs || lastRunJob.lastRun) : 'No recent runs';
 
         const el = id => document.getElementById(`${name}-${id}`);
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
