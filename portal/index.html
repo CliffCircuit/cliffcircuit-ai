@@ -2492,11 +2492,12 @@ function switchTab(t) {
           }
         }
 
-        // Live session context bar — falls back to last-run token usage if no live session
+        // Live session context bar — Cliff only; Samantha/Scout always show largest job
         const sessionAgentId = name === 'cliff' ? 'main' : name;
-        const sessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
-        // Prefer the most-used session (highest pct) as the primary context bar — use spread to avoid mutating d.sessions
-        const liveSession = [...sessions].sort((a, b) => (b.pct || 0) - (a.pct || 0))[0] || null;
+        const cliffSessions = name === 'cliff' ? (d.sessions || []).filter(s => s.agentId === 'main') : [];
+        const liveSession = cliffSessions.length
+          ? [...cliffSessions].sort((a, b) => (b.pct || 0) - (a.pct || 0))[0]
+          : null;
 
         const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
