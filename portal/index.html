@@ -1389,20 +1389,26 @@
     // No localhost polling needed — avoids Chrome's private network access prompt.
     function updateGatewayDot(ok, latencyMs) {
       window._realtimeGwSet = true;
-      const dots   = ['nav-gw-dot', 'gw-dot'].map(id => document.getElementById(id));
-      const labels = ['nav-gw-label', 'gw-label'].map(id => document.getElementById(id));
-      const lats   = ['nav-gw-latency', 'gw-latency'].map(id => document.getElementById(id));
-      dots.forEach(d => {
-        if (!d) return;
-        d.style.background = ok ? '#22c55e' : '#ef4444';
-        d.style.boxShadow  = ok ? 'none' : '0 0 6px #ef4444';
+      window._realtimeGwOk = ok;
+      window._realtimeGwLatency = latencyMs;
+      applyRealtimeGwState();
+    }
+
+    function applyRealtimeGwState() {
+      if (!window._realtimeGwSet) return;
+      const ok = window._realtimeGwOk;
+      const latencyMs = window._realtimeGwLatency;
+      const color = ok ? '#22c55e' : '#ef4444';
+      ['nav-gw-dot', 'gw-dot'].forEach(id => {
+        const d = document.getElementById(id);
+        if (d) { d.style.background = color; d.style.boxShadow = ok ? 'none' : '0 0 6px #ef4444'; }
       });
-      labels.forEach(l => {
-        if (!l) return;
-        l.textContent = ok ? 'Gateway OK' : 'Gateway Down';
-        l.style.color = ok ? '#4b5563' : '#f87171';
+      ['nav-gw-label', 'gw-label'].forEach(id => {
+        const l = document.getElementById(id);
+        if (l) { l.textContent = ok ? 'Gateway OK' : 'Gateway Down'; l.style.color = ok ? '#4b5563' : '#f87171'; }
       });
-      lats.forEach(l => {
+      ['nav-gw-latency', 'gw-latency'].forEach(id => {
+        const l = document.getElementById(id);
         if (l && latencyMs != null) l.textContent = latencyMs + 'ms';
       });
     }
@@ -2744,11 +2750,10 @@ function switchTab(t) {
           if (label) label.textContent = 'Gateway';
         }
       }
-      // Only apply static gateway state if Realtime hasn't already set it
-      if (!window._realtimeGwSet) {
-        applyGwState('gw-dot', 'gw-label', 'gw-latency');
-        applyGwState('nav-gw-dot', 'nav-gw-label', 'nav-gw-latency');
-      }
+      // Apply static state first, then immediately override with Realtime state if available
+      applyGwState('gw-dot', 'gw-label', 'gw-latency');
+      applyGwState('nav-gw-dot', 'nav-gw-label', 'nav-gw-latency');
+      applyRealtimeGwState();
 
       // Live Sessions
       const sessions = d.sessions || [];
