@@ -607,58 +607,6 @@
         </div>
       </div>
 
-      <!-- Agent Sessions (Supabase Live) -->
-      <div id="agent-sessions-section" class="card overflow-hidden mb-6">
-        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-semibold text-white">Agent Sessions</h3>
-            <p class="text-xs text-gray-600 mt-0.5">Cliff, Samantha, Scout — direct sessions from Supabase, live</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <div id="sb-realtime-dot" class="w-2 h-2 rounded-full bg-gray-600" style="transition:background 0.4s"></div>
-            <span id="sb-realtime-label" class="text-xs text-gray-600">Connecting...</span>
-          </div>
-        </div>
-        <div class="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
-          <div class="px-5 py-4">
-            <div class="text-xs text-indigo-400 font-semibold uppercase tracking-wide mb-2">Cliff</div>
-            <div class="flex items-end gap-4">
-              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-cliff-runs" class="text-xl font-bold text-white">—</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-cliff-tokens" class="text-xl font-bold text-white">—</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-cliff-cost" class="text-xl font-bold text-yellow-400">—</div></div>
-            </div>
-          </div>
-          <div class="px-5 py-4">
-            <div class="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-2">Samantha</div>
-            <div class="flex items-end gap-4">
-              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-samantha-runs" class="text-xl font-bold text-white">—</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-samantha-tokens" class="text-xl font-bold text-white">—</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-samantha-cost" class="text-xl font-bold text-yellow-400">—</div></div>
-            </div>
-          </div>
-          <div class="px-5 py-4">
-            <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Scout</div>
-            <div class="flex items-end gap-4">
-              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-scout-runs" class="text-xl font-bold text-white">—</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-scout-tokens" class="text-xl font-bold text-white">—</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-scout-cost" class="text-xl font-bold text-yellow-400">—</div></div>
-            </div>
-          </div>
-        </div>
-        <table class="w-full text-sm">
-          <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cache R+W</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
-          </tr></thead>
-          <tbody id="agent-sess-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
       <!-- Sub-agent Sessions — Grouped Summary -->
       <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
@@ -782,6 +730,59 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
           </tr></thead>
           <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+
+      <!-- Agent Sessions (Supabase Live) -->
+      <div id="agent-sessions-section" class="card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions</h3>
+            <p class="text-xs text-gray-600 mt-0.5">Cliff, Samantha, Scout — direct sessions from Supabase, live</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div id="sb-realtime-dot" class="w-2 h-2 rounded-full bg-gray-600" style="transition:background 0.4s"></div>
+            <span id="sb-realtime-label" class="text-xs text-gray-600">Connecting...</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
+          <div class="px-5 py-4">
+            <div class="text-xs text-indigo-400 font-semibold uppercase tracking-wide mb-2">Cliff</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-cliff-runs" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-cliff-tokens" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-cliff-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+            </div>
+          </div>
+          <div class="px-5 py-4">
+            <div class="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-2">Samantha</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-samantha-runs" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-samantha-tokens" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-samantha-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+            </div>
+          </div>
+          <div class="px-5 py-4">
+            <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Scout</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-scout-runs" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-scout-tokens" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-scout-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+            </div>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cache R+W</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
+          </tr></thead>
+          <tbody id="agent-sess-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
       </div>
 
@@ -2067,6 +2068,8 @@ function switchTab(t) {
       if (error) { console.error('[token] session_snapshots error:', error); return; }
       window._sbSessionRows = data || [];   // used by renderTokens grouped/raw sections
       renderAgentSessions(data || []);
+      // Re-render grouped/raw token sections now that _sbSessionRows is populated
+      if (window._lastData) renderTokens(window._lastData);
     }
 
     // Parse a session_key like "cron:samantha-draft:CRONID:run:TS" → task name
