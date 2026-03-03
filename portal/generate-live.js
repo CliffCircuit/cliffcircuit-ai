@@ -146,7 +146,8 @@ async function main() {
     run(`git clone https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git ${REPO_DIR}`, { stdio: 'pipe' });
   }
 
-  const outPath = path.join(REPO_DIR, 'portal/live-data.json');
+  const outPath = path.join(REPO_DIR, "portal/live-data.json");
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(liveData, null, 2));
   console.log('Wrote live-data.json');
 
