@@ -1312,35 +1312,42 @@
 
     async function attemptLogin(e) {
       e.preventDefault();
+      try {
       const val = document.getElementById('password-input').value;
       const hash = await sha256(val);
-      const data = await loadData();
+      const data = await loadData().catch(() => ({}));
       const correct = data?.auth?.passwordHash || DEFAULT_HASH;
       if (hash === correct) {
         sessionStorage.setItem('cc_auth','1');
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
-        loadAndRender().then(() => restoreTab());
+        loadAndRender().then(() => restoreTab()).catch(e => console.error('render error:', e));
+        setupRealtime();
       } else {
         const el = document.getElementById('login-error');
         el.textContent = 'Incorrect password';
         el.classList.remove('hidden');
         document.getElementById('password-input').value = '';
       }
+      } catch(err) {
+        console.error('Login error:', err);
+        const errEl = document.getElementById('login-error');
+        if (errEl) { errEl.textContent = 'Login error: ' + err.message; errEl.classList.remove('hidden'); }
+      }
     }
 
     function logout() { sessionStorage.removeItem('cc_auth'); location.reload(); }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    // Script is near end of body, so DOMContentLoaded has already fired by the time we get here.
+    // Run startup immediately rather than waiting for an event that's already passed.
+    (function startPortal() {
       if (sessionStorage.getItem('cc_auth') === '1') {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
-        loadAndRender().then(() => restoreTab());
-        // Auto-refresh every 60 seconds (fallback; realtime handles live updates)
-        // setInterval(() => loadAndRender().then(() => restoreTab()), 60000);
+        loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
         setupRealtime();
       }
-    });
+    })();
 
     let DATA = null;
     async function loadData() {
