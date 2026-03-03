@@ -2457,40 +2457,7 @@ function switchTab(t) {
         if (el('job-errors')) { el('job-errors').classList.toggle('hidden', !hasErrors); if (hasErrors) el('job-errors').textContent = `⚠ ${info.errors} error${info.errors===1?'':'s'} detected`; }
 
         // Live sessions (Cliff only)
-        if (name === 'cliff') {
-          // Only show Cliff's own sessions (agentId=main), sorted by usage, capped at 5
-          const cliffSessions = (d.sessions || [])
-            .filter(s => s.agentId === 'main' && s.pct > 0)
-            .sort((a, b) => (b.pct || 0) - (a.pct || 0))
-            .slice(0, 5);
-          const sessionsEl = document.getElementById('cliff-sessions');
-          const sessionsListEl = document.getElementById('cliff-sessions-list');
-          if (cliffSessions.length && sessionsEl && sessionsListEl) {
-            sessionsEl.classList.remove('hidden');
-            sessionsListEl.innerHTML = cliffSessions.map(s => {
-              const pct = s.pct;
-              const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
-              const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-              const status = pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy';
-              const tsMs = s.lastActiveAt ? new Date(s.lastActiveAt).getTime() : 0;
-              return `<div class="bg-gray-900 rounded-lg p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-gray-200 text-xs font-semibold">${esc(s.label)}</span>
-                  <span class="text-xs ${pctColor} font-bold">${pct}% &mdash; ${status}</span>
-                </div>
-                <div class="bg-gray-700 rounded-full h-1.5 mb-1">
-                  <div class="h-1.5 rounded-full transition-all" style="width:${pct}%; background:${barColor};"></div>
-                </div>
-                <div class="flex justify-between text-xs text-gray-600">
-                  <span>${Math.round(s.used/1000)}k / ${Math.round(s.limit/1000)}k tokens</span>
-                  <span class="session-age" data-ts="${tsMs}">${timeAgo(s.lastActiveAt)}</span>
-                </div>
-              </div>`;
-            }).join('');
-          } else if (sessionsEl) {
-            sessionsEl.classList.add('hidden');
-          }
-        }
+        // Session detail list lives in System Health tab, not here
 
         // Live session context bar — Cliff only; Samantha/Scout always show largest job
         const sessionAgentId = name === 'cliff' ? 'main' : name;
