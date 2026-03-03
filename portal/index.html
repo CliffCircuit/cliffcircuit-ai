@@ -1378,7 +1378,8 @@
           gateway: {
             status: latestSession.gateway_status || 'unknown',
             latencyMs: latestSession.gateway_latency_ms || null,
-            ok: latestSession.gateway_status === 'ok'
+            ok: latestSession.gateway_status === 'ok',
+            reachable: latestSession.gateway_status === 'ok' ? true : (latestSession.gateway_status === 'error' ? false : null)
           },
           crons: [],
           agentConfigs: {},
