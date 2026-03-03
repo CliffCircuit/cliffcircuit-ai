@@ -2259,7 +2259,7 @@ function switchTab(t) {
         if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
         return Math.round(ms/86400000) + 'd ago';
       };
-      tbody.innerHTML = rows.slice(0, 60).map(r => {
+      tbody.innerHTML = rows.slice(0, 10).map(r => {
         const aCls   = agentColor[r.agent_id] || 'text-gray-400';
         const aLbl   = agentLabel[r.agent_id] || fmtAgent(r.agent_id);
         const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
@@ -2710,7 +2710,7 @@ function switchTab(t) {
 
 
 
-        const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
+        const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 10);
         if (filtered.length === 0) {
           dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
         } else {
