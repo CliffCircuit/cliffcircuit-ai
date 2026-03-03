@@ -3046,41 +3046,26 @@
         }).catch(() => {});
       } catch(e) {}
 
-      // Write goals to GitHub via API (data.json includes ghWriteToken if available)
-      const token = window._DATA?.ghWriteToken;
-      if (token) {
-        const content = btoa(JSON.stringify(goals, null, 2));
-        fetch('https://api.github.com/repos/CliffCircuit/cliffcircuit-ai/contents/portal/goals.json', {
-          method: 'PUT',
-          headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: 'update goals ' + new Date().toISOString().slice(0,16),
-            content,
-            sha: window._goalsSha || undefined
-          })
-        }).then(r => r.json()).then(r => {
-          if (r.content) window._goalsSha = r.content.sha;
-          // Also write reschedule-signal.json so cliff-scheduler rebuilds schedule
-          const signal = { triggeredAt: new Date().toISOString(), goals, takesEffect: takesEffect };
-          const signalContent = btoa(JSON.stringify(signal, null, 2));
-          fetch('https://api.github.com/repos/CliffCircuit/cliffcircuit-ai/contents/portal/reschedule-signal.json', {
-            method: 'PUT',
-            headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: 'reschedule signal ' + new Date().toISOString().slice(0,16),
-              content: signalContent,
-              sha: window._rescheduleSignalSha || undefined
-            })
-          }).then(r2 => r2.json()).then(r2 => {
-            if (r2.content) window._rescheduleSignalSha = r2.content.sha;
-          }).catch(() => {});
+      // Write goals via secure Vercel API (token lives server-side, never in committed code)
+      fetch('https://cliffcircuit-goals-api.vercel.app/api/save-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliffArticles: goals.cliffArticles,
+          cliffTweets: goals.cliffTweets,
+          timTweets: goals.timTweets,
+          effectiveDate: takesEffect
+        })
+      }).then(r => r.json()).then(r => {
+        if (r.ok) {
           document.getElementById('goal-save-status').textContent = '✓ Saved & synced';
-        }).catch(() => {
-          document.getElementById('goal-save-status').textContent = '✓ Saved locally';
-        });
-      } else {
+        } else {
+          document.getElementById('goal-save-status').textContent = '✓ Saved locally (sync failed)';
+          console.error('Goals save failed:', r.error);
+        }
+      }).catch(() => {
         document.getElementById('goal-save-status').textContent = '✓ Saved locally';
-      }
+      });
 
       // Relay via agent-relay.js message (server picks up in ~2min via cliff-message-check)
       setTimeout(() => flipToRecent(), 1200);
