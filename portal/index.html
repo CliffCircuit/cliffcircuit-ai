@@ -2207,28 +2207,43 @@ function switchTab(t) {
       const calcCost = (p, tokInput, tokCacheRead, tokCacheWrite, tokOut) =>
         (tokInput * p.input + tokCacheRead * p.cacheRead + tokCacheWrite * p.cacheWrite + tokOut * p.output) / 1e6;
 
-      // Build per-job stats from costs data
+      // Build per-job stats from Supabase session_snapshots (live) — costs object from data.json is no longer used
       const agentFilter = window._globalAgent || 'all';
       const taskFilter  = window._globalTask  || 'all';
-      const jobStats = jobs.map(j => {
+      const sbRowsForJobs = window._sbSessionRows || [];
+      // Group Supabase rows by cron task name, filtered to current time range
+      const jobGroupMap = {};
+      sbRowsForJobs.forEach(r => {
+        if (!r.session_key || !r.session_key.startsWith('cron:')) return;
+        const cronName = cronTaskFromKey(r.session_key);
+        if (!cronName) return;
+        const ts = r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0;
+        if (ts < cutoffStart || ts >= cutoffEnd) return;
+        const agentId = (r.agent_id || '').toLowerCase();
         // Apply agent filter
         if (agentFilter !== 'all') {
-          const ja = (j.agent || '').toLowerCase();
           const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
           const allowed = agentMap[agentFilter] || [agentFilter];
-          if (!allowed.some(a => ja.includes(a))) return { ...j, tokens: 0, runs: 0, avg: 0, cost: 0 };
+          if (!allowed.some(a => agentId.includes(a))) return;
         }
-        const history = (costs[j.id] || []).filter(e => e.ts >= cutoffStart && e.ts < cutoffEnd);
-        const tokens      = history.reduce((s,e) => s + (e.tokens||0), 0);
-        const tokInput     = history.reduce((s,e) => s + (e.tokensInput||0), 0);
-        const tokCacheRead = history.reduce((s,e) => s + (e.tokensCacheRead||0), 0);
-        const tokCacheWrite= history.reduce((s,e) => s + (e.tokensCacheWrite||0), 0);
-        const tokensOut    = history.reduce((s,e) => s + (e.tokensOut||0), 0);
-        const tokensIn     = tokens - tokensOut; // all input including cache
-        const runs = history.length;
-        const p = modelPricing(j.model);
-        const cost = calcCost(p, tokInput, tokCacheRead, tokCacheWrite, tokensOut);
-        return { ...j, tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
+        if (!jobGroupMap[cronName]) jobGroupMap[cronName] = { name: cronName, agent: agentId, model: r.model, rows: [] };
+        jobGroupMap[cronName].rows.push(r);
+      });
+      const jobStats = Object.values(jobGroupMap).map(g => {
+        const rows = g.rows;
+        const tokInput     = rows.reduce((s,r) => s + (r.input_tokens||0), 0);
+        const tokCacheRead = rows.reduce((s,r) => s + (r.cache_read||0), 0);
+        const tokCacheWrite= rows.reduce((s,r) => s + (r.cache_write||0), 0);
+        const tokensOut    = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
+        const tokensIn     = rows.reduce((s,r) => s + (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0), 0);
+        const tokens       = tokensIn + tokensOut;
+        const runs         = rows.length;
+        const p = modelPricing(g.model);
+        const cost = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0) ||
+                     calcCost(p, tokInput, tokCacheRead, tokCacheWrite, tokensOut);
+        const displayName  = CRON_DISPLAY[g.name] || g.name.replace(/-/g,' ');
+        return { id: g.name, name: displayName, rawName: g.name, agent: g.agent, model: g.model,
+                 tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
       }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
 
       // Populate task dropdown from all known task names (cron jobs + sub-agent tasks)
@@ -2337,7 +2352,7 @@ function switchTab(t) {
           const barPct = Math.round((j.tokens / maxTokens) * 100);
           const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
           const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
-          const taskLabel = cronTaskMap[j.name] ? `<div class="text-gray-600 text-xs mt-0.5">→ ${cronTaskMap[j.name]}</div>` : '';
+          const taskLabel = cronTaskMap[j.rawName||j.name] ? `<div class="text-gray-600 text-xs mt-0.5">→ ${cronTaskMap[j.rawName||j.name]}</div>` : '';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
             <td class="px-4 py-1 text-xs font-bold text-gray-200">${esc(j.name)}${taskLabel}</td>
             <td class="px-4 py-1 text-xs"><span class="${agentCls[j.agent]||'text-gray-400'}">${agentName[j.agent]||j.agent||'—'}</span></td>
