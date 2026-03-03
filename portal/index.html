@@ -2459,8 +2459,10 @@ function switchTab(t) {
         }
 
         // Live session context bar — falls back to last-run token usage if no live session
-        const sessions = (name === 'cliff') ? (d.sessions || []) : [];
-        const liveSession = sessions.find(s => s.label === 'Telegram') || sessions[0];
+        const agentId = name === 'cliff' ? 'main' : name;
+        const sessions = (d.sessions || []).filter(s => s.agentId === agentId);
+        // Prefer the most-used session (highest pct) as the primary context bar
+        const liveSession = sessions.sort((a, b) => (b.pct || 0) - (a.pct || 0))[0] || null;
 
         const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
