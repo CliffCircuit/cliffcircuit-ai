@@ -1378,14 +1378,26 @@
           createdAt: t.created_at, publishedAt: t.published_at, scheduledFor: t.scheduled_for
         }));
 
+        // Fetch live session data alongside Supabase data
+        let liveSessions = [], liveAgentConfigs = {}, liveGeneratedAt = new Date().toISOString();
+        try {
+          const liveRes = await fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now());
+          const live = await liveRes.json();
+          if (live && live.sessions) {
+            liveSessions = live.sessions;
+            liveAgentConfigs = live.agentConfigs || {};
+            liveGeneratedAt = live.generatedAt || liveGeneratedAt;
+          }
+        } catch(e) { /* non-fatal */ }
+
         DATA = {
           queue: [...articleItems, ...tweetItems],
           generatedAt: new Date().toISOString(),
-          _liveGeneratedAt: new Date().toISOString(),
-          sessions: [],
+          _liveGeneratedAt: liveGeneratedAt,
+          sessions: liveSessions,
           gateway: { status: 'unknown', latencyMs: null, ok: false, reachable: null },  // Gateway health checked separately via JS polling
           crons: [],
-          agentConfigs: {},
+          agentConfigs: liveAgentConfigs,
           stats: { displayTz: 'America/Los_Angeles' },
           auth: { passwordHash: null }
         };
@@ -1486,6 +1498,7 @@
         if (DATA) {
           DATA.sessions = live.sessions;
           DATA._liveGeneratedAt = live.generatedAt;
+          if (live.agentConfigs) DATA.agentConfigs = live.agentConfigs;
           renderHealth(DATA);   // updates live-sessions-list in System Health tab
           renderAgents(DATA);   // updates context bars in Agents tab
           updateNavDots(DATA);
