@@ -1345,10 +1345,9 @@
     let DATA = null;
     async function loadData() {
       try {
-        const [{ data: articles, error: aErr }, { data: tweets, error: tErr }, { data: sessions }] = await Promise.all([
+        const [{ data: articles, error: aErr }, { data: tweets, error: tErr }] = await Promise.all([
           _sb.from('articles').select('*').order('created_at', { ascending: false }).limit(500),
-          _sb.from('tweets').select('*').order('created_at', { ascending: false }).limit(500),
-          _sb.from('agent_sessions').select('*').order('timestamp', { ascending: false }).limit(20)
+          _sb.from('tweets').select('*').order('created_at', { ascending: false }).limit(500)
         ]);
         if (aErr) console.error('Articles fetch error:', aErr);
         if (tErr) console.error('Tweets fetch error:', tErr);
@@ -1369,18 +1368,12 @@
           createdAt: t.created_at, publishedAt: t.published_at, scheduledFor: t.scheduled_for
         }));
 
-        const latestSession = (sessions || [])[0] || {};
         DATA = {
           queue: [...articleItems, ...tweetItems],
           generatedAt: new Date().toISOString(),
           _liveGeneratedAt: new Date().toISOString(),
           sessions: [],
-          gateway: {
-            status: latestSession.gateway_status || 'unknown',
-            latencyMs: latestSession.gateway_latency_ms || null,
-            ok: latestSession.gateway_status === 'ok',
-            reachable: latestSession.gateway_status === 'ok' ? true : (latestSession.gateway_status === 'error' ? false : null)
-          },
+          gateway: { status: 'unknown', latencyMs: null, ok: false, reachable: null },  // Gateway health checked separately via JS polling
           crons: [],
           agentConfigs: {},
           stats: { displayTz: 'America/Los_Angeles' },
@@ -1390,7 +1383,55 @@
       } catch(err) { console.error('loadData error:', err); return null; }
     }
 
-    function setupRealtime() {
+
+    // Check OpenClaw gateway health directly from the browser
+    async function checkGatewayHealth() {
+      const start = Date.now();
+      try {
+        // Try to reach the local gateway — any response means it's up
+        const resp = await fetch('http://127.0.0.1:18789/', { method: 'HEAD', mode: 'no-cors' });
+        const latency = Date.now() - start;
+        return { ok: true, latencyMs: Math.min(latency, 999) };
+      } catch (e) {
+        return { ok: false, latencyMs: null };
+      }
+    }
+
+    // Poll gateway health every 10 seconds
+    async function pollGatewayHealth() {
+      const health = await checkGatewayHealth();
+      const dotNav = document.getElementById('nav-gw-dot');
+      const dotHealth = document.getElementById('gw-dot');
+      const labelNav = document.getElementById('nav-gw-label');
+      const labelHealth = document.getElementById('gw-label');
+      const latencyNav = document.getElementById('nav-gw-latency');
+      const latencyHealth = document.getElementById('gw-latency');
+
+      if (health.ok) {
+        [dotNav, dotHealth].forEach(d => {
+          if (d) { d.style.background = '#22c55e'; d.style.boxShadow = 'none'; }
+        });
+        [labelNav, labelHealth].forEach(l => {
+          if (l) { l.textContent = 'Gateway OK'; l.style.color = '#4b5563'; }
+        });
+        [latencyNav, latencyHealth].forEach(l => {
+          if (l && health.latencyMs != null) l.textContent = health.latencyMs + 'ms';
+        });
+      } else {
+        [dotNav, dotHealth].forEach(d => {
+          if (d) { d.style.background = '#ef4444'; d.style.boxShadow = '0 0 6px #ef4444'; }
+        });
+        [labelNav, labelHealth].forEach(l => {
+          if (l) { l.textContent = 'Gateway Down'; l.style.color = '#f87171'; }
+        });
+      }
+    }
+
+    // Start polling gateway health
+    setInterval(pollGatewayHealth, 10000);
+    pollGatewayHealth(); // Check once immediately on load
+
+        function setupRealtime() {
       _sb.channel('portal-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
           loadAndRender().then(() => restoreTab());
