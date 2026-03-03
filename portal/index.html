@@ -607,6 +607,58 @@
         </div>
       </div>
 
+      <!-- Agent Sessions (Supabase Live) -->
+      <div id="agent-sessions-section" class="card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions</h3>
+            <p class="text-xs text-gray-600 mt-0.5">Cliff, Samantha, Scout — direct sessions from Supabase, live</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div id="sb-realtime-dot" class="w-2 h-2 rounded-full bg-gray-600" style="transition:background 0.4s"></div>
+            <span id="sb-realtime-label" class="text-xs text-gray-600">Connecting...</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
+          <div class="px-5 py-4">
+            <div class="text-xs text-indigo-400 font-semibold uppercase tracking-wide mb-2">Cliff</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-cliff-runs" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-cliff-tokens" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-cliff-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+            </div>
+          </div>
+          <div class="px-5 py-4">
+            <div class="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-2">Samantha</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-samantha-runs" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-samantha-tokens" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-samantha-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+            </div>
+          </div>
+          <div class="px-5 py-4">
+            <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Scout</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-scout-runs" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-scout-tokens" class="text-xl font-bold text-white">—</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-scout-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+            </div>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cache R+W</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
+          </tr></thead>
+          <tbody id="agent-sess-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
       <!-- Sub-agent Sessions — Grouped Summary -->
       <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
@@ -1517,6 +1569,13 @@
     setInterval(pollLiveSessions, 10000);
     pollLiveSessions();
 
+    function updateRealtimeDot(ok) {
+      const dot   = document.getElementById('sb-realtime-dot');
+      const label = document.getElementById('sb-realtime-label');
+      if (dot)   { dot.style.background = ok ? '#4ade80' : '#ef4444'; dot.style.boxShadow = ok ? '0 0 6px #4ade80' : 'none'; }
+      if (label) { label.textContent = ok ? 'Live' : 'Disconnected'; label.style.color = ok ? '#4ade80' : '#f87171'; }
+    }
+
     function setupRealtime() {
       const start = Date.now();
       _sb.channel('portal-live')
@@ -1526,13 +1585,18 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tweets' }, () => {
           loadAndRender().then(() => restoreTab());
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'session_snapshots' }, () => {
+          loadAndRenderAgentSessions();
+        })
         .subscribe((status) => {
           // Supabase fires: SUBSCRIBING → SUBSCRIBED (or CHANNEL_ERROR / TIMED_OUT)
           // Only update dot on terminal states — ignore intermediate ones
           if (status === 'SUBSCRIBED') {
             updateGatewayDot(true, Date.now() - start);
+            updateRealtimeDot(true);
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             updateGatewayDot(false, null);
+            updateRealtimeDot(false);
           }
           // SUBSCRIBING, UNSUBSCRIBED etc → leave dot as-is
         });
@@ -1562,6 +1626,7 @@
       renderHealth(d);
       renderAgents(d);
       renderTokens(d);
+      loadAndRenderAgentSessions();
       updateNavDots(d);
       document.getElementById('tab-marketing-content').classList.remove('hidden');
     }
@@ -1943,6 +2008,7 @@ function switchTab(t) {
     function applyGlobalFilters() {
       // All sections always visible — task/agent filters narrow within each section
       if (window._lastData) renderTokens(window._lastData);
+      loadAndRenderAgentSessions();
     }
     function populateTaskDropdown(taskNames) {
       const sel = document.getElementById('global-task');
@@ -1967,6 +2033,111 @@ function switchTab(t) {
 
     // legacy alias — kept so any old references still work
     function setTokenRange(r) { setGlobalRange(r); }
+
+    // ── Supabase Agent Sessions (Live) ───────────────────────────────────────
+    async function loadAndRenderAgentSessions() {
+      const range = window._globalRange || 'today';
+      const agentFilter = window._globalAgent || 'all';
+      const now = new Date();
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      let cutoffStart, cutoffEnd = now.toISOString();
+      if      (range === '1h')        cutoffStart = new Date(now - 3600000).toISOString();
+      else if (range === '24h')       cutoffStart = new Date(now - 86400000).toISOString();
+      else if (range === 'today')     cutoffStart = todayMidnight.toISOString();
+      else if (range === 'yesterday') { cutoffStart = new Date(todayMidnight - 86400000).toISOString(); cutoffEnd = todayMidnight.toISOString(); }
+      else if (range === '7d')        cutoffStart = new Date(now - 7*86400000).toISOString();
+      else if (range === 'week')      cutoffStart = new Date(todayMidnight - todayMidnight.getDay()*86400000).toISOString();
+      else if (range === '30d')       cutoffStart = new Date(now - 30*86400000).toISOString();
+      else if (range === 'month')     cutoffStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      else                            cutoffStart = todayMidnight.toISOString();
+
+      let query = _sb.from('session_snapshots')
+        .select('session_id,session_key,agent_id,model,input_tokens,output_tokens,cache_read,cache_write,total_tokens,cost_total_usd,first_seen_at,last_seen_at')
+        .gte('last_seen_at', cutoffStart)
+        .lte('last_seen_at', cutoffEnd)
+        .order('last_seen_at', { ascending: false })
+        .limit(500);
+
+      if (agentFilter !== 'all') {
+        const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
+        query = query.eq('agent_id', agentId);
+      }
+
+      const { data, error } = await query;
+      if (error) { console.error('[token] session_snapshots error:', error); return; }
+      renderAgentSessions(data || []);
+    }
+
+    function renderAgentSessions(rows) {
+      const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
+      const agentColor = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
+      const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
+      const modelShort = m => {
+        if (!m) return '—';
+        if (m.includes('haiku'))  return '<span class="text-yellow-600">Haiku</span>';
+        if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+        if (m.includes('opus'))   return '<span class="text-purple-400">Opus</span>';
+        return m.split('/').pop();
+      };
+
+      // Per-agent mini cards
+      for (const [agentId, alias] of [['main','cliff'],['samantha','samantha'],['scout','scout']]) {
+        const agentRows = rows.filter(r => r.agent_id === agentId);
+        const sessions  = agentRows.length;
+        const tokens    = agentRows.reduce((s,r) => s + (r.total_tokens||0), 0);
+        const cost      = agentRows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
+        const el = id => document.getElementById(id);
+        if (el(`ag-${alias}-runs`))   el(`ag-${alias}-runs`).textContent  = sessions;
+        if (el(`ag-${alias}-tokens`)) el(`ag-${alias}-tokens`).textContent = fmtK(tokens);
+        if (el(`ag-${alias}-cost`))   el(`ag-${alias}-cost`).textContent  = '$' + cost.toFixed(2);
+      }
+
+      // Update top summary cards from Supabase data
+      const totSessions  = rows.length;
+      const totTokensIn  = rows.reduce((s,r) => s + (r.input_tokens||0), 0);
+      const totTokensOut = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
+      const totCost      = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
+      const avgIn  = totSessions ? Math.round(totTokensIn  / totSessions) : 0;
+      const avgOut = totSessions ? Math.round(totTokensOut / totSessions) : 0;
+      const el = id => document.getElementById(id);
+      if (el('tok-total')) el('tok-total').innerHTML = fmtK(totTokensIn) + ' / ' + fmtK(totTokensOut);
+      if (el('tok-cost'))  el('tok-cost').textContent = '$' + totCost.toFixed(2);
+      if (el('tok-runs'))  el('tok-runs').textContent = totSessions;
+      if (el('tok-avg'))   el('tok-avg').innerHTML    = fmtK(avgIn) + ' / ' + fmtK(avgOut);
+
+      // Sessions table
+      const tbody = document.getElementById('agent-sess-body');
+      if (!tbody) return;
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
+        return;
+      }
+      const nowMs = Date.now();
+      const timeAgo = ts => {
+        if (!ts) return '—';
+        const ms = nowMs - new Date(ts).getTime();
+        if (ms < 60000)    return Math.round(ms/1000) + 's ago';
+        if (ms < 3600000)  return Math.round(ms/60000) + 'm ago';
+        if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
+        return Math.round(ms/86400000) + 'd ago';
+      };
+      tbody.innerHTML = rows.slice(0, 60).map(r => {
+        const aCls   = agentColor[r.agent_id] || 'text-gray-400';
+        const aLbl   = agentLabel[r.agent_id] || r.agent_id;
+        const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
+        const cacheStr = fmtK((r.cache_read||0) + (r.cache_write||0));
+        const shortKey = (r.session_key || r.session_id || '').split(':').pop().slice(0, 14);
+        return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+          <td class="px-4 py-1.5 text-gray-500 text-xs font-mono">${esc(shortKey)}</td>
+          <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
+          <td class="px-4 py-1.5 text-xs">${modelShort(r.model)}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-white">${fmtK(r.input_tokens||0)} / ${fmtK(r.output_tokens||0)}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-500">${cacheStr}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-600">${timeAgo(r.last_seen_at)}</td>
+        </tr>`;
+      }).join('');
+    }
 
     function renderTokens(d) {
       const range = window._tokenRange || 'today';
