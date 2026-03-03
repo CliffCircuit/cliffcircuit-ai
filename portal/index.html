@@ -2054,6 +2054,36 @@ function switchTab(t) {
     function setTokenRange(r) { setGlobalRange(r); }
 
     // ── Supabase Agent Sessions (Live) ───────────────────────────────────────
+    // ── Display name / label converters ─────────────────────────────────────
+    const AGENT_DISPLAY = {
+      'main':       'Cliff',
+      'cliff':      'Cliff',
+      'samantha':   'Samantha',
+      'scout':      'Scout',
+      'claude-code':'Claude Code',
+    };
+    const LABEL_DISPLAY = {
+      'telegram':   'Telegram',
+      'discord':    'Discord',
+      'signal':     'Signal',
+      'whatsapp':   'WhatsApp',
+      'imessage':   'iMessage',
+      'slack':      'Slack',
+      'main':       'Cliff',
+      'samantha':   'Samantha',
+      'scout':      'Scout',
+    };
+    function fmtAgent(raw) {
+      if (!raw) return '—';
+      const key = raw.toLowerCase();
+      return AGENT_DISPLAY[key] || (raw.charAt(0).toUpperCase() + raw.slice(1));
+    }
+    function fmtLabel(raw) {
+      if (!raw) return '—';
+      const key = raw.toLowerCase();
+      return LABEL_DISPLAY[key] || (raw.charAt(0).toUpperCase() + raw.slice(1));
+    }
+
     async function loadAndRenderAgentSessions() {
       const range = window._globalRange || 'today';
       const agentFilter = window._globalAgent || 'all';
@@ -2174,7 +2204,7 @@ function switchTab(t) {
       };
       tbody.innerHTML = rows.slice(0, 60).map(r => {
         const aCls   = agentColor[r.agent_id] || 'text-gray-400';
-        const aLbl   = agentLabel[r.agent_id] || r.agent_id;
+        const aLbl   = agentLabel[r.agent_id] || fmtAgent(r.agent_id);
         const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
         const cacheStr = fmtK((r.cache_read||0) + (r.cache_write||0));
         const shortKey = (r.session_key || r.session_id || '').split(':').pop().slice(0, 14);
@@ -2512,7 +2542,7 @@ function switchTab(t) {
           const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
           <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}</td>
-          <td class="px-4 py-2 text-xs"><span class="${agentCls2[g.agent]||'text-gray-400'}">${esc(g.agent||'—')}</span></td>
+          <td class="px-4 py-2 text-xs"><span class="${agentCls2[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${modelShortT(g.model)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${fmtDurG(Math.round(g.totalDur/g.runs))}</td>
@@ -2623,7 +2653,7 @@ function switchTab(t) {
         } else {
           dbSubBody.innerHTML = visible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
             <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}</td>
-            <td class="px-4 py-2 text-xs"><span class="${({'samantha':'text-teal-400','scout':'text-green-400','main':'text-indigo-400','cliff':'text-indigo-400','claude-code':'text-purple-400'})[s.agent_type] || 'text-gray-400'}">${esc(s.agent_type || '—')}</span></td>
+            <td class="px-4 py-2 text-xs"><span class="${({'samantha':'text-teal-400','scout':'text-green-400','main':'text-indigo-400','cliff':'text-indigo-400','claude-code':'text-purple-400'})[s.agent_type] || 'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
             <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
             <td class="px-4 py-2 text-gray-400 text-xs">${fmtDur(s.duration_ms)}</td>
             <td class="px-4 py-2 text-right text-white text-xs">${fmtK(s.tokens_in||0)} / ${fmtK(s.tokens_out||0)}</td>
