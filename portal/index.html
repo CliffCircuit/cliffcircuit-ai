@@ -1317,15 +1317,57 @@
               'rate_limited': 'Rate limited'
             }[i.failureReason] || (i.failureReason || 'Unknown');
             const note = i.failureNote ? (`<br><span class="text-gray-600 text-xs">${esc(i.failureNote.slice(0,80))}</span>`) : '';
-            return `<tr class="border-b border-gray-900">
-              <td class="px-3 py-1 text-gray-400 font-medium max-w-xs truncate" title="${esc(i.tweetText||i.title||i.id)}">${esc((i.tweetText||i.title||i.id).slice(0,65))}${(i.tweetText?.length||0)>65?'…':''}</td>
+            const tweetUrl = i.tweetId ? `https://x.com/i/status/${i.tweetId}` : (i.tweetUrl || null);
+            return `<tr class="article-row border-b border-gray-900 cursor-pointer" onclick="openPostFailedDetail('${esc(i.id)}')">
+              <td class="px-3 py-1 text-gray-400 font-medium max-w-xs" title="${esc(i.tweetText||i.title||i.id)}">${esc((i.tweetText||i.title||i.id).slice(0,65))}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
               <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-              <td class="px-3 py-1 text-xs"><span class="text-red-400">${reasonLabel}</span>${note}</td>
+              <td class="px-3 py-1 text-xs"><span class="text-red-400">${reasonLabel}</span></td>
               <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.postFailedAt||i.createdAt)}</td>
-              <td class="px-3 py-1 text-xs"><button onclick="requeueItem('${esc(i.id)}')" class="bg-indigo-900 hover:bg-indigo-800 text-indigo-300 text-xs px-2 py-0.5 rounded border border-indigo-700">Re-queue</button></td>
+              <td class="px-3 py-1 text-xs flex gap-2 items-center">
+                ${tweetUrl ? `<a href="${tweetUrl}" target="_blank" onclick="event.stopPropagation()" class="text-indigo-400 hover:underline text-xs">View →</a>` : ''}
+                <button onclick="event.stopPropagation();requeueItem('${esc(i.id)}')" class="bg-indigo-900 hover:bg-indigo-800 text-indigo-300 text-xs px-2 py-0.5 rounded border border-indigo-700">Re-queue</button>
+              </td>
             </tr>`;
           }).join('');
     }
+    function openPostFailedDetail(id) {
+      const item = (window._allPostFailed||[]).find(i => i.id === id);
+      if (!item) return;
+      const reasonLabel = {
+        'api_403': '403 — @mention blocked by X API',
+        'api_429': '429 — Rate limited',
+        'api_401': '401 — Auth/credential error',
+        'no_tweet_id': 'System error — tweet was never attempted',
+        'api_error': 'X API error',
+        'rate_limited': 'Rate limited'
+      }[item.failureReason] || (item.failureReason || 'Unknown failure');
+      const tweetUrl = item.tweetId ? `https://x.com/i/status/${item.tweetId}` : null;
+      const modal = document.createElement('div');
+      modal.id = 'pf-detail-modal';
+      modal.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4';
+      modal.innerHTML = `
+        <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-lg p-6 relative">
+          <button onclick="document.getElementById('pf-detail-modal').remove()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
+          <div class="text-xs font-semibold text-red-400 uppercase tracking-widest mb-3">Post Failed</div>
+          <div class="text-xs text-gray-500 mb-1">Account: <span class="text-gray-300">${item.account==='timharris707'?'@TimHarris707':'@CliffCircuit'}</span> &nbsp;·&nbsp; Failed: <span class="text-gray-300">${item.postFailedAt ? new Date(item.postFailedAt).toLocaleString() : '—'}</span></div>
+          <div class="text-xs text-red-400 mb-4">Reason: ${esc(reasonLabel)}</div>
+          ${item.failureNote ? `<div class="text-xs text-gray-600 mb-4 italic">${esc(item.failureNote)}</div>` : ''}
+          <div class="bg-gray-800 rounded-lg p-4 mb-4">
+            <div class="text-xs text-gray-500 mb-2">Tweet text${item.fixNote ? ' (revised)' : ''}:</div>
+            <div class="text-gray-200 text-sm whitespace-pre-wrap">${esc(item.tweetText||'—')}</div>
+          </div>
+          ${item.fixNote ? `<div class="text-xs text-teal-400 mb-4">✓ ${esc(item.fixNote)}</div>` : ''}
+          <div class="flex gap-3 flex-wrap">
+            ${tweetUrl ? `<a href="${tweetUrl}" target="_blank" class="text-indigo-400 hover:underline text-sm border border-indigo-800 rounded px-3 py-1">View on X ↗</a>` : ''}
+            <button onclick="document.getElementById('pf-detail-modal').remove();requeueItem('${esc(item.id)}')" class="bg-indigo-700 hover:bg-indigo-600 text-white text-sm px-4 py-1 rounded">Re-queue for Tomorrow</button>
+            <button onclick="document.getElementById('pf-detail-modal').remove()" class="text-gray-500 hover:text-white text-sm px-3 py-1">Close</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+    }
+
     async function requeueItem(id) {
       if (!confirm('Re-queue this item for posting? It will go back to approved status.')) return;
       try {
