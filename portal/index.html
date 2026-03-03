@@ -2346,7 +2346,7 @@
       const drafts = q.filter(i=>i.status==='draft');
       const approved = q.filter(i=>i.status==='approved');
       const pubToday = q.filter(i=>i.status==='published' && isToday(i.publishedAt));
-      const articles = pubToday.filter(i=>i.account!=='timharris707' && (i.title||i.slug));
+      const articles = pubToday.filter(i=>i.type==='article' && i.account!=='timharris707');
       const timPosts = pubToday.filter(i=>i.account==='timharris707');
 
       set('count-draft', drafts.length);
@@ -2477,7 +2477,7 @@
         recentCutoffEnd = new Date();
       }
       const recent = q.filter(i => i.status==='published' && i.publishedAt && new Date(i.publishedAt) >= recentCutoffStart && new Date(i.publishedAt) <= recentCutoffEnd);
-      const recentArticles = recent.filter(i=>i.account!=='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+      const recentArticles = recent.filter(i=>i.type==='article' && i.account!=='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
       const recentTim = recent.filter(i=>i.account==='timharris707').sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
       const recentCliffTweets = recent.filter(i=>i.type==='tweet' && i.account!=='timharris707');
 

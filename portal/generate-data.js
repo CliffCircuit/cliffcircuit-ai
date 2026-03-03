@@ -305,7 +305,8 @@ async function main() {
   const isToday = (ts) => ts && new Date(ts).toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }) === todayInTZ;
   const pubToday = cleanQueue.filter(i => i.status === 'published' && isToday(i.publishedAt));
   const stats = {
-    articlesToday: pubToday.filter(i => i.account !== 'timharris707' && (i.title || i.slug)).length,
+    articlesToday: pubToday.filter(i => i.type === 'article' && i.account !== 'timharris707').length,
+    cliffTweetsToday: pubToday.filter(i => i.type === 'tweet' && i.account !== 'timharris707').length,
     timPostsToday: pubToday.filter(i => i.account === 'timharris707').length,
     displayTz: DISPLAY_TZ,
     todayDate: todayInTZ,
