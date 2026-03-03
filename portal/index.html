@@ -1432,7 +1432,42 @@
     setInterval(pollGatewayHealth, 10000);
     pollGatewayHealth();
 
-        // Poll live session data from api.cliffcircuit.ai every 10 seconds
+        function updateAgentStatusDots(sessions) {
+      const now = Date.now();
+      const ONLINE_MS = 5 * 60 * 1000;   // active within 5 min = Online
+      const IDLE_MS   = 2 * 60 * 60 * 1000; // active within 2hr = Idle
+
+      ['cliff', 'samantha', 'scout'].forEach(name => {
+        const agentId = name === 'cliff' ? 'main' : name;
+        const agentSessions = sessions.filter(s => s.agentId === agentId && s.lastActiveAt);
+        const mostRecent = agentSessions.reduce((best, s) => {
+          const t = new Date(s.lastActiveAt).getTime();
+          return t > best ? t : best;
+        }, 0);
+
+        const dot   = document.getElementById(name + '-agent-status-dot');
+        const label = document.getElementById(name + '-agent-status-label');
+        if (!dot || !label) return;
+
+        const age = mostRecent ? now - mostRecent : Infinity;
+        let color, shadow, text, textColor;
+        if (age < ONLINE_MS) {
+          color = '#4ade80'; shadow = '0 0 8px #4ade80'; text = 'Online'; textColor = '#4ade80';
+        } else if (age < IDLE_MS) {
+          color = '#facc15'; shadow = '0 0 8px #facc15'; text = 'Idle'; textColor = '#facc15';
+        } else {
+          color = '#6b7280'; shadow = 'none'; text = 'Offline'; textColor = '#6b7280';
+        }
+        dot.style.background = color;
+        dot.style.boxShadow  = shadow;
+        dot.style.cssText    = `background:${color}; box-shadow:${shadow};`;
+        label.textContent    = text;
+        label.className      = 'text-xs font-semibold uppercase tracking-wide';
+        label.style.color    = textColor;
+      });
+    }
+
+    // Poll live session data from api.cliffcircuit.ai every 10 seconds
     async function pollLiveSessions() {
       try {
         const res = await fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now());
@@ -1443,6 +1478,7 @@
           DATA._liveGeneratedAt = live.generatedAt;
           renderAgents(DATA);
           updateNavDots(DATA);
+          updateAgentStatusDots(live.sessions);
         }
       } catch (e) {
         // Non-fatal — session data is best-effort
