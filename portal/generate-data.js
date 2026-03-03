@@ -298,12 +298,17 @@ async function main() {
   } catch {}
 
   // ── Stats ──────────────────────────────────────────────────────
-  // Use PT date (UTC-8) so "today" matches timestamps stored in PT
-  const today = new Date(Date.now() - 8*60*60*1000).toISOString().slice(0, 10);
-  const pubToday = cleanQueue.filter(i => i.status === 'published' && (i.publishedAt || '').startsWith(today));
+  // TIMEZONE: Use configured display timezone. Default is America/Los_Angeles.
+  // When this becomes a multi-tenant product, this should be per-account config.
+  const DISPLAY_TZ = 'America/Los_Angeles';
+  const todayInTZ = new Date().toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }); // YYYY-MM-DD
+  const isToday = (ts) => ts && new Date(ts).toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }) === todayInTZ;
+  const pubToday = cleanQueue.filter(i => i.status === 'published' && isToday(i.publishedAt));
   const stats = {
-    articlesToday: pubToday.filter(i => i.account !== 'timharris707').length,
+    articlesToday: pubToday.filter(i => i.account !== 'timharris707' && (i.title || i.slug)).length,
     timPostsToday: pubToday.filter(i => i.account === 'timharris707').length,
+    displayTz: DISPLAY_TZ,
+    todayDate: todayInTZ,
   };
 
   // ── Assemble ───────────────────────────────────────────────────

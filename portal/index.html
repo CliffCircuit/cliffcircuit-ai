@@ -2297,12 +2297,15 @@
       window._queueMap = {};
       q.forEach(i => { window._queueMap[i.id] = i; });
       // Use PT date, not UTC (PT is UTC-8)
-      const ptNow = new Date(Date.now() - 8*60*60*1000);
-      const today = ptNow.toISOString().slice(0,10);
+      // TIMEZONE: Use displayTz from data.json, or default to America/Los_Angeles.
+      // Future: make this user-configurable per account.
+      const DISPLAY_TZ = (data.stats && data.stats.displayTz) || 'America/Los_Angeles';
+      const todayInTZ = new Date().toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }); // YYYY-MM-DD
+      const isToday = (ts) => ts && new Date(ts).toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }) === todayInTZ;
       const drafts = q.filter(i=>i.status==='draft');
       const approved = q.filter(i=>i.status==='approved');
-      const pubToday = q.filter(i=>i.status==='published'&&(i.publishedAt||'').startsWith(today));
-      const articles = pubToday.filter(i=>i.account!=='timharris707');
+      const pubToday = q.filter(i=>i.status==='published' && isToday(i.publishedAt));
+      const articles = pubToday.filter(i=>i.account!=='timharris707' && (i.title||i.slug));
       const timPosts = pubToday.filter(i=>i.account==='timharris707');
 
       set('count-draft', drafts.length);
