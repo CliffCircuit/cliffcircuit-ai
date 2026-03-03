@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CliffCircuit Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     * { font-family: 'Inter', sans-serif; }
@@ -1300,6 +1301,10 @@
     // Default password is "cliffcircuit" — override via data.json auth.passwordHash
     const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
 
+    const SUPABASE_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsbXdheXpwY3Bic2N1bnZ5Y3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MjMyNzMsImV4cCI6MjA4ODA5OTI3M30.AWfTKi6szXzwc6821mYkiXUxpQ5kv2sS_hWTReBoVCY';
+    const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     async function sha256(s) {
       const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
       return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
@@ -1331,29 +1336,68 @@
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab());
-        // Auto-refresh every 60 seconds
-        setInterval(() => loadAndRender().then(() => restoreTab()), 60000);
+        // Auto-refresh every 60 seconds (fallback; realtime handles live updates)
+        // setInterval(() => loadAndRender().then(() => restoreTab()), 60000);
+        setupRealtime();
       }
     });
 
     let DATA = null;
     async function loadData() {
       try {
-        const r = await fetch('/portal/data.json?t='+Date.now());
-        DATA = await r.json();
-        // Merge live-data.json on top (fast session data)
-        try {
-          const lr = await fetch('/portal/live-data.json?t='+Date.now());
-          const live = await lr.json();
-          if (live && live.generatedAt) {
-            DATA.sessions = live.sessions || DATA.sessions;
-            DATA.conversationSessions = live.conversationSessions || DATA.conversationSessions;
-            DATA.sessionHistory = live.sessionHistory || DATA.sessionHistory;
-            DATA._liveGeneratedAt = live.generatedAt;
-          }
-        } catch { /* live-data.json optional */ }
+        const [{ data: articles, error: aErr }, { data: tweets, error: tErr }, { data: sessions }] = await Promise.all([
+          _sb.from('articles').select('*').order('created_at', { ascending: false }).limit(500),
+          _sb.from('tweets').select('*').order('created_at', { ascending: false }).limit(500),
+          _sb.from('agent_sessions').select('*').order('timestamp', { ascending: false }).limit(20)
+        ]);
+        if (aErr) console.error('Articles fetch error:', aErr);
+        if (tErr) console.error('Tweets fetch error:', tErr);
+
+        const articleItems = (articles || []).map(a => ({
+          id: a.id, type: 'article', status: a.status, title: a.title, slug: a.slug,
+          excerpt: a.excerpt, htmlContent: a.content, heroImage: a.hero_image,
+          heroImageGenerated: a.hero_image_generated, account: a.account || 'cliffcircuit',
+          wordCount: a.word_count, url: a.url, liveUrl: a.live_url, seoTitle: a.seo_title,
+          seoDescription: a.seo_description, tweetHook: a.tweet_hook, tags: a.tags || [],
+          createdAt: a.created_at, publishedAt: a.published_at, scheduledFor: a.scheduled_for,
+          rejectedReason: a.rejected_reason
+        }));
+
+        const tweetItems = (tweets || []).map(t => ({
+          id: t.id, type: 'tweet', status: t.status, tweetText: t.text, text: t.text,
+          account: t.account, tweetId: t.tweet_id, tweetUrl: t.tweet_url,
+          createdAt: t.created_at, publishedAt: t.published_at, scheduledFor: t.scheduled_for
+        }));
+
+        const latestSession = (sessions || [])[0] || {};
+        DATA = {
+          queue: [...articleItems, ...tweetItems],
+          generatedAt: new Date().toISOString(),
+          _liveGeneratedAt: new Date().toISOString(),
+          sessions: [],
+          gateway: {
+            status: latestSession.gateway_status || 'unknown',
+            latencyMs: latestSession.gateway_latency_ms || null,
+            ok: latestSession.gateway_status === 'ok'
+          },
+          crons: [],
+          agentConfigs: {},
+          stats: { displayTz: 'America/Los_Angeles' },
+          auth: { passwordHash: null }
+        };
         return DATA;
-      } catch { return null; }
+      } catch(err) { console.error('loadData error:', err); return null; }
+    }
+
+    function setupRealtime() {
+      _sb.channel('portal-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+          loadAndRender().then(() => restoreTab());
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tweets' }, () => {
+          loadAndRender().then(() => restoreTab());
+        })
+        .subscribe();
     }
 
     async function triggerRefresh(btn) {
@@ -1385,7 +1429,7 @@
     }
 
     function showError() {
-      document.getElementById('tab-marketing-content').innerHTML = '<p class="text-gray-500 py-20 text-center">data.json not found — run the data generator cron first.</p>';
+      document.getElementById('tab-marketing-content').innerHTML = '<p class="text-gray-500 py-20 text-center">Unable to connect to Supabase — check your network connection.</p>';
       document.getElementById('tab-marketing-content').classList.remove('hidden');
     }
 
