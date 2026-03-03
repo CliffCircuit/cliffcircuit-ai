@@ -1465,7 +1465,7 @@
             DATA.sessions = live.sessions;
             DATA._liveGeneratedAt = live.generatedAt || DATA._liveGeneratedAt;
             DATA.agentConfigs = live.agentConfigs || {};
-            if (live.crons && live.crons.length) DATA.crons = live.crons;
+            if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
             renderAgents(DATA);
             renderHealth(DATA);
             updateNavDots(DATA);
@@ -2123,8 +2123,18 @@ function switchTab(t) {
     // Parse a session_key like "cron:samantha-draft:CRONID:run:TS" → task name
     function cronTaskFromKey(key) {
       if (!key) return null;
-      const m = key.match(/^cron:([^:]+):/);
-      return m ? m[1] : null;
+      // Format 1: cron:<name>:<cronId>:run:<ts>
+      const m1 = key.match(/^cron:([^:]+):/);
+      if (m1) return m1[1];
+      // Format 2: agent:<agentId>:cron:<cronId>:run:<ts> — look up cronId in crons list
+      const m2 = key.match(/^agent:[^:]+:cron:([^:]+)/);
+      if (m2) {
+        // Try to find cron name from the cron list
+        const crons = (window._cronList || []);
+        const found = crons.find(c => c.id === m2[1]);
+        return found ? found.name : null;
+      }
+      return null;
     }
 
     // Map cron name to display label
@@ -2422,11 +2432,16 @@ function switchTab(t) {
       const sbRows = window._sbSessionRows || [];
       const allDbItems = sbRows
         .map(r => {
-          const isCron = r.session_key && r.session_key.startsWith('cron:');
+          const isCron = r.session_key && (r.session_key.startsWith('cron:') || r.session_key.includes(':cron:'));
           const cronName = isCron ? cronTaskFromKey(r.session_key) : null;
+          // Parse agent:main:telegram:direct:<chatId> → "Cliff — Telegram"
+          const directMatch = r.session_key && r.session_key.match(/^agent:([^:]+):([^:]+):direct:/);
           const displayName = cronName
             ? (CRON_DISPLAY[cronName] || cronName.replace(/-/g,' '))
-            : (r.session_key ? r.session_key.replace(/^(main|agent):/,'').split(':')[0] || 'Direct Session' : 'Direct Session');
+            : directMatch
+              ? (fmtAgent(directMatch[1]) + ' — ' + fmtLabel(directMatch[2]))
+              : (r.session_key === 'agent:main:main' ? 'Cliff — Direct'
+              : (r.session_key ? r.session_key.replace(/^agent:/,'').split(':').slice(0,2).join(' / ') : 'Direct Session'));
           const runMs = (() => { const m = r.session_key?.match(/:run:(\d+)$/); return m ? parseInt(m[1]) : null; })();
           const durationMs = r.duration_ms || (r.last_seen_at && r.first_seen_at
             ? new Date(r.last_seen_at) - new Date(r.first_seen_at) : 0);
