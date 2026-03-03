@@ -1434,12 +1434,14 @@
 
         function updateAgentStatusDots(sessions) {
       const now = Date.now();
-      const ONLINE_MS = 5 * 60 * 1000;   // active within 5 min = Online
-      const IDLE_MS   = 2 * 60 * 60 * 1000; // active within 2hr = Idle
+      const ONLINE_MS = 2  * 60 * 1000;  // active within 2 min  = Online
+      const IDLE_MS   = 30 * 60 * 1000;  // active within 30 min = Idle
+                                          // anything older or no sessions = Offline
 
       ['cliff', 'samantha', 'scout'].forEach(name => {
         const agentId = name === 'cliff' ? 'main' : name;
-        const agentSessions = sessions.filter(s => s.agentId === agentId && s.lastActiveAt);
+        // If sessions is empty/null (gateway down or error), go Offline immediately
+        const agentSessions = (sessions || []).filter(s => s.agentId === agentId && s.lastActiveAt);
         const mostRecent = agentSessions.reduce((best, s) => {
           const t = new Date(s.lastActiveAt).getTime();
           return t > best ? t : best;
@@ -1458,12 +1460,10 @@
         } else {
           color = '#6b7280'; shadow = 'none'; text = 'Offline'; textColor = '#6b7280';
         }
-        dot.style.background = color;
-        dot.style.boxShadow  = shadow;
-        dot.style.cssText    = `background:${color}; box-shadow:${shadow};`;
-        label.textContent    = text;
-        label.className      = 'text-xs font-semibold uppercase tracking-wide';
-        label.style.color    = textColor;
+        dot.style.cssText  = `background:${color}; box-shadow:${shadow};`;
+        label.textContent  = text;
+        label.className    = 'text-xs font-semibold uppercase tracking-wide';
+        label.style.color  = textColor;
       });
     }
 
@@ -1482,7 +1482,8 @@
           updateAgentStatusDots(live.sessions);
         }
       } catch (e) {
-        // Non-fatal — session data is best-effort
+        // Fetch failed — gateway likely down, mark all agents Offline immediately
+        updateAgentStatusDots([]);
       }
     }
     setInterval(pollLiveSessions, 10000);
