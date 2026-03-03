@@ -1621,7 +1621,7 @@
       const fullTs = d.generatedAt;
       const liveStr = liveTs ? new Date(liveTs).toLocaleTimeString() : '';
       const fullStr = fullTs && fullTs !== liveTs ? ' (full: '+new Date(fullTs).toLocaleTimeString()+')' : '';
-      document.getElementById('last-updated').textContent = liveStr ? 'Live: '+liveStr+fullStr : '';
+      const _luEl = document.getElementById('last-updated'); if (_luEl) _luEl.textContent = liveStr ? 'Live: '+liveStr+fullStr : '';
       renderMarketing(d);
       renderHealth(d);
       renderAgents(d);
