@@ -2466,8 +2466,8 @@ function switchTab(t) {
         }
 
         // Live session context bar — falls back to last-run token usage if no live session
-        const agentId = name === 'cliff' ? 'main' : name;
-        const sessions = (d.sessions || []).filter(s => s.agentId === agentId);
+        const sessionAgentId = name === 'cliff' ? 'main' : name;
+        const sessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
         // Prefer the most-used session (highest pct) as the primary context bar — use spread to avoid mutating d.sessions
         const liveSession = [...sessions].sort((a, b) => (b.pct || 0) - (a.pct || 0))[0] || null;
 
