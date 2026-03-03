@@ -938,7 +938,7 @@
             </div>
 
             <!-- Live Sessions moved to System Health tab -->
-            <div id="cliff-sessions" class="hidden"></div>
+            <div id="cliff-sessions" class="hidden"><div id="cliff-sessions-list" class="space-y-2 mt-2"></div></div>
             <!-- Job errors + last job -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
               <span class="text-gray-500">Last job: <span id="cliff-last-job" class="text-gray-300">—</span></span>
@@ -2461,8 +2461,8 @@ function switchTab(t) {
         // Live session context bar — falls back to last-run token usage if no live session
         const agentId = name === 'cliff' ? 'main' : name;
         const sessions = (d.sessions || []).filter(s => s.agentId === agentId);
-        // Prefer the most-used session (highest pct) as the primary context bar
-        const liveSession = sessions.sort((a, b) => (b.pct || 0) - (a.pct || 0))[0] || null;
+        // Prefer the most-used session (highest pct) as the primary context bar — use spread to avoid mutating d.sessions
+        const liveSession = [...sessions].sort((a, b) => (b.pct || 0) - (a.pct || 0))[0] || null;
 
         const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
