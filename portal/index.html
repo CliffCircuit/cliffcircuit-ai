@@ -2509,7 +2509,8 @@ function switchTab(t) {
             if (el('ctx-title')) el('ctx-title').textContent = 'Last Job';
             if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
             if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-            if (el('ctx-top')) { el('ctx-top').textContent = recentJob.name; el('ctx-top').className = 'text-white text-sm font-semibold mb-0 truncate'; }
+            const shortName = (recentJob.name || '').replace(/^(samantha|scout|cliff)-/i, '').replace(/-/g, ' ');
+            if (el('ctx-top')) { el('ctx-top').textContent = shortName; el('ctx-top').className = 'text-white text-sm font-semibold mb-0 truncate capitalize'; }
             if (el('ctx-label')) el('ctx-label').textContent = 'Duration: ' + durLabel;
             if (el('ctx-pct')) { el('ctx-pct').textContent = ''; }
             if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
