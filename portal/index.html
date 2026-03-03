@@ -1378,29 +1378,33 @@
           createdAt: t.created_at, publishedAt: t.published_at, scheduledFor: t.scheduled_for
         }));
 
-        // Fetch live session data alongside Supabase data
-        let liveSessions = [], liveAgentConfigs = {}, liveGeneratedAt = new Date().toISOString();
-        try {
-          const liveRes = await fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now());
-          const live = await liveRes.json();
-          if (live && live.sessions) {
-            liveSessions = live.sessions;
-            liveAgentConfigs = live.agentConfigs || {};
-            liveGeneratedAt = live.generatedAt || liveGeneratedAt;
-          }
-        } catch(e) { /* non-fatal */ }
+        // Fetch live session data in parallel (non-blocking — don't await here)
+        const liveSessionsPromise = fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
+          .then(r => r.json()).catch(() => null);
 
         DATA = {
           queue: [...articleItems, ...tweetItems],
           generatedAt: new Date().toISOString(),
-          _liveGeneratedAt: liveGeneratedAt,
-          sessions: liveSessions,
+          _liveGeneratedAt: new Date().toISOString(),
+          sessions: [],
           gateway: { status: 'unknown', latencyMs: null, ok: false, reachable: null },  // Gateway health checked separately via JS polling
           crons: [],
-          agentConfigs: liveAgentConfigs,
+          agentConfigs: {},
           stats: { displayTz: 'America/Los_Angeles' },
           auth: { passwordHash: null }
         };
+        // Patch in live session data when it arrives (non-blocking)
+        liveSessionsPromise.then(live => {
+          if (live && live.sessions && DATA) {
+            DATA.sessions = live.sessions;
+            DATA._liveGeneratedAt = live.generatedAt || DATA._liveGeneratedAt;
+            DATA.agentConfigs = live.agentConfigs || {};
+            renderAgents(DATA);
+            renderHealth(DATA);
+            updateAgentStatusDots(live.sessions);
+          }
+        });
+
         return DATA;
       } catch(err) { console.error('loadData error:', err); return null; }
     }
