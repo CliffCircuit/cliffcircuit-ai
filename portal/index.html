@@ -1570,6 +1570,9 @@
     setInterval(pollLiveSessions, 10000);
     pollLiveSessions();
 
+    // Poll token/session data every 30s as a realtime fallback
+    setInterval(() => { loadAndRenderAgentSessions(); }, 30000);
+
     function updateRealtimeDot(ok) {
       const dot   = document.getElementById('sb-realtime-dot');
       const label = document.getElementById('sb-realtime-label');
@@ -2358,16 +2361,18 @@ function switchTab(t) {
       // window._sbSessionRows is populated by loadAndRenderAgentSessions().
       const sbRows = window._sbSessionRows || [];
       const allDbItems = sbRows
-        .filter(r => r.session_key && r.session_key.startsWith('cron:'))
         .map(r => {
-          const cronName = cronTaskFromKey(r.session_key);
-          const displayName = cronName ? (CRON_DISPLAY[cronName] || cronName.replace(/-/g,' ')) : 'Unknown';
+          const isCron = r.session_key && r.session_key.startsWith('cron:');
+          const cronName = isCron ? cronTaskFromKey(r.session_key) : null;
+          const displayName = cronName
+            ? (CRON_DISPLAY[cronName] || cronName.replace(/-/g,' '))
+            : (r.session_key ? r.session_key.replace(/^(main|agent):/,'').split(':')[0] || 'Direct Session' : 'Direct Session');
           const runMs = (() => { const m = r.session_key?.match(/:run:(\d+)$/); return m ? parseInt(m[1]) : null; })();
           const durationMs = r.duration_ms || (r.last_seen_at && r.first_seen_at
             ? new Date(r.last_seen_at) - new Date(r.first_seen_at) : 0);
           return {
             display_name: displayName,
-            task_name:    cronName || 'unknown',
+            task_name:    cronName || (isCron ? 'unknown' : 'direct'),
             agent_type:   r.agent_id,
             model:        r.model,
             duration_ms:  durationMs,
