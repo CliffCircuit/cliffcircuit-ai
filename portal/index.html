@@ -1177,6 +1177,46 @@
     </div>
   </div>
 
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+    <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md p-6 relative">
+      <button onclick="closeSettings()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
+      <h2 class="text-base font-semibold text-white mb-1">Settings</h2>
+      <p class="text-xs text-gray-600 mb-5">Portal configuration. More options coming as the product grows.</p>
+      <!-- Timezone -->
+      <div class="mb-5">
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Display Timezone</label>
+        <select id="setting-timezone" class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 outline-none focus:border-indigo-500">
+          <option value="America/Los_Angeles">Pacific Time (PT) — America/Los_Angeles</option>
+          <option value="America/Denver">Mountain Time (MT) — America/Denver</option>
+          <option value="America/Chicago">Central Time (CT) — America/Chicago</option>
+          <option value="America/New_York">Eastern Time (ET) — America/New_York</option>
+          <option value="Europe/London">London (GMT/BST)</option>
+          <option value="Europe/Paris">Central European (CET)</option>
+          <option value="Asia/Tokyo">Japan (JST)</option>
+          <option value="Australia/Sydney">Sydney (AEST)</option>
+          <option value="UTC">UTC</option>
+        </select>
+        <p class="text-xs text-gray-600 mt-1">Controls how "today" is calculated across all metrics and filters.</p>
+      </div>
+      <!-- Placeholder: Daily Goals shortcut -->
+      <div class="mb-5 opacity-40">
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Daily Goals</label>
+        <p class="text-xs text-gray-600">Edit via the Marketing Plan tab.</p>
+      </div>
+      <!-- Placeholder: Notifications -->
+      <div class="mb-6 opacity-40">
+        <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Notifications <span class="text-gray-700 font-normal normal-case">— coming soon</span></label>
+        <p class="text-xs text-gray-600">Alert thresholds, Telegram notifications, daily digest.</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-5 py-2 rounded">Save</button>
+        <button onclick="closeSettings()" class="text-gray-500 hover:text-white text-sm px-3 py-2">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Default password is "cliffcircuit" — override via data.json auth.passwordHash
     const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
@@ -2879,84 +2919,8 @@
   <h1>${item.title || ''}</h1>
   <p class="excerpt">${item.excerpt || ''}</p>
   ${item.htmlContent || ''}
-
-<!-- Settings Modal -->
-<div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-  <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md p-6 relative">
-    <button onclick="closeSettings()" class="absolute top-4 right-4 text-gray-500 hover:text-white text-xl">✕</button>
-    <h2 class="text-base font-semibold text-white mb-1">Settings</h2>
-    <p class="text-xs text-gray-600 mb-5">Portal configuration. More options coming as the product grows.</p>
-
-    <!-- Timezone -->
-    <div class="mb-5">
-      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Display Timezone</label>
-      <select id="setting-timezone" class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 outline-none focus:border-indigo-500">
-        <option value="America/Los_Angeles">Pacific Time (PT) — America/Los_Angeles</option>
-        <option value="America/Denver">Mountain Time (MT) — America/Denver</option>
-        <option value="America/Chicago">Central Time (CT) — America/Chicago</option>
-        <option value="America/New_York">Eastern Time (ET) — America/New_York</option>
-        <option value="Europe/London">London (GMT/BST)</option>
-        <option value="Europe/Paris">Central European (CET)</option>
-        <option value="Asia/Tokyo">Japan (JST)</option>
-        <option value="Australia/Sydney">Sydney (AEST)</option>
-        <option value="UTC">UTC</option>
-      </select>
-      <p class="text-xs text-gray-600 mt-1">Controls how "today" is calculated across all metrics and filters.</p>
-    </div>
-
-    <!-- Placeholder: Daily Goals shortcut -->
-    <div class="mb-5 opacity-40">
-      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Daily Goals</label>
-      <p class="text-xs text-gray-600">Edit via the Marketing Plan tab.</p>
-    </div>
-
-    <!-- Placeholder: Notifications -->
-    <div class="mb-6 opacity-40">
-      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Notifications <span class="text-gray-700 font-normal normal-case">— coming soon</span></label>
-      <p class="text-xs text-gray-600">Alert thresholds, Telegram notifications, daily digest.</p>
-    </div>
-
-    <div class="flex gap-3">
-      <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-5 py-2 rounded">Save</button>
-      <button onclick="closeSettings()" class="text-gray-500 hover:text-white text-sm px-3 py-2">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const SETTINGS_KEY = 'cliffcircuit_portal_settings';
-  function loadSettings() {
-    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) { return {}; }
-  }
-  function openSettings() {
-    const s = loadSettings();
-    const tzSel = document.getElementById('setting-timezone');
-    if (tzSel && s.displayTz) tzSel.value = s.displayTz;
-    document.getElementById('settings-modal').classList.remove('hidden');
-  }
-  function closeSettings() {
-    document.getElementById('settings-modal').classList.add('hidden');
-  }
-  function saveSettings() {
-    const s = loadSettings();
-    const tzSel = document.getElementById('setting-timezone');
-    if (tzSel) s.displayTz = tzSel.value;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-    closeSettings();
-    // Trigger data reload so timezone change takes effect immediately
-    if (typeof loadData === 'function') loadData();
-  }
-  // On load, apply saved timezone to DISPLAY_TZ used in data loading
-  (function() {
-    const s = loadSettings();
-    if (s.displayTz) window._portalDisplayTz = s.displayTz;
-  })();
-  document.getElementById('settings-modal').addEventListener('click', e => {
-    if (e.target === document.getElementById('settings-modal')) closeSettings();
-  });
-</script>
 </body>
-</html>`;
+</html>\`;
       const blob = new Blob([html], {type: 'text/html'});
       const url = URL.createObjectURL(blob);
       // Create fullscreen overlay
@@ -3135,6 +3099,39 @@
 
     // Init goals displays on load
     document.addEventListener('DOMContentLoaded', () => updateGoalDisplays(loadGoals()));
+
+    // ── Settings Panel ────────────────────────────────────────────────────────
+    const SETTINGS_KEY = 'cliffcircuit_portal_settings';
+    function loadSettings() {
+      try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) { return {}; }
+    }
+    function openSettings() {
+      const s = loadSettings();
+      const tzSel = document.getElementById('setting-timezone');
+      if (tzSel && s.displayTz) tzSel.value = s.displayTz;
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+    function saveSettings() {
+      const s = loadSettings();
+      const tzSel = document.getElementById('setting-timezone');
+      if (tzSel) s.displayTz = tzSel.value;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      closeSettings();
+      if (typeof loadData === 'function') loadData();
+    }
+    // On load, apply saved timezone
+    (function() {
+      const s = loadSettings();
+      if (s.displayTz) window._portalDisplayTz = s.displayTz;
+    })();
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('settings-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('settings-modal')) closeSettings();
+      });
+    });
 
 </script>
 </body>
