@@ -1460,9 +1460,9 @@
 
         function updateAgentStatusDots(sessions) {
       const now = Date.now();
-      const ONLINE_MS = 2  * 60 * 1000;  // active within 2 min  = Online
-      const IDLE_MS   = 30 * 60 * 1000;  // active within 30 min = Idle
-                                          // anything older or no sessions = Offline
+      const ONLINE_MS =  5 * 60 * 1000;  // active within 5 min   = Online
+      const IDLE_MS   = 24 * 60 * 60 * 1000;  // active within 24 hrs = Idle
+                                               // anything older or no sessions = Offline
 
       ['cliff', 'samantha', 'scout'].forEach(name => {
         const agentId = name === 'cliff' ? 'main' : name;
