@@ -2667,7 +2667,7 @@ function switchTab(t) {
         } else {
           // No live session — show largest job by token usage
           // Use most recently run job with duration as the "last job" display
-          const recentJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
+          const recentJob = info.jobs.filter(j => j.lastRunMs && !j.name.includes('message-check')).sort((a,b) => b.lastRunMs - a.lastRunMs)[0] || info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
           const durMs = recentJob?.lastDurationMs || 0;
           if (recentJob && durMs) {
             const durSec = Math.round(durMs / 1000);
@@ -2679,7 +2679,7 @@ function switchTab(t) {
             if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
             if (el('ctx-none')) el('ctx-none').classList.add('hidden');
             const shortName = (recentJob.name || '').replace(/^(samantha|scout|cliff)-/i, '').replace(/-/g, ' ');
-            if (el('ctx-top')) { el('ctx-top').textContent = shortName; el('ctx-top').className = 'text-white text-sm font-semibold mb-0 truncate capitalize'; }
+            if (el('ctx-top')) { el('ctx-top').textContent = shortName; el('ctx-top').className = 'text-white text-sm font-semibold mb-0 capitalize'; }
             if (el('ctx-label')) el('ctx-label').textContent = 'Duration: ' + durLabel;
             if (el('ctx-pct')) { el('ctx-pct').textContent = ''; }
             if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
