@@ -689,7 +689,7 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Duration</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In/Out</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Started</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
           </tr></thead>
           <tbody id="db-subagent-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
@@ -2159,6 +2159,23 @@ function switchTab(t) {
       'nightly-extraction':     'Nightly Extraction',
     };
 
+    // Convert session key to user-friendly name
+    function sessionKeyToFriendly(key, sessionId) {
+      if (!key) return sessionId?.slice(0,12) || '—';
+      // cron:name:... → just show the name
+      if (key.startsWith('cron:')) {
+        const m = key.match(/^cron:([^:]+)/);
+        return m && CRON_DISPLAY[m[1]] ? CRON_DISPLAY[m[1]] : (m ? m[1].replace(/-/g,' ') : 'Cron');
+      }
+      // agent:main:telegram:direct:... → "Cliff — Telegram"
+      const directMatch = key.match(/^agent:([^:]+):([^:]+):direct:/);
+      if (directMatch) return fmtAgent(directMatch[1]) + ' — ' + fmtLabel(directMatch[2]);
+      // agent:main:main → "Cliff — Direct"
+      if (key === 'agent:main:main') return 'Cliff — Direct';
+      // Default: shorten it
+      return key.split(':').pop().slice(0,14);
+    }
+
     function renderAgentSessions(rows) {
       const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
       const agentColor = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
@@ -2185,7 +2202,7 @@ function switchTab(t) {
 
       // Update top summary cards from Supabase data
       const totSessions  = rows.length;
-      const totTokensIn  = rows.reduce((s,r) => s + (r.input_tokens||0), 0);
+      const totTokensIn  = rows.reduce((s,r) => s + ((r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0)), 0);
       const totTokensOut = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
       const totCost      = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
       const avgIn  = totSessions ? Math.round(totTokensIn  / totSessions) : 0;
@@ -2217,12 +2234,13 @@ function switchTab(t) {
         const aLbl   = agentLabel[r.agent_id] || fmtAgent(r.agent_id);
         const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
         const cacheStr = fmtK((r.cache_read||0) + (r.cache_write||0));
-        const shortKey = (r.session_key || r.session_id || '').split(':').pop().slice(0, 14);
+        const friendlyName = sessionKeyToFriendly(r.session_key, r.session_id);
+        const tokIn = (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0); // include cache
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-1.5 text-gray-500 text-xs font-mono">${esc(shortKey)}</td>
+          <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyName)}</td>
           <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
           <td class="px-4 py-1.5 text-xs">${modelShort(r.model)}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-white">${fmtK(r.input_tokens||0)} / ${fmtK(r.output_tokens||0)}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-white">${fmtK(tokIn)} / ${fmtK(r.output_tokens||0)}</td>
           <td class="px-4 py-1.5 text-right text-xs text-gray-500">${cacheStr}</td>
           <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
           <td class="px-4 py-1.5 text-right text-xs text-gray-600">${timeAgo(r.last_seen_at)}</td>
@@ -2673,7 +2691,7 @@ function switchTab(t) {
             <td class="px-4 py-2 text-gray-400 text-xs">${fmtDur(s.duration_ms)}</td>
             <td class="px-4 py-2 text-right text-white text-xs">${fmtK(s.tokens_in||0)} / ${fmtK(s.tokens_out||0)}</td>
             <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
-            <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap">${fmtTs(s.started_at)}</td>
+            <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap text-right">${fmtTs(s.started_at)}</td>
           </tr>`).join('');
         }
         const toggleBtn = document.getElementById('db-subagent-toggle');
