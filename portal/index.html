@@ -2451,7 +2451,7 @@ function switchTab(t) {
             agent_type:   r.agent_id,
             model:        r.model,
             duration_ms:  durationMs,
-            tokens_in:    r.input_tokens  || 0,
+            tokens_in:    (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0),
             tokens_out:   r.output_tokens || 0,
             estimated_cost_usd: r.cost_total_usd || 0,
             started_at:   runMs || (r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0),
