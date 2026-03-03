@@ -61,8 +61,20 @@
         <span class="pill bg-indigo-900 text-indigo-300 ml-1">PRIVATE</span>
       </div>
       <div class="flex items-center gap-4">
-        <span id="last-updated" class="text-gray-500 text-xs"></span>
-        <button onclick="triggerRefresh(this)" class="text-gray-400 hover:text-white text-xs border border-gray-700 rounded px-3 py-1">↻ Refresh</button>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cron health">
+            <div id="nav-cron-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
+            <span class="text-xs text-gray-600">crons</span>
+          </div>
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cliff context window">
+            <div id="nav-ctx-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
+            <span class="text-xs text-gray-600">context</span>
+          </div>
+          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('health')" title="Gateway health">
+            <div id="nav-gw-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
+            <span id="nav-gw-label" class="text-xs text-gray-600">gateway</span>
+          </div>
+        </div>
         <button onclick="openSettings()" title="Settings" class="text-gray-500 hover:text-white text-sm px-2 py-1 rounded hover:bg-gray-800 transition-colors" aria-label="Settings">⚙️</button>
         <button onclick="logout()" class="text-gray-500 hover:text-red-400 text-xs">Sign out</button>
       </div>
@@ -77,20 +89,8 @@
           <button onclick="switchTab('ideas')" id="tab-ideas" class="tab-inactive py-4 text-sm font-medium">Ideas</button>
           <button onclick="switchTab('tokens')" id="tab-tokens" class="tab-inactive py-4 text-sm font-medium">Token Usage</button>
         </div>
-        <div class="flex items-center gap-3 py-4" title="Status indicators">
-          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cron health">
-            <div id="nav-cron-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
-            <span class="text-xs text-gray-600">crons</span>
-          </div>
-          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('agents')" title="Cliff context window">
-            <div id="nav-ctx-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
-            <span class="text-xs text-gray-600">context</span>
-          </div>
-          <div class="flex items-center gap-1.5 cursor-pointer" onclick="switchTab('health')" title="Gateway health">
-            <div id="nav-gw-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600" style="transition:background 0.3s;"></div>
-            <span id="nav-gw-label" class="text-xs text-gray-600">gateway</span>
-            <span id="nav-gw-latency" class="text-xs text-gray-700"></span>
-          </div>
+        <div class="flex items-center gap-3 py-4">
+          <span id="last-updated" class="text-gray-600 text-xs"></span>
         </div>
       </div>
     </div>
