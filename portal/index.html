@@ -1384,54 +1384,30 @@
     }
 
 
-    // Check OpenClaw gateway health directly from the browser
-    async function checkGatewayHealth() {
-      const start = Date.now();
-      try {
-        // Try to reach the local gateway — any response means it's up
-        const resp = await fetch('http://127.0.0.1:18789/', { method: 'HEAD', mode: 'no-cors' });
-        const latency = Date.now() - start;
-        return { ok: true, latencyMs: Math.min(latency, 999) };
-      } catch (e) {
-        return { ok: false, latencyMs: null };
-      }
+    // Gateway health is inferred from the Supabase Realtime connection.
+    // If Realtime is subscribed and receiving events, the system is live.
+    // No localhost polling needed — avoids Chrome's private network access prompt.
+    function updateGatewayDot(ok, latencyMs) {
+      const dots   = ['nav-gw-dot', 'gw-dot'].map(id => document.getElementById(id));
+      const labels = ['nav-gw-label', 'gw-label'].map(id => document.getElementById(id));
+      const lats   = ['nav-gw-latency', 'gw-latency'].map(id => document.getElementById(id));
+      dots.forEach(d => {
+        if (!d) return;
+        d.style.background = ok ? '#22c55e' : '#ef4444';
+        d.style.boxShadow  = ok ? 'none' : '0 0 6px #ef4444';
+      });
+      labels.forEach(l => {
+        if (!l) return;
+        l.textContent = ok ? 'Gateway OK' : 'Gateway Down';
+        l.style.color = ok ? '#4b5563' : '#f87171';
+      });
+      lats.forEach(l => {
+        if (l && latencyMs != null) l.textContent = latencyMs + 'ms';
+      });
     }
-
-    // Poll gateway health every 10 seconds
-    async function pollGatewayHealth() {
-      const health = await checkGatewayHealth();
-      const dotNav = document.getElementById('nav-gw-dot');
-      const dotHealth = document.getElementById('gw-dot');
-      const labelNav = document.getElementById('nav-gw-label');
-      const labelHealth = document.getElementById('gw-label');
-      const latencyNav = document.getElementById('nav-gw-latency');
-      const latencyHealth = document.getElementById('gw-latency');
-
-      if (health.ok) {
-        [dotNav, dotHealth].forEach(d => {
-          if (d) { d.style.background = '#22c55e'; d.style.boxShadow = 'none'; }
-        });
-        [labelNav, labelHealth].forEach(l => {
-          if (l) { l.textContent = 'Gateway OK'; l.style.color = '#4b5563'; }
-        });
-        [latencyNav, latencyHealth].forEach(l => {
-          if (l && health.latencyMs != null) l.textContent = health.latencyMs + 'ms';
-        });
-      } else {
-        [dotNav, dotHealth].forEach(d => {
-          if (d) { d.style.background = '#ef4444'; d.style.boxShadow = '0 0 6px #ef4444'; }
-        });
-        [labelNav, labelHealth].forEach(l => {
-          if (l) { l.textContent = 'Gateway Down'; l.style.color = '#f87171'; }
-        });
-      }
-    }
-
-    // Start polling gateway health
-    setInterval(pollGatewayHealth, 10000);
-    pollGatewayHealth(); // Check once immediately on load
 
         function setupRealtime() {
+      const start = Date.now();
       _sb.channel('portal-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
           loadAndRender().then(() => restoreTab());
@@ -1439,7 +1415,13 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tweets' }, () => {
           loadAndRender().then(() => restoreTab());
         })
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            updateGatewayDot(true, Date.now() - start);
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            updateGatewayDot(false, null);
+          }
+        });
     }
 
     async function triggerRefresh(btn) {
