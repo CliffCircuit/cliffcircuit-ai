@@ -3363,7 +3363,7 @@ function switchTab(t) {
       }
 
     async function doPublish(id, btn, origClass) {
-      btn.textContent = 'Publishing...';
+      btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Publishing...</span>';
       btn.disabled = true;
       btn.className = 'bg-yellow-700 text-yellow-200 text-sm px-4 py-1.5 rounded border border-yellow-600 cursor-wait font-medium';
       try {
@@ -3379,8 +3379,9 @@ function switchTab(t) {
         const result = await res.json();
         const output = result.output || '';
         const hasFailures = output.includes('Failures: ') && !output.includes('Failures: 0');
-        const hasError = output.includes('ERROR:');
-        if (result.ok && !hasFailures && !hasError) {
+        // Only count publish errors, not post-publish CMD errors (scheduler trigger etc)
+        const publishErrors = output.split('\n').filter(l => l.includes('ERROR:') && !l.includes('CMD ERROR:'));
+        if (result.ok && !hasFailures && publishErrors.length === 0) {
           btn.textContent = 'Published';
           btn.className = 'bg-green-700 text-green-200 text-sm px-4 py-1.5 rounded border border-green-600 font-medium';
           // Update the status pill in the modal
