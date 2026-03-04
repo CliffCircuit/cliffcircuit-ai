@@ -1400,24 +1400,18 @@
 
     async function attemptLogin(e) {
       e.preventDefault();
-      try {
-        const val = document.getElementById("password-input").value;
-        const hash = await sha256(val);
-        const DEFAULT_HASH = "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7";
-        if (hash === DEFAULT_HASH) {
+      const val = document.getElementById("password-input").value;
+      const hash = await sha256(val);
+      const DEFAULT_HASH = "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7";
+      if (hash === DEFAULT_HASH) {
           localStorage.setItem("cc_auth","1");
           document.getElementById("login-screen").classList.add("hidden");
           document.getElementById("portal").classList.remove("hidden");
           Promise.all([loadAndRender(), setupRealtime()]).catch(e => console.error("background load error:", e));
-        } else {
+      } else {
           const el = document.getElementById("login-error");
           if (el) { el.textContent = "Incorrect password"; el.classList.remove("hidden"); }
           document.getElementById("password-input").value = "";
-        }
-      } catch(err) {
-        console.error("Login error:", err);
-        const errEl = document.getElementById("login-error");
-        if (errEl) { errEl.textContent = "Login error: " + err.message; errEl.classList.remove("hidden"); }
       }
     }
 
