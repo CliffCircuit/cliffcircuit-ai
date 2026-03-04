@@ -34,10 +34,28 @@
 <body class="min-h-screen">
 
   <!-- LOGIN -->
-  <!-- Login removed -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center">
+    <div class="card p-8 w-full max-w-sm">
+      <div class="text-center mb-6">
+        <h1 class="text-xl font-bold text-white">CliffCircuit Portal</h1>
+        <p class="text-gray-500 text-sm mt-1">Private — Tim + Cliff only</p>
+      </div>
+      <div id="login-error" class="hidden mb-4 text-red-400 text-sm text-center bg-red-950 rounded-lg p-2"></div>
+      <form onsubmit="attemptLogin(event)">
+        <div class="relative mb-4">
+          <input id="password-input" type="password" placeholder="Password"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 pr-16" autofocus />
+          <button type="button" id="pw-toggle" onclick="(function(){const i=document.getElementById('password-input'),b=document.getElementById('pw-toggle');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'Show':'Hide';}).call(this)" class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300 text-xs font-medium px-2 py-1 rounded">Show</button>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg text-sm transition-colors">
+          Enter Portal
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- PORTAL -->
-  <div id="portal" class="min-h-screen">
+  <div id="portal" class="hidden min-h-screen">
     <nav class="border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 bg-gray-950 z-10">
       <div class="flex items-center gap-3">
         <span class="font-bold text-white">CliffCircuit Portal</span>
@@ -1382,18 +1400,27 @@
 
     async function attemptLogin(e) {
       e.preventDefault();
-      const val = document.getElementById("password-input").value;
+      try {
+      const val = document.getElementById('password-input').value;
       const hash = await sha256(val);
-      const DEFAULT_HASH = "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7";
-      if (hash === DEFAULT_HASH) {
-          localStorage.setItem("cc_auth","1");
-          document.getElementById("login-screen").classList.add("hidden");
-          document.getElementById("portal").classList.remove("hidden");
-          Promise.all([loadAndRender(), setupRealtime()]).catch(e => console.error("background load error:", e));
+      const data = await loadData().catch(() => ({}));
+      const correct = data?.auth?.passwordHash || DEFAULT_HASH;
+      if (hash === correct) {
+        localStorage.setItem('cc_auth','1');
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('portal').classList.remove('hidden');
+        loadAndRender().then(() => restoreTab()).catch(e => console.error('render error:', e));
+        setupRealtime();
       } else {
-          const el = document.getElementById("login-error");
-          if (el) { el.textContent = "Incorrect password"; el.classList.remove("hidden"); }
-          document.getElementById("password-input").value = "";
+        const el = document.getElementById('login-error');
+        el.textContent = 'Incorrect password';
+        el.classList.remove('hidden');
+        document.getElementById('password-input').value = '';
+      }
+      } catch(err) {
+        console.error('Login error:', err);
+        const errEl = document.getElementById('login-error');
+        if (errEl) { errEl.textContent = 'Login error: ' + err.message; errEl.classList.remove('hidden'); }
       }
     }
 
@@ -3506,7 +3533,7 @@ function switchTab(t) {
   <h1>${item.title || ''}</h1>
   <p class="excerpt">${item.excerpt || ''}</p>
   ${item.htmlContent || ''}
-<script>loadAndRender();</script></body>
+</body>
 </html>`;
       const blob = new Blob([html], {type: 'text/html'});
       const url = URL.createObjectURL(blob);
@@ -3720,6 +3747,6 @@ function switchTab(t) {
     });
 
 </script>
-<script>loadAndRender();</script></body>
+</body>
 </html>
 <!-- cache bust 20260303T201729Z -->
