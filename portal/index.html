@@ -2780,15 +2780,15 @@ function switchTab(t) {
       ['cliff', 'samantha', 'scout'].forEach(agent => {
         const id = agent === 'cliff' ? 'main' : agent;
         const cfg = ac[id] || ac[agent] || {};
-        const level = (cfg.thinking || 'off').toLowerCase();
+        const level = (cfg.thinking || "off").toLowerCase(); const model = cfg.model || "Unknown";
         const meta = thinkingMeta[level] || thinkingMeta.off;
-        const levelEl = document.getElementById(agent + '-thinking-level');
+        const levelEl = document.getElementById(agent + "-thinking-level"); const modelEl = document.getElementById(agent + "-model");
         const descEl = document.getElementById(agent + '-thinking-desc');
         if (levelEl) {
           levelEl.textContent = level.charAt(0).toUpperCase() + level.slice(1);
           levelEl.className = meta.color + ' text-sm font-semibold';
         }
-        if (descEl) descEl.textContent = meta.desc;
+        if (descEl) descEl.textContent = meta.desc; if (modelEl) modelEl.textContent = model.split("/").pop();
       });
       const crons = d.crons || [];
       const agentMap = {};
