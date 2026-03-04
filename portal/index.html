@@ -2206,7 +2206,7 @@ function switchTab(t) {
       return key.split(':').pop().slice(0,14);
     }
 
-    function renderAgentSessions(rows) {
+    function renderAgentSessions(rows) { console.log("DEBUG ROWS:", rows.slice(0, 5));
       const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
       const agentColor = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
       const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
