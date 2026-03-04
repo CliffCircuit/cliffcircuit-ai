@@ -1779,6 +1779,12 @@
       }
       renderQueueTable();
     }
+
+    function publishBtn(item) {
+      if (item.status !== 'approved' && item.status !== 'written') return '';
+      return '<button onclick="event.stopPropagation();publishNow(\'' + esc(item.id) + '\')" class="text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors" title="Publish immediately">Publish</button>';
+    }
+
     function renderQueueTable() {
       const tf = window._queueTypeFilter||'all';
       const af = window._queueAcctFilter||'all';
@@ -1823,7 +1829,7 @@
               <td class="px-3 py-1"><span class="pill ${i.status==="approved" && i.scheduledFor ? "status-scheduled" : "status-"+i.status}">${fmtStatus(i.status, i)}</span></td>
               <td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
-              <td class="px-2 py-1 text-right">${i.status==='approved'||i.status==='written'?'<button onclick="event.stopPropagation();publishNow(\''+esc(i.id)+'\')" class="text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors" title="Publish immediately">Publish</button>':''}</td>
+              <td class="px-2 py-1 text-right">${publishBtn(i)}</td>
             </tr>`;
           }).join('');
     }
