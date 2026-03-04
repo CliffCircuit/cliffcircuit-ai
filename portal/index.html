@@ -3557,10 +3557,10 @@ function switchTab(t) {
         }
       }
 
-      // Context dot — green <70%, yellow 70-89%, red 90%+
+      // Context dot — shows Cliff's direct chat session context level
       const sessions = d.sessions || [];
-      // Use highest context session — that's the one most likely to need attention
-      const mainSession = sessions.length ? sessions.reduce((a,b) => (b.pct||0) > (a.pct||0) ? b : a) : null;
+      const cliffDirect = sessions.find(s => s.agentId === 'main' && ((s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off')));
+      const mainSession = cliffDirect || sessions.filter(s => s.agentId === 'main').sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] || null;
       const pct = mainSession ? mainSession.pct : 0;
       const ctxDot = document.getElementById('nav-ctx-dot');
       const ctxLabel = ctxDot?.nextElementSibling;
