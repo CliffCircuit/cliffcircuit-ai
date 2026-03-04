@@ -3085,6 +3085,18 @@ function switchTab(t) {
       set('metric-tim-tweets-48h-dup', timPosts48.length);
       set('metric-combined-48h', articles48.length + cliffTweets48.length + timPosts48.length);
 
+      // Over-plan warning indicators
+      const goals = loadGoals();
+      if (goals && goals.cliffArticles) {
+        const warnHtml = '<span class="text-yellow-500 text-xs ml-1" title="Over plan">\u26A0</span>';
+        const ca = document.getElementById('goal-cliff-articles-display');
+        const ct = document.getElementById('goal-cliff-tweets-display');
+        const tt = document.getElementById('goal-tim-tweets-display');
+        if (ca) ca.innerHTML = 'plan: ' + goals.cliffArticles + '/day' + (articles48.length > goals.cliffArticles ? ' ' + warnHtml : '');
+        if (ct) ct.innerHTML = 'plan: ' + goals.cliffTweets + '/day' + (cliffTweets48.length > goals.cliffTweets ? ' ' + warnHtml : '');
+        if (tt) tt.innerHTML = 'plan: ' + goals.timTweets + '/day' + (timPosts48.length > goals.timTweets ? ' ' + warnHtml : '');
+      }
+
       const rejected = q.filter(i=>i.status==='rejected');
       const postFailed = q.filter(i=>i.status==='post_failed');
       const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
@@ -3830,9 +3842,9 @@ function switchTab(t) {
       const ca = document.getElementById('goal-cliff-articles-display');
       const ct = document.getElementById('goal-cliff-tweets-display');
       const tt = document.getElementById('goal-tim-tweets-display');
-      if (ca) ca.textContent = 'goal: ' + goals.cliffArticles + '/day';
-      if (ct) ct.textContent = 'goal: ' + goals.cliffTweets + '/day';
-      if (tt) tt.textContent = 'goal: ' + goals.timTweets + '/day';
+      if (ca) ca.textContent = 'plan: ' + goals.cliffArticles + '/day';
+      if (ct) ct.textContent = 'plan: ' + goals.cliffTweets + '/day';
+      if (tt) tt.textContent = 'plan: ' + goals.timTweets + '/day';
     }
 
     // Init goals displays on load
