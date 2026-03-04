@@ -3697,13 +3697,16 @@ function switchTab(t) {
     }
 
     function updateNavDots(d) {
-      // Cron dot — green if no errors, yellow if any errors
+      // Cron dot — gray if no data, green if no errors, yellow if errors
       const crons = d.crons || [];
       const cronErrors = crons.filter(c => c.status === 'error').length;
       const cronDot = document.getElementById('nav-cron-dot');
       const cronLabel = cronDot?.nextElementSibling;
       if (cronDot) {
-        if (cronErrors === 0) {
+        if (crons.length === 0) {
+          cronDot.style.background = '#4b5563'; // gray — no data yet
+          if (cronLabel) { cronLabel.textContent = 'crons'; cronLabel.style.color = '#4b5563'; }
+        } else if (cronErrors === 0) {
           cronDot.style.background = '#22c55e'; // green
           if (cronLabel) { cronLabel.textContent = 'crons'; cronLabel.style.color = '#4b5563'; }
         } else {
@@ -3720,15 +3723,18 @@ function switchTab(t) {
       const ctxDot = document.getElementById('nav-ctx-dot');
       const ctxLabel = ctxDot?.nextElementSibling;
       if (ctxDot) {
-        if (pct >= 75) {
-          ctxDot.style.background = '#ef4444'; // red — matches agent card threshold
+        if (!mainSession) {
+          ctxDot.style.background = '#4b5563'; // gray — no data
+          if (ctxLabel) { ctxLabel.textContent = 'context'; ctxLabel.style.color = '#4b5563'; }
+        } else if (pct >= 75) {
+          ctxDot.style.background = '#ef4444'; // red
           if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ef4444'; }
         } else if (pct >= 50) {
-          ctxDot.style.background = '#facc15'; // yellow — matches agent card threshold
+          ctxDot.style.background = '#facc15'; // yellow
           if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ca8a04'; }
         } else {
           ctxDot.style.background = '#34d399'; // green
-          if (ctxLabel) { ctxLabel.textContent = 'context'; ctxLabel.style.color = '#4b5563'; }
+          if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#4b5563'; }
         }
       }
     }
