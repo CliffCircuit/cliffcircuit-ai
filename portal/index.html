@@ -983,7 +983,7 @@
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div id="cliff-model" class="text-white text-sm font-semibold">Loading...</div>
+                <div class="text-white text-sm font-semibold">Claude Sonnet 4.6</div>
                 <div class="text-gray-600 text-xs">anthropic</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
@@ -1085,7 +1085,7 @@
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div id="cliff-model" class="text-white text-sm font-semibold">Loading...</div>
+                <div class="text-white text-sm font-semibold">Claude Sonnet 4.6</div>
                 <div class="text-gray-600 text-xs">anthropic</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
@@ -1186,7 +1186,7 @@
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div id="scout-model" class="text-white text-sm font-semibold">Loading...</div>
+                <div class="text-white text-sm font-semibold">Claude Haiku 4.5</div>
                 <div class="text-gray-600 text-xs">anthropic</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
@@ -1411,8 +1411,6 @@
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab()).catch(e => console.error('render error:', e));
         setupRealtime();
-    // Fallback polling for agent configs in case of real-time missed events
-    setInterval(loadAndRenderAgentConfigs, 30000);
       } else {
         const el = document.getElementById('login-error');
         el.textContent = 'Incorrect password';
@@ -1436,8 +1434,6 @@
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
         setupRealtime();
-    // Fallback polling for agent configs in case of real-time missed events
-    setInterval(loadAndRenderAgentConfigs, 30000);
       }
     })();
 
