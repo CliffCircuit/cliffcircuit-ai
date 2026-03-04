@@ -1483,7 +1483,10 @@
           if (live && live.sessions && DATA) {
             DATA.sessions = live.sessions;
             DATA._liveGeneratedAt = live.generatedAt || DATA._liveGeneratedAt;
-            DATA.agentConfigs = live.agentConfigs || {};
+            // Only update agentConfigs if live data provides them, but don't overwrite if we already have them from Supabase
+            if (live.agentConfigs) {
+                Object.assign(DATA.agentConfigs, live.agentConfigs);
+            }
             if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
             renderAgents(DATA);
             renderHealth(DATA);
