@@ -2271,7 +2271,7 @@ function switchTab(t) {
           <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
           <td class="px-4 py-1.5 text-xs">${modelShort(r.model)}</td>
           <td class="px-4 py-1.5 text-right text-xs text-white">${fmtK(tokIn)} / ${fmtK(r.output_tokens||0)}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-gray-400">${fmtDur(r.duration_ms)}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-400">${fmtDur(r.duration_ms || (Date.now() - new Date(r.first_seen_at).getTime()))}</td>
           <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
           <td class="px-4 py-1.5 text-right text-xs text-gray-600">${timeAgo(r.last_seen_at)}</td>
         </tr>`;
