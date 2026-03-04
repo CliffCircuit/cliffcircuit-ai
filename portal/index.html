@@ -1396,6 +1396,19 @@
     (function startPortal() {
       loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
       setupRealtime();
+      // Fallback polling: silently refresh queue data every 30s in case realtime drops
+      setInterval(async () => {
+        try {
+          const d = await loadData();
+          if (d) {
+            renderMarketing(d);
+            updateNavDots(d);
+            const liveTs = d._liveGeneratedAt || d.generatedAt;
+            const _luEl = document.getElementById('last-updated');
+            if (_luEl && liveTs) _luEl.textContent = 'Live: ' + new Date(liveTs).toLocaleTimeString();
+          }
+        } catch(e) { console.warn('Auto-refresh failed:', e); }
+      }, 30000);
     })();
 
     let DATA = null;
