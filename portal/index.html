@@ -339,8 +339,9 @@
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Scheduled</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">In Queue</th>
+              <th class="text-right px-2 py-1 text-gray-500 text-xs uppercase"></th>
             </tr></thead>
-            <tbody id="unified-queue-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="unified-queue-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -3330,6 +3331,30 @@ function switchTab(t) {
       if (s === "approved" && item && item.scheduledFor) return "Scheduled";
       const labels = { draft: "Pending Review", approved: "Approved", published: "Posted", error: "Error", rejected: "Rejected", post_failed: "Post Failed" };
       return labels[s] || s;
+    }
+
+
+    async function publishNow(id) {
+      if (!confirm('Publish this item now?')) return;
+      try {
+        // Determine if article or tweet
+        const item = window._queueMap && window._queueMap[id];
+        const table = (item && (item.type === 'tweet' || (!item.title && !item.slug && item.tweetText))) ? 'tweets' : 'articles';
+        // Set scheduled_for to now and ensure status is approved
+        const now = new Date().toISOString();
+        const { error } = await _sb.from(table).update({ scheduled_for: now, status: 'approved', updated_at: now }).eq('id', id);
+        if (error) { alert('Error: ' + error.message); return; }
+        // Show feedback
+        const btn = event.target;
+        btn.textContent = 'Queued';
+        btn.disabled = true;
+        btn.className = 'text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-500 border border-gray-700';
+        // Refresh data
+        setTimeout(async () => {
+          const d = await loadData();
+          if (d) renderMarketing(d);
+        }, 1000);
+      } catch(e) { alert('Publish failed: ' + e.message); }
     }
 
     function openDetail(id) {
