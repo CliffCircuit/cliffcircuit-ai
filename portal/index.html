@@ -2732,7 +2732,10 @@ function switchTab(t) {
       ['cliff', 'samantha', 'scout'].forEach(agent => {
         const id = agent === 'cliff' ? 'main' : agent;
         const cfg = ac[id] || ac[agent] || {};
-        const level = (cfg.thinking || "off").toLowerCase(); const model = cfg.model || "Unknown";
+        // Use model from most recent live session (real model), fall back to config (default model)
+        const agentSessions = (d.sessions || []).filter(s => s.agentId === id).sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0));
+        const liveModel = agentSessions.length ? agentSessions[0].model : null;
+        const level = (cfg.thinking || "off").toLowerCase(); const model = liveModel || cfg.model || "Unknown";
         const meta = thinkingMeta[level] || thinkingMeta.off;
         const levelEl = document.getElementById(agent + "-thinking-level"); const modelEl = document.getElementById(agent + "-model");
         const descEl = document.getElementById(agent + '-thinking-desc');
