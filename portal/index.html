@@ -2796,16 +2796,31 @@ function switchTab(t) {
         const el = id => document.getElementById(`${name}-${id}`);
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
         if (el('last-job')) el('last-job').textContent = lastActive;
-        if (el('job-errors')) { el('job-errors').classList.toggle('hidden', !hasErrors); if (hasErrors) el('job-errors').textContent = `⚠ ${info.errors} error${info.errors===1?'':'s'} detected`; }
+        // Build warnings list: cron errors + slow jobs + high-token jobs
+        const warnings = [];
+        if (info.errors > 0) warnings.push(`${info.errors} error${info.errors>1?'s':''}`);
+        // Slow job warning: >10min for any single job
+        const slowJobs = info.jobs.filter(j => (j.lastDurationMs || 0) > 600000);
+        if (slowJobs.length) {
+          const slowest = slowJobs.sort((a,b) => b.lastDurationMs - a.lastDurationMs)[0];
+          const mins = Math.round(slowest.lastDurationMs / 60000);
+          const shortName = (slowest.name || '').replace(/^(samantha|scout|cliff)-/i, '').replace(/-/g, ' ');
+          warnings.push(`${shortName} took ${mins}m`);
+        }
+        // High context warning: any active session >70%
+        const highCtxSession = agentLiveSessions.find(s => (s.pct || 0) >= 70);
+        if (highCtxSession) warnings.push(`session at ${highCtxSession.pct}% context`);
+        const hasWarnings = warnings.length > 0;
+        if (el('job-errors')) {
+          el('job-errors').classList.toggle('hidden', !hasWarnings);
+          if (hasWarnings) el('job-errors').textContent = '⚠ ' + warnings.join(' · ');
+        }
 
-        // Live sessions (Cliff only)
-        // Session detail list lives in System Health tab, not here
-
-        // Live session context bar — Cliff only; Samantha/Scout always show largest job
+        // Live session context bar — all agents
         const sessionAgentId = name === 'cliff' ? 'main' : name;
-        const cliffSessions = name === 'cliff' ? (d.sessions || []).filter(s => s.agentId === 'main') : [];
-        const directLive = cliffSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
-        const liveSession = directLive || (cliffSessions.length ? [...cliffSessions].sort((a, b) => (b.pct || 0) - (a.pct || 0))[0] : null);
+        const agentLiveSessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
+        const directLive = agentLiveSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
+        const liveSession = directLive || (agentLiveSessions.length ? [...agentLiveSessions].sort((a, b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] : null);
 
         const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
