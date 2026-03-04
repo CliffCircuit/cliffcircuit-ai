@@ -3344,10 +3344,10 @@ function switchTab(t) {
     async function publishNow(id) {
       if (!confirm('Publish this item now?')) return;
       const btn = event.target;
-      const origText = btn.textContent;
+      const origClass = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors';
       btn.textContent = 'Publishing...';
       btn.disabled = true;
-      btn.className = 'text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300 border border-yellow-700';
+      btn.className = 'text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300 border border-yellow-700 cursor-wait';
       try {
         // Ensure item is approved in Supabase first
         const item = window._queueMap && window._queueMap[id];
@@ -3361,25 +3361,35 @@ function switchTab(t) {
           body: JSON.stringify({ id })
         });
         const result = await res.json();
-        if (result.ok) {
+        // Check for actual success (not just ok:true — publish.js can return ok but with failures)
+        const output = result.output || '';
+        const hasFailures = output.includes('Failures: ') && !output.includes('Failures: 0');
+        const hasError = output.includes('ERROR:');
+        if (result.ok && !hasFailures && !hasError) {
           btn.textContent = 'Published';
           btn.className = 'text-xs px-2 py-0.5 rounded bg-green-900 text-green-300 border border-green-700';
-          // Refresh data after a moment
+          // Refresh data so item moves to Published section
           setTimeout(async () => {
             const d = await loadData();
             if (d) renderMarketing(d);
           }, 2000);
         } else {
+          // Extract meaningful error from publish.js output
+          const errMatch = output.match(/ERROR: (.+)/);
+          const errMsg = result.error || (errMatch && errMatch[1]) || 'Publish failed';
           btn.textContent = 'Failed';
-          btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700';
-          console.error('Publish error:', result.error);
-          setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.className = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors'; }, 3000);
+          btn.title = errMsg;
+          btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700 cursor-help';
+          console.error('Publish error:', errMsg, result);
+          // Show failure for 8s, then offer retry
+          setTimeout(() => { btn.textContent = 'Retry'; btn.title = 'Click to retry'; btn.disabled = false; btn.className = origClass; }, 8000);
         }
       } catch(e) {
-        btn.textContent = 'Failed';
-        btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700';
+        btn.textContent = 'Error';
+        btn.title = e.message || 'Network or server error';
+        btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700 cursor-help';
         console.error('Publish failed:', e);
-        setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.className = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors'; }, 3000);
+        setTimeout(() => { btn.textContent = 'Retry'; btn.title = 'Click to retry'; btn.disabled = false; btn.className = origClass; }, 8000);
       }
     }
 
