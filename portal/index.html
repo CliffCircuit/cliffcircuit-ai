@@ -1326,7 +1326,10 @@
           <div id="modal-tags" class="hidden mb-4 flex flex-wrap gap-2"></div>
           <!-- Actions -->
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <div id="modal-link" class="flex gap-3"></div>
+            <div class="flex gap-3 items-center">
+              <div id="modal-link" class="flex gap-3"></div>
+              <div id="modal-publish-btn"></div>
+            </div>
             <div id="modal-id" class="text-xs text-gray-700 font-mono"></div>
           </div>
         </div>
@@ -3341,53 +3344,65 @@ function switchTab(t) {
     }
 
 
+    async function publishFromModal(id) {
+      const btn = document.getElementById('modal-publish-action');
+      if (!btn) return;
+      doPublish(id, btn, 'bg-teal-700 hover:bg-teal-600 text-white text-sm px-4 py-1.5 rounded border border-teal-600 hover:border-teal-500 transition-colors font-medium');
+    }
+
     async function publishNow(id) {
-      if (!confirm('Publish this item now?')) return;
+      // Open the detail modal instead of using confirm()
+      openDetail(id);
+      return;
       const btn = event.target;
       const origClass = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors';
       btn.textContent = 'Publishing...';
       btn.disabled = true;
       btn.className = 'text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300 border border-yellow-700 cursor-wait';
+      // dead code — publishNow now opens modal instead
+      }
+
+    async function doPublish(id, btn, origClass) {
+      btn.textContent = 'Publishing...';
+      btn.disabled = true;
+      btn.className = 'bg-yellow-700 text-yellow-200 text-sm px-4 py-1.5 rounded border border-yellow-600 cursor-wait font-medium';
       try {
-        // Ensure item is approved in Supabase first
         const item = window._queueMap && window._queueMap[id];
         const table = (item && (item.type === 'tweet' || (!item.title && !item.slug && item.tweetText))) ? 'tweets' : 'articles';
         const now = new Date().toISOString();
         await _sb.from(table).update({ status: 'approved', scheduled_for: now, updated_at: now }).eq('id', id);
-        // Call publish API for instant publish
         const res = await fetch('https://api.cliffcircuit.ai/publish-now', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
         });
         const result = await res.json();
-        // Check for actual success (not just ok:true — publish.js can return ok but with failures)
         const output = result.output || '';
         const hasFailures = output.includes('Failures: ') && !output.includes('Failures: 0');
         const hasError = output.includes('ERROR:');
         if (result.ok && !hasFailures && !hasError) {
           btn.textContent = 'Published';
-          btn.className = 'text-xs px-2 py-0.5 rounded bg-green-900 text-green-300 border border-green-700';
-          // Refresh data so item moves to Published section
+          btn.className = 'bg-green-700 text-green-200 text-sm px-4 py-1.5 rounded border border-green-600 font-medium';
+          // Update the status pill in the modal
+          const statusEl = document.getElementById('modal-status');
+          if (statusEl) statusEl.innerHTML = '<span class="pill status-published">Published</span>';
           setTimeout(async () => {
             const d = await loadData();
             if (d) renderMarketing(d);
           }, 2000);
         } else {
-          // Extract meaningful error from publish.js output
           const errMatch = output.match(/ERROR: (.+)/);
           const errMsg = result.error || (errMatch && errMatch[1]) || 'Publish failed';
-          btn.textContent = 'Failed';
+          btn.textContent = 'Failed — ' + errMsg.slice(0, 40);
           btn.title = errMsg;
-          btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700 cursor-help';
+          btn.className = 'bg-red-700 text-red-200 text-sm px-4 py-1.5 rounded border border-red-600 cursor-help font-medium';
           console.error('Publish error:', errMsg, result);
-          // Show failure for 8s, then offer retry
           setTimeout(() => { btn.textContent = 'Retry'; btn.title = 'Click to retry'; btn.disabled = false; btn.className = origClass; }, 8000);
         }
       } catch(e) {
-        btn.textContent = 'Error';
+        btn.textContent = 'Error — ' + (e.message || 'Network error').slice(0, 40);
         btn.title = e.message || 'Network or server error';
-        btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700 cursor-help';
+        btn.className = 'bg-red-700 text-red-200 text-sm px-4 py-1.5 rounded border border-red-600 cursor-help font-medium';
         console.error('Publish failed:', e);
         setTimeout(() => { btn.textContent = 'Retry'; btn.title = 'Click to retry'; btn.disabled = false; btn.className = origClass; }, 8000);
       }
@@ -3477,6 +3492,16 @@ function switchTab(t) {
         links.push(`<a href="https://x.com/i/status/${esc(item.tweetId)}" target="_blank" class="text-gray-400 hover:text-white text-sm border border-gray-700 rounded px-3 py-1 hover:border-gray-500 transition-colors">View Tweet ↗</a>`);
       }
       linkEl.innerHTML = links.join('');
+
+      // Publish button inside modal (only for approved/written items)
+      const pubBtnEl = document.getElementById('modal-publish-btn');
+      if (pubBtnEl) {
+        if (item.status === 'approved' || item.status === 'written') {
+          pubBtnEl.innerHTML = '<button id="modal-publish-action" onclick="publishFromModal(\'' + esc(item.id) + '\')" class="bg-teal-700 hover:bg-teal-600 text-white text-sm px-4 py-1.5 rounded border border-teal-600 hover:border-teal-500 transition-colors font-medium">Publish Now</button>';
+        } else {
+          pubBtnEl.innerHTML = '';
+        }
+      }
 
       document.getElementById('detail-modal').classList.remove('hidden');
     }
