@@ -16,6 +16,7 @@
     .tf-inactive { background: transparent; color: #6b7280; }
     .status-published { background: #064e3b; color: #34d399; }
     .status-approved  { background: #1e3a5f; color: #60a5fa; }
+    .status-scheduled  { background: #1a3a2a; color: #4ade80; }
     .status-draft     { background: #3b2800; color: #fbbf24; }
     .status-error     { background: #450a0a; color: #f87171; }
     .status-rejected  { background: #2d1515; color: #f87171; }
@@ -1775,6 +1776,14 @@
         const dateOk = df==='all' || (df==='today' && (!sched || (sched>=todayStart && sched<=todayEnd))) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
         return typeOk && acctOk && dateOk;
       });
+      // Sort non-drafts: scheduled first (by time asc), then unscheduled
+      nonDrafts.sort((a,b) => {
+        const aS = a.scheduledFor ? 0 : 1;
+        const bS = b.scheduledFor ? 0 : 1;
+        if (aS !== bS) return aS - bS;
+        if (a.scheduledFor && b.scheduledFor) return new Date(a.scheduledFor) - new Date(b.scheduledFor);
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      });
       const items = [...drafts, ...nonDrafts];
       const el = document.getElementById('unified-queue-body');
       if (!el) return;
@@ -1789,7 +1798,7 @@
               <td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td>
               <td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-              <td class="px-3 py-1"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
+              <td class="px-3 py-1"><span class="pill ${i.status==="approved" && i.scheduledFor ? "status-scheduled" : "status-"+i.status}">${fmtStatus(i.status, i)}</span></td>
               <td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
             </tr>`;
@@ -3298,8 +3307,9 @@ function switchTab(t) {
       set('stat-tim2', stats.timPostsToday??'—');
     }
 
-    function fmtStatus(s) {
-      const labels = { draft: 'Pending Review', approved: 'Approved', published: 'Posted', error: 'Error', rejected: 'Rejected', post_failed: 'Post Failed' };
+    function fmtStatus(s, item) {
+      if (s === "approved" && item && item.scheduledFor) return "Scheduled";
+      const labels = { draft: "Pending Review", approved: "Approved", published: "Posted", error: "Error", rejected: "Rejected", post_failed: "Post Failed" };
       return labels[s] || s;
     }
 
@@ -3333,7 +3343,7 @@ function switchTab(t) {
 
       document.getElementById('modal-title').textContent = title;
       document.getElementById('modal-account').textContent = isTimPost ? '@TimHarris707' : '@CliffCircuit';
-      document.getElementById('modal-status').innerHTML = `<span class="pill status-${item.status}">${fmtStatus(item.status)}</span>`;
+      document.getElementById('modal-status').innerHTML = `<span class="pill ${item.status==="approved" && item.scheduledFor ? "status-scheduled" : "status-"+item.status}">${fmtStatus(item.status, item)}</span>`;
       document.getElementById('modal-scheduled').innerHTML = scheduled ? `Scheduled: ${scheduled}` : '';
 
       // Meta (word count for articles)
