@@ -1772,7 +1772,7 @@
         const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
         const sched = i.scheduledFor ? new Date(i.scheduledFor) : null;
-        const dateOk = df==='all' || (df==='today' && sched && sched>=todayStart && sched<=todayEnd) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
+        const dateOk = df==='all' || (df==='today' && (!sched || (sched>=todayStart && sched<=todayEnd))) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
         return typeOk && acctOk && dateOk;
       });
       const items = [...drafts, ...nonDrafts];
@@ -3459,7 +3459,7 @@ function switchTab(t) {
       }
 
       // Articles with no scheduled time
-      if (account !== 'timharris707') return '<span class="text-gray-500 text-xs">Next publish cycle</span>';
+      if (account !== 'timharris707') return '<span class="text-gray-500 text-xs">Unscheduled</span>';
       return '—';
     }
     function relTime(iso) {
