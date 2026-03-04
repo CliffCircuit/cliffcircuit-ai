@@ -2796,6 +2796,13 @@ function switchTab(t) {
         const el = id => document.getElementById(`${name}-${id}`);
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
         if (el('last-job')) el('last-job').textContent = lastActive;
+
+        // Live sessions for this agent (needed by both warnings and context bar)
+        const sessionAgentId = name === 'cliff' ? 'main' : name;
+        const agentLiveSessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
+        const directLive = agentLiveSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
+        const liveSession = directLive || (agentLiveSessions.length ? [...agentLiveSessions].sort((a, b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] : null);
+
         // Build warnings list: cron errors + slow jobs + high-token jobs
         const warnings = [];
         if (info.errors > 0) warnings.push(`${info.errors} error${info.errors>1?'s':''}`);
@@ -2816,11 +2823,7 @@ function switchTab(t) {
           if (hasWarnings) el('job-errors').textContent = '⚠ ' + warnings.join(' · ');
         }
 
-        // Live session context bar — all agents
-        const sessionAgentId = name === 'cliff' ? 'main' : name;
-        const agentLiveSessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
-        const directLive = agentLiveSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
-        const liveSession = directLive || (agentLiveSessions.length ? [...agentLiveSessions].sort((a, b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] : null);
+        // Live session context bar — all agents (session vars defined above)
 
         const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
