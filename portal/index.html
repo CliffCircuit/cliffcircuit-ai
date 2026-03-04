@@ -1411,6 +1411,8 @@
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab()).catch(e => console.error('render error:', e));
         setupRealtime();
+    // Fallback polling for agent configs in case of real-time missed events
+    setInterval(loadAndRenderAgentConfigs, 30000);
       } else {
         const el = document.getElementById('login-error');
         el.textContent = 'Incorrect password';
@@ -1434,6 +1436,8 @@
         document.getElementById('portal').classList.remove('hidden');
         loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
         setupRealtime();
+    // Fallback polling for agent configs in case of real-time missed events
+    setInterval(loadAndRenderAgentConfigs, 30000);
       }
     })();
 
