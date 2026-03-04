@@ -3336,25 +3336,44 @@ function switchTab(t) {
 
     async function publishNow(id) {
       if (!confirm('Publish this item now?')) return;
+      const btn = event.target;
+      const origText = btn.textContent;
+      btn.textContent = 'Publishing...';
+      btn.disabled = true;
+      btn.className = 'text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300 border border-yellow-700';
       try {
-        // Determine if article or tweet
+        // Ensure item is approved in Supabase first
         const item = window._queueMap && window._queueMap[id];
         const table = (item && (item.type === 'tweet' || (!item.title && !item.slug && item.tweetText))) ? 'tweets' : 'articles';
-        // Set scheduled_for to now and ensure status is approved
         const now = new Date().toISOString();
-        const { error } = await _sb.from(table).update({ scheduled_for: now, status: 'approved', updated_at: now }).eq('id', id);
-        if (error) { alert('Error: ' + error.message); return; }
-        // Show feedback
-        const btn = event.target;
-        btn.textContent = 'Queued';
-        btn.disabled = true;
-        btn.className = 'text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-500 border border-gray-700';
-        // Refresh data
-        setTimeout(async () => {
-          const d = await loadData();
-          if (d) renderMarketing(d);
-        }, 1000);
-      } catch(e) { alert('Publish failed: ' + e.message); }
+        await _sb.from(table).update({ status: 'approved', scheduled_for: now, updated_at: now }).eq('id', id);
+        // Call publish API for instant publish
+        const res = await fetch('https://api.cliffcircuit.ai/publish-now', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const result = await res.json();
+        if (result.ok) {
+          btn.textContent = 'Published';
+          btn.className = 'text-xs px-2 py-0.5 rounded bg-green-900 text-green-300 border border-green-700';
+          // Refresh data after a moment
+          setTimeout(async () => {
+            const d = await loadData();
+            if (d) renderMarketing(d);
+          }, 2000);
+        } else {
+          btn.textContent = 'Failed';
+          btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700';
+          console.error('Publish error:', result.error);
+          setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.className = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors'; }, 3000);
+        }
+      } catch(e) {
+        btn.textContent = 'Failed';
+        btn.className = 'text-xs px-2 py-0.5 rounded bg-red-900 text-red-300 border border-red-700';
+        console.error('Publish failed:', e);
+        setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.className = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors'; }, 3000);
+      }
     }
 
     function openDetail(id) {
