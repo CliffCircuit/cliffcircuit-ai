@@ -2841,7 +2841,7 @@ function switchTab(t) {
           const pct = liveSession.pct;
           const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-          const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
+          const tokLabel = `${Math.round(liveSession.used / 1000)}K / ${Math.round(liveSession.limit / 1000)}K tokens`;
           if (el('ctx-title')) el('ctx-title').textContent = 'Live Session';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
