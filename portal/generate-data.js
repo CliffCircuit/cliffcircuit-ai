@@ -437,12 +437,21 @@ async function main() {
       } catch (e) { console.log('tweet-ids.json warning: ' + e.message); }
 
       // Copy hero images + article HTML previews for approved items
+      // Fetch from Supabase (source of truth) — local queue may be out of sync
       try {
-        const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
-        if (fs.existsSync(queuePath)) {
-          const queue = JSON.parse(fs.readFileSync(queuePath));
-          const items = Array.isArray(queue) ? queue : queue.queue || Object.values(queue);
-          const approved = items.filter(i => i.status === 'approved');
+        const SUPA_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
+        const SUPA_KEY = execSync("security find-generic-password -s supabase-anon-key -w", { encoding: 'utf8' }).trim();
+        const supaResp = await httpGet(
+          `${SUPA_URL}/rest/v1/articles?status=eq.approved&select=id,title,slug,excerpt,content,hero_image,hero_image_generated,status`,
+          { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+        );
+        const supaArticles = (supaResp.status === 200 && Array.isArray(supaResp.body)) ? supaResp.body : [];
+        const approved = supaArticles.map(a => ({
+          id: a.id, title: a.title, slug: a.slug, excerpt: a.excerpt,
+          htmlContent: a.content, heroImage: a.hero_image ? `/blog/images/${a.slug}.png` : null,
+          heroImageGenerated: a.hero_image_generated, status: a.status
+        }));
+        {
           const imgDestDir = path.join(PORTAL_REPO, 'portal/images');
           fs.mkdirSync(imgDestDir, { recursive: true });
           const previewDestDir = path.join(PORTAL_REPO, 'portal/previews');
