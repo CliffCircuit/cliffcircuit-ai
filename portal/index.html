@@ -1578,7 +1578,7 @@
           if (live.agentConfigs) DATA.agentConfigs = live.agentConfigs;
           if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
           renderHealth(DATA);   // updates live-sessions-list in System Health tab
-          renderAgents(DATA);   // updates context bars in Agents tab
+          renderAgents(DATA); enrichCronTokens(DATA);  // updates context bars + token data in Agents tab
           updateNavDots(DATA);
           updateAgentStatusDots(live.sessions);
         }
@@ -2982,35 +2982,42 @@ function switchTab(t) {
       });
     }
 
-    // Enrich cron job rows with real-time token data from Supabase
+    // Enrich cron job rows with token data from session_snapshots (same source as Tokens tab)
     async function enrichCronTokens(d) {
       if (!_sb) return;
       try {
-        const { data: snapshots } = await _sb.from('session_snapshots')
-          .select('session_key,total_tokens,cost_total_usd,duration_ms,last_seen_at')
-          .eq('kind', 'cron')
+        // Query cron sessions from session_snapshots — same table the Tokens tab uses
+        const { data: rows, error } = await _sb.from('session_snapshots')
+          .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+          .like('session_key', 'cron:%')
+          .gt('total_tokens', 0)
           .order('last_seen_at', { ascending: false })
-          .limit(300);
-        if (!snapshots || !snapshots.length) return;
+          .limit(200);
+        if (error || !rows?.length) return;
 
-        // Build map: cron_name -> latest snapshot (first occurrence = most recent)
+        // Build map: cron_name -> latest snapshot (first match = most recent due to desc order)
         const tokenMap = {};
-        snapshots.forEach(s => {
-          const cronName = s.session_key?.split(':')[1];
-          if (cronName && !tokenMap[cronName]) tokenMap[cronName] = s;
+        rows.forEach(r => {
+          const cronName = r.session_key?.split(':')[1];
+          if (cronName && !tokenMap[cronName]) tokenMap[cronName] = r;
         });
 
-        // Update cron objects in DATA with real token data
+        // Enrich cron objects with real data from Supabase
+        let enriched = 0;
         (d.crons || []).forEach(c => {
           const snap = tokenMap[c.name];
           if (snap) {
-            c.lastRunTokens = snap.total_tokens || c.lastRunTokens;
-            c.lastDurationMs = snap.duration_ms || c.lastDurationMs;
+            c.lastRunTokens = snap.total_tokens;
+            c.lastRunInputTokens = snap.input_tokens;
+            c.lastRunOutputTokens = snap.output_tokens;
+            c.lastRunCost = snap.cost_total_usd;
+            c.lastDurationMs = snap.duration_ms;
+            c.lastRunModel = snap.model;
+            enriched++;
           }
         });
 
-        // Re-render agents page with enriched data
-        renderAgents(d);
+        if (enriched > 0) renderAgents(d);
       } catch(e) { console.warn('[agents] Supabase token enrich failed:', e); }
     }
 
