@@ -456,18 +456,17 @@ async function main() {
             }
             if (item.slug && item.htmlContent) {
               const slug = item.heroImage ? item.heroImage.split('/').pop() : null;
-              const heroImg = slug ? `<img src="https://cliffcircuit.ai/portal/images/${slug}" style="width:100%;border-radius:8px;margin-bottom:1.5rem;aspect-ratio:16/9;object-fit:contain;background:#111;" onerror="this.src='https://shop.cliffcircuit.com${item.heroImage}';this.onerror=null;">` : '';
+              const heroImg = slug ? `<img src="https://cliffcircuit.ai/portal/images/${slug}" style="width:100%;border-radius:8px;margin-bottom:1.5rem;aspect-ratio:16/9;object-fit:cover;background:#111;" onerror="this.src='https://shop.cliffcircuit.com${item.heroImage}';this.onerror=null;">` : '';
               const previewHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>${(item.title||'').replace(/</g,'&lt;')}</title>
-  <link rel="stylesheet" href="https://shop.cliffcircuit.com/styles.css">
   <style>body{background:#0f172a;color:#e2e8f0;padding:2rem;max-width:860px;margin:0 auto;font-family:system-ui,sans-serif;line-height:1.75;}h1{color:#fff;font-size:1.8rem;margin-bottom:0.75rem;}h2{color:#fff;font-size:1.3rem;margin-top:2rem;margin-bottom:0.75rem;}p{margin-bottom:1.1rem;}.excerpt{color:#94a3b8;font-style:italic;border-left:3px solid #334155;padding-left:1rem;margin-bottom:2rem;}.nav-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}.btn{display:inline-block;background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.85rem;text-decoration:none;}.btn:hover{background:#334155;color:#e2e8f0;}</style>
 </head>
 <body>
-  <div class="nav-row"><a class="btn" href="javascript:void(0)" onclick="window.close()">Back</a><a class="btn" href="https://cliffcircuit.ai/blog/">Blog</a></div>
+  <div class="nav-row"><a class="btn" href="https://shop.cliffcircuit.com/blog/">Blog</a></div>
   ${heroImg}
   <h1>${(item.title||'').replace(/</g,'&lt;')}</h1>
   <p class="excerpt">${(item.excerpt||'').replace(/</g,'&lt;')}</p>
