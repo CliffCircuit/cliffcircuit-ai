@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Cache-buster: 1772579137 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CliffCircuit Portal</title>
@@ -15,6 +16,7 @@
     .tf-inactive { background: transparent; color: #6b7280; }
     .status-published { background: #064e3b; color: #34d399; }
     .status-approved  { background: #1e3a5f; color: #60a5fa; }
+    .status-scheduled  { background: #1a3a2a; color: #4ade80; }
     .status-draft     { background: #3b2800; color: #fbbf24; }
     .status-error     { background: #450a0a; color: #f87171; }
     .status-rejected  { background: #2d1515; color: #f87171; }
@@ -32,29 +34,8 @@
 </head>
 <body class="min-h-screen">
 
-  <!-- LOGIN -->
-  <div id="login-screen" class="min-h-screen flex items-center justify-center">
-    <div class="card p-8 w-full max-w-sm">
-      <div class="text-center mb-6">
-        <h1 class="text-xl font-bold text-white">CliffCircuit Portal</h1>
-        <p class="text-gray-500 text-sm mt-1">Private — Tim + Cliff only</p>
-      </div>
-      <div id="login-error" class="hidden mb-4 text-red-400 text-sm text-center bg-red-950 rounded-lg p-2"></div>
-      <form onsubmit="attemptLogin(event)">
-        <div class="relative mb-4">
-          <input id="password-input" type="password" placeholder="Password"
-            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 pr-16" autofocus />
-          <button type="button" id="pw-toggle" onclick="(function(){const i=document.getElementById('password-input'),b=document.getElementById('pw-toggle');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'Show':'Hide';}).call(this)" class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300 text-xs font-medium px-2 py-1 rounded">Show</button>
-        </div>
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg text-sm transition-colors">
-          Enter Portal
-        </button>
-      </form>
-    </div>
-  </div>
-
   <!-- PORTAL -->
-  <div id="portal" class="hidden min-h-screen">
+  <div id="portal" class="min-h-screen">
     <nav class="border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 bg-gray-950 z-10">
       <div class="flex items-center gap-3">
         <span class="font-bold text-white">CliffCircuit Portal</span>
@@ -76,7 +57,7 @@
           </div>
         </div>
         <button onclick="openSettings()" title="Settings" class="text-gray-500 hover:text-white text-sm px-2 py-1 rounded hover:bg-gray-800 transition-colors" aria-label="Settings">⚙️</button>
-        <button onclick="logout()" class="text-gray-500 hover:text-red-400 text-xs">Sign out</button>
+        
       </div>
     </nav>
 
@@ -202,9 +183,9 @@
                   <span id="on-deck-acct-badge" class="pill bg-gray-800 text-gray-300">@Cliff</span>
                 </div>
                 <!-- Preview text -->
-                <div id="on-deck-text" class="text-white text-sm font-medium leading-snug mb-4" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">—</div>
+                <div id="on-deck-text" class="text-white text-sm font-medium leading-snug mb-2" style="display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;">—</div>
                 <!-- Divider -->
-                <div class="border-t border-teal-900 mb-4"></div>
+                <div class="border-t border-teal-900 mb-2"></div>
                 <!-- Meta -->
                 <div class="space-y-2 mt-auto">
                   <div class="flex items-center justify-between">
@@ -358,8 +339,9 @@
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Scheduled</th>
               <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">In Queue</th>
+              <th class="text-right px-2 py-1 text-gray-500 text-xs uppercase"></th>
             </tr></thead>
-            <tbody id="unified-queue-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+            <tbody id="unified-queue-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -631,21 +613,6 @@
             <div id="grp-sub-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
-        <!-- Summary stats (below portraits) -->
-        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800 bg-gray-900">
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="ag-total-runs" class="text-2xl font-bold text-white">—</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost</div>
-            <div id="ag-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="ag-total-tokens" class="text-2xl font-bold text-indigo-400">—</div>
-          </div>
-        </div>
         <table class="w-full text-sm">
           <thead><tr class="border-b border-gray-800 bg-gray-900">
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Task</th>
@@ -661,6 +628,11 @@
           <tbody id="grp-subagent-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
       </div>
+
+      
+ -->
+
+
 
       <!-- Sub-agent Coding Sessions (from DB) - Raw -->
       <div id="coding-section" class="card overflow-hidden mb-8">
@@ -709,47 +681,6 @@
           <tbody id="db-subagent-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
       </div>
-
-<!-- Per-job breakdown -->
-      <div id="crons-section" class="card overflow-hidden mb-8">
-        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-semibold text-white">Per-Job Breakdown</h3>
-          </div>
-          <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
-        </div>
-        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="cron-total-runs" class="text-2xl font-bold text-white">—</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Cost (USD)</div>
-            <div id="cron-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="cron-total-tokens" class="text-xl font-bold text-indigo-400">—</div>
-            <div id="cron-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
-          </div>
-        </div>
-        <table class="w-full text-sm">
-          <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Job</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
-          </tr></thead>
-          <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-
-      <!-- Agent Sessions (Supabase Live) -->
       <div id="agent-sessions-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
@@ -761,7 +692,22 @@
             <span id="sb-realtime-label" class="text-xs text-gray-600">Connecting...</span>
           </div>
         </div>
-        <div class="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
+        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
+          <div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
+            <div id="ag-total-runs" class="text-2xl font-bold text-white">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
+            <div id="ag-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
+            <div id="ag-total-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="ag-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
+          </div>
+        </div>
+                <div class="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
           <!-- Cliff -->
           <div class="relative overflow-hidden" style="min-height:90px;">
             <img src="/portal/cliff-avatar.jpg" alt="Cliff" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" />
@@ -802,19 +748,58 @@
             </div>
           </div>
         </div>
-        <table class="w-full text-sm">
+<table class="w-full text-sm">
           <thead><tr class="border-b border-gray-800 bg-gray-900">
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cache R+W</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Duration</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
           </tr></thead>
           <tbody id="agent-sess-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
       </div>
+
+      <!-- Agent Sessions (Supabase Live) -->
+      <div id="crons-section" class="card overflow-hidden mb-8">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Per-Job Breakdown</h3>
+          </div>
+          <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
+          <div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
+            <div id="cron-total-runs" class="text-2xl font-bold text-white">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Cost (USD)</div>
+            <div id="cron-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
+            <div id="cron-total-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="cron-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Job</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
+          </tr></thead>
+          <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
 
       <div class="card p-5 mb-8">
         <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
@@ -979,8 +964,8 @@
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div class="text-white text-sm font-semibold">Claude Sonnet 4.6</div>
-                <div class="text-gray-600 text-xs">anthropic</div>
+<div id="cliff-model" class="text-white text-sm font-semibold">Loading...</div>
+                <div id="cliff-model-provider" class="text-gray-600 text-xs">anthropic</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
@@ -1081,8 +1066,8 @@
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div class="text-white text-sm font-semibold">Claude Sonnet 4.6</div>
-                <div class="text-gray-600 text-xs">anthropic</div>
+<div id="samantha-model" class="text-white text-sm font-semibold">Loading...</div>
+                <div id="samantha-model-provider" class="text-gray-600 text-xs">anthropic</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
@@ -1182,8 +1167,8 @@
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div class="text-white text-sm font-semibold">Claude Haiku 4.5</div>
-                <div class="text-gray-600 text-xs">anthropic</div>
+<div id="scout-model" class="text-white text-sm font-semibold">Loading...</div>
+                <div id="scout-model-provider" class="text-gray-600 text-xs">anthropic</div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
@@ -1214,11 +1199,8 @@
 
             <!-- Capabilities -->
             <div class="flex flex-wrap gap-2 mb-4">
-              <span class="pill bg-green-950 text-green-300">Social Monitoring</span>
-              <span class="pill bg-green-950 text-green-300">GitHub Monitoring</span>
               <span class="pill bg-green-950 text-green-300">Portal Refresh</span>
-              <span class="pill bg-green-950 text-green-300">Nightly Extraction</span>
-              <span class="pill bg-green-950 text-green-300">Thread Drafts</span>
+              <span class="pill bg-green-950 text-green-300">Message Relay</span>
             </div>
 
             <!-- Last job -->
@@ -1300,7 +1282,7 @@
     <div class="relative card w-full max-w-2xl overflow-hidden" style="z-index:1; max-height:90vh; display:flex; flex-direction:column;">
       <!-- Hero image (articles only) -->
       <div id="modal-hero" class="hidden relative w-full" style="flex-shrink:0;padding-top:56.25%;overflow:hidden;">
-        <img id="modal-hero-img" src="" alt="Hero image" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#0f172a;" />
+        <img id="modal-hero-img" src="" alt="Hero image" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#0f172a;" />
         <div class="absolute inset-0" style="background:linear-gradient(to bottom, transparent 50%, #111827 100%);"></div>
         <button onclick="closeDetail()" class="absolute top-3 right-3 bg-black bg-opacity-60 hover:bg-opacity-90 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg leading-none">✕</button>
       </div>
@@ -1321,6 +1303,14 @@
           <div class="bg-gray-900 rounded-lg p-4 mb-4">
             <p id="modal-body" class="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap"></p>
           </div>
+          <!-- Tweet Hook (articles only) -->
+          <div id="modal-tweet-hook" class="hidden bg-gray-900/50 rounded-lg p-4 mb-4 border border-gray-800">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Tweet</span>
+              <div class="flex-1 h-px bg-gray-800"></div>
+            </div>
+            <p id="modal-tweet-text" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap"></p>
+          </div>
           <!-- Article full body (articles only) -->
           <div id="modal-article-body" class="hidden mb-4">
             <div class="flex items-center gap-2 mb-2">
@@ -1333,7 +1323,10 @@
           <div id="modal-tags" class="hidden mb-4 flex flex-wrap gap-2"></div>
           <!-- Actions -->
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <div id="modal-link" class="flex gap-3"></div>
+            <div class="flex gap-3 items-center">
+              <div id="modal-link" class="flex gap-3"></div>
+              <div id="modal-publish-btn"></div>
+            </div>
             <div id="modal-id" class="text-xs text-gray-700 font-mono"></div>
           </div>
         </div>
@@ -1394,43 +1387,29 @@
       return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
     }
 
-    async function attemptLogin(e) {
-      e.preventDefault();
-      try {
-      const val = document.getElementById('password-input').value;
-      const hash = await sha256(val);
-      const data = await loadData().catch(() => ({}));
-      const correct = data?.auth?.passwordHash || DEFAULT_HASH;
-      if (hash === correct) {
-        localStorage.setItem('cc_auth','1');
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('portal').classList.remove('hidden');
-        loadAndRender().then(() => restoreTab()).catch(e => console.error('render error:', e));
-        setupRealtime();
-      } else {
-        const el = document.getElementById('login-error');
-        el.textContent = 'Incorrect password';
-        el.classList.remove('hidden');
-        document.getElementById('password-input').value = '';
-      }
-      } catch(err) {
-        console.error('Login error:', err);
-        const errEl = document.getElementById('login-error');
-        if (errEl) { errEl.textContent = 'Login error: ' + err.message; errEl.classList.remove('hidden'); }
-      }
-    }
+    
 
-    function logout() { localStorage.removeItem('cc_auth'); location.reload(); }
+    function logout() { /* login disabled */ }
 
     // Script is near end of body, so DOMContentLoaded has already fired by the time we get here.
     // Run startup immediately rather than waiting for an event that's already passed.
+    // Login removed — portal loads directly
     (function startPortal() {
-      if (localStorage.getItem('cc_auth') === '1') {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('portal').classList.remove('hidden');
-        loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
-        setupRealtime();
-      }
+      loadAndRender().then(() => restoreTab()).catch(e => console.error('loadAndRender error:', e));
+      setupRealtime();
+      // Fallback polling: silently refresh queue data every 30s in case realtime drops
+      setInterval(async () => {
+        try {
+          const d = await loadData();
+          if (d) {
+            renderMarketing(d);
+            updateNavDots(d);
+            const liveTs = d._liveGeneratedAt || d.generatedAt;
+            const _luEl = document.getElementById('last-updated');
+            if (_luEl && liveTs) _luEl.textContent = 'Live: ' + new Date(liveTs).toLocaleTimeString();
+          }
+        } catch(e) { console.warn('Auto-refresh failed:', e); }
+      }, 30000);
     })();
 
     let DATA = null;
@@ -1450,7 +1429,7 @@
           wordCount: a.word_count, url: a.url, liveUrl: a.live_url, seoTitle: a.seo_title,
           seoDescription: a.seo_description, tweetHook: a.tweet_hook, tags: a.tags || [],
           createdAt: a.created_at, publishedAt: a.published_at, scheduledFor: a.scheduled_for,
-          rejectedReason: a.rejected_reason
+          rejectedReason: a.rejected_reason, tweetId: a.tweet_id
         }));
 
         const tweetItems = (tweets || []).map(t => ({
@@ -1462,6 +1441,14 @@
         // Fetch live session data in parallel (non-blocking — don't await here)
         const liveSessionsPromise = fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
           .then(r => r.json()).catch(() => null);
+
+        // Merge tweet IDs from local queue (articles table lacks tweet_id column)
+        let tweetIdMap = {};
+        try {
+          const tRes = await fetch("/portal/tweet-ids.json?t=" + Date.now());
+          if (tRes.ok) tweetIdMap = await tRes.json();
+        } catch {}
+        articleItems.forEach(a => { if (!a.tweetId && tweetIdMap[a.id]) a.tweetId = tweetIdMap[a.id]; });
 
         DATA = {
           queue: [...articleItems, ...tweetItems],
@@ -1479,9 +1466,17 @@
           if (live && live.sessions && DATA) {
             DATA.sessions = live.sessions;
             DATA._liveGeneratedAt = live.generatedAt || DATA._liveGeneratedAt;
-            DATA.agentConfigs = live.agentConfigs || {};
-            if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
+            // Only update agentConfigs if live data provides them, but don't overwrite if we already have them from Supabase
+            if (live.agentConfigs) {
+                Object.assign(DATA.agentConfigs, live.agentConfigs);
+            }
+            if (live.crons && live.crons.length) {
+              DATA.crons = live.crons;
+              window._cronList = live.crons;
+            }
             renderAgents(DATA);
+            // Enrich cron tokens from Supabase in real-time (async)
+            enrichCronTokens(DATA);
             renderHealth(DATA);
             updateNavDots(DATA);
             updateAgentStatusDots(live.sessions);
@@ -1517,11 +1512,11 @@
     async function pollGatewayHealth() {
       const start = Date.now();
       try {
-        await fetch('https://gateway.cliffcircuit.ai/', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+        const res = await fetch('https://api.cliffcircuit.ai/sessions.json?gw_ping=1&t=' + Date.now(), { cache: 'no-store' });
         const latency = Date.now() - start;
         window._realtimeGwSet = true;
-        window._realtimeGwOk = true;
-        window._realtimeGwLatency = latency;
+        window._realtimeGwOk = res.ok;
+        window._realtimeGwLatency = res.ok ? latency : null;
       } catch (e) {
         window._realtimeGwSet = true;
         window._realtimeGwOk = false;
@@ -1588,13 +1583,14 @@
           if (live.agentConfigs) DATA.agentConfigs = live.agentConfigs;
           if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
           renderHealth(DATA);   // updates live-sessions-list in System Health tab
-          renderAgents(DATA);   // updates context bars in Agents tab
+          renderAgents(DATA); enrichCronTokens(DATA);  // updates context bars + token data in Agents tab
           updateNavDots(DATA);
           updateAgentStatusDots(live.sessions);
         }
       } catch (e) {
-        // Fetch failed — gateway likely down, mark all agents Offline immediately
+        // Fetch failed — gateway likely down, mark all agents Offline + reset nav dots
         updateAgentStatusDots([]);
+        updateNavDots({ crons: [], sessions: [] });
       }
     }
     setInterval(pollLiveSessions, 10000);
@@ -1687,7 +1683,7 @@
             <td class="px-3 py-1 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
             <td class="px-3 py-1 text-gray-500 text-xs">${(i.type==='tweet'||(i.account==='timharris707'&&!i.title&&!i.slug&&i.tweetText))?'Tweet':'Article'}</td>
             <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-            <td class="px-3 py-1 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td>
+            <td class="px-3 py-1 text-xs">${formatRejectReasons(i.rejectionReason||i.rejectedReason||"")}</td>
             <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
           </tr>`).join('');
     }
@@ -1797,6 +1793,12 @@
       }
       renderQueueTable();
     }
+
+    function publishBtn(item) {
+      if (item.status !== 'approved' && item.status !== 'written') return '';
+      return '<button onclick="event.stopPropagation();publishNow(\'' + esc(item.id) + '\')" class="text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors" title="Publish immediately">Publish</button>';
+    }
+
     function renderQueueTable() {
       const tf = window._queueTypeFilter||'all';
       const af = window._queueAcctFilter||'all';
@@ -1813,8 +1815,16 @@
         const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
         const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
         const sched = i.scheduledFor ? new Date(i.scheduledFor) : null;
-        const dateOk = df==='all' || (df==='today' && sched && sched>=todayStart && sched<=todayEnd) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
+        const dateOk = df==='all' || (df==='today' && (!sched || (sched>=todayStart && sched<=todayEnd))) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
         return typeOk && acctOk && dateOk;
+      });
+      // Sort non-drafts: scheduled first (by time asc), then unscheduled
+      nonDrafts.sort((a,b) => {
+        const aS = a.scheduledFor ? 0 : 1;
+        const bS = b.scheduledFor ? 0 : 1;
+        if (aS !== bS) return aS - bS;
+        if (a.scheduledFor && b.scheduledFor) return new Date(a.scheduledFor) - new Date(b.scheduledFor);
+        return new Date(a.createdAt) - new Date(b.createdAt);
       });
       const items = [...drafts, ...nonDrafts];
       const el = document.getElementById('unified-queue-body');
@@ -1830,9 +1840,10 @@
               <td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td>
               <td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-              <td class="px-3 py-1"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td>
+              <td class="px-3 py-1"><span class="pill ${i.status==="approved" && i.scheduledFor ? "status-scheduled" : "status-"+i.status}">${fmtStatus(i.status, i)}</span></td>
               <td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td>
               <td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td>
+              <td class="px-2 py-1 text-right">${publishBtn(i)}</td>
             </tr>`;
           }).join('');
     }
@@ -1881,11 +1892,9 @@
             const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet && (i.title||i.slug);
             const label = esc((i.title||i.tweetText||i.id).slice(0,70));
             const overflow = (i.title||i.tweetText||'').length>70?'…':'';
-            const viewLink = i.tweetId
-              ? `<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">View →</a>`
-              : i.slug
-              ? `<a href="https://cliffcircuit.ai/blog/${esc(i.slug)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">Read →</a>`
-              : '<span class="text-gray-600 text-xs">—</span>';
+            const articleLink = (isArticle && i.slug) ? `<a href="https://cliffcircuit.ai/blog/${esc(i.slug)}.html" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">Article</a>` : '';
+            const tweetLink = i.tweetId ? `<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">Tweet</a>` : '';
+            const viewLink = [articleLink, tweetLink].filter(Boolean).join(' <span class="text-gray-600">|</span> ') || '<span class="text-gray-600 text-xs">—</span>';
             return `<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')">
               <td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td>
               <td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td>
@@ -2202,16 +2211,26 @@ function switchTab(t) {
       return key.split(':').pop().slice(0,14);
     }
 
-    function renderAgentSessions(rows) {
+    function renderAgentSessions(rows) { console.log("DEBUG ROWS:", rows.slice(0, 5));
       const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
       const agentColor = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
       const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
       const modelShort = m => {
-        if (!m) return '—';
-        if (m.includes('haiku'))  return '<span class="text-yellow-600">Haiku</span>';
-        if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
-        if (m.includes('opus'))   return '<span class="text-purple-400">Opus</span>';
-        return m.split('/').pop();
+        if (!m) return '<span class="text-gray-700">—</span>';
+        const s = m.toLowerCase();
+        if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
+        if (s.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+        if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return '<span class="text-indigo-400">Sonnet 4.6</span>';
+        if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return '<span class="text-indigo-400">Sonnet 4.5</span>';
+        if (s.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+        if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return '<span class="text-yellow-600">Haiku 4.5</span>';
+        if (s.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+        if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return '<span class="text-green-400">Gemini 3.1 Flash Lite</span>';
+        if (s.includes('gemini-2.5-flash')) return '<span class="text-green-400">Gemini 2.5 Flash</span>';
+        if (s.includes('gemini-2.5-pro')) return '<span class="text-green-400">Gemini 2.5 Pro</span>';
+        if (s.includes('gemini')) return '<span class="text-green-400">Gemini</span>';
+        if (s.includes('grok')) return '<span class="text-orange-400">Grok</span>';
+        return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
       };
 
       // Per-agent mini cards
@@ -2226,7 +2245,7 @@ function switchTab(t) {
         if (el(`ag-${alias}-cost`))   el(`ag-${alias}-cost`).textContent  = '$' + cost.toFixed(2);
       }
 
-      // Update top summary cards from Supabase data
+      // Update Agent Sessions summary (above portrait cards) — Supabase agent sessions only
       const totSessions  = rows.length;
       const totTokensIn  = rows.reduce((s,r) => s + ((r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0)), 0);
       const totTokensOut = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
@@ -2234,11 +2253,7 @@ function switchTab(t) {
       const avgIn  = totSessions ? Math.round(totTokensIn  / totSessions) : 0;
       const avgOut = totSessions ? Math.round(totTokensOut / totSessions) : 0;
       const el = id => document.getElementById(id);
-      if (el('tok-total')) el('tok-total').innerHTML = fmtK(totTokensIn) + ' / ' + fmtK(totTokensOut);
-      if (el('tok-cost'))  el('tok-cost').textContent = '$' + totCost.toFixed(2);
-      if (el('tok-runs'))  el('tok-runs').textContent = totSessions;
-      if (el('tok-avg'))   el('tok-avg').innerHTML    = fmtK(avgIn) + ' / ' + fmtK(avgOut);
-      // Update Agent Sessions summary (above portrait cards)
+      // ONLY update agent-specific summary IDs — do NOT touch tok-* (those belong to Raw/Sub-agent table)
       if (el('ag-total-runs'))   el('ag-total-runs').textContent   = totSessions;
       if (el('ag-total-cost'))   el('ag-total-cost').textContent   = '$' + totCost.toFixed(2);
       if (el('ag-total-tokens')) el('ag-total-tokens').innerHTML   = fmtK(totTokensIn) + ' / ' + fmtK(totTokensOut);
@@ -2259,11 +2274,11 @@ function switchTab(t) {
         if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
         return Math.round(ms/86400000) + 'd ago';
       };
-      tbody.innerHTML = rows.slice(0, 60).map(r => {
+      tbody.innerHTML = rows.slice(0, 10).map(r => {
         const aCls   = agentColor[r.agent_id] || 'text-gray-400';
         const aLbl   = agentLabel[r.agent_id] || fmtAgent(r.agent_id);
         const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
-        const cacheStr = fmtK((r.cache_read||0) + (r.cache_write||0));
+        const fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
         const friendlyName = sessionKeyToFriendly(r.session_key, r.session_id);
         const tokIn = (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0); // include cache
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
@@ -2271,7 +2286,7 @@ function switchTab(t) {
           <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
           <td class="px-4 py-1.5 text-xs">${modelShort(r.model)}</td>
           <td class="px-4 py-1.5 text-right text-xs text-white">${fmtK(tokIn)} / ${fmtK(r.output_tokens||0)}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-gray-500">${cacheStr}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-400">${fmtDur(r.duration_ms || (Date.now() - new Date(r.first_seen_at).getTime()))}</td>
           <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
           <td class="px-4 py-1.5 text-right text-xs text-gray-600">${timeAgo(r.last_seen_at)}</td>
         </tr>`;
@@ -2409,10 +2424,20 @@ function switchTab(t) {
       const agentName = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
       const modelShortT = m => {
         if (!m) return '<span class="text-gray-700">—</span>';
-        if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
-        if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
-        if (m.includes('opus')) return '<span class="text-purple-400">Opus</span>';
-        return m.split('/').pop();
+        const s = m.toLowerCase();
+        if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
+        if (s.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+        if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return '<span class="text-indigo-400">Sonnet 4.6</span>';
+        if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return '<span class="text-indigo-400">Sonnet 4.5</span>';
+        if (s.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+        if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return '<span class="text-yellow-600">Haiku 4.5</span>';
+        if (s.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+        if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return '<span class="text-green-400">Gemini 3.1 Flash Lite</span>';
+        if (s.includes('gemini-2.5-flash')) return '<span class="text-green-400">Gemini 2.5 Flash</span>';
+        if (s.includes('gemini-2.5-pro')) return '<span class="text-green-400">Gemini 2.5 Pro</span>';
+        if (s.includes('gemini')) return '<span class="text-green-400">Gemini</span>';
+        if (s.includes('grok')) return '<span class="text-orange-400">Grok</span>';
+        return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
       };
 
       // Cron job → Sub-agent task name mapping
@@ -2710,7 +2735,7 @@ function switchTab(t) {
 
 
 
-        const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
+        const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 10);
         if (filtered.length === 0) {
           dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
         } else {
@@ -2765,7 +2790,32 @@ function switchTab(t) {
       toggle.textContent = hidden ? '▼ hide' : '▶ show';
     }
 
-    function renderAgents(d) {
+    function friendlyModel(m) {
+      if (!m || m === 'Unknown') return 'Unknown';
+      const s = m.toLowerCase();
+      if (s.includes('opus-4-6') || s.includes('opus-4.6')) return 'Opus 4.6';
+      if (s.includes('opus-4')) return 'Opus 4';
+      if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return 'Sonnet 4.6';
+      if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return 'Sonnet 4.5';
+      if (s.includes('sonnet-4')) return 'Sonnet 4';
+      if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return 'Haiku 4.5';
+      if (s.includes('haiku-3-5') || s.includes('haiku-3.5')) return 'Haiku 3.5';
+      if (s.includes('haiku')) return 'Haiku';
+      if (s.includes('gemini-3.1-flash-lite')) return 'Gemini 3.1 Flash Lite';
+      if (s.includes('gemini-2.5-flash')) return 'Gemini 2.5 Flash';
+      if (s.includes('gemini-2.5-pro')) return 'Gemini 2.5 Pro';
+      if (s.includes('gemini')) return 'Gemini';
+      if (s.includes('grok-4.1-fast') || s.includes('grok-4-1-fast')) return 'Grok 4.1 Fast';
+      if (s.includes('grok-4.1') || s.includes('grok-4-1')) return 'Grok 4.1';
+      if (s.includes('grok')) return 'Grok';
+      if (s.includes('gpt-4o')) return 'GPT-4o';
+      if (s.includes('gpt-4')) return 'GPT-4';
+      if (s.includes('o1')) return 'o1';
+      // Fallback: strip provider prefix, clean up
+      return m.split('/').pop().replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase());
+    }
+
+        function renderAgents(d) {
       // Populate agent thinking levels from config
       const ac = d.agentConfigs || {};
       const thinkingMeta = {
@@ -2777,15 +2827,29 @@ function switchTab(t) {
       ['cliff', 'samantha', 'scout'].forEach(agent => {
         const id = agent === 'cliff' ? 'main' : agent;
         const cfg = ac[id] || ac[agent] || {};
-        const level = (cfg.thinking || 'off').toLowerCase();
+        // Pick best live session: prefer direct/interactive sessions (has thinking set or label includes "direct"), then most recent
+        const agentSessions = (d.sessions || []).filter(s => s.agentId === id);
+        const directSession = agentSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
+        const bestSession = directSession || agentSessions.sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] || null;
+        const liveModel = bestSession ? bestSession.model : null;
+        const level = (bestSession?.thinking || cfg.thinking || "off").toLowerCase();
+        const model = liveModel || cfg.model || "Unknown";
         const meta = thinkingMeta[level] || thinkingMeta.off;
-        const levelEl = document.getElementById(agent + '-thinking-level');
+        const levelEl = document.getElementById(agent + "-thinking-level"); const modelEl = document.getElementById(agent + "-model");
         const descEl = document.getElementById(agent + '-thinking-desc');
         if (levelEl) {
           levelEl.textContent = level.charAt(0).toUpperCase() + level.slice(1);
           levelEl.className = meta.color + ' text-sm font-semibold';
         }
-        if (descEl) descEl.textContent = meta.desc;
+        if (descEl) descEl.textContent = meta.desc; if (modelEl) modelEl.textContent = friendlyModel(model);
+        const providerEl = document.getElementById(agent + '-model-provider');
+        if (providerEl && model) {
+          const s = model.toLowerCase();
+          if (s.includes('gemini') || s.includes('google')) providerEl.textContent = 'google';
+          else if (s.includes('grok') || s.includes('xai')) providerEl.textContent = 'xai';
+          else if (s.includes('gpt') || s.includes('openai') || s.includes('o1')) providerEl.textContent = 'openai';
+          else providerEl.textContent = 'anthropic';
+        }
       });
       const crons = d.crons || [];
       const agentMap = {};
@@ -2797,6 +2861,8 @@ function switchTab(t) {
       });
 
       const agentIds = { 'cliff': 'cliff', 'samantha': 'samantha', 'scout': 'scout' };
+      // Map 'main' agent jobs to cliff
+      if (agentMap['main']) { if (!agentMap['cliff']) agentMap['cliff'] = { jobs: [], errors: 0 }; agentMap['cliff'].jobs.push(...agentMap['main'].jobs); agentMap['cliff'].errors += agentMap['main'].errors; }
 
       Object.entries(agentIds).forEach(([name, agentId]) => {
         const info = agentMap[agentId] || { jobs: [], errors: 0 };
@@ -2810,17 +2876,34 @@ function switchTab(t) {
         const el = id => document.getElementById(`${name}-${id}`);
         if (el('job-count')) el('job-count').textContent = jobCount + (jobCount === 1 ? ' job' : ' jobs');
         if (el('last-job')) el('last-job').textContent = lastActive;
-        if (el('job-errors')) { el('job-errors').classList.toggle('hidden', !hasErrors); if (hasErrors) el('job-errors').textContent = `⚠ ${info.errors} error${info.errors===1?'':'s'} detected`; }
 
-        // Live sessions (Cliff only)
-        // Session detail list lives in System Health tab, not here
-
-        // Live session context bar — Cliff only; Samantha/Scout always show largest job
+        // Live sessions for this agent (needed by both warnings and context bar)
         const sessionAgentId = name === 'cliff' ? 'main' : name;
-        const cliffSessions = name === 'cliff' ? (d.sessions || []).filter(s => s.agentId === 'main') : [];
-        const liveSession = cliffSessions.length
-          ? [...cliffSessions].sort((a, b) => (b.pct || 0) - (a.pct || 0))[0]
-          : null;
+        const agentLiveSessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
+        const directLive = agentLiveSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
+        const liveSession = directLive || (agentLiveSessions.length ? [...agentLiveSessions].sort((a, b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] : null);
+
+        // Build warnings list: cron errors + slow jobs + high-token jobs
+        const warnings = [];
+        if (info.errors > 0) warnings.push(`${info.errors} error${info.errors>1?'s':''}`);
+        // Slow job warning: >10min for any single job
+        const slowJobs = info.jobs.filter(j => (j.lastDurationMs || 0) > 600000);
+        if (slowJobs.length) {
+          const slowest = slowJobs.sort((a,b) => b.lastDurationMs - a.lastDurationMs)[0];
+          const mins = Math.round(slowest.lastDurationMs / 60000);
+          const shortName = (slowest.name || '').replace(/^(samantha|scout|cliff)-/i, '').replace(/-/g, ' ');
+          warnings.push(`${shortName} took ${mins}m`);
+        }
+        // High context warning: any active session >70%
+        const highCtxSession = agentLiveSessions.find(s => (s.pct || 0) >= 70);
+        if (highCtxSession) warnings.push(`session at ${highCtxSession.pct}% context`);
+        const hasWarnings = warnings.length > 0;
+        if (el('job-errors')) {
+          el('job-errors').classList.toggle('hidden', !hasWarnings);
+          if (hasWarnings) el('job-errors').textContent = '⚠ ' + warnings.join(' · ');
+        }
+
+        // Live session context bar — all agents (session vars defined above)
 
         const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
         function snapshotAge(ts) {
@@ -2838,8 +2921,8 @@ function switchTab(t) {
           const pct = liveSession.pct;
           const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-          const tokLabel = Math.round(liveSession.used / 1000) + 'K / ' + Math.round(liveSession.limit / 1000) + 'K tokens';
-          if (el('ctx-title')) el('ctx-title').textContent = 'Live Session';
+          const tokLabel = `${Math.round(liveSession.used / 1000)}K / ${Math.round(liveSession.limit / 1000)}K tokens`;
+          if (el('ctx-title')) el('ctx-title').textContent = (name === 'cliff') ? 'Live Session' : 'Last Run';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
           if (el('ctx-top')) el('ctx-top').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy');
@@ -2902,9 +2985,19 @@ function switchTab(t) {
 
           const modelShort = m => {
             if (!m) return '<span class="text-gray-700">—</span>';
-            if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
-            if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
-            if (m.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+            const s = m.toLowerCase();
+            if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
+            if (s.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+            if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return '<span class="text-indigo-400">Sonnet 4.6</span>';
+            if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return '<span class="text-indigo-400">Sonnet 4.5</span>';
+            if (s.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+            if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return '<span class="text-yellow-600">Haiku 4.5</span>';
+            if (s.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+            if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return '<span class="text-green-400">Gemini 3.1 Flash Lite</span>';
+            if (s.includes('gemini-2.5-flash')) return '<span class="text-green-400">Gemini 2.5 Flash</span>';
+            if (s.includes('gemini-2.5-pro')) return '<span class="text-green-400">Gemini 2.5 Pro</span>';
+            if (s.includes('gemini')) return '<span class="text-green-400">Gemini</span>';
+            if (s.includes('grok')) return '<span class="text-orange-400">Grok</span>';
             return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
           };
 
@@ -2924,13 +3017,52 @@ function switchTab(t) {
               <td class="px-4 py-2.5 text-xs">${thinkingBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
-              <td class="px-4 py-2.5 text-gray-500">${j.nextRun ? timeAgo(j.nextRun) : '—'}</td>
+              <td class="px-4 py-2.5 text-gray-500">${j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—')}</td>
               <td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens, j)}</td>
             </tr>`).join('');
         } else if (tbody) {
           tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
         }
       });
+    }
+
+    // Enrich cron job rows with token data from session_snapshots (same source as Tokens tab)
+    async function enrichCronTokens(d) {
+      if (!_sb) return;
+      try {
+        // Query cron sessions from session_snapshots — same table the Tokens tab uses
+        const { data: rows, error } = await _sb.from('session_snapshots')
+          .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+          .like('session_key', 'cron:%')
+          .gt('total_tokens', 0)
+          .order('last_seen_at', { ascending: false })
+          .limit(200);
+        if (error || !rows?.length) return;
+
+        // Build map: cron_name -> latest snapshot (first match = most recent due to desc order)
+        const tokenMap = {};
+        rows.forEach(r => {
+          const cronName = r.session_key?.split(':')[1];
+          if (cronName && !tokenMap[cronName]) tokenMap[cronName] = r;
+        });
+
+        // Enrich cron objects with real data from Supabase
+        let enriched = 0;
+        (d.crons || []).forEach(c => {
+          const snap = tokenMap[c.name];
+          if (snap) {
+            c.lastRunTokens = snap.total_tokens;
+            c.lastRunInputTokens = snap.input_tokens;
+            c.lastRunOutputTokens = snap.output_tokens;
+            c.lastRunCost = snap.cost_total_usd;
+            c.lastDurationMs = snap.duration_ms;
+            c.lastRunModel = snap.model;
+            enriched++;
+          }
+        });
+
+        if (enriched > 0) renderAgents(d);
+      } catch(e) { console.warn('[agents] Supabase token enrich failed:', e); }
     }
 
     function renderMarketing(d) {
@@ -3043,9 +3175,21 @@ function switchTab(t) {
       set('metric-tim-tweets-48h-dup', timPosts48.length);
       set('metric-combined-48h', articles48.length + cliffTweets48.length + timPosts48.length);
 
+      // Over-plan warning indicators
+      const goals = loadGoals();
+      if (goals && goals.cliffArticles) {
+        const warnHtml = '<span class="text-yellow-500 text-xs ml-1" title="Over plan">\u26A0</span>';
+        const ca = document.getElementById('goal-cliff-articles-display');
+        const ct = document.getElementById('goal-cliff-tweets-display');
+        const tt = document.getElementById('goal-tim-tweets-display');
+        if (ca) ca.innerHTML = 'plan: ' + goals.cliffArticles + '/day' + (articles48.length > goals.cliffArticles ? ' ' + warnHtml : '');
+        if (ct) ct.innerHTML = 'plan: ' + goals.cliffTweets + '/day' + (cliffTweets48.length > goals.cliffTweets ? ' ' + warnHtml : '');
+        if (tt) tt.innerHTML = 'plan: ' + goals.timTweets + '/day' + (timPosts48.length > goals.timTweets ? ' ' + warnHtml : '');
+      }
+
       const rejected = q.filter(i=>i.status==='rejected');
       const postFailed = q.filter(i=>i.status==='post_failed');
-      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
+      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && i.status!=='failed' && i.status!=='draft' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
         .sort((a,b)=>new Date(a.scheduledFor||a.createdAt)-new Date(b.scheduledFor||b.createdAt));
 
       // Pending Articles table
@@ -3236,9 +3380,9 @@ function switchTab(t) {
       };
       const modelShortH = m => {
         if (!m) return '<span class="text-gray-700">—</span>';
-        if (m.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
-        if (m.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
-        if (m.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+        if (m.includes("-haiku")) return '<span class="text-yellow-600">Haiku</span>';
+        if (m.includes("-sonnet")) return '<span class="text-indigo-400">Sonnet</span>';
+        if (m.includes("-opus")) return '<span class="text-purple-400">Opus</span>';
         return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
       };
       const fmtTokensH = (t, j) => {
@@ -3295,9 +3439,76 @@ function switchTab(t) {
       set('stat-tim2', stats.timPostsToday??'—');
     }
 
-    function fmtStatus(s) {
-      const labels = { draft: 'Pending Review', approved: 'Approved', published: 'Posted', error: 'Error', rejected: 'Rejected', post_failed: 'Post Failed' };
+    function fmtStatus(s, item) {
+      if (s === "approved" && item && item.scheduledFor) return "Scheduled";
+      const labels = { draft: "Pending Review", approved: "Approved", published: "Posted", error: "Error", rejected: "Rejected", post_failed: "Post Failed" };
       return labels[s] || s;
+    }
+
+
+    async function publishFromModal(id) {
+      const btn = document.getElementById('modal-publish-action');
+      if (!btn) return;
+      doPublish(id, btn, 'bg-teal-700 hover:bg-teal-600 text-white text-sm px-4 py-1.5 rounded border border-teal-600 hover:border-teal-500 transition-colors font-medium');
+    }
+
+    async function publishNow(id) {
+      // Open the detail modal instead of using confirm()
+      openDetail(id);
+      return;
+      const btn = event.target;
+      const origClass = 'text-xs px-2 py-0.5 rounded bg-teal-900 text-teal-300 border border-teal-700 hover:bg-teal-800 hover:text-white transition-colors';
+      btn.textContent = 'Publishing...';
+      btn.disabled = true;
+      btn.className = 'text-xs px-2 py-0.5 rounded bg-yellow-900 text-yellow-300 border border-yellow-700 cursor-wait';
+      // dead code — publishNow now opens modal instead
+      }
+
+    async function doPublish(id, btn, origClass) {
+      btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Publishing...</span>';
+      btn.disabled = true;
+      btn.className = 'bg-yellow-700 text-yellow-200 text-sm px-4 py-1.5 rounded border border-yellow-600 cursor-wait font-medium';
+      try {
+        const item = window._queueMap && window._queueMap[id];
+        const table = (item && (item.type === 'tweet' || (!item.title && !item.slug && item.tweetText))) ? 'tweets' : 'articles';
+        const now = new Date().toISOString();
+        await _sb.from(table).update({ status: 'approved', scheduled_for: now, updated_at: now }).eq('id', id);
+        const res = await fetch('https://api.cliffcircuit.ai/publish-now', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const result = await res.json();
+        const output = result.output || '';
+        const hasFailures = output.includes('Failures: ') && !output.includes('Failures: 0');
+        // Only count publish errors, not post-publish CMD errors (scheduler trigger etc)
+        const publishErrors = output.split('\n').filter(l => l.includes('ERROR:') && !l.includes('CMD ERROR:'));
+        if (result.ok && !hasFailures && publishErrors.length === 0) {
+          btn.textContent = 'Published';
+          btn.className = 'bg-green-700 text-green-200 text-sm px-4 py-1.5 rounded border border-green-600 font-medium';
+          // Update the status pill in the modal
+          const statusEl = document.getElementById('modal-status');
+          if (statusEl) statusEl.innerHTML = '<span class="pill status-published">Published</span>';
+          setTimeout(async () => {
+            const d = await loadData();
+            if (d) renderMarketing(d);
+          }, 2000);
+        } else {
+          const errMatch = output.match(/ERROR: (.+)/);
+          const errMsg = result.error || (errMatch && errMatch[1]) || 'Publish failed';
+          btn.textContent = 'Failed — ' + errMsg.slice(0, 40);
+          btn.title = errMsg;
+          btn.className = 'bg-red-700 text-red-200 text-sm px-4 py-1.5 rounded border border-red-600 cursor-help font-medium';
+          console.error('Publish error:', errMsg, result);
+          setTimeout(() => { btn.textContent = 'Retry'; btn.title = 'Click to retry'; btn.disabled = false; btn.className = origClass; }, 8000);
+        }
+      } catch(e) {
+        btn.textContent = 'Error — ' + (e.message || 'Network error').slice(0, 40);
+        btn.title = e.message || 'Network or server error';
+        btn.className = 'bg-red-700 text-red-200 text-sm px-4 py-1.5 rounded border border-red-600 cursor-help font-medium';
+        console.error('Publish failed:', e);
+        setTimeout(() => { btn.textContent = 'Retry'; btn.title = 'Click to retry'; btn.disabled = false; btn.className = origClass; }, 8000);
+      }
     }
 
     function openDetail(id) {
@@ -3318,7 +3529,7 @@ function switchTab(t) {
         const slug = item.heroImage.split('/').pop();
         const cb = '?t=' + Date.now();
         const portalSrc = `https://cliffcircuit.ai/portal/images/${slug}${cb}`;
-        const liveSrc = item.heroImage.startsWith('http') ? item.heroImage : `https://shopcliffmart.com${item.heroImage}`;
+        const liveSrc = item.heroImage.startsWith('http') ? item.heroImage : `https://cliffcircuit.ai${item.heroImage}`;
         heroImg.src = portalSrc;
         heroImg.onerror = () => { heroImg.src = liveSrc + cb; heroImg.onerror = null; };
         heroEl.classList.remove('hidden');
@@ -3330,7 +3541,7 @@ function switchTab(t) {
 
       document.getElementById('modal-title').textContent = title;
       document.getElementById('modal-account').textContent = isTimPost ? '@TimHarris707' : '@CliffCircuit';
-      document.getElementById('modal-status').innerHTML = `<span class="pill status-${item.status}">${fmtStatus(item.status)}</span>`;
+      document.getElementById('modal-status').innerHTML = `<span class="pill ${item.status==="approved" && item.scheduledFor ? "status-scheduled" : "status-"+item.status}">${fmtStatus(item.status, item)}</span>`;
       document.getElementById('modal-scheduled').innerHTML = scheduled ? `Scheduled: ${scheduled}` : '';
 
       // Meta (word count for articles)
@@ -3339,6 +3550,19 @@ function switchTab(t) {
 
       // Excerpt / tweet body
       document.getElementById('modal-body').textContent = body;
+
+      // Tweet hook (for articles that have one)
+      const tweetHookEl = document.getElementById('modal-tweet-hook');
+      const tweetTextEl = document.getElementById('modal-tweet-text');
+      if (tweetHookEl && item.tweetHook) {
+        // Show tweet with paragraph spacing matching Twitter's rendering
+        const tweetClean = item.tweetHook.replace(/ARTICLE_URL_PLACEHOLDER/g, '[link]').replace(/\[URL\]/g, '[link]').trim();
+        /* Double newlines = paragraph break, single = line break */
+        tweetTextEl.innerHTML = esc(tweetClean).replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+        tweetHookEl.classList.remove('hidden');
+      } else if (tweetHookEl) {
+        tweetHookEl.classList.add('hidden');
+      }
       document.getElementById('modal-id').textContent = item.id || '';
 
       // Tags (articles)
@@ -3363,10 +3587,10 @@ function switchTab(t) {
       let links = [];
       if (item.slug) {
         if (item.status === 'published') {
-          const liveUrl = item.liveUrl || `https://shopcliffmart.com/blog/${item.slug}.html`;
+          const liveUrl = item.liveUrl || `https://cliffcircuit.ai/blog/${item.slug}.html`;
           links.push(`<a href="${esc(liveUrl)}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Open on Blog ↗</a>`);
         } else {
-          const previewUrl = item.liveUrl || `/portal/previews/${esc(item.slug)}.html`;
+          const previewUrl = `/portal/previews/${esc(item.slug)}.html`;
           links.push(`<a href="${esc(previewUrl)}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1 hover:border-indigo-600 transition-colors">Preview Full Article ↗</a>`);
         }
       }
@@ -3374,6 +3598,16 @@ function switchTab(t) {
         links.push(`<a href="https://x.com/i/status/${esc(item.tweetId)}" target="_blank" class="text-gray-400 hover:text-white text-sm border border-gray-700 rounded px-3 py-1 hover:border-gray-500 transition-colors">View Tweet ↗</a>`);
       }
       linkEl.innerHTML = links.join('');
+
+      // Publish button inside modal (only for approved/written items)
+      const pubBtnEl = document.getElementById('modal-publish-btn');
+      if (pubBtnEl) {
+        if (item.status === 'approved' || item.status === 'written') {
+          pubBtnEl.innerHTML = '<button id="modal-publish-action" onclick="publishFromModal(\'' + esc(item.id) + '\')" class="bg-teal-700 hover:bg-teal-600 text-white text-sm px-4 py-1.5 rounded border border-teal-600 hover:border-teal-500 transition-colors font-medium">Publish Now</button>';
+        } else {
+          pubBtnEl.innerHTML = '';
+        }
+      }
 
       document.getElementById('detail-modal').classList.remove('hidden');
     }
@@ -3383,9 +3617,15 @@ function switchTab(t) {
       if (!j) return;
       const modelShortText = m => {
         if (!m) return 'Default model';
-        if (m.includes('haiku')) return 'Claude Haiku';
-        if (m.includes('sonnet')) return 'Claude Sonnet';
-        if (m.includes('opus')) return 'Claude Opus';
+        const s = m.toLowerCase();
+        if (s.includes('opus-4-6') || s.includes('opus-4.6')) return 'Claude Opus 4.6';
+        if (s.includes('opus')) return 'Claude Opus';
+        if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return 'Claude Sonnet 4.6';
+        if (s.includes('sonnet')) return 'Claude Sonnet';
+        if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return 'Claude Haiku 4.5';
+        if (s.includes('haiku')) return 'Claude Haiku';
+        if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return 'Gemini 3.1 Flash Lite';
+        if (s.includes('gemini')) return 'Gemini';
         return m.split('/').pop();
       };
       document.getElementById('job-modal-name').textContent = j.name;
@@ -3414,6 +3654,36 @@ function switchTab(t) {
 
     function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    const REASON_LABELS = {
+      'poor_title': ['Poor Title', '#92400e', '#fbbf24'],
+      'title_too_long': ['Title Too Long', '#92400e', '#fbbf24'],
+      'poor_excerpt': ['Poor Excerpt', '#92400e', '#fbbf24'],
+      'missing_htmlContent': ['No Content', '#7f1d1d', '#f87171'],
+      'content_empty_or_too_short': ['No Content', '#7f1d1d', '#f87171'],
+      'tweet_hook_missing': ['No Tweet Hook', '#4c1d95', '#a78bfa'],
+      'wrong_template': ['Wrong Template', '#4c1d95', '#a78bfa'],
+      'hero_image_missing_on_disk': ['No Hero Image', '#1e3a5f', '#60a5fa'],
+      'duplicate_item': ['Duplicate', '#374151', '#9ca3af'],
+    };
+    function formatRejectReasons(raw) {
+      if (!raw) return '<span style="color:#6b7280">No reason noted</span>';
+      // Split on semicolons or commas, handle compound reasons like "Title too long (65 chars, max 59); No hero_image specified"
+      const parts = raw.split(/;|,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
+      return parts.map(p => {
+        const key = Object.keys(REASON_LABELS).find(k => p.toLowerCase().includes(k.replace(/_/g,' ')) || p.toLowerCase().includes(k));
+        // Also match natural language versions
+        const nlKey = !key ? Object.keys(REASON_LABELS).find(k => {
+          const label = REASON_LABELS[k][0].toLowerCase();
+          return p.toLowerCase().includes(label);
+        }) : null;
+        const match = REASON_LABELS[key || nlKey];
+        if (match) return `<span style="background:${match[1]};color:${match[2]};border-radius:9999px;padding:1px 8px;font-size:10px;font-weight:600;letter-spacing:0.03em;display:inline-block;margin:1px 2px">${match[0]}</span>`;
+        // Unknown reason — gray capsule
+        const short = p.length > 30 ? p.slice(0,28) + '..' : p;
+        return `<span style="background:#374151;color:#9ca3af;border-radius:9999px;padding:1px 8px;font-size:10px;font-weight:600;letter-spacing:0.03em;display:inline-block;margin:1px 2px">${esc(short)}</span>`;
+      }).join(' ');
+    }
+
     function fmt(n){if(n==null)return'—';return Number(n).toLocaleString();}
     function ago(iso){if(!iso)return'—';const m=(Date.now()-new Date(iso))/60000;if(m<60)return Math.round(m)+'m ago';if(m<1440)return Math.round(m/60)+'h ago';return Math.round(m/1440)+'d ago';}
     function fmtScheduled(item) {
@@ -3455,9 +3725,8 @@ function switchTab(t) {
         }
       }
 
-      // Articles with no scheduled time
-      if (account !== 'timharris707') return '<span class="text-gray-500 text-xs">Next publish cycle</span>';
-      return '—';
+      // No scheduled time — show Unscheduled for all items
+      return '<span class="text-gray-500 text-xs">Unscheduled</span>';
     }
     function relTime(iso) {
       if (!iso) return '—';
@@ -3515,17 +3784,18 @@ function switchTab(t) {
       const html = `<!DOCTYPE html>
 <html>
 <head>
+<!-- Cache-buster: 1772579137 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <base href="https://shopcliffmart.com/">
-  <link rel="stylesheet" href="https://shopcliffmart.com/styles.css">
+  <base href="https://cliffcircuit.ai/">
+  <link rel="stylesheet" href="https://cliffcircuit.ai/styles.css">
   <style>body{background:#111;color:#e5e7eb;padding:2rem;max-width:860px;margin:0 auto;font-family:system-ui,sans-serif;line-height:1.7;}h1{color:#fff;font-size:2rem;margin-bottom:1rem;}h2{color:#fff;font-size:1.4rem;margin-top:2rem;}img{max-width:100%;border-radius:8px;margin:1.5rem 0;}.excerpt{color:#9ca3af;font-style:italic;font-size:1.1rem;border-left:3px solid #374151;padding-left:1rem;margin-bottom:2rem;}</style>
 </head>
 <body>
   <div style="margin-bottom:2rem;">
     <button onclick="window.parent.closeArticlePreview()" style="background:#1f2937;color:#9ca3af;border:1px solid #374151;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.85rem;">← Back to Portal</button>
   </div>
-  ${item.heroImage ? `<img src="https://cliffcircuit.ai/portal/images/${item.heroImage.split('/').pop()}?t=${Date.now()}" alt="${item.title}" onerror="this.src='https://shopcliffmart.com${item.heroImage}';this.onerror=null;" style="width:100%;border-radius:8px;margin-bottom:1.5rem;">` : ''}
+  ${item.heroImage ? `<img src="https://cliffcircuit.ai/portal/images/${item.heroImage.split('/').pop()}?t=${Date.now()}" alt="${item.title}" onerror="this.src='https://cliffcircuit.ai${item.heroImage}';this.onerror=null;" style="width:100%;border-radius:8px;margin-bottom:1.5rem;">` : ''}
   <h1>${item.title || ''}</h1>
   <p class="excerpt">${item.excerpt || ''}</p>
   ${item.htmlContent || ''}
@@ -3556,13 +3826,16 @@ function switchTab(t) {
     }
 
     function updateNavDots(d) {
-      // Cron dot — green if no errors, yellow if any errors
+      // Cron dot — gray if no data, green if no errors, yellow if errors
       const crons = d.crons || [];
       const cronErrors = crons.filter(c => c.status === 'error').length;
       const cronDot = document.getElementById('nav-cron-dot');
       const cronLabel = cronDot?.nextElementSibling;
       if (cronDot) {
-        if (cronErrors === 0) {
+        if (crons.length === 0) {
+          cronDot.style.background = '#4b5563'; // gray — no data yet
+          if (cronLabel) { cronLabel.textContent = 'crons'; cronLabel.style.color = '#4b5563'; }
+        } else if (cronErrors === 0) {
           cronDot.style.background = '#22c55e'; // green
           if (cronLabel) { cronLabel.textContent = 'crons'; cronLabel.style.color = '#4b5563'; }
         } else {
@@ -3571,23 +3844,26 @@ function switchTab(t) {
         }
       }
 
-      // Context dot — green <70%, yellow 70-89%, red 90%+
+      // Context dot — shows Cliff's direct chat session context level
       const sessions = d.sessions || [];
-      // Use highest context session — that's the one most likely to need attention
-      const mainSession = sessions.length ? sessions.reduce((a,b) => (b.pct||0) > (a.pct||0) ? b : a) : null;
+      const cliffDirect = sessions.find(s => s.agentId === 'main' && ((s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off')));
+      const mainSession = cliffDirect || sessions.filter(s => s.agentId === 'main').sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] || null;
       const pct = mainSession ? mainSession.pct : 0;
       const ctxDot = document.getElementById('nav-ctx-dot');
       const ctxLabel = ctxDot?.nextElementSibling;
       if (ctxDot) {
-        if (pct >= 75) {
-          ctxDot.style.background = '#ef4444'; // red — matches agent card threshold
+        if (!mainSession) {
+          ctxDot.style.background = '#4b5563'; // gray — no data
+          if (ctxLabel) { ctxLabel.textContent = 'context'; ctxLabel.style.color = '#4b5563'; }
+        } else if (pct >= 75) {
+          ctxDot.style.background = '#ef4444'; // red
           if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ef4444'; }
         } else if (pct >= 50) {
-          ctxDot.style.background = '#facc15'; // yellow — matches agent card threshold
+          ctxDot.style.background = '#facc15'; // yellow
           if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#ca8a04'; }
         } else {
           ctxDot.style.background = '#34d399'; // green
-          if (ctxLabel) { ctxLabel.textContent = 'context'; ctxLabel.style.color = '#4b5563'; }
+          if (ctxLabel) { ctxLabel.textContent = pct+'% ctx'; ctxLabel.style.color = '#4b5563'; }
         }
       }
     }
@@ -3701,9 +3977,9 @@ function switchTab(t) {
       const ca = document.getElementById('goal-cliff-articles-display');
       const ct = document.getElementById('goal-cliff-tweets-display');
       const tt = document.getElementById('goal-tim-tweets-display');
-      if (ca) ca.textContent = 'goal: ' + goals.cliffArticles + '/day';
-      if (ct) ct.textContent = 'goal: ' + goals.cliffTweets + '/day';
-      if (tt) tt.textContent = 'goal: ' + goals.timTweets + '/day';
+      if (ca) ca.textContent = 'plan: ' + goals.cliffArticles + '/day';
+      if (ct) ct.textContent = 'plan: ' + goals.cliffTweets + '/day';
+      if (tt) tt.textContent = 'plan: ' + goals.timTweets + '/day';
     }
 
     // Init goals displays on load
