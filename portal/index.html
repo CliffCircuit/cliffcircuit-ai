@@ -1675,7 +1675,7 @@
             <td class="px-3 py-1 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td>
             <td class="px-3 py-1 text-gray-500 text-xs">${(i.type==='tweet'||(i.account==='timharris707'&&!i.title&&!i.slug&&i.tweetText))?'Tweet':'Article'}</td>
             <td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td>
-            <td class="px-3 py-1 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td>
+            <td class="px-3 py-1 text-xs">${formatRejectReasons(i.rejectionReason||i.rejectedReason||"")}</td>
             <td class="px-3 py-1 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td>
           </tr>`).join('');
     }
@@ -3645,6 +3645,36 @@ function switchTab(t) {
 
     function set(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
     function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    const REASON_LABELS = {
+      'poor_title': ['Poor Title', '#92400e', '#fbbf24'],
+      'title_too_long': ['Title Too Long', '#92400e', '#fbbf24'],
+      'poor_excerpt': ['Poor Excerpt', '#92400e', '#fbbf24'],
+      'missing_htmlContent': ['No Content', '#7f1d1d', '#f87171'],
+      'content_empty_or_too_short': ['No Content', '#7f1d1d', '#f87171'],
+      'tweet_hook_missing': ['No Tweet Hook', '#4c1d95', '#a78bfa'],
+      'wrong_template': ['Wrong Template', '#4c1d95', '#a78bfa'],
+      'hero_image_missing_on_disk': ['No Hero Image', '#1e3a5f', '#60a5fa'],
+      'duplicate_item': ['Duplicate', '#374151', '#9ca3af'],
+    };
+    function formatRejectReasons(raw) {
+      if (!raw) return '<span style="color:#6b7280">No reason noted</span>';
+      // Split on semicolons or commas, handle compound reasons like "Title too long (65 chars, max 59); No hero_image specified"
+      const parts = raw.split(/;|,(?![^(]*\))/).map(s => s.trim()).filter(Boolean);
+      return parts.map(p => {
+        const key = Object.keys(REASON_LABELS).find(k => p.toLowerCase().includes(k.replace(/_/g,' ')) || p.toLowerCase().includes(k));
+        // Also match natural language versions
+        const nlKey = !key ? Object.keys(REASON_LABELS).find(k => {
+          const label = REASON_LABELS[k][0].toLowerCase();
+          return p.toLowerCase().includes(label);
+        }) : null;
+        const match = REASON_LABELS[key || nlKey];
+        if (match) return `<span style="background:${match[1]};color:${match[2]};border-radius:9999px;padding:1px 8px;font-size:10px;font-weight:600;letter-spacing:0.03em;display:inline-block;margin:1px 2px">${match[0]}</span>`;
+        // Unknown reason — gray capsule
+        const short = p.length > 30 ? p.slice(0,28) + '..' : p;
+        return `<span style="background:#374151;color:#9ca3af;border-radius:9999px;padding:1px 8px;font-size:10px;font-weight:600;letter-spacing:0.03em;display:inline-block;margin:1px 2px">${esc(short)}</span>`;
+      }).join(' ');
+    }
+
     function fmt(n){if(n==null)return'—';return Number(n).toLocaleString();}
     function ago(iso){if(!iso)return'—';const m=(Date.now()-new Date(iso))/60000;if(m<60)return Math.round(m)+'m ago';if(m<1440)return Math.round(m/60)+'h ago';return Math.round(m/1440)+'d ago';}
     function fmtScheduled(item) {
