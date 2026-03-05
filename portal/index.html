@@ -1504,11 +1504,11 @@
     async function pollGatewayHealth() {
       const start = Date.now();
       try {
-        await fetch('https://gateway.cliffcircuit.ai/', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+        const res = await fetch('https://api.cliffcircuit.ai/sessions.json?gw_ping=1&t=' + Date.now(), { cache: 'no-store' });
         const latency = Date.now() - start;
         window._realtimeGwSet = true;
-        window._realtimeGwOk = true;
-        window._realtimeGwLatency = latency;
+        window._realtimeGwOk = res.ok;
+        window._realtimeGwLatency = res.ok ? latency : null;
       } catch (e) {
         window._realtimeGwSet = true;
         window._realtimeGwOk = false;
@@ -1580,8 +1580,9 @@
           updateAgentStatusDots(live.sessions);
         }
       } catch (e) {
-        // Fetch failed — gateway likely down, mark all agents Offline immediately
+        // Fetch failed — gateway likely down, mark all agents Offline + reset nav dots
         updateAgentStatusDots([]);
+        updateNavDots({ crons: [], sessions: [] });
       }
     }
     setInterval(pollLiveSessions, 10000);
