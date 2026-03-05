@@ -3466,8 +3466,8 @@ function switchTab(t) {
       const tweetTextEl = document.getElementById('modal-tweet-text');
       if (tweetHookEl && item.tweetHook) {
         // Show tweet with paragraph spacing matching Twitter's rendering
-        const tweetClean = item.tweetHook.replace(/ARTICLE_URL_PLACEHOLDER/g, '').replace(/\[URL\]/g, '').trim();
-        tweetTextEl.innerHTML = esc(tweetClean).replace(/\n/g, '<br><br>');
+        const tweetClean = item.tweetHook.replace(/ARTICLE_URL_PLACEHOLDER/g, '[link]').replace(/\[URL\]/g, '[link]').trim();
+        tweetTextEl.innerHTML = esc(tweetClean).replace(/\n/g, '<br>');
         tweetHookEl.classList.remove('hidden');
       } else if (tweetHookEl) {
         tweetHookEl.classList.add('hidden');
