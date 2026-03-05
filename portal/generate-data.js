@@ -424,6 +424,18 @@ async function main() {
       fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
       console.log('Wrote data.json');
 
+      // Generate tweet-ids.json for portal (articles table lacks tweet_id column)
+      try {
+        const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
+        if (fs.existsSync(queuePath)) {
+          const q = JSON.parse(fs.readFileSync(queuePath, 'utf8'));
+          const map = {};
+          (q.queue || []).forEach(i => { if (i.tweetId) map[i.id] = i.tweetId; });
+          fs.writeFileSync(path.join(PORTAL_REPO, 'portal/tweet-ids.json'), JSON.stringify(map));
+          console.log('Wrote tweet-ids.json (' + Object.keys(map).length + ' entries)');
+        }
+      } catch (e) { console.log('tweet-ids.json warning: ' + e.message); }
+
       // Copy hero images + article HTML previews for approved items
       try {
         const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';

@@ -1442,6 +1442,14 @@
         const liveSessionsPromise = fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
           .then(r => r.json()).catch(() => null);
 
+        // Merge tweet IDs from local queue (articles table lacks tweet_id column)
+        let tweetIdMap = {};
+        try {
+          const tRes = await fetch("/portal/tweet-ids.json?t=" + Date.now());
+          if (tRes.ok) tweetIdMap = await tRes.json();
+        } catch {}
+        articleItems.forEach(a => { if (!a.tweetId && tweetIdMap[a.id]) a.tweetId = tweetIdMap[a.id]; });
+
         DATA = {
           queue: [...articleItems, ...tweetItems],
           generatedAt: new Date().toISOString(),
