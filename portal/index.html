@@ -3557,7 +3557,7 @@ function switchTab(t) {
       if (tweetHookEl && item.tweetHook) {
         // Show tweet with paragraph spacing matching Twitter's rendering
         const tweetClean = item.tweetHook.replace(/ARTICLE_URL_PLACEHOLDER/g, '[link]').replace(/\[URL\]/g, '[link]').trim();
-        tweetTextEl.innerHTML = esc(tweetClean).replace(/\n/g, '<br>');
+        tweetTextEl.style.whiteSpace = 'pre-line'; tweetTextEl.style.lineHeight = '1.8'; tweetTextEl.textContent = tweetClean;
         tweetHookEl.classList.remove('hidden');
       } else if (tweetHookEl) {
         tweetHookEl.classList.add('hidden');
