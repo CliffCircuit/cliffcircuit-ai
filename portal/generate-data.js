@@ -440,7 +440,7 @@ async function main() {
       // Fetch from Supabase (source of truth) — local queue may be out of sync
       try {
         const SUPA_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
-        const SUPA_KEY = execSync("security find-generic-password -s supabase-anon-key -w", { encoding: 'utf8' }).trim();
+        const SUPA_KEY = require('child_process').execSync('security find-generic-password -s supabase-anon-key -w', { encoding: 'utf8' }).trim();
         const supaResp = await httpGet(
           `${SUPA_URL}/rest/v1/articles?status=eq.approved&select=id,title,slug,excerpt,content,hero_image,hero_image_generated,status`,
           { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
