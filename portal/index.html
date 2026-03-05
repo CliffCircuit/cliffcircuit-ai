@@ -1465,7 +1465,18 @@
             if (live.agentConfigs) {
                 Object.assign(DATA.agentConfigs, live.agentConfigs);
             }
-            if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
+            if (live.crons && live.crons.length) {
+              // Merge live cron data (fresh timing) with data.json crons (has tokens)
+              const dataJsonCrons = DATA.crons || [];
+              const tokenMap = {};
+              dataJsonCrons.forEach(c => { if (c.lastRunTokens) tokenMap[c.name] = c.lastRunTokens; });
+              // Use live crons as base, but fill in tokens from data.json
+              DATA.crons = live.crons.map(c => ({
+                ...c,
+                lastRunTokens: c.lastRunTokens || tokenMap[c.name] || null,
+              }));
+              window._cronList = DATA.crons;
+            }
             renderAgents(DATA);
             renderHealth(DATA);
             updateNavDots(DATA);
