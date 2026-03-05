@@ -1466,18 +1466,12 @@
                 Object.assign(DATA.agentConfigs, live.agentConfigs);
             }
             if (live.crons && live.crons.length) {
-              // Merge live cron data (fresh timing) with data.json crons (has tokens)
-              const dataJsonCrons = DATA.crons || [];
-              const tokenMap = {};
-              dataJsonCrons.forEach(c => { if (c.lastRunTokens) tokenMap[c.name] = c.lastRunTokens; });
-              // Use live crons as base, but fill in tokens from data.json
-              DATA.crons = live.crons.map(c => ({
-                ...c,
-                lastRunTokens: c.lastRunTokens || tokenMap[c.name] || null,
-              }));
-              window._cronList = DATA.crons;
+              DATA.crons = live.crons;
+              window._cronList = live.crons;
             }
             renderAgents(DATA);
+            // Enrich cron tokens from Supabase in real-time (async)
+            enrichCronTokens(DATA);
             renderHealth(DATA);
             updateNavDots(DATA);
             updateAgentStatusDots(live.sessions);
@@ -2986,6 +2980,38 @@ function switchTab(t) {
           tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
         }
       });
+    }
+
+    // Enrich cron job rows with real-time token data from Supabase
+    async function enrichCronTokens(d) {
+      if (!_sb) return;
+      try {
+        const { data: snapshots } = await _sb.from('session_snapshots')
+          .select('session_key,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+          .eq('kind', 'cron')
+          .order('last_seen_at', { ascending: false })
+          .limit(300);
+        if (!snapshots || !snapshots.length) return;
+
+        // Build map: cron_name -> latest snapshot (first occurrence = most recent)
+        const tokenMap = {};
+        snapshots.forEach(s => {
+          const cronName = s.session_key?.split(':')[1];
+          if (cronName && !tokenMap[cronName]) tokenMap[cronName] = s;
+        });
+
+        // Update cron objects in DATA with real token data
+        (d.crons || []).forEach(c => {
+          const snap = tokenMap[c.name];
+          if (snap) {
+            c.lastRunTokens = snap.total_tokens || c.lastRunTokens;
+            c.lastDurationMs = snap.duration_ms || c.lastDurationMs;
+          }
+        });
+
+        // Re-render agents page with enriched data
+        renderAgents(d);
+      } catch(e) { console.warn('[agents] Supabase token enrich failed:', e); }
     }
 
     function renderMarketing(d) {
