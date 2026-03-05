@@ -3189,7 +3189,7 @@ function switchTab(t) {
 
       const rejected = q.filter(i=>i.status==='rejected');
       const postFailed = q.filter(i=>i.status==='post_failed');
-      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && i.status!=='draft' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
+      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && i.status!=='failed' && i.status!=='draft' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
         .sort((a,b)=>new Date(a.scheduledFor||a.createdAt)-new Date(b.scheduledFor||b.createdAt));
 
       // Pending Articles table
