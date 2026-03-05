@@ -61,7 +61,92 @@ async function main() {
   // Strip htmlContent to keep data.json small
   const cleanQueue = queue.map(({ htmlContent, ...rest }) => rest);
 
-  // ── Cron data removed — portal now pulls from live endpoint + Supabase ──
+  // ── Cron Jobs ──────────────────────────────────────────────────
+  let crons = [];
+  try {
+    const cronRaw = run('openclaw cron list --json');
+    const cronData = JSON.parse(cronRaw);
+    const jobs = Array.isArray(cronData) ? cronData : (cronData.jobs || cronData.entries || []);
+    const now = Date.now();
+    crons = jobs.map(j => {
+      const state = j.state || {};
+      const status = state.lastRunStatus || (state.consecutiveErrors > 0 ? 'error' : 'idle');
+      const lastMs = state.lastRunAtMs;
+      const nextMs = state.nextRunAtMs;
+      const msAgo = lastMs ? now - lastMs : null;
+      const msUntil = nextMs ? nextMs - now : null;
+      function fmtDuration(ms) {
+        if (!ms || ms < 0) return null;
+        const m = Math.round(ms / 60000);
+        if (m < 60) return m + 'm';
+        const h = Math.round(m / 60);
+        if (h < 24) return h + 'h';
+        return Math.round(h / 24) + 'd';
+      }
+      const payload = j.payload || {};
+      const msg = payload.message || payload.systemEvent || '';
+      // Use human-set description if available, else fall back to message
+      const desc = j.description || msg.split(/\n/)[0].slice(0, 200) || '—';
+      return {
+        name: j.name,
+        schedule: (() => {
+          const s = j.schedule || {};
+          if (s.expr) return s.expr;
+          if (s.kind === 'every' && s.everyMs) {
+            const mins = s.everyMs / 60000;
+            if (mins < 60) return 'every ' + mins + 'm';
+            return 'every ' + Math.round(mins / 60) + 'h';
+          }
+          if (s.kind === 'at' && s.at) return 'at ' + s.at;
+          return s.kind || '—';
+        })(),
+        status: status,
+        lastRun: msAgo !== null ? fmtDuration(msAgo) + ' ago' : null,
+        lastRunMs: lastMs || null,
+        nextRun: msUntil !== null ? 'in ' + fmtDuration(Math.abs(msUntil)) : null,
+        agent: j.agentId || 'main',
+        consecutiveErrors: state.consecutiveErrors || 0,
+        id: j.id,
+        model: payload.model || null,
+        thinking: payload.thinking || null,
+        description: desc,
+      };
+    });
+
+    // ── Token usage per job (from most recent run of each job) ──
+    const agentTokens = {};
+    for (const j of jobs) {
+      if (!j.state?.lastRunAtMs) continue;
+      try {
+        const runsRaw = run(`openclaw cron runs --id ${j.id}`);
+        const runsData = JSON.parse(runsRaw);
+        const lastEntry = (runsData.entries || [])[0];
+        if (lastEntry?.usage) {
+          const total = lastEntry.usage.total_tokens || 0;
+          j._lastRunTokens = total;
+          // Also track per-agent for the context bar
+          const agentId = j.agentId || 'main';
+          if (!agentTokens[agentId] || total > (agentTokens[agentId].totalTokens || 0)) {
+            agentTokens[agentId] = {
+              totalTokens: total,
+              inputTokens: lastEntry.usage.input_tokens || 0,
+              outputTokens: lastEntry.usage.output_tokens || 0,
+              jobName: j.name,
+            };
+          }
+        }
+      } catch(e) { /* ignore */ }
+    }
+    // Attach per-job token usage to cron entries
+    crons = crons.map((c, i) => ({
+      ...c,
+      lastRunTokens: jobs[i]?._lastRunTokens || null,
+    }));
+    crons._agentTokens = agentTokens;
+
+  } catch (e) {
+    console.warn('Could not load crons:', e.message);
+  }
 
   // ── Sites ──────────────────────────────────────────────────────
   const siteUrls = ['shop.cliffcircuit.com', 'cliffcircuit.ai'];
@@ -228,7 +313,24 @@ async function main() {
   };
 
   // ── Assemble ───────────────────────────────────────────────────
-  // ── Token/cost history removed — portal now pulls from Supabase ──
+  // ── Token Usage / Cost History ───────────────────────────────
+  let costs = {};
+  try {
+    const { execSync: _execSync } = require('child_process');
+    const cutoff30d = Date.now() - 30 * 86400000;
+    // Sequential — execSync + Promise.all don't mix (race condition)
+    for (const j of crons) {
+      if (!j.id) continue;
+      try {
+        const raw = _execSync(`openclaw cron runs --id ${j.id}`, { encoding: 'utf8', timeout: 10000 }).trim();
+        const runsData = JSON.parse(raw);
+        const entries = (runsData.entries || [])
+          .filter(e => (e.runAtMs || 0) >= cutoff30d && e.usage)
+          .map(e => ({ ts: e.runAtMs, tokens: e.usage.total_tokens || 0, tokensInput: e.usage.input_tokens || 0, tokensCacheRead: e.usage.cache_read_input_tokens || 0, tokensCacheWrite: e.usage.cache_creation_input_tokens || 0, tokensOut: e.usage.output_tokens || 0, status: e.status }));
+        if (entries.length) costs[j.id] = entries;
+      } catch(e) { /* skip this job */ }
+    }
+  } catch(e) { console.warn('Could not collect token history:', e.message); }
 
   // ── Gateway Health ────────────────────────────────────────────
   let gateway = { reachable: null, latencyMs: null, version: null, error: null };
@@ -264,7 +366,7 @@ async function main() {
       '763a67ae-49b6-4bd7-82ad-5cac8510352a':'Nightly Extraction','248701de-21b3-4c1a-86b6-164a8de04ca3':'Nightly Git Backup',
       '8cd72f3d-03b2-4160-81b2-bae92ee72620':'Cliff Tweets','fbd92dff-ce46-48d2-8bfd-6873c75b1031':'Morning Check-In',
       'bbbd846b-ecb6-420f-822b-4c95e69a6d4d':'Weekly Report','586ef3eb-f39e-4a5a-97d6-ab45b29a9f32':'Tim Thread Draft',
-      'b2055796-4f19-4200-b970-f40c7212e649':'Writer','f50b5756-82e2-4fd8-b8e4-d1b4045a1c20':'Media',
+      '845fff96-da1a-4ebd-b653-9b3007085dd3':'Writer','f50b5756-82e2-4fd8-b8e4-d1b4045a1c20':'Media',
       '43a6704d-8e77-448a-81d7-e7fda3ac7614':'Recycle Writer','50708c6f-37b2-4f19-88a9-9ff56a732f7c':'Recycle Media',
     };
     const upd = _db2.prepare('UPDATE subagent_sessions SET task_name=? WHERE session_id=? AND task_name IS NULL');
@@ -320,6 +422,8 @@ async function main() {
       passwordHash: '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7'
     },
     queue: cleanQueue,
+    crons,
+    agentTokens: crons._agentTokens || {},
     ghWriteToken: null, // token served separately — never commit to repo
     agentConfigs,
     sessions: (() => {
@@ -411,6 +515,7 @@ async function main() {
     disk,
     stats,
     gateway,
+    costs,
     subagentSessions,
     execEvents,
   };
@@ -526,5 +631,7 @@ async function main() {
 
   console.log('Done.');
 }
+
+main().catch(console.error);
 
 main().catch(console.error);
