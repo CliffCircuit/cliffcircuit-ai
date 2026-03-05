@@ -2966,7 +2966,7 @@ function switchTab(t) {
               <td class="px-4 py-2.5 text-xs">${thinkingBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
-              <td class="px-4 py-2.5 text-gray-500">${j.nextRun ? timeAgo(j.nextRun) : '—'}</td>
+              <td class="px-4 py-2.5 text-gray-500">${j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—')}</td>
               <td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens, j)}</td>
             </tr>`).join('');
         } else if (tbody) {
