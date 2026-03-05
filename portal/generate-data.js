@@ -560,7 +560,7 @@ async function main() {
   <style>body{background:#0f172a;color:#e2e8f0;padding:2rem;max-width:860px;margin:0 auto;font-family:system-ui,sans-serif;line-height:1.75;}h1{color:#fff;font-size:1.8rem;margin-bottom:0.75rem;}h2{color:#fff;font-size:1.3rem;margin-top:2rem;margin-bottom:0.75rem;}p{margin-bottom:1.1rem;}.excerpt{color:#94a3b8;font-style:italic;border-left:3px solid #334155;padding-left:1rem;margin-bottom:2rem;}.back{display:inline-block;margin-bottom:1.5rem;background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.85rem;text-decoration:none;}</style>
 </head>
 <body>
-  <a class="back" onclick="window.close();return false;" href="/portal/#marketing">← Back</a>
+  <a class="back" onclick="window.close()" href="javascript:history.back()">← Back</a>
   ${heroImg}
   <h1>${(item.title||'').replace(/</g,'&lt;')}</h1>
   <p class="excerpt">${(item.excerpt||'').replace(/</g,'&lt;')}</p>
