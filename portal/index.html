@@ -3557,7 +3557,8 @@ function switchTab(t) {
       if (tweetHookEl && item.tweetHook) {
         // Show tweet with paragraph spacing matching Twitter's rendering
         const tweetClean = item.tweetHook.replace(/ARTICLE_URL_PLACEHOLDER/g, '[link]').replace(/\[URL\]/g, '[link]').trim();
-        /* DO NOT CHANGE: <br><br> matches Twitter paragraph spacing. Reverted twice already. See MEMORY.md */ tweetTextEl.innerHTML = esc(tweetClean).replace(/\n/g, '<br><br>');
+        /* Double newlines = paragraph break, single = line break */
+        tweetTextEl.innerHTML = esc(tweetClean).replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
         tweetHookEl.classList.remove('hidden');
       } else if (tweetHookEl) {
         tweetHookEl.classList.add('hidden');
