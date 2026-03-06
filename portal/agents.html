@@ -57,37 +57,10 @@
   <script>
     if (!window._jobMap) window._jobMap = {};
 
-    // ─── CRON DISPLAY NAMES (consistent with tokens page) ─────────────────
-    const CRON_DISPLAY = {
-      'samantha-draft':          'Article Draft',
-      'samantha-publish':        'Publish',
-      'samantha-writer':         'Article Writer',
-      'samantha-media':          'Media / Images',
-      'samantha-cliff-tweets':   'Cliff Tweets',
-      'samantha-tim-tweets':     'Tim Posts',
-      'samantha-message-check':  'Message Check',
-      'samantha-recycle':        'Recycle Rejected',
-      'samantha-recycle-writer': 'Recycle Writer',
-      'samantha-recycle-media':  'Recycle Media',
-      'cliff-article-review':    'Article Review',
-      'cliff-message-check':     'Message Check',
-      'cliff-scheduler':         'Scheduler',
-      'scout-message-check':     'Message Check',
-      'portal-data-refresh':     'Portal Refresh',
-      'portal-live-refresh':     'Portal Refresh',
-      'social-monitoring':       'Social Monitoring',
-      'github-monitoring':       'GitHub Monitoring',
-      'pipeline-health-check':   'Pipeline Health',
-      'nightly-extraction':      'Nightly Extraction',
-      'nightly-git-backup':      'Nightly Git Backup',
-      'morning-check-in':        'Morning Check-In',
-      'weekly-report':           'Weekly Report',
-      'atlas-build':             'Build',
-      'atlas-refactor':          'Refactor',
-      'atlas-debug':             'Debug',
-    };
+    // ─── CRON DISPLAY NAMES — reuse CRON_DISPLAY from portal-common.js ────
     function cronDisplayName(rawName) {
-      return CRON_DISPLAY[rawName] || rawName.replace(/^(samantha|scout|cliff|atlas)-/i, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      if (typeof CRON_DISPLAY !== 'undefined' && CRON_DISPLAY[rawName]) return CRON_DISPLAY[rawName];
+      return rawName.replace(/^(samantha|scout|cliff|atlas)-/i, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
     // A job is "parked" if its next run is more than 1 year away (far-future placeholder)
