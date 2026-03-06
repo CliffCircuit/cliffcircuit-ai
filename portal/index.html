@@ -595,6 +595,7 @@
           <div>
             <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — sessions, cost, and tokens per job type</p>
+            <p class="text-xs text-gray-700 mt-1">Key: <span class="text-gray-500">Web UI (Heartbeat+Chat)</span> = heartbeats + webchat in same session &nbsp;·&nbsp; <span class="text-gray-500">Tim (Telegram DM)</span> = your direct Telegram messages &nbsp;·&nbsp; <span class="text-gray-500">Heartbeat</span> = scheduled health checks (now on Haiku)</p>
           </div>
           <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
@@ -2202,11 +2203,15 @@ function switchTab(t) {
         if (cron) return CRON_DISPLAY[cron.name] || cron.name.replace(/-/g,' ');
         return 'Cron (UUID)';
       }
-      // agent:main:telegram:direct:... → "Cliff — Telegram"
+      // agent:main:telegram:direct:heartbeat → "Heartbeat"
+      if (key.includes(':telegram:direct:heartbeat')) return fmtAgent(key.split(':')[1]) + ' — Heartbeat';
+      // agent:main:telegram:direct:<userId> → "Cliff ↔ Tim (Telegram DM)"
+      if (key.match(/^agent:([^:]+):telegram:direct:\d+$/)) return fmtAgent(key.split(':')[1]) + ' — Tim (Telegram DM)';
+      // agent:main:telegram:direct:... → other direct telegram
       const directMatch = key.match(/^agent:([^:]+):([^:]+):direct:/);
       if (directMatch) return fmtAgent(directMatch[1]) + ' — ' + fmtLabel(directMatch[2]);
-      // agent:main:main → "Cliff — Direct"
-      if (key === 'agent:main:main') return 'Cliff — Direct';
+      // agent:main:main → "Cliff — Web UI / Webchat"
+      if (key === 'agent:main:main') return 'Cliff — Web UI (Heartbeat+Chat)';
       // Default: shorten it
       return key.split(':').pop().slice(0,14);
     }
@@ -2511,9 +2516,13 @@ function switchTab(t) {
           const directMatch = r.session_key && r.session_key.match(/^agent:([^:]+):([^:]+):direct:/);
           const displayName = cronName
             ? (CRON_DISPLAY[cronName] || cronName.replace(/-/g,' '))
+            : (r.session_key && r.session_key.includes(':telegram:direct:heartbeat'))
+              ? (fmtAgent(r.agent_id) + ' — Heartbeat')
+            : (r.session_key && r.session_key.match(/^agent:[^:]+:telegram:direct:\d+$/))
+              ? (fmtAgent(r.agent_id) + ' — Tim (Telegram DM)')
             : directMatch
               ? (fmtAgent(directMatch[1]) + ' — ' + fmtLabel(directMatch[2]))
-              : (r.session_key === 'agent:main:main' ? 'Cliff — Direct'
+              : (r.session_key === 'agent:main:main' ? 'Cliff — Web UI (Heartbeat+Chat)'
               : (r.session_key ? r.session_key.replace(/^agent:/,'').split(':').slice(0,2).join(' / ') : 'Direct Session'));
           const runMs = (() => { const m = r.session_key?.match(/:run:(\d+)$/); return m ? parseInt(m[1]) : null; })();
           const durationMs = r.duration_ms || (r.last_seen_at && r.first_seen_at
