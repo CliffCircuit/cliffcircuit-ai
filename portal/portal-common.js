@@ -38,6 +38,7 @@ const CRON_UUID_MAP = {
   'befa343c-3f24-40bf-97ab-102954820866': 'atlas-refactor',
   '47cfaf3a-ca98-4eb5-9851-b12ee18641fa': 'atlas-debug',
   '6cef6a39-3fde-4575-9208-947d53f6a425': 'atlas-debug',
+  'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
   'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
 };
 
