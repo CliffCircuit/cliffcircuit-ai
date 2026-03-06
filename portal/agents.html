@@ -7,6 +7,18 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    .info-tip { position: relative; cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
+    .info-tip:hover { color: #a5b4fc; }
+    .info-tip:hover::after {
+      content: attr(data-tip);
+      position: absolute; left: 50%; bottom: 120%; transform: translateX(-50%);
+      background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
+      padding: 6px 10px; font-size: 11px; font-weight: 400; white-space: normal;
+      width: max-content; max-width: 280px; z-index: 50; pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+  </style>
 </head>
 <body class="min-h-screen">
   <div id="portal" class="min-h-screen">
@@ -82,7 +94,7 @@
         id: 'main',       // matches agentId in data.json / openclaw config
         name: 'Cliff',
         avatar: '/portal/cliff-avatar.jpg',
-        role: 'Main assistant · Direct chat + orchestration · @CliffCircuit voice',
+        role: 'Team Lead · Direct chat + orchestration · @CliffCircuit voice',
         badge: 'PRIMARY',
         badgeClass: 'bg-indigo-900 text-indigo-300',
         accentClass: 'text-indigo-400',
@@ -204,13 +216,13 @@
 
         <!-- Collapsible job table -->
         <div class="border-t border-gray-800 px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors" onclick="toggleJobs('${n}')">
-          <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Scheduled Jobs</span>
+          <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Job Responsibilities</span>
           <span id="${n}-jobs-toggle" class="text-gray-600 text-xs">&#9658; show</span>
         </div>
         <div id="${n}-jobs-list" class="hidden border-t border-gray-900">
           <table class="w-full text-xs">
             <thead><tr class="border-b border-gray-800 bg-gray-900">
-              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Task</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Thinking</th>
@@ -379,7 +391,7 @@
           if (info.jobs.length) {
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
             tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
-              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(cronDisplayName(j.name))}</td>
+              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
               <td class="px-4 py-2.5 text-gray-400 text-xs">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
               <td class="px-4 py-2.5 text-xs">${thinkBadge(j.thinking)}</td>
