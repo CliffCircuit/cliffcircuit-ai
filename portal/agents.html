@@ -66,7 +66,7 @@
     </div>
   </div>
 
-  <script src="/portal/portal-common.js?v=3"></script>
+  <script src="/portal/portal-common.js?v=4"></script>
   <script>
     if (!window._jobMap) window._jobMap = {};
 
@@ -209,7 +209,7 @@
 
             <!-- Last job / errors -->
             <div class="flex items-center gap-4 text-xs text-gray-500">
-              <span>Last job: <span id="${n}-last-job" class="text-gray-300">—</span></span>
+              <span>Last task: <span id="${n}-last-job" class="text-gray-300">—</span></span>
               <span id="${n}-job-errors" class="text-red-400 hidden"></span>
             </div>
           </div>
@@ -230,7 +230,7 @@
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
               <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
-              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Tokens</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Tokens (In / Out)</th>
             </tr></thead>
             <tbody id="${n}-jobs-body"></tbody>
           </table>
@@ -293,7 +293,7 @@
       const crons = d.crons || [];
       const agentJobMap = {};
       crons.forEach(job => {
-        const a = job.agent || 'main';
+        const a = cronAgentFromName(job.name) || job.agent || 'main';
         if (!agentJobMap[a]) agentJobMap[a] = { jobs: [], errors: 0 };
         agentJobMap[a].jobs.push(job);
         if (job.status === 'error') agentJobMap[a].errors++;
@@ -338,9 +338,7 @@
 
         // Cron job info
         // Merge jobs from both agentId and name keys (Cliff has agent='cliff' AND agent='main')
-        const infoA = agentJobMap[agentId] || { jobs: [], errors: 0 };
-        const infoN = (n !== agentId) ? (agentJobMap[n] || { jobs: [], errors: 0 }) : { jobs: [], errors: 0 };
-        const info = { jobs: [...infoA.jobs, ...infoN.jobs], errors: infoA.errors + infoN.errors };
+        const info = agentJobMap[agentId] || { jobs: [], errors: 0 };
         if (el('job-count')) el('job-count').textContent = info.jobs.length + (info.jobs.length === 1 ? ' job' : ' jobs');
         const lastRunJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
         if (el('last-job')) el('last-job').textContent = lastRunJob ? timeAgo(lastRunJob.lastRunMs || lastRunJob.lastRun) : 'No recent runs';
@@ -373,7 +371,7 @@
           const durSec = Math.round(durMs / 1000);
           const durLabel = durSec >= 60 ? Math.round(durSec/60) + 'm ' + (durSec%60) + 's' : durSec + 's';
           const pct = Math.min(100, Math.round((durMs / (20*60*1000)) * 100));
-          if (el('ctx-title')) el('ctx-title').textContent = 'Last Job';
+          if (el('ctx-title')) el('ctx-title').textContent = 'Last Task';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
           if (el('ctx-top')) { el('ctx-top').textContent = cronDisplayName(lastRunJob.name||''); el('ctx-top').className = 'text-white text-sm font-semibold mb-0'; }
@@ -388,7 +386,16 @@
         if (tbody) {
           const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
           const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
-          const fmtTok = (t, j) => { if (!t) return '<span class="text-gray-700">—</span>'; const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`; };
+          const fmtTok = (t, j) => {
+            if (!t) return '<span class="text-gray-700">—</span>';
+            if (j && j.lastRunInputTokens && j.lastRunOutputTokens) {
+              const inK = (j.lastRunInputTokens/1000).toFixed(1);
+              const outK = (j.lastRunOutputTokens/1000).toFixed(1);
+              const c = t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400';
+              return `<span class="${c} font-medium">${inK}K / ${outK}K</span>`;
+            }
+            const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`;
+          };
           let newJobsHtml;
           if (info.jobs.length) {
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
@@ -459,11 +466,11 @@
       const agentId = agent.id;
       const agentJobMap_local = {};
       crons.forEach(job => {
-        const a = job.agent || 'main';
+        const a = cronAgentFromName(job.name) || job.agent || 'main';
         if (!agentJobMap_local[a]) agentJobMap_local[a] = [];
         agentJobMap_local[a].push(job);
       });
-      const jobs = agentJobMap_local[agentId] || agentJobMap_local[n] || [];
+      const jobs = agentJobMap_local[agentId] || [];
 
       const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
 
@@ -491,7 +498,7 @@
             </div>
             <div class="flex gap-3 text-xs">
               <span class="text-gray-500">Model: <span id="${n}-c-model" class="text-gray-300">—</span></span>
-              <span class="text-gray-500">Last job: <span id="${n}-c-last" class="text-gray-300">—</span></span>
+              <span class="text-gray-500">Last task: <span id="${n}-c-last" class="text-gray-300">—</span></span>
               <span id="${n}-c-errors" class="text-red-400 hidden"></span>
             </div>
           </div>
@@ -508,15 +515,13 @@
       if (_currentView !== 'condensed') return;
       const crons = d.crons || [];
       const agentJobMap = {};
-      crons.forEach(job => { const a = job.agent||'main'; if (!agentJobMap[a]) agentJobMap[a]={jobs:[],errors:0}; agentJobMap[a].jobs.push(job); if(job.status==='error') agentJobMap[a].errors++; });
+      crons.forEach(job => { const a = cronAgentFromName(job.name)||job.agent||'main'; if (!agentJobMap[a]) agentJobMap[a]={jobs:[],errors:0}; agentJobMap[a].jobs.push(job); if(job.status==='error') agentJobMap[a].errors++; });
 
       AGENTS.forEach(agent => {
         const n = agent.name.toLowerCase();
         const agentId = agent.id;
         const agentSessions = (d.sessions||[]).filter(s=>s.agentId===agentId);
-        const infoA2 = agentJobMap[agentId]||{jobs:[],errors:0};
-        const infoN2 = (n !== agentId) ? (agentJobMap[n]||{jobs:[],errors:0}) : {jobs:[],errors:0};
-        const info = { jobs: [...infoA2.jobs, ...infoN2.jobs], errors: infoA2.errors + infoN2.errors };
+        const info = agentJobMap[agentId]||{jobs:[],errors:0};
         const cfg = (d.agentConfigs||{})[agentId]||{};
 
         // Model
@@ -586,7 +591,15 @@
         let enriched = 0;
         (d.crons || []).forEach(c => {
           const snap = tokenMap[c.name];
-          if (snap) { c.lastRunTokens = snap.total_tokens; c.lastDurationMs = snap.duration_ms; c.lastRunModel = snap.model; enriched++; }
+          if (snap) {
+            c.lastRunTokens = snap.total_tokens;
+            c.lastRunInputTokens = snap.input_tokens;
+            c.lastRunOutputTokens = snap.output_tokens;
+            c.lastDurationMs = snap.duration_ms;
+            c.lastRunModel = snap.model;
+            if (snap.last_seen_at && !c.lastRunMs) c.lastRunMs = new Date(snap.last_seen_at).getTime();
+            enriched++;
+          }
         });
         if (enriched > 0) renderAgentsPage(d);
       } catch(e) { console.warn('[agents] enrich failed:', e); }

@@ -64,7 +64,20 @@ const CRON_DISPLAY = {
   'atlas-build':             'Build',
   'atlas-refactor':          'Refactor',
   'atlas-debug':             'Debug',
+  'evening-check':           'Evening Check',
+  'daily-cost-report':       'Daily Cost Report',
 };
+
+// ── Route cron jobs to agents by name prefix ────────────────────────────
+function cronAgentFromName(name) {
+  if (!name) return null;
+  if (name.startsWith('samantha-')) return 'samantha';
+  if (name.startsWith('atlas-')) return 'atlas';
+  if (name.startsWith('scout-') || name === 'portal-data-refresh') return 'scout';
+  if (name.startsWith('cliff-')) return 'main';
+  // Everything else (pipeline-health-check, morning-check-in, etc.) → main (Cliff)
+  return 'main';
+}
 
 const DIRECT_DISPLAY = {
   'main:telegram':     'Tim (Telegram DM)',
