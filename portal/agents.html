@@ -559,12 +559,30 @@
     async function enrichCronTokens(d) {
       if (!_sb) return;
       try {
-        const { data: rows, error } = await _sb.from('session_snapshots')
-          .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
-          .like('session_key', 'cron:%').gt('total_tokens', 0).order('last_seen_at', { ascending: false }).limit(200);
-        if (error || !rows?.length) return;
+        // Fetch both cron:* sessions (main agent) and agent:*:cron:* sessions (other agents)
+        const [res1, res2] = await Promise.all([
+          _sb.from('session_snapshots')
+            .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+            .like('session_key', 'cron:%').gt('total_tokens', 0).order('last_seen_at', { ascending: false }).limit(200),
+          _sb.from('session_snapshots')
+            .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+            .like('session_key', 'agent:%:cron:%').gt('total_tokens', 0).order('last_seen_at', { ascending: false }).limit(200)
+        ]);
+        const allRows = [...(res1.data||[]), ...(res2.data||[])];
+        if (!allRows.length) return;
         const tokenMap = {};
-        rows.forEach(r => { const cronName = r.session_key?.split(':')[1]; if (cronName && !tokenMap[cronName]) tokenMap[cronName] = r; });
+        allRows.forEach(r => {
+          // Extract cron name: "cron:<name>:..." or "agent:<id>:cron:<uuid>:..."
+          let cronName = null;
+          if (r.session_key.startsWith('cron:')) {
+            cronName = r.session_key.split(':')[1];
+          } else {
+            // agent:<id>:cron:<uuid>:run:<run-id> — look up UUID in CRON_UUID_MAP
+            const m = r.session_key.match(/cron:([0-9a-f-]{36})/);
+            if (m && typeof CRON_UUID_MAP !== 'undefined') cronName = CRON_UUID_MAP[m[1]];
+          }
+          if (cronName && !tokenMap[cronName]) tokenMap[cronName] = r;
+        });
         let enriched = 0;
         (d.crons || []).forEach(c => {
           const snap = tokenMap[c.name];

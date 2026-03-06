@@ -3089,19 +3089,28 @@ function switchTab(t) {
     async function enrichCronTokens(d) {
       if (!_sb) return;
       try {
-        // Query cron sessions from session_snapshots — same table the Tokens tab uses
-        const { data: rows, error } = await _sb.from('session_snapshots')
-          .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
-          .like('session_key', 'cron:%')
-          .gt('total_tokens', 0)
-          .order('last_seen_at', { ascending: false })
-          .limit(200);
-        if (error || !rows?.length) return;
+        // Query both cron:* and agent:*:cron:* sessions
+        const [res1, res2] = await Promise.all([
+          _sb.from('session_snapshots')
+            .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+            .like('session_key', 'cron:%').gt('total_tokens', 0).order('last_seen_at', { ascending: false }).limit(200),
+          _sb.from('session_snapshots')
+            .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+            .like('session_key', 'agent:%:cron:%').gt('total_tokens', 0).order('last_seen_at', { ascending: false }).limit(200)
+        ]);
+        const allRows = [...(res1.data||[]), ...(res2.data||[])];
+        if (!allRows.length) return;
 
-        // Build map: cron_name -> latest snapshot (first match = most recent due to desc order)
+        // Build map: cron_name -> latest snapshot
         const tokenMap = {};
-        rows.forEach(r => {
-          const cronName = r.session_key?.split(':')[1];
+        allRows.forEach(r => {
+          let cronName = null;
+          if (r.session_key.startsWith('cron:')) {
+            cronName = r.session_key.split(':')[1];
+          } else {
+            const m = r.session_key.match(/cron:([0-9a-f-]{36})/);
+            if (m && typeof CRON_UUID_MAP !== 'undefined') cronName = CRON_UUID_MAP[m[1]];
+          }
           if (cronName && !tokenMap[cronName]) tokenMap[cronName] = r;
         });
 
