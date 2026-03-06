@@ -254,6 +254,12 @@ function sessionKeyToFriendly(key, sessionId) {
     const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[agentId] || agentId;
     return agentLabel + ' Cron';
   }
+  // Subagent sessions: agent:X:subagent:UUID
+  const subagentMatch = key.match(/^agent:([^:]+):subagent:/);
+  if (subagentMatch) {
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[subagentMatch[1]] || subagentMatch[1];
+    return agentLabel + ' (Subagent Run)';
+  }
   // Group chat sessions: agent:X:telegram:group:CHAT_ID
   const groupMatch = key.match(/^agent:([^:]+):([^:]+):group:/);
   if (groupMatch) {
