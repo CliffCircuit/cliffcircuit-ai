@@ -2,6 +2,10 @@
 // portal-common.js — Shared code for all CliffCircuit Portal pages
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── Session Labels (loaded async, keyed by session_key → friendly name) ──
+let SESSION_LABELS = {};
+fetch('/portal/session-labels.json?t=' + Date.now()).then(r => r.json()).then(d => { SESSION_LABELS = d || {}; }).catch(() => {});
+
 // ── Constants ────────────────────────────────────────────────────────────
 const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
 const SUPABASE_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
@@ -240,6 +244,8 @@ function cronTaskFromKey(key) {
 }
 
 function sessionKeyToFriendly(key, sessionId) {
+  // Check explicit session labels first (from session-labels.json)
+  if (key && SESSION_LABELS[key]) return SESSION_LABELS[key];
   if (!key) return 'Subagent Run';
   if (key.startsWith('cron:')) {
     const m = key.match(/^cron:([^:]+)/);
