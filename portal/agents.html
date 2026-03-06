@@ -382,15 +382,16 @@
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = timeAgo(lastRunJob.lastRunMs); if (lastRunJob.lastRunMs) el('ctx-sublabel').dataset.ts = lastRunJob.lastRunMs; }
         }
 
-        // Job table rows
+        // Job table rows — skip DOM update if unchanged (prevents hover flicker)
         const tbody = document.getElementById(`${n}-jobs-body`);
         if (tbody) {
           const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
           const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
           const fmtTok = (t, j) => { if (!t) return '<span class="text-gray-700">—</span>'; const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`; };
+          let newJobsHtml;
           if (info.jobs.length) {
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
-            tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+            newJobsHtml = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
               <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
               <td class="px-4 py-2.5 text-gray-400 text-xs">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
@@ -401,8 +402,9 @@
               <td class="px-4 py-2.5 text-xs">${fmtTok(j.lastRunTokens, j)}</td>
             </tr>`).join('');
           } else {
-            tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
+            newJobsHtml = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
           }
+          if (tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
         }
       });
 
@@ -537,17 +539,18 @@
         if (el('last')) el('last').textContent = lastRunJob ? timeAgo(lastRunJob.lastRunMs) : 'No recent runs';
         if (el('errors')) { el('errors').classList.toggle('hidden', !warnings); if(warnings) el('errors').textContent = `Warning: ${info.errors} error${info.errors>1?'s':''}`; }
 
-        // Rebuild job rows with fresh data
+        // Rebuild job rows with fresh data — skip if unchanged (prevents hover flicker)
         const tbody = document.querySelector(`#card-condensed-${n} .border-t table tbody`);
         if (tbody && info.jobs.length) {
           const statusColor = s => s==='ok'?'text-green-400':s==='error'?'text-red-400':'text-gray-500';
           info.jobs.forEach(j => { window._jobMap[j.name] = j; });
-          tbody.innerHTML = info.jobs.map(j=>`<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+          const newCondensedHtml = info.jobs.map(j=>`<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
             <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(cronDisplayName(j.name))}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${jobScheduleLabel(j)}</td>
             <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
           </tr>`).join('');
+          if (tbody.innerHTML !== newCondensedHtml) tbody.innerHTML = newCondensedHtml;
         }
       });
     }
