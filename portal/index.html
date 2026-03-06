@@ -2147,72 +2147,96 @@ function switchTab(t) {
     }
 
     // Parse a session_key like "cron:samantha-draft:CRONID:run:TS" → task name
+    // ── Canonical cron UUID → name (hardcoded so names resolve before _cronList loads) ──
+    const CRON_UUID_MAP = {
+      'af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1': 'samantha-publish',
+      '785dc24f-e15b-420b-a7e5-0116f5e60e93': 'portal-data-refresh',
+      '01a338f9-8be9-4ab8-82d9-a050f64bdaf6': 'pipeline-health-check',
+      '498ea0a9-f2c2-49f2-bd78-73c683af9d82': 'samantha-tim-tweets',
+      '9d407dd0-af2b-4bf5-97f2-ae5d006a8663': 'cliff-article-review',
+      '8cd72f3d-03b2-4160-81b2-bae92ee72620': 'samantha-cliff-tweets',
+      'fbd92dff-ce46-48d2-8bfd-6893c75b1031': 'morning-check-in',
+      '46b53934-fd27-4950-959d-9218f4201756': 'cliff-scheduler',
+      '43a6704d-8e77-448a-81d7-e7fda3ac7614': 'samantha-recycle-writer',
+      '50708c6f-37b2-4f19-88a9-9ff56a732f7c': 'samantha-recycle-media',
+      'ca0f70f9-6972-494d-8910-4b65c58ddeae': 'social-monitoring',
+      '3bcb8b34-667b-42a6-a156-26bead73d717': 'github-monitoring',
+      '763a67ae-49b6-4bd7-82ad-5cac8510352a': 'nightly-extraction',
+      '248701de-21b3-4c1a-86b6-164a8de04ca3': 'nightly-git-backup',
+      'bbbd846b-ecb6-420f-822b-4c95e69a6d4d': 'weekly-report',
+      'b2055796-4f19-4200-b970-f40c7212e649': 'samantha-writer',
+      'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
+    };
+
     function cronTaskFromKey(key) {
       if (!key) return null;
-      // Format 1: cron:<name>:<cronId>:run:<ts>
       const m1 = key.match(/^cron:([^:]+):/);
       if (m1) return m1[1];
-      // Format 2: agent:<agentId>:cron:<cronId>:run:<ts> — look up cronId in crons list
       const m2 = key.match(/^agent:[^:]+:cron:([^:]+)/);
       if (m2) {
-        // Try to find cron name from the cron list
-        const crons = (window._cronList || []);
-        const found = crons.find(c => c.id === m2[1]);
+        if (CRON_UUID_MAP[m2[1]]) return CRON_UUID_MAP[m2[1]];
+        const found = (window._cronList || []).find(c => c.id === m2[1]);
         return found ? found.name : null;
       }
       return null;
     }
 
-    // Map cron name to display label
+    // ── Canonical display names — THE source of truth ──
     const CRON_DISPLAY = {
-      'samantha-draft':         'Article Draft',
-      'samantha-publish':       'Publish',
-      'samantha-writer':        'Article Writer',
-      'samantha-media':         'Media / Images',
-      'samantha-cliff-tweets':  'Cliff Tweets',
-      'samantha-tim-tweets':    'Tim Posts',
-      'samantha-message-check': 'Message Check',
-      'samantha-recycle':       'Recycle Rejected',
-      'cliff-article-review':   'Article Review',
-      'cliff-message-check':    'Message Check',
-      'cliff-scheduler':        'Scheduler',
-      'scout-message-check':    'Message Check',
-      'portal-data-refresh':    'Portal Refresh',
-      'portal-live-refresh':    'Live Refresh',
-      'social-monitoring':      'Social Monitoring',
-      'github-monitoring':      'GitHub Monitoring',
-      'pipeline-health-check':  'Pipeline Health',
-      'nightly-extraction':     'Nightly Extraction',
+      'samantha-draft':          'Article Draft',
+      'samantha-publish':        'Publish',
+      'samantha-writer':         'Article Writer',
+      'samantha-media':          'Media / Images',
+      'samantha-cliff-tweets':   'Cliff Tweets',
+      'samantha-tim-tweets':     'Tim Posts',
+      'samantha-message-check':  'Message Check',
+      'samantha-recycle':        'Recycle Rejected',
+      'samantha-recycle-writer': 'Recycle Writer',
+      'samantha-recycle-media':  'Recycle Media',
+      'cliff-article-review':    'Article Review',
+      'cliff-message-check':     'Message Check',
+      'cliff-scheduler':         'Scheduler',
+      'scout-message-check':     'Message Check',
+      'portal-data-refresh':     'Portal Refresh',
+      'portal-live-refresh':     'Portal Refresh',
+      'social-monitoring':       'Social Monitoring',
+      'github-monitoring':       'GitHub Monitoring',
+      'pipeline-health-check':   'Pipeline Health',
+      'nightly-extraction':      'Nightly Extraction',
+      'nightly-git-backup':      'Nightly Git Backup',
+      'morning-check-in':        'Morning Check-In',
+      'weekly-report':           'Weekly Report',
     };
 
-    // Convert session key to user-friendly name
+    // ── Canonical direct-session names ──
+    const DIRECT_DISPLAY = {
+      'main:telegram':     'Tim (Telegram DM)',
+      'main:signal':       'Tim (Signal DM)',
+      'main:main':         'Web UI (Heartbeat+Chat)',
+      'samantha:telegram': 'Samantha (Telegram DM)',
+      'scout:telegram':    'Scout (Telegram DM)',
+    };
+
     function sessionKeyToFriendly(key, sessionId) {
       if (!key) return sessionId?.slice(0,12) || '—';
-      // cron:name:... → just show the name
       if (key.startsWith('cron:')) {
         const m = key.match(/^cron:([^:]+)/);
         if (m && CRON_DISPLAY[m[1]]) return CRON_DISPLAY[m[1]];
         return m ? m[1].replace(/-/g,' ') : 'Cron';
       }
-      // agent:agent:cron:UUID:run:... → look up cron by UUID
       const agentCronMatch = key.match(/^agent:([^:]+):cron:([^:]+)/);
       if (agentCronMatch) {
-        const cronId = agentCronMatch[2];
-        const cronList = window._cronList || [];
-        const cron = cronList.find(c => c.id === cronId);
-        if (cron) return CRON_DISPLAY[cron.name] || cron.name.replace(/-/g,' ');
-        return 'Cron (UUID)';
+        const taskName = cronTaskFromKey(key);
+        if (taskName) return CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ');
+        const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' }[agentCronMatch[1]] || agentCronMatch[1];
+        return agentLabel + ' Cron';
       }
-      // agent:main:telegram:direct:heartbeat → "Heartbeat"
-      if (key.includes(':telegram:direct:heartbeat')) return fmtAgent(key.split(':')[1]) + ' — Heartbeat';
-      // agent:main:telegram:direct:<userId> → "Cliff ↔ Tim (Telegram DM)"
-      if (key.match(/^agent:([^:]+):telegram:direct:\d+$/)) return fmtAgent(key.split(':')[1]) + ' — Tim (Telegram DM)';
-      // agent:main:telegram:direct:... → other direct telegram
-      const directMatch = key.match(/^agent:([^:]+):([^:]+):direct:/);
-      if (directMatch) return fmtAgent(directMatch[1]) + ' — ' + fmtLabel(directMatch[2]);
-      // agent:main:main → "Cliff — Web UI / Webchat"
-      if (key === 'agent:main:main') return 'Cliff — Web UI (Heartbeat+Chat)';
-      // Default: shorten it
+      if (key === 'agent:main:main') return DIRECT_DISPLAY['main:main'];
+      const directMatch = key.match(/^agent:([^:]+):([^:]+)(?::direct)?:/);
+      if (directMatch) {
+        const dk = directMatch[1] + ':' + directMatch[2];
+        if (DIRECT_DISPLAY[dk]) return DIRECT_DISPLAY[dk];
+      }
       return key.split(':').pop().slice(0,14);
     }
 
@@ -2512,18 +2536,7 @@ function switchTab(t) {
         .map(r => {
           const isCron = r.session_key && (r.session_key.startsWith('cron:') || r.session_key.includes(':cron:'));
           const cronName = isCron ? cronTaskFromKey(r.session_key) : null;
-          // Parse agent:main:telegram:direct:<chatId> → "Cliff — Telegram"
-          const directMatch = r.session_key && r.session_key.match(/^agent:([^:]+):([^:]+):direct:/);
-          const displayName = cronName
-            ? (CRON_DISPLAY[cronName] || cronName.replace(/-/g,' '))
-            : (r.session_key && r.session_key.includes(':telegram:direct:heartbeat'))
-              ? (fmtAgent(r.agent_id) + ' — Heartbeat')
-            : (r.session_key && r.session_key.match(/^agent:[^:]+:telegram:direct:\d+$/))
-              ? (fmtAgent(r.agent_id) + ' — Tim (Telegram DM)')
-            : directMatch
-              ? (fmtAgent(directMatch[1]) + ' — ' + fmtLabel(directMatch[2]))
-              : (r.session_key === 'agent:main:main' ? 'Cliff — Web UI (Heartbeat+Chat)'
-              : (r.session_key ? r.session_key.replace(/^agent:/,'').split(':').slice(0,2).join(' / ') : 'Direct Session'));
+          const displayName = sessionKeyToFriendly(r.session_key, r.session_id);
           const runMs = (() => { const m = r.session_key?.match(/:run:(\d+)$/); return m ? parseInt(m[1]) : null; })();
           const durationMs = r.duration_ms || (r.last_seen_at && r.first_seen_at
             ? new Date(r.last_seen_at) - new Date(r.first_seen_at) : 0);
