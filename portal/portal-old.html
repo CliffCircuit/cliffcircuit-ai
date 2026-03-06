@@ -2166,6 +2166,9 @@ function switchTab(t) {
       'bbbd846b-ecb6-420f-822b-4c95e69a6d4d': 'weekly-report',
       'b2055796-4f19-4200-b970-f40c7212e649': 'samantha-writer',
       'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
+      '50e0a780-c5ae-4d24-bf14-714e535de315': 'atlas-build',
+      'befa343c-3f24-40bf-97ab-102954820866': 'atlas-refactor',
+      'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
     };
 
     function cronTaskFromKey(key) {
@@ -2206,6 +2209,9 @@ function switchTab(t) {
       'nightly-git-backup':      'Nightly Git Backup',
       'morning-check-in':        'Morning Check-In',
       'weekly-report':           'Weekly Report',
+      'atlas-build':             'Atlas Build',
+      'atlas-refactor':          'Atlas Refactor',
+      'atlas-debug':             'Atlas Debug',
     };
 
     // ── Canonical direct-session names ──
@@ -2215,10 +2221,24 @@ function switchTab(t) {
       'main:main':         'Web UI (Heartbeat+Chat)',
       'samantha:telegram': 'Samantha (Telegram DM)',
       'scout:telegram':    'Scout (Telegram DM)',
+      'atlas:telegram':    'Atlas (Telegram DM)',
+      'atlas:main':        'Atlas (Web UI)',
+    };
+
+    // ── Explicit session labels (for subagent runs, group chats, etc.) ──
+    const SESSION_LABELS = {
+      'agent:main:subagent:6989bb51-fc12-4fb7-91be-0bfd7511ffa7': 'Cliff — Debug Agents Page',
+      'agent:atlas:telegram:group:-5298874391': 'Atlas (Chat Hub)',
+      'agent:main:telegram:group:-5298874391': 'Cliff (Chat Hub)',
+      'agent:scout:telegram:group:-5298874391': 'Scout (Chat Hub)',
+      'agent:samantha:telegram:group:-5298874391': 'Samantha (Chat Hub)',
+      'agent:atlas:telegram:direct:8386624734': 'Atlas (Telegram DM)',
+      'agent:atlas:main': 'Atlas (Web UI)',
     };
 
     function sessionKeyToFriendly(key, sessionId) {
-      if (!key) return sessionId?.slice(0,12) || '—';
+      if (key && SESSION_LABELS[key]) return SESSION_LABELS[key];
+      if (!key) return 'Subagent Run';
       if (key.startsWith('cron:')) {
         const m = key.match(/^cron:([^:]+)/);
         if (m && CRON_DISPLAY[m[1]]) return CRON_DISPLAY[m[1]];
@@ -2228,8 +2248,24 @@ function switchTab(t) {
       if (agentCronMatch) {
         const taskName = cronTaskFromKey(key);
         if (taskName) return CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ');
-        const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' }[agentCronMatch[1]] || agentCronMatch[1];
+        const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[agentCronMatch[1]] || agentCronMatch[1];
         return agentLabel + ' Cron';
+      }
+      const subagentMatch = key.match(/^agent:([^:]+):subagent:/);
+      if (subagentMatch) {
+        const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[subagentMatch[1]] || subagentMatch[1];
+        return agentLabel + ' (Subagent Run)';
+      }
+      const groupMatch = key.match(/^agent:([^:]+):([^:]+):group:/);
+      if (groupMatch) {
+        const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[groupMatch[1]] || groupMatch[1];
+        return agentLabel + ' (Chat Hub)';
+      }
+      const mainMatch = key.match(/^agent:([^:]+):main$/);
+      if (mainMatch) {
+        if (mainMatch[1] === 'main') return 'Web UI (Heartbeat+Chat)';
+        const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[mainMatch[1]] || mainMatch[1];
+        return agentLabel + ' (Web UI)';
       }
       if (key === 'agent:main:main') return DIRECT_DISPLAY['main:main'];
       const directMatch = key.match(/^agent:([^:]+):([^:]+)(?::direct)?:/);
@@ -2242,8 +2278,8 @@ function switchTab(t) {
 
     function renderAgentSessions(rows) { console.log("DEBUG ROWS:", rows.slice(0, 5));
       const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
-      const agentColor = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' };
-      const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' };
+      const agentColor = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400', atlas: 'text-orange-400' };
+      const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' };
       const modelShort = m => {
         if (!m) return '<span class="text-gray-700">—</span>';
         const s = m.toLowerCase();
