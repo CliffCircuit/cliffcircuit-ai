@@ -57,6 +57,39 @@
   <script>
     if (!window._jobMap) window._jobMap = {};
 
+    // ─── CRON DISPLAY NAMES (consistent with tokens page) ─────────────────
+    const CRON_DISPLAY = {
+      'samantha-draft':          'Article Draft',
+      'samantha-publish':        'Publish',
+      'samantha-writer':         'Article Writer',
+      'samantha-media':          'Media / Images',
+      'samantha-cliff-tweets':   'Cliff Tweets',
+      'samantha-tim-tweets':     'Tim Posts',
+      'samantha-message-check':  'Message Check',
+      'samantha-recycle':        'Recycle Rejected',
+      'samantha-recycle-writer': 'Recycle Writer',
+      'samantha-recycle-media':  'Recycle Media',
+      'cliff-article-review':    'Article Review',
+      'cliff-message-check':     'Message Check',
+      'cliff-scheduler':         'Scheduler',
+      'scout-message-check':     'Message Check',
+      'portal-data-refresh':     'Portal Refresh',
+      'portal-live-refresh':     'Portal Refresh',
+      'social-monitoring':       'Social Monitoring',
+      'github-monitoring':       'GitHub Monitoring',
+      'pipeline-health-check':   'Pipeline Health',
+      'nightly-extraction':      'Nightly Extraction',
+      'nightly-git-backup':      'Nightly Git Backup',
+      'morning-check-in':        'Morning Check-In',
+      'weekly-report':           'Weekly Report',
+      'atlas-build':             'Build',
+      'atlas-refactor':          'Refactor',
+      'atlas-debug':             'Debug',
+    };
+    function cronDisplayName(rawName) {
+      return CRON_DISPLAY[rawName] || rawName.replace(/^(samantha|scout|cliff|atlas)-/i, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
     // A job is "parked" if its next run is more than 1 year away (far-future placeholder)
     const TWO_YEARS_MS = 2 * 365.25 * 24 * 60 * 60 * 1000;
     function isParked(j) {
@@ -234,7 +267,7 @@
 
     function openJobDetail(name) {
       const j = window._jobMap && window._jobMap[name]; if (!j) return;
-      document.getElementById('job-modal-name').textContent = j.name;
+      document.getElementById('job-modal-name').textContent = cronDisplayName(j.name);
       document.getElementById('job-modal-status').textContent = j.status || 'idle';
       document.getElementById('job-modal-status').className = `pill status-${j.status||'idle'}`;
       document.getElementById('job-modal-schedule').textContent = 'Schedule: ' + humanCron(j.schedule || '—');
@@ -357,7 +390,7 @@
           if (el('ctx-title')) el('ctx-title').textContent = 'Last Job';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-          if (el('ctx-top')) { el('ctx-top').textContent = (lastRunJob.name||'').replace(/^(samantha|scout|cliff|atlas)-/i,'').replace(/-/g,' '); el('ctx-top').className = 'text-white text-sm font-semibold mb-0 capitalize'; }
+          if (el('ctx-top')) { el('ctx-top').textContent = cronDisplayName(lastRunJob.name||''); el('ctx-top').className = 'text-white text-sm font-semibold mb-0'; }
           if (el('ctx-label')) el('ctx-label').textContent = 'Duration: ' + durLabel;
           if (el('ctx-pct')) el('ctx-pct').textContent = '';
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = '#6366f1'; }
@@ -372,8 +405,8 @@
           const fmtTok = (t, j) => { if (!t) return '<span class="text-gray-700">—</span>'; const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`; };
           if (info.jobs.length) {
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
-            tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
-              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')}</td>
+            tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(cronDisplayName(j.name))}</td>
               <td class="px-4 py-2.5 text-gray-400 text-xs">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
               <td class="px-4 py-2.5 text-xs">${thinkBadge(j.thinking)}</td>
@@ -448,7 +481,7 @@
 
       const jobRows = jobs.length
         ? jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
-            <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(j.name||'—')}</td>
+            <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(cronDisplayName(j.name))}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${jobScheduleLabel(j)}</td>
             <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
@@ -525,7 +558,7 @@
           const statusColor = s => s==='ok'?'text-green-400':s==='error'?'text-red-400':'text-gray-500';
           info.jobs.forEach(j => { window._jobMap[j.name] = j; });
           tbody.innerHTML = info.jobs.map(j=>`<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
-            <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(j.name||'—')}</td>
+            <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(cronDisplayName(j.name))}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${jobScheduleLabel(j)}</td>
             <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
