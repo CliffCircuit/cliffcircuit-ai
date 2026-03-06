@@ -380,8 +380,9 @@
       // No-op for DATA render — token data is loaded directly from Supabase
     }
 
-    initPortal('tokens', renderTokensPage).then(ok => {
+    initPortal('tokens', renderTokensPage).then(async ok => {
       if (ok) {
+        await _sessionLabelsReady;
         loadTokenData();
         setupRealtime(null, () => { loadTokenData(); });
       }

@@ -2,9 +2,9 @@
 // portal-common.js — Shared code for all CliffCircuit Portal pages
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ── Session Labels (loaded async, keyed by session_key → friendly name) ──
+// ── Session Labels (keyed by session_key → friendly name) ──
 let SESSION_LABELS = {};
-fetch('/portal/session-labels.json?t=' + Date.now()).then(r => r.json()).then(d => { SESSION_LABELS = d || {}; }).catch(() => {});
+const _sessionLabelsReady = fetch('/portal/session-labels.json?t=' + Date.now()).then(r => r.json()).then(d => { SESSION_LABELS = d || {}; }).catch(() => {});
 
 // ── Constants ────────────────────────────────────────────────────────────
 const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
@@ -30,6 +30,9 @@ const CRON_UUID_MAP = {
   '248701de-21b3-4c1a-86b6-164a8de04ca3': 'nightly-git-backup',
   'bbbd846b-ecb6-420f-822b-4c95e69a6d4d': 'weekly-report',
   'b2055796-4f19-4200-b970-f40c7212e649': 'samantha-writer',
+  '50e0a780-c5ae-4d24-bf14-714e535de315': 'atlas-build',
+  'befa343c-3f24-40bf-97ab-102954820866': 'atlas-refactor',
+  'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
   'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
 };
 
@@ -57,6 +60,9 @@ const CRON_DISPLAY = {
   'nightly-git-backup':      'Nightly Git Backup',
   'morning-check-in':        'Morning Check-In',
   'weekly-report':           'Weekly Report',
+  'atlas-build':             'Atlas Build',
+  'atlas-refactor':          'Atlas Refactor',
+  'atlas-debug':             'Atlas Debug',
 };
 
 const DIRECT_DISPLAY = {
@@ -272,7 +278,13 @@ function sessionKeyToFriendly(key, sessionId) {
     const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[groupMatch[1]] || groupMatch[1];
     return agentLabel + ' (Chat Hub)';
   }
-  if (key === 'agent:main:main') return DIRECT_DISPLAY['main:main'];
+  // Agent main sessions: agent:X:main
+  const mainMatch = key.match(/^agent:([^:]+):main$/);
+  if (mainMatch) {
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[mainMatch[1]] || mainMatch[1];
+    if (mainMatch[1] === 'main') return 'Web UI (Heartbeat+Chat)';
+    return agentLabel + ' (Web UI)';
+  }
   const directMatch = key.match(/^agent:([^:]+):([^:]+)(?::direct)?:/);
   if (directMatch) {
     const dk = directMatch[1] + ':' + directMatch[2];
