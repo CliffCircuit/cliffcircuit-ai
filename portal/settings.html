@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+</head>
+<body class="min-h-screen">
+  <div id="portal" class="min-h-screen">
+    <div id="portal-nav"></div>
+    <div class="p-6 max-w-3xl mx-auto">
+
+      <h1 class="text-2xl font-bold text-white mb-6">Settings</h1>
+
+      <!-- Daily Goals -->
+      <div class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Daily Content Goals</h2>
+        <p class="text-gray-500 text-sm mb-6">Set daily volume goals. Samantha will respect these limits when scheduling content.</p>
+        <div class="grid grid-cols-3 gap-6 mb-6">
+          <div class="text-center">
+            <div class="text-sm text-emerald-400 font-semibold mb-2">Cliff Articles / day</div>
+            <input id="goal-cliff-articles" type="number" min="0" max="50" class="w-24 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-2xl font-bold text-center focus:outline-none focus:border-indigo-500">
+          </div>
+          <div class="text-center">
+            <div class="text-sm text-emerald-400 font-semibold mb-2">Cliff Tweets / day</div>
+            <input id="goal-cliff-tweets" type="number" min="0" max="50" class="w-24 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-2xl font-bold text-center focus:outline-none focus:border-indigo-500">
+          </div>
+          <div class="text-center">
+            <div class="text-sm text-purple-400 font-semibold mb-2">Tim Tweets / day</div>
+            <input id="goal-tim-tweets" type="number" min="0" max="20" class="w-24 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white text-2xl font-bold text-center focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500">Takes effect:</span>
+            <select id="goal-takes-effect" class="bg-gray-900 border border-gray-700 rounded px-3 py-1 text-sm text-gray-300 outline-none cursor-pointer">
+              <option value="today" selected>Immediately</option>
+              <option value="tomorrow">Tomorrow</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="goal-save-status" class="text-xs text-gray-500"></span>
+            <button onclick="saveGoals()" class="bg-green-700 hover:bg-green-600 text-green-200 font-semibold px-6 py-2 rounded-lg text-sm transition-colors">Save Goals</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Display Settings -->
+      <div class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Display</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-gray-300">Timezone</div>
+            <div class="text-xs text-gray-500 mt-1">Controls how dates and times are displayed across the portal</div>
+          </div>
+          <select id="setting-timezone" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-300 outline-none cursor-pointer">
+            <option value="America/Los_Angeles" selected>Pacific Time (PT)</option>
+            <option value="America/Denver">Mountain Time (MT)</option>
+            <option value="America/Chicago">Central Time (CT)</option>
+            <option value="America/New_York">Eastern Time (ET)</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button onclick="saveDisplaySettings()" class="bg-indigo-700 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Save Display Settings</button>
+        </div>
+      </div>
+
+      <!-- Account -->
+      <div class="card p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">Account</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-gray-300">Sign Out</div>
+            <div class="text-xs text-gray-500 mt-1">Clear your authentication and return to the login screen</div>
+          </div>
+          <button onclick="logout()" class="bg-red-900 hover:bg-red-800 text-red-300 font-medium px-4 py-2 rounded-lg text-sm transition-colors border border-red-700">Sign Out</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/portal/portal-common.js"></script>
+  <script>
+    function renderSettings(d) {
+      // Load current goals
+      const goals = loadGoals();
+      document.getElementById('goal-cliff-articles').value = goals.cliffArticles ?? 12;
+      document.getElementById('goal-cliff-tweets').value = goals.cliffTweets ?? 6;
+      document.getElementById('goal-tim-tweets').value = goals.timTweets ?? 5;
+      if (goals.takesEffect) document.getElementById('goal-takes-effect').value = goals.takesEffect;
+
+      // Load display settings
+      const settings = loadSettings();
+      if (settings.displayTz) document.getElementById('setting-timezone').value = settings.displayTz;
+    }
+
+    function saveGoals() {
+      const takesEffect = document.getElementById('goal-takes-effect')?.value || 'today';
+      const goals = {
+        cliffArticles: parseInt(document.getElementById('goal-cliff-articles').value) || 12,
+        cliffTweets: parseInt(document.getElementById('goal-cliff-tweets').value) || 6,
+        timTweets: parseInt(document.getElementById('goal-tim-tweets').value) || 5,
+        takesEffect, savedAt: new Date().toISOString(), savedBy: 'tim'
+      };
+      localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+      document.getElementById('goal-save-status').textContent = 'Saving…';
+
+      fetch('https://api.cliffcircuit.ai/save-goals', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliffArticles: goals.cliffArticles, cliffTweets: goals.cliffTweets, timTweets: goals.timTweets, effectiveDate: takesEffect })
+      }).catch(() => {});
+
+      fetch('https://cliffcircuit-goals-api.vercel.app/api/save-goals', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cliffArticles: goals.cliffArticles, cliffTweets: goals.cliffTweets, timTweets: goals.timTweets, effectiveDate: takesEffect })
+      }).then(r => r.json()).then(r => {
+        document.getElementById('goal-save-status').textContent = r.ok ? '✓ Saved & synced' : '✓ Saved locally';
+      }).catch(() => {
+        document.getElementById('goal-save-status').textContent = '✓ Saved locally';
+      });
+    }
+
+    function saveDisplaySettings() {
+      const settings = loadSettings();
+      settings.displayTz = document.getElementById('setting-timezone').value;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      window._portalDisplayTz = settings.displayTz;
+      alert('Display settings saved. Reload pages to apply.');
+    }
+
+    initPortal('settings', renderSettings);
+  </script>
+</body>
+</html>

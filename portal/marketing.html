@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+</head>
+<body class="min-h-screen">
+  <div id="portal" class="min-h-screen">
+    <div id="portal-nav"></div>
+    <div id="loading" class="flex items-center justify-center py-20 text-gray-500 text-sm hidden">Loading data...</div>
+
+    <div id="tab-marketing-content" class="p-6 max-w-7xl mx-auto">
+
+      <!-- Twitter Growth Cards -->
+      <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <img src="https://pbs.twimg.com/profile_images/2026134754689736704/HEaSEt1K_normal.jpg" class="w-8 h-8 rounded-full" alt="@CliffCircuit">
+              <a href="https://x.com/CliffCircuit" target="_blank" class="font-semibold text-white hover:text-indigo-400">@CliffCircuit</a>
+            </div>
+            <span id="cliff-since" class="text-gray-600 text-xs"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div id="cliff-followers" class="text-3xl font-bold text-indigo-400">—</div>
+              <div class="text-xs text-gray-500 mt-1">Followers</div>
+              <div id="cliff-growth-row" class="flex gap-2 mt-2 flex-wrap"></div>
+            </div>
+            <div>
+              <div id="cliff-posts-count" class="text-3xl font-bold text-indigo-300">—</div>
+              <div class="text-xs text-gray-500 mt-1">Total Posts</div>
+            </div>
+          </div>
+          <canvas id="sparkline-cliff" height="36" class="w-full opacity-60"></canvas>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <img src="https://pbs.twimg.com/profile_images/2026148940652134400/VV7OqiuJ_normal.jpg" class="w-8 h-8 rounded-full" alt="@TimHarris707">
+              <a href="https://x.com/timharris707" target="_blank" class="font-semibold text-white hover:text-purple-400">@TimHarris707</a>
+            </div>
+            <span id="tim-since" class="text-gray-600 text-xs"></span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <div id="tim-followers" class="text-3xl font-bold text-purple-400">—</div>
+              <div class="text-xs text-gray-500 mt-1">Followers</div>
+              <div id="tim-growth-row" class="flex gap-2 mt-2 flex-wrap"></div>
+            </div>
+            <div>
+              <div id="tim-posts-count" class="text-3xl font-bold text-purple-300">—</div>
+              <div class="text-xs text-gray-500 mt-1">Total Posts</div>
+            </div>
+          </div>
+          <canvas id="sparkline-tim" height="36" class="w-full opacity-60"></canvas>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <div class="flex gap-4">
+          <!-- LEFT: Today's Queue -->
+          <div class="card overflow-hidden flex-shrink-0" style="width:260px; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
+            <div class="p-6 flex flex-col h-full">
+              <div class="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-4">Today's Queue</div>
+              <div class="mb-5">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="w-2 h-2 rounded-full bg-green-400" style="box-shadow: 0 0 8px #4ade80; animation: pulse 2s infinite;"></div>
+                  <span class="text-xs text-gray-400 uppercase tracking-wide">Next Publish</span>
+                </div>
+                <div id="metric-next-publish" class="text-4xl font-bold text-white leading-none tracking-tight">—</div>
+              </div>
+              <div class="border-t border-indigo-900 mb-5"></div>
+              <div class="space-y-3 flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-400">In Queue</span>
+                  <span id="metric-in-queue" class="text-xl font-bold text-yellow-400">—</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-400">Articles</span>
+                  <span id="metric-articles-today" class="text-xl font-bold text-indigo-400">—</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-400">Tweets</span>
+                  <span id="metric-tweets-today" class="text-xl font-bold text-blue-400">—</span>
+                </div>
+              </div>
+              <div style="align-self:flex-start;margin-top:0.75rem;">
+                <select id="queue-window-select" onchange="setQueueWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#6b7280;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;width:fit-content;">
+                  <option value="today" selected>today</option>
+                  <option value="1">next 1h</option>
+                  <option value="12">next 12h</option>
+                  <option value="24">next 24h</option>
+                  <option value="48">next 48h</option>
+                  <option value="tomorrow">tomorrow</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- MIDDLE: On Deck -->
+          <div class="card overflow-hidden flex-shrink-0 cursor-pointer hover:border-teal-800 transition-colors" id="on-deck-card" style="width:260px; background: linear-gradient(135deg, #0f172a 0%, #0d1f1a 100%); border-color: #1f2937;" onclick="onDeckClick()">
+            <div class="p-6 flex flex-col h-full">
+              <div class="flex items-center justify-between mb-4"><div class="text-xs font-semibold text-teal-400 uppercase tracking-widest">On Deck</div><span class="text-xs text-gray-600 hover:text-teal-400 transition-colors" id="on-deck-view-hint">view →</span></div>
+              <div id="on-deck-empty" class="text-gray-600 text-sm">Nothing scheduled</div>
+              <div id="on-deck-content" class="hidden flex-1 flex flex-col">
+                <div class="flex items-center gap-2 mb-3">
+                  <span id="on-deck-type-badge" class="pill bg-indigo-950 text-indigo-300">Article</span>
+                  <span id="on-deck-acct-badge" class="pill bg-gray-800 text-gray-300">@Cliff</span>
+                </div>
+                <div id="on-deck-text" class="text-white text-sm font-medium leading-snug mb-2" style="display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;">—</div>
+                <div class="border-t border-teal-900 mb-2"></div>
+                <div class="space-y-2 mt-auto">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">Posts in</span>
+                    <span id="on-deck-scheduled" class="text-2xl font-bold text-teal-400">—</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">In queue</span>
+                    <span id="on-deck-queued" class="text-xs text-gray-400">—</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">Status</span>
+                    <span id="on-deck-status" class="pill status-approved">Approved</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Recent Posts -->
+          <div class="card overflow-hidden flex-1" id="recent-posts-card" style="background: linear-gradient(135deg, #0f172a 0%, #0d1a1a 100%); perspective: 1000px;">
+            <div id="rp-front" class="px-6 pt-5 pb-6 h-full flex flex-col transition-all duration-300">
+              <div class="flex items-baseline justify-between mb-5">
+                <div class="text-base font-bold text-white">Recent Posts</div>
+                <select id="recent-window-select" onchange="setRecentWindow(this.value)" style="background:#0f172a;border:1px solid #1e3a3a;color:#6b7280;font-size:0.7rem;padding:2px 6px;border-radius:4px;cursor:pointer;outline:none;"><option value="today" selected>today</option><option value="yesterday">yesterday</option><option value="1">last 1 hour</option><option value="12">last 12 hours</option><option value="24">last 24 hours</option><option value="48">last 48 hours</option></select>
+              </div>
+              <div class="flex flex-1 items-center gap-0">
+                <div class="flex flex-col justify-center items-center pr-6 border-r border-gray-800" style="min-width:130px;">
+                  <div id="metric-combined-48h" class="text-7xl font-bold text-white leading-none tracking-tight">—</div>
+                  <div class="text-xs text-gray-500 mt-3 text-center">total</div>
+                </div>
+                <div class="flex-1 flex flex-col items-center justify-center gap-3 px-6">
+                  <div class="text-2xl font-bold text-emerald-400">Cliff</div>
+                  <div class="flex gap-10 justify-center">
+                    <div class="text-center">
+                      <div id="metric-articles-48h" class="text-5xl font-bold text-white leading-none">—</div>
+                      <div class="text-sm text-gray-500 mt-2">Articles</div>
+                      <div id="goal-cliff-articles-display" class="text-xs text-gray-600 mt-1"></div>
+                    </div>
+                    <div class="text-center">
+                      <div id="metric-cliff-tweets-48h" class="text-5xl font-bold text-white leading-none">—</div>
+                      <div class="text-sm text-gray-500 mt-2">Tweets</div>
+                      <div id="goal-cliff-tweets-display" class="text-xs text-gray-600 mt-1"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="w-px bg-gray-800 self-stretch"></div>
+                <div class="flex-1 flex flex-col items-center justify-center gap-3 px-6">
+                  <div class="text-2xl font-bold text-purple-400">Tim</div>
+                  <div class="text-center">
+                    <div id="metric-tim-tweets-48h-dup" class="text-5xl font-bold text-white leading-none">—</div>
+                    <div class="text-sm text-gray-500 mt-2">Tweets</div>
+                    <div id="goal-tim-tweets-display" class="text-xs text-gray-600 mt-1"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end mt-4">
+                <button onclick="flipToGoals()" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:0.75rem;padding:4px 14px;border-radius:6px;cursor:pointer;" onmouseover="this.style.color='#e2e8f0'" onmouseout="this.style.color='#94a3b8'">Modify plan</button>
+              </div>
+            </div>
+            <div id="rp-back" class="px-6 pt-5 pb-6 h-full flex-col hidden">
+              <div class="flex items-center justify-between mb-5">
+                <div class="text-base font-bold text-white">Modify Plan</div>
+                <button onclick="flipToRecent()" style="background:#1e293b;border:1px solid #334155;color:#94a3b8;font-size:0.7rem;padding:2px 10px;border-radius:4px;cursor:pointer;" onmouseover="this.style.color='#e2e8f0'" onmouseout="this.style.color='#94a3b8'">← Back</button>
+              </div>
+              <div class="text-xs text-gray-500 mb-5">Set daily volume goals. Samantha will respect these limits.</div>
+              <div class="flex flex-1 items-center gap-0">
+                <div class="flex-1 flex flex-col items-center justify-center gap-5 px-6">
+                  <div class="text-xl font-bold text-emerald-400">Cliff</div>
+                  <div class="flex gap-8 justify-center">
+                    <div class="text-center">
+                      <div class="text-xs text-gray-500 mb-2">Articles / day</div>
+                      <input id="goal-cliff-articles" type="number" min="0" max="50" style="width:80px;background:#0f172a;border:1px solid #334155;color:#fff;font-size:1.8rem;font-weight:700;text-align:center;border-radius:8px;padding:8px 4px;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#334155'">
+                    </div>
+                    <div class="text-center">
+                      <div class="text-xs text-gray-500 mb-2">Tweets / day</div>
+                      <input id="goal-cliff-tweets" type="number" min="0" max="50" style="width:80px;background:#0f172a;border:1px solid #334155;color:#fff;font-size:1.8rem;font-weight:700;text-align:center;border-radius:8px;padding:8px 4px;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#334155'">
+                    </div>
+                  </div>
+                </div>
+                <div class="w-px bg-gray-800 self-stretch"></div>
+                <div class="flex-1 flex flex-col items-center justify-center gap-5 px-6">
+                  <div class="text-xl font-bold text-purple-400">Tim</div>
+                  <div class="text-center">
+                    <div class="text-xs text-gray-500 mb-2">Tweets / day</div>
+                    <input id="goal-tim-tweets" type="number" min="0" max="20" style="width:80px;background:#0f172a;border:1px solid #334155;color:#fff;font-size:1.8rem;font-weight:700;text-align:center;border-radius:8px;padding:8px 4px;outline:none;" onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#334155'">
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-between items-center mt-5">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500">Takes effect:</span>
+                  <select id="goal-takes-effect" style="background:#0f172a;border:1px solid #334155;color:#94a3b8;font-size:0.75rem;padding:4px 8px;border-radius:6px;cursor:pointer;outline:none;">
+                    <option value="today" selected>Current Day (Immediately)</option>
+                    <option value="tomorrow">Tomorrow</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span id="goal-save-status" class="text-xs text-gray-500"></span>
+                  <button onclick="saveGoals()" style="background:#166534;border:1px solid #16a34a;color:#4ade80;font-size:0.85rem;font-weight:600;padding:8px 24px;border-radius:6px;cursor:pointer;" onmouseover="this.style.background='#14532d'" onmouseout="this.style.background='#166534'">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hidden"><div id="count-draft"></div><div id="count-approved"></div><div id="count-published"></div><div id="count-tim"></div></div>
+      </div>
+
+      <!-- Unified Queue -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Queue <span id="queue-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
+          <div class="flex gap-2">
+            <div class="flex gap-1" id="q-type-btns">
+              <button onclick="setQueueFilter('type','all')" id="qt-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+              <button onclick="setQueueFilter('type','article')" id="qt-article" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Articles</button>
+              <button onclick="setQueueFilter('type','tweet')" id="qt-tweet" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tweets</button>
+            </div>
+            <div class="flex gap-1" id="q-acct-btns">
+              <button onclick="setQueueFilter('acct','all')" id="qa-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+              <button onclick="setQueueFilter('acct','cliff')" id="qa-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+              <button onclick="setQueueFilter('acct','tim')" id="qa-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+            </div>
+            <select id="q-date-filter" onchange="setQueueDateFilter(this.value)" style="background:#0f172a;border:1px solid #374151;color:#6b7280;font-size:0.75rem;padding:2px 8px;border-radius:6px;cursor:pointer;outline:none;">
+              <option value="today" selected>Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+        <div class="card overflow-hidden mb-8">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Content</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Type</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Status</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Scheduled</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">In Queue</th>
+            </tr></thead>
+            <tbody id="unified-queue-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Posted -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Posted <span id="posted-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
+          <div class="flex gap-2">
+            <div class="flex gap-1" id="p-type-btns">
+              <button onclick="setPostedFilter('type','all')" id="pt-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+              <button onclick="setPostedFilter('type','article')" id="pt-article" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Articles</button>
+              <button onclick="setPostedFilter('type','tweet')" id="pt-tweet" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tweets</button>
+            </div>
+            <div class="flex gap-1" id="p-acct-btns">
+              <button onclick="setPostedFilter('acct','all')" id="pa-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+              <button onclick="setPostedFilter('acct','cliff')" id="pa-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+              <button onclick="setPostedFilter('acct','tim')" id="pa-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+            </div>
+            <select id="posted-date-filter" onchange="setPostedDateFilter(this.value)" style="background:#0f172a;border:1px solid #374151;color:#6b7280;font-size:0.75rem;padding:2px 8px;border-radius:6px;cursor:pointer;outline:none;">
+              <option value="today" selected>Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="24">Last 24h</option>
+              <option value="48">Last 48h</option>
+            </select>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Content</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Type</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Published</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">View</th>
+            </tr></thead>
+            <tbody id="recent-posts-body"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Post Failed -->
+      <div class="mb-6" id="post-failed-section">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Post Failed <span id="post-failed-count-badge" class="ml-2 text-xs font-semibold bg-red-900 text-red-400 rounded-full px-2 py-0.5">0</span></h2>
+          <div class="flex gap-1">
+            <button onclick="setPfFilter('all')" id="pff-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+            <button onclick="setPfFilter('cliff')" id="pff-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+            <button onclick="setPfFilter('tim')" id="pff-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Item</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Failure</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Failed</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Action</th>
+            </tr></thead>
+            <tbody id="post-failed-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Rejected -->
+      <div class="mb-6" id="rejected-section">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold text-white">Rejected <span id="rejected-count-badge" class="ml-2 text-xs font-semibold bg-gray-800 text-gray-400 rounded-full px-2 py-0.5">0</span></h2>
+          <div class="flex gap-1" id="rej-filter-btns">
+            <button onclick="setRejFilter('all')" id="rf-all" class="tf-active text-xs px-3 py-1 rounded border border-gray-700">All</button>
+            <button onclick="setRejFilter('cliff')" id="rf-cliff" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Cliff</button>
+            <button onclick="setRejFilter('tim')" id="rf-tim" class="tf-inactive text-xs px-3 py-1 rounded border border-gray-700">Tim</button>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-gray-800">
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Item</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Type</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Account</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Reason</th>
+              <th class="text-left px-3 py-1 text-gray-500 text-xs uppercase">Rejected</th>
+            </tr></thead>
+            <tbody id="rejected-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Goal tracker -->
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-white">Goal: @CliffCircuit → 1,000 followers by March 31</span>
+          <span id="goal-pct" class="text-gray-400 text-sm font-mono">—%</span>
+        </div>
+        <div class="bg-gray-800 rounded-full h-3">
+          <div id="goal-bar" class="bg-indigo-500 h-3 rounded-full transition-all" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between mt-2">
+          <span class="text-xs text-gray-600">0</span>
+          <span id="goal-label" class="text-xs text-gray-500"></span>
+          <span class="text-xs text-gray-600">1,000</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeDetail()">
+    <div class="absolute inset-0 bg-black opacity-70"></div>
+    <div class="relative card w-full max-w-2xl overflow-hidden" style="z-index:1; max-height:90vh; display:flex; flex-direction:column;">
+      <div id="modal-hero" class="hidden relative w-full" style="flex-shrink:0;padding-top:56.25%;overflow:hidden;">
+        <img id="modal-hero-img" src="" alt="Hero image" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#0f172a;" />
+        <div class="absolute inset-0" style="background:linear-gradient(to bottom, transparent 50%, #111827 100%);"></div>
+        <button onclick="closeDetail()" class="absolute top-3 right-3 bg-black bg-opacity-60 hover:bg-opacity-90 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg leading-none">✕</button>
+      </div>
+      <div class="overflow-y-auto" style="flex:1;">
+        <div class="p-6">
+          <div class="flex items-start justify-between mb-1">
+            <div id="modal-account" class="text-xs text-gray-500"></div>
+            <button id="modal-close-btn" onclick="closeDetail()" class="text-gray-500 hover:text-white ml-4 text-xl leading-none">✕</button>
+          </div>
+          <h3 id="modal-title" class="text-white font-bold text-xl leading-snug mb-3"></h3>
+          <div class="flex items-center gap-3 mb-4">
+            <div id="modal-status"></div>
+            <div id="modal-scheduled" class="text-xs text-gray-400"></div>
+            <div id="modal-meta" class="text-xs text-gray-600"></div>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 mb-4">
+            <p id="modal-body" class="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap"></p>
+          </div>
+          <div id="modal-article-body" class="hidden mb-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Article Preview</span>
+              <div class="flex-1 h-px bg-gray-800"></div>
+            </div>
+            <div id="modal-article-text" class="text-gray-300 text-sm leading-relaxed space-y-3 max-h-64 overflow-y-auto pr-1"></div>
+          </div>
+          <div id="modal-tags" class="hidden mb-4 flex flex-wrap gap-2"></div>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div id="modal-link" class="flex gap-3"></div>
+            <div id="modal-publish-btn"></div>
+            <div id="modal-id" class="text-xs text-gray-700 font-mono"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/portal/portal-common.js"></script>
+  <script>
+    // ── Marketing-specific rendering ──────────────────────────────────────
+
+    function renderMarketing(d) {
+      window._lastData = d;
+      const q = d.queue||[];
+      window._queueMap = {};
+      q.forEach(i => { window._queueMap[i.id] = i; });
+
+      const DISPLAY_TZ = window._portalDisplayTz || (d.stats && d.stats.displayTz) || 'America/Los_Angeles';
+      const todayInTZ = new Date().toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ });
+      const isToday = (ts) => ts && new Date(ts).toLocaleDateString('en-CA', { timeZone: DISPLAY_TZ }) === todayInTZ;
+      const drafts = q.filter(i=>i.status==='draft');
+      const approved = q.filter(i=>i.status==='approved');
+      const pubToday = q.filter(i=>i.status==='published' && isToday(i.publishedAt));
+      const articles = pubToday.filter(i=>i.type==='article' && i.account!=='timharris707');
+      const timPosts = pubToday.filter(i=>i.account==='timharris707');
+
+      set('count-draft', drafts.length);
+      set('count-approved', approved.length);
+      set('count-published', articles.length);
+      set('count-tim', timPosts.length);
+
+      // Queue window filtering
+      window._queueWindowHours = window._queueWindowHours || 'today';
+      const qw = window._queueWindowHours;
+      let qFilter;
+      if (qw === 'yesterday') { const yStart = new Date(); yStart.setHours(0,0,0,0); yStart.setDate(yStart.getDate()-1); const yEnd = new Date(); yEnd.setHours(0,0,0,0); qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= yStart && new Date(i.scheduledFor) < yEnd; }
+      else if (qw === 'today') { const tStart = new Date(); tStart.setHours(0,0,0,0); const tEnd = new Date(); tEnd.setHours(23,59,59,999); qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= tStart && new Date(i.scheduledFor) <= tEnd; }
+      else if (qw === 'tomorrow') { const tStart = new Date(); tStart.setHours(0,0,0,0); tStart.setDate(tStart.getDate()+1); const tEnd = new Date(tStart); tEnd.setDate(tEnd.getDate()+1); qFilter = i => i.scheduledFor && new Date(i.scheduledFor) >= tStart && new Date(i.scheduledFor) < tEnd; }
+      else { const nextWindow = new Date(Date.now() + qw*60*60*1000); qFilter = i => i.scheduledFor && new Date(i.scheduledFor) <= nextWindow; }
+
+      const approved24Articles = approved.filter(i=>(i.title||i.slug) && qFilter(i));
+      const approved24Tweets = approved.filter(i=>(i.type==='tweet'||i.tweetText) && qFilter(i));
+      const approved24All = approved.filter(i=>qFilter(i));
+      set('metric-in-queue', approved24All.length);
+      set('metric-articles-today', approved24Articles.length);
+      set('metric-tweets-today', approved24Tweets.length);
+
+      // Next publish
+      const allPending = q.filter(i=>i.status!=='published'&&i.status!=='rejected');
+      const nextItem = allPending.filter(i=>i.scheduledFor&&i.status==='approved').sort((a,b)=>new Date(a.scheduledFor)-new Date(b.scheduledFor))[0];
+      const nextPublish = nextItem ? (() => { const diff = new Date(nextItem.scheduledFor) - Date.now(); if (diff <= 0) return 'Now'; const m = Math.floor(diff/60000); return m < 60 ? m+'m' : Math.floor(m/60)+'h '+(m%60)+'m'; })() : '—';
+      set('metric-next-publish', nextPublish);
+
+      // On Deck card
+      const onDeckEmpty = document.getElementById('on-deck-empty');
+      const onDeckContent = document.getElementById('on-deck-content');
+      if (nextItem && onDeckContent) {
+        const isTweet = nextItem.type==='tweet' || (!nextItem.type && !nextItem.title && !nextItem.slug && nextItem.tweetText);
+        const isTimPost = nextItem.account === 'timharris707';
+        const preview = (nextItem.title || nextItem.tweetText || '').slice(0, 120);
+        document.getElementById('on-deck-type-badge').className = isTweet ? 'pill bg-blue-950 text-blue-300' : 'pill bg-indigo-950 text-indigo-300';
+        document.getElementById('on-deck-type-badge').textContent = isTweet ? 'Tweet' : 'Article';
+        document.getElementById('on-deck-acct-badge').className = isTimPost ? 'pill bg-purple-950 text-purple-300' : 'pill bg-teal-950 text-teal-300';
+        document.getElementById('on-deck-acct-badge').textContent = isTimPost ? '@TimHarris707' : '@CliffCircuit';
+        document.getElementById('on-deck-text').textContent = preview + (preview.length >= 120 ? '...' : '');
+        const diff = new Date(nextItem.scheduledFor) - Date.now();
+        document.getElementById('on-deck-scheduled').textContent = diff <= 0 ? 'Now' : diff < 3600000 ? Math.floor(diff/60000)+'m' : Math.floor(diff/3600000)+'h '+Math.floor((diff%3600000)/60000)+'m';
+        document.getElementById('on-deck-queued').textContent = nextItem.createdAt ? ago(nextItem.createdAt).replace(' ago','') : '—';
+        onDeckEmpty.classList.add('hidden');
+        onDeckContent.classList.remove('hidden');
+      } else if (onDeckEmpty) { onDeckEmpty.classList.remove('hidden'); if (onDeckContent) onDeckContent.classList.add('hidden'); }
+
+      // Recent Posts window
+      window._recentWindowHours = window._recentWindowHours || 'today';
+      const rw = window._recentWindowHours;
+      let recentCutoffStart, recentCutoffEnd;
+      if (rw === 'today') { recentCutoffStart = new Date(); recentCutoffStart.setHours(0,0,0,0); recentCutoffEnd = new Date(); }
+      else if (rw === 'yesterday') { recentCutoffStart = new Date(); recentCutoffStart.setHours(0,0,0,0); recentCutoffStart.setDate(recentCutoffStart.getDate()-1); recentCutoffEnd = new Date(); recentCutoffEnd.setHours(0,0,0,0); }
+      else { recentCutoffStart = new Date(Date.now() - rw*60*60*1000); recentCutoffEnd = new Date(); }
+      const recent = q.filter(i => i.status==='published' && i.publishedAt && new Date(i.publishedAt) >= recentCutoffStart && new Date(i.publishedAt) <= recentCutoffEnd);
+      const recentArticles = recent.filter(i=>i.type==='article' && i.account!=='timharris707');
+      const recentTim = recent.filter(i=>i.account==='timharris707');
+      const recentCliffTweets = recent.filter(i=>i.type==='tweet' && i.account!=='timharris707');
+      set('metric-combined-48h', recentArticles.length + recentCliffTweets.length + recentTim.length);
+      set('metric-articles-48h', recentArticles.length);
+      set('metric-cliff-tweets-48h', recentCliffTweets.length);
+      set('metric-tim-tweets-48h-dup', recentTim.length);
+
+      // Goals display
+      const goals = loadGoals();
+      if (goals && goals.cliffArticles) {
+        const warnHtml = '<span class="text-yellow-500 text-xs ml-1" title="Over plan">\u26A0</span>';
+        const ca = document.getElementById('goal-cliff-articles-display');
+        const ct = document.getElementById('goal-cliff-tweets-display');
+        const tt = document.getElementById('goal-tim-tweets-display');
+        if (ca) ca.innerHTML = 'plan: ' + goals.cliffArticles + '/day' + (recentArticles.length > goals.cliffArticles ? ' ' + warnHtml : '');
+        if (ct) ct.innerHTML = 'plan: ' + goals.cliffTweets + '/day' + (recentCliffTweets.length > goals.cliffTweets ? ' ' + warnHtml : '');
+        if (tt) tt.innerHTML = 'plan: ' + goals.timTweets + '/day' + (recentTim.length > goals.timTweets ? ' ' + warnHtml : '');
+      }
+
+      // Pending/rejected/failed
+      const rejected = q.filter(i=>i.status==='rejected');
+      const postFailed = q.filter(i=>i.status==='post_failed');
+      const pendingAll = q.filter(i=>i.status!=='published' && i.status!=='rejected' && i.status!=='post_failed' && i.status!=='failed' && i.status!=='draft' && (i.type==='tweet' || i.title || i.slug || i.tweetText))
+        .sort((a,b)=>new Date(a.scheduledFor||a.createdAt)-new Date(b.scheduledFor||b.createdAt));
+      window._pendingAll = pendingAll;
+      renderQueueTable();
+
+      window._allPostFailed = postFailed;
+      renderPostFailed('all');
+
+      window._allRejected = rejected;
+      const rcb = document.getElementById('rejected-count-badge'); if(rcb) rcb.textContent = rejected.length;
+      renderRejected('all');
+
+      window._allPublishedQueue = q.filter(i=>i.status==='published');
+      window._allRecentPosts = [...recentArticles, ...recentTim].sort((a,b)=>new Date(b.publishedAt)-new Date(a.publishedAt));
+      renderPostedTable();
+
+      // Twitter stats
+      const tw = d.twitter||{};
+      set('cliff-followers', fmt(tw.cliffFollowers));
+      set('cliff-posts-count', fmt(tw.cliffPosts));
+      set('tim-followers', fmt(tw.timFollowers));
+      set('tim-posts-count', fmt(tw.timPosts));
+      if (tw.trackingSince) { set('cliff-since', 'Since ' + tw.trackingSince); set('tim-since', 'Since ' + tw.trackingSince); }
+
+      function growthBadge(todayDelta, weekDelta, allTimeDelta, currentVal, trackingSince) {
+        function badge(val, label) { if (val == null) return ''; const sign = val > 0 ? '+' : ''; const color = val > 0 ? 'bg-green-900 text-green-400' : val < 0 ? 'bg-red-900 text-red-400' : 'bg-gray-800 text-gray-500'; return `<span class="pill ${color}">${sign}${val} ${label}</span>`; }
+        if (todayDelta != null) return badge(todayDelta, 'today') + badge(weekDelta, 'this week') + badge(allTimeDelta, 'all time');
+        return `<span class="pill bg-gray-800 text-gray-500">Tracking since ${trackingSince || 'today'}</span>`;
+      }
+      document.getElementById('cliff-growth-row').innerHTML = growthBadge(tw.cliffGrowthToday, tw.cliffGrowthWeek, tw.cliffGrowthAllTime, tw.cliffFollowers, tw.trackingSince);
+      document.getElementById('tim-growth-row').innerHTML = growthBadge(tw.timGrowthToday, tw.timGrowthWeek, tw.timGrowthAllTime, tw.timFollowers, tw.trackingSince);
+
+      // Goal bar
+      const goal = 1000, curr = tw.cliffFollowers || 0;
+      const pct = Math.min(100, Math.round(curr / goal * 100));
+      document.getElementById('goal-bar').style.width = pct + '%';
+      set('goal-pct', pct + '%');
+      const daysLeft = Math.ceil((new Date('2026-03-31') - new Date()) / 86400000);
+      set('goal-label', `${curr} / ${goal} · ${daysLeft} days left`);
+
+      // Sparklines
+      setTimeout(() => {
+        drawSparkline('sparkline-cliff', tw.sparklineCliff, '#818cf8');
+        drawSparkline('sparkline-tim', tw.sparklineTim, '#a78bfa');
+      }, 100);
+    }
+
+    function drawSparkline(canvasId, data, color) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !data || data.length < 2) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth || 300;
+      const w = canvas.width, h = canvas.height;
+      const min = Math.min(...data), max = Math.max(...data);
+      const range = max - min || 1;
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+      data.forEach((v, i) => { const x = (i / (data.length - 1)) * w; const y = h - ((v - min) / range) * (h - 4) - 2; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+      ctx.stroke();
+      ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath(); ctx.fillStyle = color + '22'; ctx.fill();
+    }
+
+    // Queue/Posted/Rejected/Failed rendering (same as original)
+    function setQueueFilter(dim, val) {
+      if (dim==='type') { window._queueTypeFilter = val; ['all','article','tweet'].forEach(k => { document.getElementById('qt-'+k).className = (k===val?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700'; }); }
+      else { window._queueAcctFilter = val; ['all','cliff','tim'].forEach(k => { document.getElementById('qa-'+k).className = (k===val?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700'; }); }
+      renderQueueTable();
+    }
+    function renderQueueTable() {
+      const tf = window._queueTypeFilter||'all'; const af = window._queueAcctFilter||'all'; const df = window._queueDateFilter||'today';
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0); const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+      const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(tomorrowStart.getDate()+1); const tomorrowEnd = new Date(todayEnd); tomorrowEnd.setDate(tomorrowEnd.getDate()+1);
+      const allItems = window._pendingAll||[];
+      const drafts = (window._lastData?.queue||[]).filter(i => i.status === 'draft');
+      const nonDrafts = allItems.filter(i => i.status !== 'draft').filter(i => {
+        const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText); const isArticle = !isTweet;
+        const typeOk = tf==='all' || (tf==='article'&&isArticle) || (tf==='tweet'&&isTweet);
+        const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
+        const sched = i.scheduledFor ? new Date(i.scheduledFor) : null;
+        const dateOk = df==='all' || (df==='today' && sched && sched>=todayStart && sched<=todayEnd) || (df==='tomorrow' && sched && sched>=tomorrowStart && sched<=tomorrowEnd);
+        return typeOk && acctOk && dateOk;
+      });
+      const items = [...drafts, ...nonDrafts];
+      const el = document.getElementById('unified-queue-body'); if (!el) return;
+      const qb = document.getElementById('queue-count-badge'); if(qb) qb.textContent = items.length;
+      el.innerHTML = items.length === 0 ? `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Queue is clear</td></tr>` : items.map(i=>{
+        const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText);
+        const label = esc((i.title||i.tweetText||i.id).slice(0,70)); const overflow = (i.title||i.tweetText||'').length>70?'…':'';
+        return `<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')"><td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td><td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td><td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td><td class="px-3 py-1"><span class="pill status-${i.status}">${fmtStatus(i.status)}</span></td><td class="px-3 py-1 text-gray-400 text-xs">${fmtScheduled(i)}</td><td class="px-3 py-1 text-gray-500 text-xs">${ago(i.createdAt)}</td></tr>`;
+      }).join('');
+    }
+    function setPostedFilter(dim, val) {
+      if (dim==='type') { window._postedTypeFilter = val; ['all','article','tweet'].forEach(k => { document.getElementById('pt-'+k).className = (k===val?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700'; }); }
+      else { window._postedAcctFilter = val; ['all','cliff','tim'].forEach(k => { document.getElementById('pa-'+k).className = (k===val?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700'; }); }
+      renderPostedTable();
+    }
+    function renderPostedTable() {
+      const tf = window._postedTypeFilter||'all'; const af = window._postedAcctFilter||'all'; const pdf = window._postedDateFilter||'today';
+      const allPub = window._allPublishedQueue || [];
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0); const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+      const yStart = new Date(todayStart); yStart.setDate(yStart.getDate()-1); const yEnd = new Date(todayStart);
+      let dateFiltered;
+      if (pdf==='today') dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=todayStart && new Date(i.publishedAt)<=todayEnd);
+      else if (pdf==='yesterday') dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=yStart && new Date(i.publishedAt)<yEnd);
+      else dateFiltered = allPub.filter(i=>i.publishedAt && new Date(i.publishedAt)>=new Date(Date.now()-parseInt(pdf)*60*60*1000));
+      dateFiltered.sort((a,b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+      const items = dateFiltered.filter(i => {
+        const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText);
+        const typeOk = tf==='all' || (tf==='article'&&!isTweet) || (tf==='tweet'&&isTweet);
+        const acctOk = af==='all' || (af==='cliff'&&i.account!=='timharris707') || (af==='tim'&&i.account==='timharris707');
+        return typeOk && acctOk;
+      });
+      const rpb = document.getElementById('recent-posts-body'); if (!rpb) return;
+      const pb = document.getElementById('posted-count-badge'); if(pb) pb.textContent = items.length;
+      rpb.innerHTML = items.length === 0 ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No posts in this period</td></tr>` : items.map(i=>{
+        const isTweet = i.type==='tweet' || (!i.type && !i.title && !i.slug && i.tweetText);
+        const label = esc((i.title||i.tweetText||i.id).slice(0,70)); const overflow = (i.title||i.tweetText||'').length>70?'…':'';
+        const viewLink = i.tweetId ? `<a href="https://x.com/i/status/${esc(i.tweetId)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">View →</a>` : i.slug ? `<a href="https://cliffcircuit.ai/blog/${esc(i.slug)}" target="_blank" class="text-indigo-400 hover:underline text-xs" onclick="event.stopPropagation()">Read →</a>` : '<span class="text-gray-600 text-xs">—</span>';
+        return `<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')"><td class="px-3 py-1 text-gray-400 font-medium">${label}${overflow} <span class="text-gray-600 text-xs ml-1">→</span></td><td class="px-3 py-1 text-gray-500 text-xs">${isTweet?'Tweet':'Article'}</td><td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td><td class="px-3 py-1 text-gray-400 text-xs whitespace-nowrap">${relTime(i.publishedAt)}</td><td class="px-3 py-1">${viewLink}</td></tr>`;
+      }).join('');
+    }
+    function setRejFilter(f) { ['all','cliff','tim'].forEach(k => { document.getElementById('rf-'+k).className = (k===f?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700'; }); renderRejected(f); }
+    function renderRejected(f) {
+      const items = (window._allRejected||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707')).sort((a,b) => new Date(b.rejectedAt||b.createdAt) - new Date(a.rejectedAt||a.createdAt));
+      document.getElementById('rejected-body').innerHTML = items.length === 0 ? `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Nothing rejected</td></tr>` : items.map(i=>`<tr class="article-row border-b border-gray-900" onclick="openDetail('${esc(i.id)}')"><td class="px-3 py-1 text-gray-400 font-medium">${esc(i.title||i.tweetText?.slice(0,65)||i.id)}${(i.tweetText?.length||0)>65?'…':''} <span class="text-gray-600 text-xs ml-1">→</span></td><td class="px-3 py-1 text-gray-500 text-xs">${(i.type==='tweet')?'Tweet':'Article'}</td><td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td><td class="px-3 py-1 text-red-400 text-xs">${esc(i.rejectionReason||i.rejectedReason||'No reason noted')}</td><td class="px-3 py-1 text-gray-600 text-xs">${ago(i.rejectedAt||i.createdAt)}</td></tr>`).join('');
+    }
+    function setPfFilter(f) { ['all','cliff','tim'].forEach(k => { document.getElementById('pff-'+k).className = (k===f?'tf-active':'tf-inactive') + ' text-xs px-3 py-1 rounded border border-gray-700'; }); renderPostFailed(f); }
+    function renderPostFailed(f) {
+      const items = (window._allPostFailed||[]).filter(i => f==='all' || (f==='cliff'&&i.account!=='timharris707') || (f==='tim'&&i.account==='timharris707')).sort((a,b) => new Date(b.postFailedAt||b.createdAt) - new Date(a.postFailedAt||a.createdAt));
+      const badge = document.getElementById('post-failed-count-badge'); if (badge) badge.textContent = (window._allPostFailed||[]).length;
+      const section = document.getElementById('post-failed-section'); if (section) section.style.display = (window._allPostFailed||[]).length === 0 ? 'none' : '';
+      const el = document.getElementById('post-failed-body'); if (!el) return;
+      el.innerHTML = items.length === 0 ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No post failures</td></tr>' : items.map(i => {
+        const reasonLabel = { 'api_403': '403 — @mention blocked', 'api_429': '429 — Rate limited', 'api_401': '401 — Auth error', 'no_tweet_id': 'Never posted', 'api_error': 'API error', 'rate_limited': 'Rate limited' }[i.failureReason] || (i.failureReason || 'Unknown');
+        const tweetUrl = i.tweetId ? `https://x.com/i/status/${i.tweetId}` : null;
+        return `<tr class="article-row border-b border-gray-900 cursor-pointer" onclick="openDetail('${esc(i.id)}')"><td class="px-3 py-1 text-gray-400 font-medium max-w-xs">${esc((i.tweetText||i.title||i.id).slice(0,65))}${(i.tweetText?.length||0)>65?'…':''}</td><td class="px-3 py-1 text-gray-500 text-xs">${i.account==='timharris707'?'Tim':'Cliff'}</td><td class="px-3 py-1 text-xs"><span class="text-red-400">${reasonLabel}</span></td><td class="px-3 py-1 text-gray-600 text-xs">${ago(i.postFailedAt||i.createdAt)}</td><td class="px-3 py-1 text-xs">${tweetUrl ? `<a href="${tweetUrl}" target="_blank" onclick="event.stopPropagation()" class="text-indigo-400 hover:underline text-xs">View →</a>` : ''}</td></tr>`;
+      }).join('');
+    }
+    function setQueueDateFilter(val) { window._queueDateFilter = val; renderQueueTable(); }
+    function setPostedDateFilter(val) { window._postedDateFilter = val; renderPostedTable(); }
+    function setQueueWindow(hours) { window._queueWindowHours = (['yesterday','today','tomorrow'].includes(hours)) ? hours : parseInt(hours); if (window._lastData) renderMarketing(window._lastData); }
+    function setRecentWindow(hours) { window._recentWindowHours = (['today','yesterday'].includes(hours)) ? hours : parseInt(hours); if (window._lastData) renderMarketing(window._lastData); }
+
+    // Detail modal
+    function openDetail(id) {
+      const item = window._queueMap && window._queueMap[id]; if (!item) return;
+      const isArticle = item.type !== 'tweet' && item.account !== 'timharris707';
+      const isTimPost = item.account === 'timharris707';
+      const heroEl = document.getElementById('modal-hero'); const heroImg = document.getElementById('modal-hero-img'); const closeBtn = document.getElementById('modal-close-btn');
+      if (isArticle && item.heroImage) {
+        const slug = item.heroImage.split('/').pop(); const cb = '?t=' + Date.now();
+        heroImg.src = `https://cliffcircuit.ai/portal/images/${slug}${cb}`;
+        heroImg.onerror = () => { heroImg.src = (item.heroImage.startsWith('http') ? item.heroImage : `https://cliffcircuit.ai${item.heroImage}`) + cb; heroImg.onerror = null; };
+        heroEl.classList.remove('hidden'); closeBtn.classList.add('hidden');
+      } else { heroEl.classList.add('hidden'); closeBtn.classList.remove('hidden'); }
+      document.getElementById('modal-title').textContent = item.title || (isTimPost ? '@TimHarris707 Post' : 'Queue Item');
+      document.getElementById('modal-account').textContent = isTimPost ? '@TimHarris707' : '@CliffCircuit';
+      document.getElementById('modal-status').innerHTML = `<span class="pill ${item.status==="approved" && item.scheduledFor ? "status-scheduled" : "status-"+item.status}">${fmtStatus(item.status, item)}</span>`;
+      document.getElementById('modal-scheduled').innerHTML = item.scheduledFor ? `Scheduled: ${fmtScheduled(item)}` : '';
+      document.getElementById('modal-meta').textContent = item.wordCount ? `${item.wordCount.toLocaleString()} words` : '';
+      document.getElementById('modal-body').textContent = item.tweetText || item.excerpt || '(No preview available)';
+      document.getElementById('modal-article-body').classList.add('hidden');
+      const tagsEl = document.getElementById('modal-tags');
+      if (isArticle && item.tags && item.tags.length) { tagsEl.classList.remove('hidden'); tagsEl.innerHTML = item.tags.map(t => `<span class="pill bg-gray-800 text-gray-400">${esc(t)}</span>`).join(''); } else { tagsEl.classList.add('hidden'); }
+      document.getElementById('modal-id').textContent = item.id || '';
+      let links = [];
+      if (item.slug) {
+        if (item.status === 'published') { links.push(`<a href="${item.liveUrl || `https://cliffcircuit.ai/blog/${item.slug}.html`}" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1">Open on Blog ↗</a>`); }
+        else { links.push(`<a href="/portal/previews/${esc(item.slug)}.html" target="_blank" class="text-indigo-400 hover:text-indigo-300 text-sm border border-indigo-800 rounded px-3 py-1">Preview ↗</a>`); }
+      }
+      if (item.tweetId) links.push(`<a href="https://x.com/i/status/${esc(item.tweetId)}" target="_blank" class="text-gray-400 hover:text-white text-sm border border-gray-700 rounded px-3 py-1">View Tweet ↗</a>`);
+      document.getElementById('modal-link').innerHTML = links.join('');
+      const pubBtnEl = document.getElementById('modal-publish-btn');
+      if (pubBtnEl) {
+        if (item.status === 'approved' || item.status === 'written') { pubBtnEl.innerHTML = `<button id="modal-publish-action" onclick="publishFromModal('${esc(item.id)}')" class="bg-teal-700 hover:bg-teal-600 text-white text-sm px-4 py-1.5 rounded border border-teal-600 font-medium">Publish Now</button>`; }
+        else { pubBtnEl.innerHTML = ''; }
+      }
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+    function closeDetail() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+    async function publishFromModal(id) {
+      const btn = document.getElementById('modal-publish-action'); if (!btn) return;
+      const origClass = 'bg-teal-700 hover:bg-teal-600 text-white text-sm px-4 py-1.5 rounded border border-teal-600 font-medium';
+      btn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>Publishing...</span>';
+      btn.disabled = true;
+      try {
+        const item = window._queueMap && window._queueMap[id];
+        const table = (item && (item.type === 'tweet' || (!item.title && !item.slug && item.tweetText))) ? 'tweets' : 'articles';
+        const now = new Date().toISOString();
+        await _sb.from(table).update({ status: 'approved', scheduled_for: now, updated_at: now }).eq('id', id);
+        const res = await fetch('https://api.cliffcircuit.ai/publish-now', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+        const result = await res.json();
+        if (result.ok) {
+          btn.textContent = 'Published'; btn.className = 'bg-green-700 text-green-200 text-sm px-4 py-1.5 rounded border border-green-600 font-medium';
+          const statusEl = document.getElementById('modal-status'); if (statusEl) statusEl.innerHTML = '<span class="pill status-published">Published</span>';
+          setTimeout(async () => { const d = await loadData(); if (d) renderMarketing(d); }, 2000);
+        } else {
+          btn.textContent = 'Failed'; btn.className = 'bg-red-700 text-red-200 text-sm px-4 py-1.5 rounded border border-red-600 font-medium';
+          setTimeout(() => { btn.textContent = 'Retry'; btn.disabled = false; btn.className = origClass; }, 8000);
+        }
+      } catch(e) {
+        btn.textContent = 'Error'; btn.className = 'bg-red-700 text-red-200 text-sm px-4 py-1.5 rounded border border-red-600 font-medium';
+        setTimeout(() => { btn.textContent = 'Retry'; btn.disabled = false; btn.className = origClass; }, 8000);
+      }
+    }
+
+    function onDeckClick() {
+      const allItems = window._pendingAll || [];
+      const next = allItems.filter(i => i.status === 'approved' && i.scheduledFor).sort((a,b) => new Date(a.scheduledFor) - new Date(b.scheduledFor))[0];
+      if (next) openDetail(next.id);
+    }
+
+    // Goals
+    function flipToGoals() {
+      const goals = loadGoals();
+      document.getElementById('goal-cliff-articles').value = goals.cliffArticles ?? 12;
+      document.getElementById('goal-cliff-tweets').value = goals.cliffTweets ?? 6;
+      document.getElementById('goal-tim-tweets').value = goals.timTweets ?? 5;
+      document.getElementById('rp-front').classList.add('hidden');
+      document.getElementById('rp-back').classList.remove('hidden');
+      document.getElementById('rp-back').classList.add('flex');
+      document.getElementById('goal-save-status').textContent = '';
+    }
+    function flipToRecent() { document.getElementById('rp-back').classList.add('hidden'); document.getElementById('rp-back').classList.remove('flex'); document.getElementById('rp-front').classList.remove('hidden'); }
+    function saveGoals() {
+      const takesEffect = document.getElementById('goal-takes-effect')?.value || 'today';
+      const goals = { cliffArticles: parseInt(document.getElementById('goal-cliff-articles').value) || 12, cliffTweets: parseInt(document.getElementById('goal-cliff-tweets').value) || 6, timTweets: parseInt(document.getElementById('goal-tim-tweets').value) || 5, takesEffect, savedAt: new Date().toISOString(), savedBy: 'tim' };
+      localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+      document.getElementById('goal-save-status').textContent = 'Saving…';
+      fetch('https://api.cliffcircuit.ai/save-goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cliffArticles: goals.cliffArticles, cliffTweets: goals.cliffTweets, timTweets: goals.timTweets, effectiveDate: takesEffect }) }).then(r => r.json()).then(r => { console.log('[goals] synced:', r.ok); }).catch(e => console.warn('[goals] sync failed:', e.message));
+      fetch('https://cliffcircuit-goals-api.vercel.app/api/save-goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cliffArticles: goals.cliffArticles, cliffTweets: goals.cliffTweets, timTweets: goals.timTweets, effectiveDate: takesEffect }) }).then(r => r.json()).then(r => { document.getElementById('goal-save-status').textContent = r.ok ? '✓ Saved & synced' : '✓ Saved locally'; }).catch(() => { document.getElementById('goal-save-status').textContent = '✓ Saved locally'; });
+      setTimeout(() => flipToRecent(), 1200);
+    }
+
+    // Init
+    initPortal('marketing', renderMarketing).then(ok => {
+      if (ok) {
+        setupRealtime(
+          () => { loadData().then(d => { if (d) renderMarketing(d); }); },
+          null
+        );
+      }
+    });
+  </script>
+</body>
+</html>
