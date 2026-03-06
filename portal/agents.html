@@ -318,9 +318,10 @@
         }
 
         // Cron job info
-        const info = agentJobMap[agentId] || agentJobMap[n] || { jobs: [], errors: 0 };
-        // Also pull 'main' jobs for cliff
-        if (agentId === 'main' && agentJobMap['main'] && n !== 'cliff') { /* skip */ }
+        // Merge jobs from both agentId and name keys (Cliff has agent='cliff' AND agent='main')
+        const infoA = agentJobMap[agentId] || { jobs: [], errors: 0 };
+        const infoN = (n !== agentId) ? (agentJobMap[n] || { jobs: [], errors: 0 }) : { jobs: [], errors: 0 };
+        const info = { jobs: [...infoA.jobs, ...infoN.jobs], errors: infoA.errors + infoN.errors };
         if (el('job-count')) el('job-count').textContent = info.jobs.length + (info.jobs.length === 1 ? ' job' : ' jobs');
         const lastRunJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
         if (el('last-job')) el('last-job').textContent = lastRunJob ? timeAgo(lastRunJob.lastRunMs || lastRunJob.lastRun) : 'No recent runs';
@@ -492,7 +493,9 @@
         const n = agent.name.toLowerCase();
         const agentId = agent.id;
         const agentSessions = (d.sessions||[]).filter(s=>s.agentId===agentId);
-        const info = agentJobMap[agentId]||agentJobMap[n]||{jobs:[],errors:0};
+        const infoA2 = agentJobMap[agentId]||{jobs:[],errors:0};
+        const infoN2 = (n !== agentId) ? (agentJobMap[n]||{jobs:[],errors:0}) : {jobs:[],errors:0};
+        const info = { jobs: [...infoA2.jobs, ...infoN2.jobs], errors: infoA2.errors + infoN2.errors };
         const cfg = (d.agentConfigs||{})[agentId]||{};
 
         // Model
@@ -549,9 +552,10 @@
       } catch(e) { console.warn('[agents] enrich failed:', e); }
     }
 
+    let _cardsBuilt = false;
     initPortal('agents', d => {
       _lastData = d;
-      rebuildCards(d);
+      if (!_cardsBuilt) { rebuildCards(d); _cardsBuilt = true; }
       if (_currentView === 'full') renderAgentsPage(d);
       else renderCondensedData(d);
     }).then(ok => {
