@@ -267,11 +267,53 @@ async function main() {
       'b2055796-4f19-4200-b970-f40c7212e649':'Writer','f50b5756-82e2-4fd8-b8e4-d1b4045a1c20':'Media',
       '43a6704d-8e77-448a-81d7-e7fda3ac7614':'Recycle Writer','50708c6f-37b2-4f19-88a9-9ff56a732f7c':'Recycle Media',
     };
+    // Friendly name mapping for non-cron sessions (label-based, permanent)
+    const labelMap = {
+      'Heartbeat Check': 'Heartbeat',
+      'morning-check-in': 'Morning Check-In',
+      'portal-data-refresh': 'Portal Data Refresh',
+      'portal-live-refresh': 'Portal Data Refresh',
+      'pipeline-health-check': 'Pipeline Health Check',
+      'cliff-scheduler': 'Scheduler',
+      'samantha-publish': 'Publish',
+      'samantha-tim-tweets': 'Tim Posts',
+      'samantha-cliff-tweets': 'Cliff Tweets',
+      'cliff-article-review': 'Article Review',
+      'samantha-recycle-writer': 'Recycle Writer',
+      'samantha-recycle-media': 'Recycle Media',
+      'samantha-writer': 'Writer',
+      'samantha-media': 'Media',
+      'samantha-message-check': 'Message Check',
+      'cliff-message-check': 'Message Check',
+      'scout-message-check': 'Message Check',
+      'github-monitoring': 'GitHub Monitoring',
+      'social-monitoring': 'Social Monitoring',
+      'nightly-extraction': 'Nightly Extraction',
+      'nightly-git-backup': 'Nightly Git Backup',
+      'Cliff: Direct Conversation': 'Tim (Telegram DM)',
+      'Cron Job': 'Cron Job',
+    };
+    // Prefix/pattern matches for dynamic labels (e.g. Telegram DMs, group chats)
+    const labelPatterns = [
+      { match: /^Conversation info/i, agent: 'cliff',    name: 'Tim (Telegram DM)' },
+      { match: /^Conversation info/i, agent: 'samantha', name: 'Samantha (Telegram DM)' },
+      { match: /^Conversation info/i, agent: 'scout',    name: 'Scout (Telegram DM)' },
+      { match: /^Continue where you left off/i, agent: 'cliff', name: 'Tim (Telegram DM)' },
+    ];
     const upd = _db2.prepare('UPDATE subagent_sessions SET task_name=? WHERE session_id=? AND task_name IS NULL');
-    const rows2 = _db2.prepare('SELECT session_id, label FROM subagent_sessions WHERE task_name IS NULL').all();
+    const rows2 = _db2.prepare('SELECT session_id, label, agent_type FROM subagent_sessions WHERE task_name IS NULL').all();
     for (const r of rows2) {
+      // 1. Cron ID match
       const m = (r.label||'').match(/cron:([a-f0-9-]{36})/);
-      if (m && cronMap[m[1]]) upd.run(cronMap[m[1]], r.session_id);
+      if (m && cronMap[m[1]]) { upd.run(cronMap[m[1]], r.session_id); continue; }
+      // 2. Exact label match
+      if (labelMap[r.label]) { upd.run(labelMap[r.label], r.session_id); continue; }
+      // 3. Pattern match (with optional agent_type check)
+      for (const p of labelPatterns) {
+        if (p.match.test(r.label||'') && (!p.agent || p.agent === r.agent_type)) {
+          upd.run(p.name, r.session_id); break;
+        }
+      }
     }
     _db2.close();
   } catch(e) {}
