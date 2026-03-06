@@ -24,19 +24,8 @@
         </div>
       </div>
 
-      <!-- Agent Cards (dynamically rendered) -->
+      <!-- Agent Cards (dynamically rendered — Add an Agent included by rebuildCards) -->
       <div id="agent-cards-container"></div>
-
-      <!-- Add Agent teaser -->
-      <div class="mt-6 card p-6 border-dashed" style="border-color:#374151;">
-        <div class="flex items-center gap-4 text-gray-600">
-          <div class="w-16 h-16 rounded-full bg-gray-900 border-2 border-dashed border-gray-700 flex items-center justify-center text-2xl flex-shrink-0">+</div>
-          <div>
-            <div class="text-gray-400 font-semibold mb-1">Add an Agent</div>
-            <div class="text-sm">As new agents join the team they'll appear here with their own card, model config, and job history.</div>
-          </div>
-        </div>
-      </div>
 
     </div>
   </div>
@@ -67,6 +56,18 @@
   <script src="/portal/portal-common.js"></script>
   <script>
     if (!window._jobMap) window._jobMap = {};
+
+    // A job is "parked" if its next run is more than 1 year away (far-future placeholder)
+    const TWO_YEARS_MS = 2 * 365.25 * 24 * 60 * 60 * 1000;
+    function isParked(j) {
+      return j.nextRunMs && (j.nextRunMs - Date.now()) > TWO_YEARS_MS;
+    }
+    function jobScheduleLabel(j) {
+      return isParked(j) ? '<span class="text-gray-600 italic">Parked</span>' : esc(humanCron(j.schedule||'—'));
+    }
+    function jobNextLabel(j) {
+      return isParked(j) ? '—' : esc(j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—'));
+    }
 
     // ─── AGENT CONFIG ─────────────────────────────────────────────────────────
     // Add a new agent here — the page renders dynamically from this list.
@@ -243,7 +244,7 @@
       thinkEl.classList.toggle('hidden', !j.thinking);
       document.getElementById('job-modal-desc').textContent = j.description || 'No description available.';
       document.getElementById('job-modal-last').textContent = j.lastRun || '—';
-      document.getElementById('job-modal-next').textContent = j.nextRun || '—';
+      document.getElementById('job-modal-next').textContent = isParked(j) ? '—' : (j.nextRun || '—');
       const t = j.lastRunTokens;
       document.getElementById('job-modal-tokens').textContent = t ? (t/1000).toFixed(1) + 'K' : '—';
       document.getElementById('job-modal').classList.remove('hidden');
@@ -372,12 +373,12 @@
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
             tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
               <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')}</td>
-              <td class="px-4 py-2.5 text-gray-400">${esc(humanCron(j.schedule||'—'))}</td>
+              <td class="px-4 py-2.5 text-gray-400 text-xs">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
               <td class="px-4 py-2.5 text-xs">${thinkBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
               <td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
-              <td class="px-4 py-2.5 text-gray-500">${j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—')}</td>
+              <td class="px-4 py-2.5 text-gray-500">${jobNextLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">${fmtTok(j.lastRunTokens, j)}</td>
             </tr>`).join('');
           } else {
@@ -447,7 +448,7 @@
       const jobRows = jobs.length
         ? jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
             <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(j.name||'—')}</td>
-            <td class="px-3 py-1.5 text-gray-500 text-xs">${esc(humanCron(j.schedule||'—'))}</td>
+            <td class="px-3 py-1.5 text-gray-500 text-xs">${jobScheduleLabel(j)}</td>
             <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
           </tr>`).join('')
@@ -522,7 +523,7 @@
           info.jobs.forEach(j => { window._jobMap[j.name] = j; });
           tbody.innerHTML = info.jobs.map(j=>`<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
             <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(j.name||'—')}</td>
-            <td class="px-3 py-1.5 text-gray-500 text-xs">${esc(humanCron(j.schedule||'—'))}</td>
+            <td class="px-3 py-1.5 text-gray-500 text-xs">${jobScheduleLabel(j)}</td>
             <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
             <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
           </tr>`).join('');
@@ -552,8 +553,17 @@
       _lastData = d;
       rebuildCards(d);
       if (_currentView === 'full') renderAgentsPage(d);
+      else renderCondensedData(d);
     }).then(ok => {
-      if (ok) setupRealtime(null, () => { loadData().then(d => { if (d) { _lastData = d; rebuildCards(d); if (_currentView === 'full') renderAgentsPage(d); } }); });
+      if (ok) setupRealtime(null, () => {
+        loadData().then(d => {
+          if (!d) return;
+          _lastData = d;
+          // Update data in-place — do NOT rebuild cards (would reset expanded job drawers)
+          if (_currentView === 'full') renderAgentsPage(d);
+          else renderCondensedData(d);
+        });
+      });
       // Apply saved view after init
       setView(_currentView);
     });
