@@ -13,75 +13,27 @@
     <div id="portal-nav"></div>
     <div class="p-6 max-w-7xl mx-auto">
 
-      <!-- Agent Cards -->
-      <div class="grid grid-cols-3 gap-6 mb-8">
-        <!-- Cliff -->
-        <div class="card p-5">
-          <div class="flex items-center gap-4 mb-4">
-            <img src="/portal/cliff-avatar.jpg" alt="Cliff" class="w-12 h-12 rounded-full object-cover shadow-lg" style="box-shadow: 0 0 12px rgba(99,102,241,0.3);">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-white font-bold text-lg">Cliff</span>
-                <div id="cliff-agent-status-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600"></div>
-                <span id="cliff-agent-status-label" class="text-gray-500 text-xs font-semibold uppercase tracking-wide">—</span>
-              </div>
-              <div class="text-gray-500 text-xs">Primary assistant · Tim's right hand</div>
-            </div>
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-white mb-1">Agent Team</h2>
+        <p class="text-gray-500 text-sm">The crew running the operation. Live status, model configs, and job history.</p>
+      </div>
+
+      <!-- Agent Cards (dynamically rendered) -->
+      <div class="space-y-6" id="agent-cards-container"></div>
+
+      <!-- Add Agent teaser -->
+      <div class="mt-6 card p-6 border-dashed" style="border-color:#374151;">
+        <div class="flex items-center gap-4 text-gray-600">
+          <div class="w-16 h-16 rounded-full bg-gray-900 border-2 border-dashed border-gray-700 flex items-center justify-center text-2xl flex-shrink-0">+</div>
+          <div>
+            <div class="text-gray-400 font-semibold mb-1">Add an Agent</div>
+            <div class="text-sm">As new agents join the team they'll appear here with their own card, model config, and job history.</div>
           </div>
-          <div class="grid grid-cols-2 gap-3 text-xs mb-4">
-            <div><span class="text-gray-500">Model</span><br><span id="cliff-model" class="text-white font-semibold">—</span> <span id="cliff-model-provider" class="text-gray-600"></span></div>
-            <div><span class="text-gray-500">Thinking</span><br><span id="cliff-thinking-level" class="text-gray-400">—</span><br><span id="cliff-thinking-desc" class="text-gray-600 text-xs"></span></div>
-          </div>
-          <div class="text-xs mb-3"><span id="cliff-job-count" class="text-gray-400">—</span> · <span id="cliff-last-job" class="text-gray-500">—</span><div id="cliff-job-errors" class="hidden text-yellow-400 text-xs mt-1"></div></div>
-          <div class="mb-3"><div class="text-xs text-gray-500 mb-1" id="cliff-ctx-title">Context</div><div id="cliff-ctx-bar-wrap"><div id="cliff-ctx-top" class="text-sm font-semibold mb-0 text-gray-400">—</div><div class="bg-gray-700 rounded-full h-1.5 mt-1 mb-1"><div id="cliff-ctx-bar" class="h-1.5 rounded-full" style="width:0%"></div></div><div class="flex justify-between text-xs text-gray-600"><span id="cliff-ctx-label"></span><span id="cliff-ctx-pct"></span></div><div id="cliff-ctx-sublabel" class="text-xs text-gray-700 mt-0.5"></div></div><div id="cliff-ctx-none" class="hidden text-xs text-gray-600">No active session</div></div>
-          <div><button onclick="toggleJobs('cliff')" id="cliff-jobs-toggle" class="text-xs text-gray-500 hover:text-gray-300">▶ show</button><div id="cliff-jobs-list" class="hidden mt-2"><table class="w-full text-xs"><thead><tr class="border-b border-gray-800"><th class="text-left px-4 py-1 text-gray-600">Job</th><th class="text-left px-4 py-1 text-gray-600">Schedule</th><th class="text-left px-4 py-1 text-gray-600">Model</th><th class="text-left px-4 py-1 text-gray-600">Think</th><th class="text-left px-4 py-1 text-gray-600">Status</th><th class="text-left px-4 py-1 text-gray-600">Last Run</th><th class="text-left px-4 py-1 text-gray-600">Next</th><th class="text-left px-4 py-1 text-gray-600">Tokens</th></tr></thead><tbody id="cliff-jobs-body"></tbody></table></div></div>
-        </div>
-        <!-- Samantha -->
-        <div class="card p-5">
-          <div class="flex items-center gap-4 mb-4">
-            <img src="/portal/samantha-avatar.jpg" alt="Samantha" class="w-12 h-12 rounded-full object-cover shadow-lg" style="box-shadow: 0 0 12px rgba(45,212,191,0.3);">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-white font-bold text-lg">Samantha</span>
-                <div id="samantha-agent-status-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600"></div>
-                <span id="samantha-agent-status-label" class="text-gray-500 text-xs font-semibold uppercase tracking-wide">—</span>
-              </div>
-              <div class="text-gray-500 text-xs">Content studio · Articles, tweets, media</div>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 text-xs mb-4">
-            <div><span class="text-gray-500">Model</span><br><span id="samantha-model" class="text-white font-semibold">—</span> <span id="samantha-model-provider" class="text-gray-600"></span></div>
-            <div><span class="text-gray-500">Thinking</span><br><span id="samantha-thinking-level" class="text-gray-400">—</span><br><span id="samantha-thinking-desc" class="text-gray-600 text-xs"></span></div>
-          </div>
-          <div class="text-xs mb-3"><span id="samantha-job-count" class="text-gray-400">—</span> · <span id="samantha-last-job" class="text-gray-500">—</span><div id="samantha-job-errors" class="hidden text-yellow-400 text-xs mt-1"></div></div>
-          <div class="mb-3"><div class="text-xs text-gray-500 mb-1" id="samantha-ctx-title">Context</div><div id="samantha-ctx-bar-wrap"><div id="samantha-ctx-top" class="text-sm font-semibold mb-0 text-gray-400">—</div><div class="bg-gray-700 rounded-full h-1.5 mt-1 mb-1"><div id="samantha-ctx-bar" class="h-1.5 rounded-full" style="width:0%"></div></div><div class="flex justify-between text-xs text-gray-600"><span id="samantha-ctx-label"></span><span id="samantha-ctx-pct"></span></div><div id="samantha-ctx-sublabel" class="text-xs text-gray-700 mt-0.5"></div></div><div id="samantha-ctx-none" class="hidden text-xs text-gray-600">No active session</div></div>
-          <div><button onclick="toggleJobs('samantha')" id="samantha-jobs-toggle" class="text-xs text-gray-500 hover:text-gray-300">▶ show</button><div id="samantha-jobs-list" class="hidden mt-2"><table class="w-full text-xs"><thead><tr class="border-b border-gray-800"><th class="text-left px-4 py-1 text-gray-600">Job</th><th class="text-left px-4 py-1 text-gray-600">Schedule</th><th class="text-left px-4 py-1 text-gray-600">Model</th><th class="text-left px-4 py-1 text-gray-600">Think</th><th class="text-left px-4 py-1 text-gray-600">Status</th><th class="text-left px-4 py-1 text-gray-600">Last Run</th><th class="text-left px-4 py-1 text-gray-600">Next</th><th class="text-left px-4 py-1 text-gray-600">Tokens</th></tr></thead><tbody id="samantha-jobs-body"></tbody></table></div></div>
-        </div>
-        <!-- Scout -->
-        <div class="card p-5">
-          <div class="flex items-center gap-4 mb-4">
-            <img src="/portal/scout-avatar.jpg" alt="Scout" class="w-12 h-12 rounded-full object-cover shadow-lg" style="box-shadow: 0 0 12px rgba(74,222,128,0.3);">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-white font-bold text-lg">Scout</span>
-                <div id="scout-agent-status-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600"></div>
-                <span id="scout-agent-status-label" class="text-gray-500 text-xs font-semibold uppercase tracking-wide">—</span>
-              </div>
-              <div class="text-gray-500 text-xs">Monitoring intern · Social + GitHub</div>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 text-xs mb-4">
-            <div><span class="text-gray-500">Model</span><br><span id="scout-model" class="text-white font-semibold">—</span> <span id="scout-model-provider" class="text-gray-600"></span></div>
-            <div><span class="text-gray-500">Thinking</span><br><span id="scout-thinking-level" class="text-gray-400">—</span><br><span id="scout-thinking-desc" class="text-gray-600 text-xs"></span></div>
-          </div>
-          <div class="text-xs mb-3"><span id="scout-job-count" class="text-gray-400">—</span> · <span id="scout-last-job" class="text-gray-500">—</span><div id="scout-job-errors" class="hidden text-yellow-400 text-xs mt-1"></div></div>
-          <div class="mb-3"><div class="text-xs text-gray-500 mb-1" id="scout-ctx-title">Context</div><div id="scout-ctx-bar-wrap"><div id="scout-ctx-top" class="text-sm font-semibold mb-0 text-gray-400">—</div><div class="bg-gray-700 rounded-full h-1.5 mt-1 mb-1"><div id="scout-ctx-bar" class="h-1.5 rounded-full" style="width:0%"></div></div><div class="flex justify-between text-xs text-gray-600"><span id="scout-ctx-label"></span><span id="scout-ctx-pct"></span></div><div id="scout-ctx-sublabel" class="text-xs text-gray-700 mt-0.5"></div></div><div id="scout-ctx-none" class="hidden text-xs text-gray-600">No active session</div></div>
-          <div><button onclick="toggleJobs('scout')" id="scout-jobs-toggle" class="text-xs text-gray-500 hover:text-gray-300">▶ show</button><div id="scout-jobs-list" class="hidden mt-2"><table class="w-full text-xs"><thead><tr class="border-b border-gray-800"><th class="text-left px-4 py-1 text-gray-600">Job</th><th class="text-left px-4 py-1 text-gray-600">Schedule</th><th class="text-left px-4 py-1 text-gray-600">Model</th><th class="text-left px-4 py-1 text-gray-600">Think</th><th class="text-left px-4 py-1 text-gray-600">Status</th><th class="text-left px-4 py-1 text-gray-600">Last Run</th><th class="text-left px-4 py-1 text-gray-600">Next</th><th class="text-left px-4 py-1 text-gray-600">Tokens</th></tr></thead><tbody id="scout-jobs-body"></tbody></table></div></div>
         </div>
       </div>
 
       <!-- System Health -->
-      <div class="mb-8">
+      <div class="mt-10 mb-8">
         <h2 class="text-lg font-semibold text-white mb-4">System Health</h2>
         <div class="card p-4 mb-4 flex items-center gap-3">
           <div id="system-dot" class="w-3 h-3 rounded-full bg-gray-500"></div>
@@ -123,7 +75,7 @@
           </div>
         </div>
 
-        <!-- Sites & Credentials -->
+        <!-- Sites & Credentials & Disk -->
         <div class="grid grid-cols-3 gap-4">
           <div class="card p-5">
             <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">Sites</h3>
@@ -140,6 +92,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -149,7 +102,7 @@
     <div class="relative card p-6 w-full max-w-md" style="z-index:1;">
       <div class="flex justify-between items-start mb-4">
         <h3 id="job-modal-name" class="text-white font-bold text-lg"></h3>
-        <button onclick="closeJobModal()" class="text-gray-500 hover:text-white text-xl">✕</button>
+        <button onclick="closeJobModal()" class="text-gray-500 hover:text-white text-xl">X</button>
       </div>
       <div class="space-y-3 text-sm">
         <div><span id="job-modal-status" class="pill"></span></div>
@@ -170,24 +123,177 @@
   <script>
     if (!window._jobMap) window._jobMap = {};
 
+    // ─── AGENT CONFIG ─────────────────────────────────────────────────────────
+    // Add a new agent here — the page renders dynamically from this list.
+    const AGENTS = [
+      {
+        id: 'main',       // matches agentId in data.json / openclaw config
+        name: 'Cliff',
+        avatar: '/portal/cliff-avatar.jpg',
+        role: 'Main assistant · Direct chat + orchestration · @CliffCircuit voice',
+        badge: 'PRIMARY',
+        badgeClass: 'bg-indigo-900 text-indigo-300',
+        accentClass: 'text-indigo-400',
+        pillClass: 'bg-blue-950 text-blue-300',
+        capabilities: ['Direct Chat', 'Web Browse', 'Code Exec', 'File System', 'Cron Scheduling', 'Telegram', 'Twitter/X', 'Cloudflare'],
+      },
+      {
+        id: 'samantha',
+        name: 'Samantha',
+        avatar: '/portal/samantha-avatar.jpg',
+        role: 'Content studio · Blog drafts + publishing · @CliffCircuit articles',
+        badge: 'CONTENT STUDIO',
+        badgeClass: 'bg-teal-900 text-teal-300',
+        accentClass: 'text-teal-400',
+        pillClass: 'bg-teal-950 text-teal-300',
+        capabilities: ['Article Writing', 'DALL-E Image Gen', 'GitHub Deploy', 'Twitter/X Post', 'Queue Management', 'SEO Optimization', 'Tim Posts'],
+      },
+      {
+        id: 'scout',
+        name: 'Scout',
+        avatar: '/portal/scout-avatar.jpg',
+        role: 'Monitoring intern · Routine ops · Reports to Cliff',
+        badge: 'INTERN · OPS',
+        badgeClass: 'bg-green-900 text-green-300',
+        accentClass: 'text-green-400',
+        pillClass: 'bg-green-950 text-green-300',
+        capabilities: ['Portal Refresh', 'Health Checks', 'Message Relay', 'Git Push'],
+      },
+      {
+        id: 'atlas',
+        name: 'Atlas',
+        avatar: null,  // replace with /portal/atlas-avatar.jpg when ready
+        role: 'Builder · Coding, refactoring, architecture, deployments',
+        badge: 'BUILDER',
+        badgeClass: 'bg-orange-900 text-orange-300',
+        accentClass: 'text-orange-400',
+        pillClass: 'bg-orange-950 text-orange-300',
+        capabilities: ['Frontend Dev', 'Node.js', 'GitHub Deploy', 'Cloudflare Pages', 'Refactoring', 'Code Review'],
+      },
+    ];
+
+    // ─── CARD HTML BUILDER ────────────────────────────────────────────────────
+    function buildAgentCard(agent) {
+      const n = agent.name.toLowerCase();
+      const avatarHtml = agent.avatar
+        ? `<img src="${agent.avatar}" alt="${agent.name}" class="w-full h-full object-cover object-top" />`
+        : `<div class="w-full h-full flex items-center justify-center text-5xl bg-gray-900">${agent.name[0]}</div>`;
+
+      return `
+      <div class="card overflow-hidden" id="card-${n}">
+        <div class="flex flex-row">
+          <!-- Avatar -->
+          <div class="relative flex-shrink-0" style="width:220px; height:220px;">
+            ${avatarHtml}
+            <div class="absolute inset-0" style="background: linear-gradient(to right, transparent 70%, #111827 100%);"></div>
+            <div class="absolute bottom-3 left-3">
+              <span class="pill ${agent.badgeClass}">${agent.badge}</span>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="flex-1 p-6">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <div class="flex items-center gap-3 mb-1">
+                  <h3 class="text-2xl font-bold text-white">${agent.name}</h3>
+                  <div id="${n}-agent-status-dot" class="w-2.5 h-2.5 rounded-full bg-gray-600"></div>
+                  <span id="${n}-agent-status-label" class="text-gray-500 text-xs font-semibold uppercase tracking-wide">—</span>
+                </div>
+                <p class="text-gray-400 text-sm">${agent.role}</p>
+              </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="grid grid-cols-4 gap-4 mb-5">
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Model</div>
+                <div id="${n}-model" class="text-white text-sm font-semibold">—</div>
+                <div id="${n}-model-provider" class="text-gray-600 text-xs">anthropic</div>
+              </div>
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Thinking</div>
+                <div id="${n}-thinking-level" class="${agent.accentClass} text-sm font-semibold">—</div>
+                <div id="${n}-thinking-desc" class="text-gray-600 text-xs">—</div>
+              </div>
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1" id="${n}-ctx-title">Live Session</div>
+                <div id="${n}-ctx-bar-wrap" class="hidden">
+                  <div id="${n}-ctx-top" class="text-white text-sm font-semibold mb-0"></div>
+                  <div class="flex justify-between items-center text-xs mt-1 mb-1">
+                    <span id="${n}-ctx-label" class="text-gray-400"></span>
+                    <span id="${n}-ctx-pct" class="font-semibold"></span>
+                  </div>
+                  <div class="bg-gray-700 rounded-full h-1.5">
+                    <div id="${n}-ctx-bar" class="h-1.5 rounded-full transition-all" style="width:0%"></div>
+                  </div>
+                  <div class="text-gray-600 text-xs mt-1" id="${n}-ctx-sublabel">—</div>
+                </div>
+                <div id="${n}-ctx-none" class="text-gray-600 text-xs">No active session</div>
+              </div>
+              <div class="bg-gray-900 rounded-lg p-3">
+                <div class="text-xs text-gray-500 mb-1">Cron Jobs</div>
+                <div id="${n}-job-count" class="text-white text-sm font-semibold">—</div>
+                <div class="text-gray-600 text-xs">scheduled tasks</div>
+              </div>
+            </div>
+
+            <!-- Capabilities -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              ${agent.capabilities.map(c => `<span class="pill ${agent.pillClass}">${c}</span>`).join('')}
+            </div>
+
+            <!-- Last job / errors -->
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+              <span>Last job: <span id="${n}-last-job" class="text-gray-300">—</span></span>
+              <span id="${n}-job-errors" class="text-red-400 hidden"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible job table -->
+        <div class="border-t border-gray-800 px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors" onclick="toggleJobs('${n}')">
+          <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Scheduled Jobs</span>
+          <span id="${n}-jobs-toggle" class="text-gray-600 text-xs">&#9658; show</span>
+        </div>
+        <div id="${n}-jobs-list" class="hidden border-t border-gray-900">
+          <table class="w-full text-xs">
+            <thead><tr class="border-b border-gray-800 bg-gray-900">
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Job</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Schedule</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Model</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Thinking</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Status</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Last Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Next Run</th>
+              <th class="text-left px-4 py-2 text-gray-500 uppercase tracking-wide">Tokens</th>
+            </tr></thead>
+            <tbody id="${n}-jobs-body"></tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+
+    // Render skeleton cards immediately
+    document.getElementById('agent-cards-container').innerHTML = AGENTS.map(buildAgentCard).join('');
+
+    // ─── HELPERS ─────────────────────────────────────────────────────────────
     function toggleJobs(agent) {
       const list = document.getElementById(agent+'-jobs-list');
       const toggle = document.getElementById(agent+'-jobs-toggle');
       const hidden = list.classList.contains('hidden');
       list.classList.toggle('hidden', !hidden);
-      toggle.textContent = hidden ? '▼ hide' : '▶ show';
+      toggle.innerHTML = hidden ? '&#9660; hide' : '&#9658; show';
     }
 
     function openJobDetail(name) {
       const j = window._jobMap && window._jobMap[name]; if (!j) return;
-      const modelShortText = m => { if (!m) return 'Default model'; return friendlyModel(m); };
       document.getElementById('job-modal-name').textContent = j.name;
       document.getElementById('job-modal-status').textContent = j.status || 'idle';
       document.getElementById('job-modal-status').className = `pill status-${j.status||'idle'}`;
-      document.getElementById('job-modal-schedule').textContent = '🕐 ' + humanCron(j.schedule || '—');
-      document.getElementById('job-modal-model').textContent = '🤖 ' + modelShortText(j.model);
+      document.getElementById('job-modal-schedule').textContent = 'Schedule: ' + humanCron(j.schedule || '—');
+      document.getElementById('job-modal-model').textContent = 'Model: ' + (j.model ? friendlyModel(j.model) : 'Default');
       const thinkEl = document.getElementById('job-modal-thinking');
-      thinkEl.textContent = j.thinking ? '🧠 Thinking: ' + j.thinking : '';
+      thinkEl.textContent = j.thinking ? 'Thinking: ' + j.thinking : '';
       thinkEl.classList.toggle('hidden', !j.thinking);
       document.getElementById('job-modal-desc').textContent = j.description || 'No description available.';
       document.getElementById('job-modal-last').textContent = j.lastRun || '—';
@@ -204,124 +310,137 @@
       if (mins < 1) return 'just now';
       if (mins < 60) return mins + 'm ago';
       const hrs = Math.round(mins / 60);
-      if (hrs < 24) return hrs + 'h ago';
-      return new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      return hrs < 24 ? hrs + 'h ago' : new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     }
 
+    // ─── MAIN RENDER ─────────────────────────────────────────────────────────
     function renderAgentsPage(d) {
-      // Agent cards — model, thinking, jobs, context bars
       const ac = d.agentConfigs || {};
-      const thinkingMeta = { low: { color: 'text-teal-400', desc: 'lightweight reasoning' }, medium: { color: 'text-yellow-400', desc: 'balanced reasoning' }, high: { color: 'text-orange-400', desc: 'deep reasoning' }, off: { color: 'text-gray-400', desc: 'no reasoning' } };
+      const thinkingMeta = {
+        low:    { color: 'text-teal-400',   desc: 'lightweight reasoning' },
+        medium: { color: 'text-yellow-400', desc: 'balanced reasoning' },
+        high:   { color: 'text-orange-400', desc: 'deep reasoning' },
+        off:    { color: 'text-gray-400',   desc: 'no reasoning' },
+      };
 
-      ['cliff', 'samantha', 'scout'].forEach(agent => {
-        const id = agent === 'cliff' ? 'main' : agent;
-        const cfg = ac[id] || ac[agent] || {};
-        const agentSessions = (d.sessions || []).filter(s => s.agentId === id);
+      // Build cron map per agent
+      const crons = d.crons || [];
+      const agentJobMap = {};
+      crons.forEach(job => {
+        const a = job.agent || 'main';
+        if (!agentJobMap[a]) agentJobMap[a] = { jobs: [], errors: 0 };
+        agentJobMap[a].jobs.push(job);
+        if (job.status === 'error') agentJobMap[a].errors++;
+      });
+
+      const generatedTs = d._liveGeneratedAt || d.generatedAt ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
+
+      AGENTS.forEach(agent => {
+        const n = agent.name.toLowerCase();
+        const agentId = agent.id;
+        const cfg = ac[agentId] || ac[n] || {};
+        const agentSessions = (d.sessions || []).filter(s => s.agentId === agentId);
         const directSession = agentSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
         const bestSession = directSession || agentSessions.sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] || null;
         const liveModel = bestSession ? bestSession.model : null;
-        const level = (bestSession?.thinking || cfg.thinking || "off").toLowerCase();
-        const model = liveModel || cfg.model || "Unknown";
+        const level = (bestSession?.thinking || cfg.thinking || 'off').toLowerCase();
+        const model = liveModel || cfg.model || 'Unknown';
         const meta = thinkingMeta[level] || thinkingMeta.off;
-        const el = id2 => document.getElementById(agent + "-" + id2);
+
+        const el = id2 => document.getElementById(`${n}-${id2}`);
+
+        // Model & thinking
+        if (el('model')) el('model').textContent = friendlyModel(model);
+        if (el('model-provider')) {
+          const s = model.toLowerCase();
+          el('model-provider').textContent = s.includes('gemini') || s.includes('google') ? 'google'
+            : s.includes('grok') || s.includes('xai') ? 'xai'
+            : s.includes('gpt') || s.includes('openai') || s.includes('o1') ? 'openai'
+            : 'anthropic';
+        }
         if (el('thinking-level')) { el('thinking-level').textContent = level.charAt(0).toUpperCase() + level.slice(1); el('thinking-level').className = meta.color + ' text-sm font-semibold'; }
         if (el('thinking-desc')) el('thinking-desc').textContent = meta.desc;
-        if (el('model')) el('model').textContent = friendlyModel(model);
-        const providerEl = el('model-provider');
-        if (providerEl && model) {
-          const s = model.toLowerCase();
-          if (s.includes('gemini') || s.includes('google')) providerEl.textContent = 'google';
-          else if (s.includes('grok') || s.includes('xai')) providerEl.textContent = 'xai';
-          else if (s.includes('gpt') || s.includes('openai') || s.includes('o1')) providerEl.textContent = 'openai';
-          else providerEl.textContent = 'anthropic';
+
+        // Status dot — online/offline based on sessions
+        if (agentSessions.length > 0) {
+          if (el('agent-status-dot')) { el('agent-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-green-400'; el('agent-status-dot').style.boxShadow = '0 0 8px #4ade80'; }
+          if (el('agent-status-label')) { el('agent-status-label').textContent = 'Online'; el('agent-status-label').className = 'text-green-400 text-xs font-semibold uppercase tracking-wide'; }
+        } else {
+          if (el('agent-status-dot')) { el('agent-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-gray-600'; el('agent-status-dot').style.boxShadow = ''; }
+          if (el('agent-status-label')) { el('agent-status-label').textContent = 'Idle'; el('agent-status-label').className = 'text-gray-500 text-xs font-semibold uppercase tracking-wide'; }
         }
-      });
 
-      // Cron jobs per agent
-      const crons = d.crons || [];
-      const agentMap = {};
-      crons.forEach(job => {
-        const a = job.agent || 'main';
-        if (!agentMap[a]) agentMap[a] = { jobs: [], errors: 0 };
-        agentMap[a].jobs.push(job);
-        if (job.status === 'error') agentMap[a].errors++;
-      });
-      if (agentMap['main']) { if (!agentMap['cliff']) agentMap['cliff'] = { jobs: [], errors: 0 }; agentMap['cliff'].jobs.push(...agentMap['main'].jobs); agentMap['cliff'].errors += agentMap['main'].errors; }
-
-      const agentIds = { 'cliff': 'cliff', 'samantha': 'samantha', 'scout': 'scout' };
-      Object.entries(agentIds).forEach(([name, agentId]) => {
-        const info = agentMap[agentId] || { jobs: [], errors: 0 };
-        const el = id2 => document.getElementById(`${name}-${id2}`);
+        // Cron job info
+        const info = agentJobMap[agentId] || agentJobMap[n] || { jobs: [], errors: 0 };
+        // Also pull 'main' jobs for cliff
+        if (agentId === 'main' && agentJobMap['main'] && n !== 'cliff') { /* skip */ }
         if (el('job-count')) el('job-count').textContent = info.jobs.length + (info.jobs.length === 1 ? ' job' : ' jobs');
         const lastRunJob = info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
         if (el('last-job')) el('last-job').textContent = lastRunJob ? timeAgo(lastRunJob.lastRunMs || lastRunJob.lastRun) : 'No recent runs';
 
-        const sessionAgentId = name === 'cliff' ? 'main' : name;
-        const agentLiveSessions = (d.sessions || []).filter(s => s.agentId === sessionAgentId);
-        const directLive = agentLiveSessions.find(s => (s.label || '').includes('direct'));
-        const liveSession = directLive || (agentLiveSessions.length ? [...agentLiveSessions].sort((a, b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] : null);
-
         // Warnings
         const warnings = [];
         if (info.errors > 0) warnings.push(`${info.errors} error${info.errors>1?'s':''}`);
-        const slowJobs = info.jobs.filter(j => (j.lastDurationMs || 0) > 600000);
-        if (slowJobs.length) { const slowest = slowJobs.sort((a,b) => b.lastDurationMs - a.lastDurationMs)[0]; warnings.push(`${(slowest.name||'').replace(/^(samantha|scout|cliff)-/i,'').replace(/-/g,' ')} took ${Math.round(slowest.lastDurationMs/60000)}m`); }
-        const highCtx = agentLiveSessions.find(s => (s.pct || 0) >= 70);
-        if (highCtx) warnings.push(`session at ${highCtx.pct}% context`);
-        if (el('job-errors')) { el('job-errors').classList.toggle('hidden', warnings.length===0); if (warnings.length) el('job-errors').textContent = '⚠ ' + warnings.join(' · '); }
+        if (el('job-errors')) { el('job-errors').classList.toggle('hidden', warnings.length===0); if (warnings.length) el('job-errors').textContent = 'Warning: ' + warnings.join(' · '); }
+        if (warnings.length > 0 && el('agent-status-dot')) {
+          el('agent-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-yellow-400';
+          el('agent-status-dot').style.boxShadow = '0 0 8px #facc15';
+          if (el('agent-status-label')) { el('agent-status-label').textContent = 'Warning'; el('agent-status-label').className = 'text-yellow-400 text-xs font-semibold uppercase tracking-wide'; }
+        }
 
         // Context bar
-        const generatedTs = (d._liveGeneratedAt || d.generatedAt) ? new Date(d._liveGeneratedAt || d.generatedAt).getTime() : null;
-        if (liveSession && liveSession.pct !== undefined) {
-          const pct = liveSession.pct;
+        if (bestSession && bestSession.pct !== undefined) {
+          const pct = bestSession.pct;
           const barColor = pct >= 75 ? '#ef4444' : pct >= 50 ? '#facc15' : '#34d399';
           const pctColor = pct >= 75 ? 'text-red-400' : pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-          if (el('ctx-title')) el('ctx-title').textContent = (name === 'cliff') ? 'Live Session' : 'Last Run';
+          if (el('ctx-title')) el('ctx-title').textContent = 'Live Session';
           if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
           if (el('ctx-none')) el('ctx-none').classList.add('hidden');
           if (el('ctx-top')) { el('ctx-top').textContent = pct + '% — ' + (pct >= 75 ? 'Reset soon' : pct >= 50 ? 'Getting there' : 'Healthy'); el('ctx-top').className = `text-sm font-semibold mb-0 ${pctColor}`; }
-          if (el('ctx-label')) el('ctx-label').textContent = `${Math.round(liveSession.used/1000)}K / ${Math.round(liveSession.limit/1000)}K tokens`;
+          if (el('ctx-label')) el('ctx-label').textContent = `${Math.round(bestSession.used/1000)}K / ${Math.round(bestSession.limit/1000)}K tokens`;
           if (el('ctx-pct')) el('ctx-pct').textContent = '';
           if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = barColor; }
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = snapshotAge(generatedTs); if (generatedTs) el('ctx-sublabel').dataset.ts = generatedTs; }
-        } else {
-          const recentJob = info.jobs.filter(j => j.lastRunMs && !j.name.includes('message-check')).sort((a,b) => ((b.lastRunTokens||0)+(b.lastDurationMs||0)/1000) - ((a.lastRunTokens||0)+(a.lastDurationMs||0)/1000))[0] || info.jobs.filter(j => j.lastRunMs).sort((a,b) => b.lastRunMs - a.lastRunMs)[0];
-          if (recentJob && recentJob.lastDurationMs) {
-            const durMs = recentJob.lastDurationMs;
-            const durSec = Math.round(durMs / 1000);
-            const durLabel = durSec >= 60 ? Math.round(durSec/60) + 'm ' + (durSec%60) + 's' : durSec + 's';
-            const pct = Math.min(100, Math.round((durMs / (20*60*1000)) * 100));
-            if (el('ctx-title')) el('ctx-title').textContent = 'Last Job';
-            if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
-            if (el('ctx-none')) el('ctx-none').classList.add('hidden');
-            if (el('ctx-top')) { el('ctx-top').textContent = (recentJob.name||'').replace(/^(samantha|scout|cliff)-/i,'').replace(/-/g,' '); el('ctx-top').className = 'text-white text-sm font-semibold mb-0 capitalize'; }
-            if (el('ctx-label')) el('ctx-label').textContent = 'Duration: ' + durLabel;
-            if (el('ctx-pct')) el('ctx-pct').textContent = '';
-            if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = '#6366f1'; }
-            if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = timeAgo(recentJob.lastRunMs); if(recentJob.lastRunMs) el('ctx-sublabel').dataset.ts = recentJob.lastRunMs; }
+        } else if (lastRunJob && lastRunJob.lastDurationMs) {
+          const durMs = lastRunJob.lastDurationMs;
+          const durSec = Math.round(durMs / 1000);
+          const durLabel = durSec >= 60 ? Math.round(durSec/60) + 'm ' + (durSec%60) + 's' : durSec + 's';
+          const pct = Math.min(100, Math.round((durMs / (20*60*1000)) * 100));
+          if (el('ctx-title')) el('ctx-title').textContent = 'Last Job';
+          if (el('ctx-bar-wrap')) el('ctx-bar-wrap').classList.remove('hidden');
+          if (el('ctx-none')) el('ctx-none').classList.add('hidden');
+          if (el('ctx-top')) { el('ctx-top').textContent = (lastRunJob.name||'').replace(/^(samantha|scout|cliff|atlas)-/i,'').replace(/-/g,' '); el('ctx-top').className = 'text-white text-sm font-semibold mb-0 capitalize'; }
+          if (el('ctx-label')) el('ctx-label').textContent = 'Duration: ' + durLabel;
+          if (el('ctx-pct')) el('ctx-pct').textContent = '';
+          if (el('ctx-bar')) { el('ctx-bar').style.width = pct + '%'; el('ctx-bar').style.background = '#6366f1'; }
+          if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = timeAgo(lastRunJob.lastRunMs); if (lastRunJob.lastRunMs) el('ctx-sublabel').dataset.ts = lastRunJob.lastRunMs; }
+        }
+
+        // Job table rows
+        const tbody = document.getElementById(`${n}-jobs-body`);
+        if (tbody) {
+          const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
+          const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
+          const fmtTok = (t, j) => { if (!t) return '<span class="text-gray-700">—</span>'; const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`; };
+          if (info.jobs.length) {
+            info.jobs.forEach(j => { window._jobMap[j.name] = j; });
+            tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')}</td>
+              <td class="px-4 py-2.5 text-gray-400">${esc(humanCron(j.schedule||'—'))}</td>
+              <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
+              <td class="px-4 py-2.5 text-xs">${thinkBadge(j.thinking)}</td>
+              <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
+              <td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
+              <td class="px-4 py-2.5 text-gray-500">${j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—')}</td>
+              <td class="px-4 py-2.5 text-xs">${fmtTok(j.lastRunTokens, j)}</td>
+            </tr>`).join('');
+          } else {
+            tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
           }
         }
-
-        // Status dot update for errors
-        if (el('agent-status-dot') && el('agent-status-label') && info.errors > 0) {
-          el('agent-status-dot').style.cssText = 'box-shadow: 0 0 8px #facc15;';
-          el('agent-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-yellow-400';
-          el('agent-status-label').textContent = 'Warning';
-          el('agent-status-label').className = 'text-yellow-400 text-xs font-semibold uppercase tracking-wide';
-        }
-
-        // Job rows
-        const tbody = document.getElementById(`${name}-jobs-body`);
-        if (tbody && info.jobs.length) {
-          const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
-          info.jobs.forEach(j => { window._jobMap[j.name] = j; });
-          const thinkingBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const map = { low: { label: 'Low', cls: 'text-blue-400' }, medium: { label: 'Medium', cls: 'text-yellow-400' }, high: { label: 'High', cls: 'text-orange-400' } }; const v = map[t] || { label: t, cls: 'text-gray-400' }; return `<span class="${v.cls}">${v.label}</span>`; };
-          const fmtTokens = (t, j) => { if (!t && j.model === null && !j.description?.includes('agent')) return '<span class="text-gray-700 text-xs">sys</span>'; if (!t) return '<span class="text-gray-700">—</span>'; const k = (t/1000).toFixed(1); const cls = t > 100000 ? 'text-red-400' : t > 50000 ? 'text-yellow-400' : 'text-green-400'; return `<span class="${cls} font-medium">${k}K</span>`; };
-          tbody.innerHTML = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(j.name)}')"><td class="px-4 py-2.5 text-gray-200 font-medium">${esc(j.name||'—')} <span class="text-gray-600 text-xs">→</span></td><td class="px-4 py-2.5 text-gray-400">${esc(humanCron(j.schedule||'—'))}</td><td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td><td class="px-4 py-2.5 text-xs">${thinkingBadge(j.thinking)}</td><td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td><td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td><td class="px-4 py-2.5 text-gray-500">${j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—')}</td><td class="px-4 py-2.5 text-xs">${fmtTokens(j.lastRunTokens, j)}</td></tr>`).join('');
-        } else if (tbody) { tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>'; }
       });
 
-      // System Health
+      // ─── System Health ────────────────────────────────────────────────────
       const errs = crons.filter(c=>c.status==='error').length;
       const dot = document.getElementById('system-dot');
       if (dot) dot.className = 'w-3 h-3 rounded-full '+(errs===0?'bg-green-400':'bg-yellow-400 animate-pulse');
@@ -333,7 +452,7 @@
       const sessions = d.sessions || [];
       const sessionsEl = document.getElementById('live-sessions-list');
       if (sessionsEl) {
-        if (sessions.length === 0) { sessionsEl.innerHTML = '<div class="text-gray-600 text-sm">No active sessions</div>'; }
+        if (!sessions.length) { sessionsEl.innerHTML = '<div class="text-gray-600 text-sm">No active sessions</div>'; }
         else {
           sessionsEl.innerHTML = sessions.map(s => {
             const barColor = s.pct >= 75 ? '#ef4444' : s.pct >= 50 ? '#facc15' : '#34d399';
@@ -346,27 +465,36 @@
       }
 
       // Cron table
-      const agentLabel = a => { const map = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' }; const cls = { main: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400' }; return `<span class="${cls[a]||'text-gray-400'} font-medium text-xs">${map[a]||a}</span>`; };
-      const statusDot = s => { const cls = s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500'; return `<span class="${cls}">● ${esc(s||'idle')}</span>`; };
-      const thinkingBadgeH = t => { if (!t) return '<span class="text-gray-700">—</span>'; const map = { low: { label: 'Low', cls: 'text-blue-400' }, medium: { label: 'Medium', cls: 'text-yellow-400' }, high: { label: 'High', cls: 'text-orange-400' } }; const v = map[t] || { label: t, cls: 'text-gray-400' }; return `<span class="${v.cls}">${v.label}</span>`; };
-      const fmtTokensH = (t, j) => { if (!t && j.model === null) return '<span class="text-gray-700 text-xs">sys</span>'; if (!t) return '<span class="text-gray-700">—</span>'; const k = (t/1000).toFixed(1); const cls = t > 100000 ? 'text-red-400' : t > 50000 ? 'text-yellow-400' : 'text-green-400'; return `<span class="${cls} font-medium">${k}K</span>`; };
+      const agentLabel = a => { const map = {main:'Cliff',samantha:'Samantha',scout:'Scout',atlas:'Atlas'}; const cls = {main:'text-indigo-400',samantha:'text-teal-400',scout:'text-green-400',atlas:'text-orange-400'}; return `<span class="${cls[a]||'text-gray-400'} font-medium text-xs">${map[a]||a}</span>`; };
+      const statusDot = s => { const cls = s==='ok'?'text-green-400':s==='error'?'text-red-400':'text-gray-500'; return `<span class="${cls}">● ${esc(s||'idle')}</span>`; };
+      const thinkBadgeH = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m={low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v=m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
+      const fmtTokH = (t) => { if (!t) return '<span class="text-gray-700">—</span>'; const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`; };
       const sortedCrons = [...crons].sort((a,b) => (a.nextRunMs||Infinity) - (b.nextRunMs||Infinity));
-      document.getElementById('cron-body').innerHTML = sortedCrons.length===0 ? '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No cron data</td></tr>' : sortedCrons.map(c=>{
+      document.getElementById('cron-body').innerHTML = !sortedCrons.length ? '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No cron data</td></tr>' : sortedCrons.map(c => {
         window._jobMap[c.name] = c;
-        return `<tr class="cron-row border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(c.name)}')"><td class="px-4 py-2.5 text-gray-200 font-medium">${esc(c.name||'—')} <span class="text-gray-600 text-xs">→</span></td><td class="px-4 py-2.5 text-gray-400 text-xs">${esc(humanCron(c.schedule||'—'))}</td><td class="px-4 py-2.5 text-xs">${agentLabel(c.agent||'main')}</td><td class="px-4 py-2.5 text-xs">${modelShort(c.model)}</td><td class="px-4 py-2.5 text-xs">${thinkingBadgeH(c.thinking)}</td><td class="px-4 py-2.5 text-xs">${statusDot(c.status)}</td><td class="px-4 py-2.5 text-gray-500 text-xs">${c.lastRunMs ? timeAgo(c.lastRunMs) : (c.lastRun ? timeAgo(c.lastRun) : '—')}</td><td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.nextRun||'—')}</td><td class="px-4 py-2.5 text-xs">${fmtTokensH(c.lastRunTokens, c)}</td></tr>`;
+        return `<tr class="cron-row border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(c.name)}')">
+          <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(c.name||'—')}</td>
+          <td class="px-4 py-2.5 text-gray-400 text-xs">${esc(humanCron(c.schedule||'—'))}</td>
+          <td class="px-4 py-2.5 text-xs">${agentLabel(c.agent||'main')}</td>
+          <td class="px-4 py-2.5 text-xs">${modelShort(c.model)}</td>
+          <td class="px-4 py-2.5 text-xs">${thinkBadgeH(c.thinking)}</td>
+          <td class="px-4 py-2.5 text-xs">${statusDot(c.status)}</td>
+          <td class="px-4 py-2.5 text-gray-500 text-xs">${c.lastRunMs ? timeAgo(c.lastRunMs) : (c.lastRun ? timeAgo(c.lastRun) : '—')}</td>
+          <td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.nextRun||'—')}</td>
+          <td class="px-4 py-2.5 text-xs">${fmtTokH(c.lastRunTokens)}</td>
+        </tr>`;
       }).join('');
 
       // Sites & Creds & Disk
       const sites = d.sites||[];
-      document.getElementById('sites-list').innerHTML = sites.length===0 ? '<div class="text-gray-600">No data</div>' : sites.map(s=>`<div class="flex items-center justify-between"><a href="https://${esc(s.url)}" target="_blank" class="text-gray-300 hover:text-white text-sm">${esc(s.url)}</a><span class="pill ${s.status===200?'status-ok':'status-error'}">${s.status}</span></div>`).join('');
+      document.getElementById('sites-list').innerHTML = !sites.length ? '<div class="text-gray-600">No data</div>' : sites.map(s=>`<div class="flex items-center justify-between"><a href="https://${esc(s.url)}" target="_blank" class="text-gray-300 hover:text-white text-sm">${esc(s.url)}</a><span class="pill ${s.status===200?'status-ok':'status-error'}">${s.status}</span></div>`).join('');
       const creds = d.credentials||[];
-      document.getElementById('creds-list').innerHTML = creds.length===0 ? '<div class="text-gray-600">No data</div>' : creds.map(c=>`<div class="flex items-center justify-between"><span class="text-gray-300 text-sm">${esc(c.name)}</span><span class="pill ${c.ok?'status-ok':'status-error'}">${c.ok?'OK':'FAIL'}</span></div>`).join('');
+      document.getElementById('creds-list').innerHTML = !creds.length ? '<div class="text-gray-600">No data</div>' : creds.map(c=>`<div class="flex items-center justify-between"><span class="text-gray-300 text-sm">${esc(c.name)}</span><span class="pill ${c.ok?'status-ok':'status-error'}">${c.ok?'OK':'FAIL'}</span></div>`).join('');
       const disk = d.disk||{};
-      set('disk-pct', disk.percent?disk.percent+'%':'—');
+      set('disk-pct', disk.percent ? disk.percent+'%' : '—');
       const bar = document.getElementById('disk-bar');
       if (bar) { bar.style.width = (disk.percent||0)+'%'; bar.className = 'h-2 rounded-full '+(disk.percent>80?'bg-red-500':'bg-green-500'); }
 
-      // Enrich cron tokens
       enrichCronTokens(d);
     }
 
