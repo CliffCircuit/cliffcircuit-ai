@@ -13,13 +13,19 @@
     <div id="portal-nav"></div>
     <div class="p-6 max-w-7xl mx-auto">
 
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold text-white mb-1">Agent Team</h2>
-        <p class="text-gray-500 text-sm">The crew running the operation. Live status, model configs, and job history.</p>
+      <div class="mb-6 flex items-start justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-white mb-1">Agent Team</h2>
+          <p class="text-gray-500 text-sm">The crew running the operation. Live status, model configs, and job history.</p>
+        </div>
+        <div class="flex gap-1 mt-1" id="view-toggle">
+          <button onclick="setView('full')" id="view-btn-full" class="text-xs px-3 py-1.5 rounded border border-gray-700 tf-active">Full</button>
+          <button onclick="setView('condensed')" id="view-btn-condensed" class="text-xs px-3 py-1.5 rounded border border-gray-700 tf-inactive">Condensed</button>
+        </div>
       </div>
 
       <!-- Agent Cards (dynamically rendered) -->
-      <div class="space-y-6" id="agent-cards-container"></div>
+      <div id="agent-cards-container"></div>
 
       <!-- Add Agent teaser -->
       <div class="mt-6 card p-6 border-dashed" style="border-color:#374151;">
@@ -28,67 +34,6 @@
           <div>
             <div class="text-gray-400 font-semibold mb-1">Add an Agent</div>
             <div class="text-sm">As new agents join the team they'll appear here with their own card, model config, and job history.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- System Health -->
-      <div class="mt-10 mb-8">
-        <h2 class="text-lg font-semibold text-white mb-4">System Health</h2>
-        <div class="card p-4 mb-4 flex items-center gap-3">
-          <div id="system-dot" class="w-3 h-3 rounded-full bg-gray-500"></div>
-          <span id="system-text" class="font-semibold">Checking...</span>
-          <span id="system-sub" class="text-gray-500 text-sm"></span>
-          <div class="ml-auto flex items-center gap-2">
-            <div id="gw-dot" class="w-2 h-2 rounded-full bg-gray-600"></div>
-            <span id="gw-label" class="text-xs text-gray-500">Gateway</span>
-            <span id="gw-latency" class="text-xs text-gray-700"></span>
-          </div>
-        </div>
-
-        <!-- Live Sessions -->
-        <div class="mb-6">
-          <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">Live Sessions</h3>
-          <div id="live-sessions-list" class="grid grid-cols-2 gap-3">
-            <div class="text-gray-600 text-sm">No data</div>
-          </div>
-        </div>
-
-        <!-- Cron Jobs -->
-        <div class="mb-6">
-          <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">Cron Jobs</h3>
-          <div class="card overflow-hidden">
-            <table class="w-full text-sm">
-              <thead><tr class="border-b border-gray-800">
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Job</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Schedule</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Agent</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Model</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Thinking</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Status</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Last Run</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Next</th>
-                <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase">Tokens</th>
-              </tr></thead>
-              <tbody id="cron-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Sites & Credentials & Disk -->
-        <div class="grid grid-cols-3 gap-4">
-          <div class="card p-5">
-            <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">Sites</h3>
-            <div id="sites-list" class="space-y-2"><div class="text-gray-600 text-sm">No data</div></div>
-          </div>
-          <div class="card p-5">
-            <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">Credentials</h3>
-            <div id="creds-list" class="space-y-2"><div class="text-gray-600 text-sm">No data</div></div>
-          </div>
-          <div class="card p-5">
-            <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">Disk</h3>
-            <div class="text-3xl font-bold text-white mb-2" id="disk-pct">—</div>
-            <div class="bg-gray-700 rounded-full h-2"><div id="disk-bar" class="h-2 rounded-full bg-green-500" style="width:0%"></div></div>
           </div>
         </div>
       </div>
@@ -273,7 +218,8 @@
       </div>`;
     }
 
-    // Render skeleton cards immediately
+    // Render skeleton cards immediately (view applied after initPortal)
+    document.getElementById('agent-cards-container').className = 'space-y-6';
     document.getElementById('agent-cards-container').innerHTML = AGENTS.map(buildAgentCard).join('');
 
     // ─── HELPERS ─────────────────────────────────────────────────────────────
@@ -440,62 +386,148 @@
         }
       });
 
-      // ─── System Health ────────────────────────────────────────────────────
-      const errs = crons.filter(c=>c.status==='error').length;
-      const dot = document.getElementById('system-dot');
-      if (dot) dot.className = 'w-3 h-3 rounded-full '+(errs===0?'bg-green-400':'bg-yellow-400 animate-pulse');
-      set('system-text', errs===0?'All systems nominal':`${errs} job${errs>1?'s':''} in error state`);
-      set('system-sub', errs===0?`${crons.length} cron jobs running`:'Content pipeline still flowing');
-      applyRealtimeGwState();
-
-      // Live sessions
-      const sessions = d.sessions || [];
-      const sessionsEl = document.getElementById('live-sessions-list');
-      if (sessionsEl) {
-        if (!sessions.length) { sessionsEl.innerHTML = '<div class="text-gray-600 text-sm">No active sessions</div>'; }
-        else {
-          sessionsEl.innerHTML = sessions.map(s => {
-            const barColor = s.pct >= 75 ? '#ef4444' : s.pct >= 50 ? '#facc15' : '#34d399';
-            const pctColor = s.pct >= 75 ? 'text-red-400' : s.pct >= 50 ? 'text-yellow-400' : 'text-green-400';
-            const dotColor = s.pct >= 75 ? 'bg-red-400' : s.pct >= 50 ? 'bg-yellow-400' : 'bg-green-400';
-            const status = s.pct >= 75 ? 'Reset soon' : s.pct >= 50 ? 'Getting there' : 'Healthy';
-            return `<div class="card p-4"><div class="flex items-center justify-between mb-2"><span class="text-white font-semibold text-sm">${esc(s.label)}</span><span class="${pctColor} font-semibold text-sm">${s.pct}% &mdash; <span class="inline-block w-2 h-2 rounded-full ${dotColor} mr-1"></span>${status}</span></div><div class="bg-gray-700 rounded-full h-1.5 mb-2"><div class="h-1.5 rounded-full transition-all" style="width:${s.pct}%;background:${barColor}"></div></div><div class="flex justify-between text-xs text-gray-500"><span>${Math.round(s.used/1000)}k / ${Math.round(s.limit/1000)}k tokens</span><span class="session-age" data-ts="${s.lastActiveAt||''}">${s.lastActiveAt ? timeAgo(s.lastActiveAt) : '—'}</span></div></div>`;
-          }).join('');
-        }
-      }
-
-      // Cron table
-      const agentLabel = a => { const map = {main:'Cliff',samantha:'Samantha',scout:'Scout',atlas:'Atlas'}; const cls = {main:'text-indigo-400',samantha:'text-teal-400',scout:'text-green-400',atlas:'text-orange-400'}; return `<span class="${cls[a]||'text-gray-400'} font-medium text-xs">${map[a]||a}</span>`; };
-      const statusDot = s => { const cls = s==='ok'?'text-green-400':s==='error'?'text-red-400':'text-gray-500'; return `<span class="${cls}">● ${esc(s||'idle')}</span>`; };
-      const thinkBadgeH = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m={low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v=m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
-      const fmtTokH = (t) => { if (!t) return '<span class="text-gray-700">—</span>'; const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`; };
-      const sortedCrons = [...crons].sort((a,b) => (a.nextRunMs||Infinity) - (b.nextRunMs||Infinity));
-      document.getElementById('cron-body').innerHTML = !sortedCrons.length ? '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No cron data</td></tr>' : sortedCrons.map(c => {
-        window._jobMap[c.name] = c;
-        return `<tr class="cron-row border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(c.name)}')">
-          <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(c.name||'—')}</td>
-          <td class="px-4 py-2.5 text-gray-400 text-xs">${esc(humanCron(c.schedule||'—'))}</td>
-          <td class="px-4 py-2.5 text-xs">${agentLabel(c.agent||'main')}</td>
-          <td class="px-4 py-2.5 text-xs">${modelShort(c.model)}</td>
-          <td class="px-4 py-2.5 text-xs">${thinkBadgeH(c.thinking)}</td>
-          <td class="px-4 py-2.5 text-xs">${statusDot(c.status)}</td>
-          <td class="px-4 py-2.5 text-gray-500 text-xs">${c.lastRunMs ? timeAgo(c.lastRunMs) : (c.lastRun ? timeAgo(c.lastRun) : '—')}</td>
-          <td class="px-4 py-2.5 text-gray-500 text-xs">${esc(c.nextRun||'—')}</td>
-          <td class="px-4 py-2.5 text-xs">${fmtTokH(c.lastRunTokens)}</td>
-        </tr>`;
-      }).join('');
-
-      // Sites & Creds & Disk
-      const sites = d.sites||[];
-      document.getElementById('sites-list').innerHTML = !sites.length ? '<div class="text-gray-600">No data</div>' : sites.map(s=>`<div class="flex items-center justify-between"><a href="https://${esc(s.url)}" target="_blank" class="text-gray-300 hover:text-white text-sm">${esc(s.url)}</a><span class="pill ${s.status===200?'status-ok':'status-error'}">${s.status}</span></div>`).join('');
-      const creds = d.credentials||[];
-      document.getElementById('creds-list').innerHTML = !creds.length ? '<div class="text-gray-600">No data</div>' : creds.map(c=>`<div class="flex items-center justify-between"><span class="text-gray-300 text-sm">${esc(c.name)}</span><span class="pill ${c.ok?'status-ok':'status-error'}">${c.ok?'OK':'FAIL'}</span></div>`).join('');
-      const disk = d.disk||{};
-      set('disk-pct', disk.percent ? disk.percent+'%' : '—');
-      const bar = document.getElementById('disk-bar');
-      if (bar) { bar.style.width = (disk.percent||0)+'%'; bar.className = 'h-2 rounded-full '+(disk.percent>80?'bg-red-500':'bg-green-500'); }
-
       enrichCronTokens(d);
+    }
+
+    // ─── VIEW TOGGLE ─────────────────────────────────────────────────────────
+    let _currentView = localStorage.getItem('agents-view') || 'full';
+    let _lastData = null;
+
+    function setView(v) {
+      _currentView = v;
+      localStorage.setItem('agents-view', v);
+      document.getElementById('view-btn-full').className = 'text-xs px-3 py-1.5 rounded border border-gray-700 ' + (v==='full' ? 'tf-active' : 'tf-inactive');
+      document.getElementById('view-btn-condensed').className = 'text-xs px-3 py-1.5 rounded border border-gray-700 ' + (v==='condensed' ? 'tf-active' : 'tf-inactive');
+      rebuildCards(_lastData);
+    }
+
+    function rebuildCards(d) {
+      const container = document.getElementById('agent-cards-container');
+      if (!container) return;
+      if (_currentView === 'condensed') {
+        container.className = 'grid grid-cols-2 gap-4';
+        container.innerHTML = AGENTS.map(a => buildCondensedCard(a, d)).join('') +
+          `<div class="card p-4 border-dashed flex items-center gap-3 text-gray-600" style="border-color:#374151;">
+            <div class="w-10 h-10 rounded-full bg-gray-900 border-2 border-dashed border-gray-700 flex items-center justify-center text-xl flex-shrink-0">+</div>
+            <div class="text-sm text-gray-500">Add an Agent</div>
+          </div>`;
+      } else {
+        container.className = 'space-y-6';
+        container.innerHTML = AGENTS.map(buildAgentCard).join('') +
+          `<div class="mt-6 card p-6 border-dashed" style="border-color:#374151;">
+            <div class="flex items-center gap-4 text-gray-600">
+              <div class="w-16 h-16 rounded-full bg-gray-900 border-2 border-dashed border-gray-700 flex items-center justify-center text-2xl flex-shrink-0">+</div>
+              <div><div class="text-gray-400 font-semibold mb-1">Add an Agent</div>
+              <div class="text-sm">As new agents join the team they'll appear here with their own card, model config, and job history.</div></div>
+            </div>
+          </div>`;
+        if (d) renderAgentsPage(d);
+      }
+      if (d) renderCondensedData(d);
+    }
+
+    function buildCondensedCard(agent, d) {
+      const n = agent.name.toLowerCase();
+      const avatarHtml = agent.avatar
+        ? `<img src="${agent.avatar}" alt="${agent.name}" class="w-full h-full object-cover object-top" />`
+        : `<div class="w-full h-full flex items-center justify-center text-3xl bg-gray-900">${agent.name[0]}</div>`;
+
+      const crons = (d && d.crons) ? d.crons : [];
+      const agentId = agent.id;
+      const agentJobMap_local = {};
+      crons.forEach(job => {
+        const a = job.agent || 'main';
+        if (!agentJobMap_local[a]) agentJobMap_local[a] = [];
+        agentJobMap_local[a].push(job);
+      });
+      const jobs = agentJobMap_local[agentId] || agentJobMap_local[n] || [];
+
+      const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
+
+      const jobRows = jobs.length
+        ? jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+            <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(j.name||'—')}</td>
+            <td class="px-3 py-1.5 text-gray-500 text-xs">${esc(humanCron(j.schedule||'—'))}</td>
+            <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
+            <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="4" class="px-3 py-2 text-gray-700 text-xs">No scheduled jobs</td></tr>`;
+
+      return `<div class="card overflow-hidden" id="card-condensed-${n}">
+        <div class="flex flex-row">
+          <div class="relative flex-shrink-0" style="width:100px;height:100px;">
+            ${avatarHtml}
+            <div class="absolute inset-0" style="background:linear-gradient(to right,transparent 60%,#111827 100%);"></div>
+            <div class="absolute bottom-2 left-2"><span class="pill ${agent.badgeClass}" style="font-size:0.6rem;padding:1px 6px;">${agent.badge}</span></div>
+          </div>
+          <div class="flex-1 px-4 py-3">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="text-base font-bold text-white">${agent.name}</h3>
+              <div id="${n}-c-status-dot" class="w-2 h-2 rounded-full bg-gray-600"></div>
+              <span id="${n}-c-status-label" class="text-gray-500 text-xs font-semibold uppercase tracking-wide">—</span>
+            </div>
+            <div class="flex gap-3 text-xs">
+              <span class="text-gray-500">Model: <span id="${n}-c-model" class="text-gray-300">—</span></span>
+              <span class="text-gray-500">Last job: <span id="${n}-c-last" class="text-gray-300">—</span></span>
+              <span id="${n}-c-errors" class="text-red-400 hidden"></span>
+            </div>
+          </div>
+        </div>
+        <div class="border-t border-gray-800">
+          <table class="w-full text-xs" id="${n}-c-jobs-table">
+            <tbody>${jobRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+
+    function renderCondensedData(d) {
+      if (_currentView !== 'condensed') return;
+      const crons = d.crons || [];
+      const agentJobMap = {};
+      crons.forEach(job => { const a = job.agent||'main'; if (!agentJobMap[a]) agentJobMap[a]={jobs:[],errors:0}; agentJobMap[a].jobs.push(job); if(job.status==='error') agentJobMap[a].errors++; });
+
+      AGENTS.forEach(agent => {
+        const n = agent.name.toLowerCase();
+        const agentId = agent.id;
+        const agentSessions = (d.sessions||[]).filter(s=>s.agentId===agentId);
+        const info = agentJobMap[agentId]||agentJobMap[n]||{jobs:[],errors:0};
+        const cfg = (d.agentConfigs||{})[agentId]||{};
+
+        // Model
+        const bestSession = agentSessions.sort((a,b)=>new Date(b.lastActiveAt||0)-new Date(a.lastActiveAt||0))[0]||null;
+        const model = bestSession?.model||cfg.model||'—';
+        const el = id2 => document.getElementById(`${n}-c-${id2}`);
+        if (el('model')) el('model').textContent = friendlyModel(model);
+
+        // Status
+        const warnings = info.errors > 0;
+        if (agentSessions.length > 0) {
+          if (el('status-dot')) { el('status-dot').className = warnings ? 'w-2 h-2 rounded-full bg-yellow-400' : 'w-2 h-2 rounded-full bg-green-400'; el('status-dot').style.boxShadow = warnings ? '0 0 6px #facc15' : '0 0 6px #4ade80'; }
+          if (el('status-label')) { el('status-label').textContent = warnings ? 'Warning' : 'Online'; el('status-label').className = (warnings ? 'text-yellow-400' : 'text-green-400') + ' text-xs font-semibold uppercase tracking-wide'; }
+        } else {
+          if (el('status-dot')) { el('status-dot').className = 'w-2 h-2 rounded-full bg-gray-600'; el('status-dot').style.boxShadow = ''; }
+          if (el('status-label')) { el('status-label').textContent = 'Idle'; el('status-label').className = 'text-gray-500 text-xs font-semibold uppercase tracking-wide'; }
+        }
+
+        // Last job
+        const lastRunJob = info.jobs.filter(j=>j.lastRunMs).sort((a,b)=>b.lastRunMs-a.lastRunMs)[0];
+        if (el('last')) el('last').textContent = lastRunJob ? timeAgo(lastRunJob.lastRunMs) : 'No recent runs';
+        if (el('errors')) { el('errors').classList.toggle('hidden', !warnings); if(warnings) el('errors').textContent = `Warning: ${info.errors} error${info.errors>1?'s':''}`; }
+
+        // Rebuild job rows with fresh data
+        const tbody = document.querySelector(`#card-condensed-${n} .border-t table tbody`);
+        if (tbody && info.jobs.length) {
+          const statusColor = s => s==='ok'?'text-green-400':s==='error'?'text-red-400':'text-gray-500';
+          info.jobs.forEach(j => { window._jobMap[j.name] = j; });
+          tbody.innerHTML = info.jobs.map(j=>`<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
+            <td class="px-3 py-1.5 text-gray-200 text-xs font-medium">${esc(j.name||'—')}</td>
+            <td class="px-3 py-1.5 text-gray-500 text-xs">${esc(humanCron(j.schedule||'—'))}</td>
+            <td class="px-3 py-1.5 text-xs ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
+            <td class="px-3 py-1.5 text-gray-500 text-xs">${j.lastRunMs ? timeAgo(j.lastRunMs) : '—'}</td>
+          </tr>`).join('');
+        }
+      });
     }
 
     async function enrichCronTokens(d) {
@@ -516,8 +548,14 @@
       } catch(e) { console.warn('[agents] enrich failed:', e); }
     }
 
-    initPortal('agents', renderAgentsPage).then(ok => {
-      if (ok) setupRealtime(null, () => { loadData().then(d => { if (d) renderAgentsPage(d); }); });
+    initPortal('agents', d => {
+      _lastData = d;
+      rebuildCards(d);
+      if (_currentView === 'full') renderAgentsPage(d);
+    }).then(ok => {
+      if (ok) setupRealtime(null, () => { loadData().then(d => { if (d) { _lastData = d; rebuildCards(d); if (_currentView === 'full') renderAgentsPage(d); } }); });
+      // Apply saved view after init
+      setView(_currentView);
     });
   </script>
 </body>
