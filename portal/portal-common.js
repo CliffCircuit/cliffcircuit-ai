@@ -324,6 +324,7 @@ function renderNav(activePage) {
     { id: 'dashboard', label: 'Dashboard', href: '/portal/' },
     { id: 'marketing', label: 'Marketing', href: '/portal/marketing.html' },
     { id: 'agents', label: 'Agents', href: '/portal/agents.html' },
+    { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
     { id: 'settings', label: 'Settings', href: '/portal/settings.html' },
   ];
@@ -396,6 +397,8 @@ async function loadData() {
 
     const liveSessionsPromise = fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
       .then(r => r.json()).catch(() => null);
+    const dataJsonPromise = fetch('/portal/data.json?t=' + Date.now())
+      .then(r => r.json()).catch(() => null);
 
     DATA = {
       queue: [...articleItems, ...tweetItems],
@@ -408,6 +411,14 @@ async function loadData() {
       stats: { displayTz: 'America/Los_Angeles' },
       auth: { passwordHash: null }
     };
+
+    dataJsonPromise.then(dj => {
+      if (dj && DATA) {
+        if (dj.sites)       DATA.sites       = dj.sites;
+        if (dj.credentials) DATA.credentials = dj.credentials;
+        if (dj.disk)        DATA.disk        = dj.disk;
+      }
+    });
 
     liveSessionsPromise.then(live => {
       if (live && live.sessions && DATA) {

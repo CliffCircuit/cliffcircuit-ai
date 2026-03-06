@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ideas — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+</head>
+<body class="min-h-screen">
+  <div id="portal" class="min-h-screen">
+    <div id="portal-nav"></div>
+    <div class="p-6 max-w-7xl mx-auto">
+
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-white mb-1">Ideas &amp; Backlog</h2>
+        <p class="text-gray-500 text-sm">Projects and features to build when the time is right.</p>
+      </div>
+
+      <div class="space-y-3">
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded-full">Portal</span>
+                <span class="text-xs text-gray-500">Added 2026-03-01</span>
+              </div>
+              <h3 class="text-white font-medium">Add Agent via UI</h3>
+              <p class="text-gray-400 text-sm mt-1">Provision a new agent directly from the portal — fill in name, persona, schedule, and hit a button. No terminal required. Needs a backend endpoint on the Mac mini to handle the provisioning (openclaw config, cron jobs, persona files).</p>
+            </div>
+            <span class="shrink-0 text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">Backlog</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded-full">Portal</span>
+                <span class="text-xs text-gray-500">Added 2026-03-01</span>
+              </div>
+              <h3 class="text-white font-medium">Kanban Board for Ideas &amp; Projects</h3>
+              <p class="text-gray-400 text-sm mt-1">Upgrade the Ideas tab into a lightweight Trello-style kanban board. Columns: Backlog, In Progress, Done. Draggable cards, expandable notes, and a Projects layer that groups related cards together.</p>
+            </div>
+            <span class="shrink-0 text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">Backlog</span>
+          </div>
+        </div>
+
+        <!-- SPEC: Real-Time Portal -->
+        <div class="bg-gray-900 border border-purple-800 rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs bg-purple-900 text-purple-300 px-2 py-0.5 rounded-full">Infrastructure</span>
+                <span class="text-xs text-gray-500">Spec added 2026-03-02</span>
+              </div>
+              <h3 class="text-white font-semibold text-base mb-2">Real-Time Portal — No More Refreshing</h3>
+              <p class="text-gray-400 text-sm mb-3">Every status change currently requires a page refresh. The portal should update instantly — like Slack or Linear. Root cause: JSON files as a database + cron-driven data.json regeneration pipeline. Three options evaluated: WebSockets (overkill), Server-Sent Events (DIY option), and Supabase Realtime (recommended — solves real-time AND the flat-file problem in one move).</p>
+              <div class="text-gray-200 text-sm font-semibold mb-2">Recommended: Supabase Realtime</div>
+              <p class="text-gray-400 text-xs mb-3">Managed Postgres + built-in real-time subscriptions. Change a row → every browser sees it instantly. Free tier. Replaces content-queue.json, content-schedule.json, daily-goals.json with real DB tables. Agents write rows; portal subscribes live. No more data.json generation or GitHub deploy cycle for content state.</p>
+              <div class="text-gray-200 text-sm font-semibold mb-2">Migration Path</div>
+              <div class="space-y-1 text-xs text-gray-400 mb-3">
+                <div>1. Opus specs full schema (queue, schedule, goals, agent_log)</div>
+                <div>2. Migrate existing JSON → Supabase</div>
+                <div>3. Rewrite portal with Supabase JS client + real-time subscriptions</div>
+                <div>4. Update all agents to write to Supabase instead of JSON files</div>
+                <div>5. Retire data.json pipeline entirely</div>
+              </div>
+            </div>
+            <span class="shrink-0 text-xs bg-green-900 text-green-300 px-2 py-0.5 rounded-full">Next Up</span>
+          </div>
+        </div>
+
+        <!-- SPEC: Database + API -->
+        <div class="bg-gray-900 border border-red-800 rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs bg-red-900 text-red-300 px-2 py-0.5 rounded-full">Infrastructure</span>
+                <span class="text-xs text-gray-500">Spec added 2026-03-02</span>
+              </div>
+              <h3 class="text-white font-semibold text-base mb-2">Replace JSON File Pipeline with Real Database + API</h3>
+              <p class="text-gray-400 text-sm mb-3">The current content pipeline uses flat JSON files as its database. Every status change requires: edit JSON → run generate-data.js → git commit + push → wait for Cloudflare deploy → refresh browser. That's 3–4 minutes for what should be instant. It's fragile, has no audit trail, and concurrent writes can corrupt the file.</p>
+              <button id="spec-db-btn" onclick="toggleSpec('spec-db')" class="text-xs text-blue-400 hover:text-blue-300 mb-3 font-medium">Show spec</button>
+              <div id="spec-db" class="hidden">
+                <div class="text-gray-200 text-sm font-semibold mb-2">Proposed Architecture</div>
+                <div class="space-y-2 mb-4">
+                  <div class="bg-gray-800 rounded-lg p-3"><div class="text-gray-200 text-xs font-semibold mb-1">Database</div><p class="text-gray-400 text-xs">SQLite on Mac Mini (or Cloudflare D1). Single source of truth for all content items, statuses, scheduled times, tweet IDs, audit history.</p></div>
+                  <div class="bg-gray-800 rounded-lg p-3"><div class="text-gray-200 text-xs font-semibold mb-1">API Layer</div><p class="text-gray-400 text-xs">Node/Express on Mac Mini (port 3001), exposed via Cloudflare Tunnel. Endpoints: GET /queue, PATCH /items/:id/status, GET /published, POST /items.</p></div>
+                  <div class="bg-gray-800 rounded-lg p-3"><div class="text-gray-200 text-xs font-semibold mb-1">Portal</div><p class="text-gray-400 text-xs">Stays static HTML. Swap data.json fetches for live API calls. Status changes write directly to DB — portal reflects instantly. No deploy cycle for content state changes.</p></div>
+                  <div class="bg-gray-800 rounded-lg p-3"><div class="text-gray-200 text-xs font-semibold mb-1">Agents</div><p class="text-gray-400 text-xs">Samantha writes drafts to DB via API. Publish cron reads approved items from DB. All agents share the same API — no file conflicts.</p></div>
+                  <div class="bg-gray-800 rounded-lg p-3"><div class="text-gray-200 text-xs font-semibold mb-1">Audit Trail</div><p class="text-gray-400 text-xs">Every status change logged with timestamp, actor, and reason. Full history — no more "how did this get back in the queue?"</p></div>
+                </div>
+                <div class="text-gray-200 text-sm font-semibold mb-2">Build Estimate</div>
+                <div class="grid grid-cols-4 gap-2 text-xs mb-3">
+                  <div class="bg-gray-800 rounded p-2"><div class="text-gray-400">Schema</div><div class="text-white font-semibold">1h</div></div>
+                  <div class="bg-gray-800 rounded p-2"><div class="text-gray-400">API server</div><div class="text-white font-semibold">2h</div></div>
+                  <div class="bg-gray-800 rounded p-2"><div class="text-gray-400">Portal</div><div class="text-white font-semibold">1h</div></div>
+                  <div class="bg-gray-800 rounded p-2"><div class="text-gray-400">Migration</div><div class="text-white font-semibold">1.5h</div></div>
+                </div>
+                <p class="text-gray-500 text-xs">~5–6 hours total. One focused session.</p>
+              </div>
+            </div>
+            <span class="shrink-0 text-xs bg-red-900 text-red-300 px-2 py-0.5 rounded-full font-semibold">Priority</span>
+          </div>
+        </div>
+
+        <!-- SPEC: Documentation Repo -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs bg-purple-900 text-purple-300 px-2 py-0.5 rounded-full">Documentation</span>
+                <span class="text-xs text-gray-500">Spec added 2026-03-02</span>
+              </div>
+              <h3 class="text-white font-medium">Documentation Repository + Spec System</h3>
+              <button id="spec-doc-btn" onclick="toggleSpec('spec-doc')" class="text-xs text-blue-400 hover:text-blue-300 mb-2 mt-1 font-medium">Show spec</button>
+              <div id="spec-doc" class="hidden">
+                <p class="text-gray-400 text-sm mb-2">Dedicated GitHub repo for architecture docs and decision records. Use this Ideas tab as the visual spec board — full write-ups live here before we build. When a spec is approved, it moves to "In Progress" with a link to the implementation.</p>
+                <p class="text-gray-400 text-sm">Stack: Markdown files in GitHub + this Ideas tab as the visual layer. Every major system gets a SPEC.md before we touch code.</p>
+              </div>
+            </div>
+            <span class="shrink-0 text-xs bg-yellow-900 text-yellow-300 px-2 py-0.5 rounded-full">Backlog</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/portal/portal-common.js"></script>
+  <script>
+    function toggleSpec(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('hidden');
+      const btn = document.getElementById(id + '-btn');
+      if (btn) btn.textContent = el.classList.contains('hidden') ? 'Show spec' : 'Hide spec';
+    }
+    initPortal('ideas', () => {});
+  </script>
+</body>
+</html>
