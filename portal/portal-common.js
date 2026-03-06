@@ -61,6 +61,8 @@ const DIRECT_DISPLAY = {
   'main:main':         'Web UI (Heartbeat+Chat)',
   'samantha:telegram': 'Samantha (Telegram DM)',
   'scout:telegram':    'Scout (Telegram DM)',
+  'atlas:telegram':    'Atlas (Telegram DM)',
+  'atlas:main':        'Atlas (Web UI)',
 };
 
 const AGENT_DISPLAY = {
@@ -238,7 +240,7 @@ function cronTaskFromKey(key) {
 }
 
 function sessionKeyToFriendly(key, sessionId) {
-  if (!key) return sessionId?.slice(0,12) || '—';
+  if (!key) return 'Subagent Run';
   if (key.startsWith('cron:')) {
     const m = key.match(/^cron:([^:]+)/);
     if (m && CRON_DISPLAY[m[1]]) return CRON_DISPLAY[m[1]];
@@ -249,8 +251,14 @@ function sessionKeyToFriendly(key, sessionId) {
     const taskName = cronTaskFromKey(key);
     if (taskName) return CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ');
     const agentId = agentCronMatch[1];
-    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout' }[agentId] || agentId;
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[agentId] || agentId;
     return agentLabel + ' Cron';
+  }
+  // Group chat sessions: agent:X:telegram:group:CHAT_ID
+  const groupMatch = key.match(/^agent:([^:]+):([^:]+):group:/);
+  if (groupMatch) {
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[groupMatch[1]] || groupMatch[1];
+    return agentLabel + ' (Chat Hub)';
   }
   if (key === 'agent:main:main') return DIRECT_DISPLAY['main:main'];
   const directMatch = key.match(/^agent:([^:]+):([^:]+)(?::direct)?:/);
