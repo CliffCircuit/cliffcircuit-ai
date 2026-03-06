@@ -32,7 +32,7 @@ const CRON_UUID_MAP = {
   'b2055796-4f19-4200-b970-f40c7212e649': 'samantha-writer',
   '50e0a780-c5ae-4d24-bf14-714e535de315': 'atlas-build',
   'befa343c-3f24-40bf-97ab-102954820866': 'atlas-refactor',
-  'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
+  '47cfaf3a-ca98-4eb5-9851-b12ee18641fa': 'atlas-debug',
   'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
 };
 
@@ -60,9 +60,9 @@ const CRON_DISPLAY = {
   'nightly-git-backup':      'Nightly Git Backup',
   'morning-check-in':        'Morning Check-In',
   'weekly-report':           'Weekly Report',
-  'atlas-build':             'Atlas Build',
-  'atlas-refactor':          'Atlas Refactor',
-  'atlas-debug':             'Atlas Debug',
+  'atlas-build':             'Build',
+  'atlas-refactor':          'Refactor',
+  'atlas-debug':             'Debug',
 };
 
 const DIRECT_DISPLAY = {
