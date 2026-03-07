@@ -316,9 +316,12 @@
     const _sessionStore = {};
     const _expandedSessions = new Set();
     function _renderRunsCell(count, storeKey, sessions) {
-      if (!sessions || sessions.length <= 1) return String(count);
-      _sessionStore[storeKey] = sessions;
-      return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;" title="Show individual sessions">+</button></span>`;
+      const hasExpand = sessions && sessions.length > 1;
+      if (hasExpand) _sessionStore[storeKey] = sessions;
+      const btnStyle = hasExpand
+        ? 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;'
+        : 'background:none;border:1px solid transparent;border-radius:4px;color:transparent;font-size:12px;padding:1px 5px;line-height:1;pointer-events:none;';
+      return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button ${hasExpand ? `onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions"` : ''} style="${btnStyle}">+</button></span>`;
     }
     function _toggleSessionExpand(storeKey, btn) {
       // Find the parent TR
