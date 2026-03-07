@@ -767,61 +767,61 @@
     // Task tooltip descriptions — canonical database keyed by display name
     const _taskTooltips = {
       // Direct / interactive sessions
-      'Tim (Telegram DM)':          'Live conversation with Tim via Telegram',
-      'Tim (Signal DM)':            'Live conversation with Tim via Signal',
-      'Web UI (Heartbeat+Chat)':    'Cliff main session — handles heartbeats and web dashboard chat',
-      'Atlas (Telegram DM)':        'Atlas coding agent responding to Tim in Telegram',
-      'Atlas (Web UI)':             'Atlas session via the web dashboard',
-      'Samantha (Telegram DM)':     'Samantha responding to Tim in Telegram',
-      'Scout (Telegram DM)':        'Scout responding to Tim in Telegram',
+      'Tim (Telegram DM)':          'A live conversation between Tim and this agent in Telegram DMs. Cost depends on how long the conversation runs and how much context accumulates.',
+      'Tim (Signal DM)':            'A live conversation between Tim and this agent via Signal.',
+      'Web UI (Heartbeat+Chat)':    'Cliff\'s always-on session that handles the web dashboard and any background heartbeat checks. Can accumulate cost if left running for many hours.',
+      'Atlas (Telegram DM)':        'Tim chatting directly with Atlas (the coding agent) in Telegram.',
+      'Atlas (Web UI)':             'Atlas session started from the web dashboard.',
+      'Samantha (Telegram DM)':     'Tim chatting directly with Samantha (the content writer) in Telegram.',
+      'Scout (Telegram DM)':        'Tim chatting directly with Scout (the monitoring agent) in Telegram.',
 
       // Group chat
-      'Cliff (Chat Hub)':           'Cliff in the multi-agent Telegram group',
-      'Samantha (Chat Hub)':        'Samantha in the multi-agent Telegram group',
-      'Scout (Chat Hub)':           'Scout in the multi-agent Telegram group',
-      'Atlas (Chat Hub)':           'Atlas in the multi-agent Telegram group',
+      'Cliff (Chat Hub)':           'Cliff participating in the multi-agent Telegram group chat where all agents can talk to each other and Tim.',
+      'Samantha (Chat Hub)':        'Samantha participating in the multi-agent Telegram group chat.',
+      'Scout (Chat Hub)':           'Scout participating in the multi-agent Telegram group chat.',
+      'Atlas (Chat Hub)':           'Atlas participating in the multi-agent Telegram group chat.',
 
       // Content pipeline — Samantha
-      'Article Writer':             'Samantha drafts new blog articles with hero images',
-      'Article Draft':              'Samantha drafts new blog articles with hero images',
-      'Publish':                    'Publishes scheduled articles and tweets to live sites',
-      'Cliff Tweet':                'Samantha generates tweets posted from the Cliff account',
-      'Tim Tweet':                  'Samantha generates tweets posted from Tim account',
-      'Media / Images':             'Generates hero images and media assets for content',
-      'Recycle Writer':             'Samantha rewrites previously rejected articles',
-      'Recycle Media':              'Regenerates images for recycled articles',
+      'Article Writer':             'Samantha picks an industry from the Felix Playbook, researches pain points, and writes a full blog article with SEO metadata. Currently parked until Tim reviews the schedule.',
+      'Article Draft':              'Samantha picks an industry from the Felix Playbook, researches pain points, and writes a full blog article with SEO metadata. Currently parked until Tim reviews the schedule.',
+      'Publish':                    'Takes approved articles and tweets from the queue and pushes them live — deploys blog posts to the website and posts tweets to Twitter/X. Currently parked.',
+      'Cliff Tweet':                'Samantha writes tweets in Cliff\'s voice to post from the @CliffCircuit Twitter account. Topics come from the content queue.',
+      'Tim Tweet':                  'Samantha writes tweets in Tim\'s voice to post from Tim\'s Twitter account. Cross-promotes Cliff and the blog.',
+      'Media / Images':             'Generates DALL-E 3 hero images in the isometric 3D diorama style for blog articles. Runs after an article is written, before it enters the queue.',
+      'Recycle Writer':             'When an article gets rejected during review, this picks it back up and rewrites it — fixes the title, excerpt, or body based on the rejection reason. One article per run.',
+      'Recycle Media':              'Regenerates hero images for articles that were rejected and rewritten by the recycle writer.',
 
       // Content pipeline — Cliff
-      'Article Review':             'Cliff reviews drafted articles — approves, rejects, or requests changes',
-      'Scheduler':                  'Assigns publish times to approved content',
+      'Article Review':             'Cliff reads drafted articles and decides: approve, reject, or request changes. Acts as quality control before anything gets published.',
+      'Scheduler':                  'The central pipeline brain — reviews drafts, assigns publish times to approved content, and triggers publishing. Runs every 30 minutes to keep the content pipeline moving automatically.',
 
       // Infrastructure — Scout
-      'Portal Refresh':             'Regenerates portal data.json and syncs to GitHub',
-      'Social Monitoring':          'Monitors Twitter mentions, followers, and engagement',
-      'GitHub Monitoring':          'Watches GitHub repos for new issues, PRs, and activity',
+      'Portal Refresh':             'Scout rebuilds the portal\'s data file with the latest content queue, Twitter stats, site health, and cron info, then pushes to GitHub so the dashboard stays current. Runs every few minutes.',
+      'Social Monitoring':          'Monitors Twitter/X for mentions of @CliffCircuit and @timharris707, tracks follower counts, and flags any notable engagement.',
+      'GitHub Monitoring':          'Watches the GitHub repos for new issues, pull requests, or unexpected activity.',
 
       // Infrastructure — Cliff
-      'Pipeline Health':            'Checks cron errors, queue backlog, website status, and credentials',
-      'Morning Check-In':           'Daily morning briefing — weather, calendar, pipeline status',
-      'Evening Check':              'End-of-day summary and overnight task queue',
-      'Weekly Report':              'Weekly rollup of content published, costs, and metrics',
-      'Daily Cost Report':          'Summarizes token usage and API costs for the day',
-      'Nightly Extraction':         'Overnight data extraction and processing jobs',
-      'Nightly Git Backup':         'Automated git backup of workspace and config files',
+      'Pipeline Health':            'Every 2 hours during business hours — verifies all cron jobs are healthy, both websites are responding, the content queue isn\'t stuck, Twitter credentials work, and disk space is fine.',
+      'Morning Check-In':           'Good morning briefing sent to Tim via Telegram. Covers today\'s calendar, urgent emails, weather, and what the agents did overnight.',
+      'Evening Check':              'End-of-day review — what got done today, anything left unfinished, and notes for tomorrow.',
+      'Weekly Report':              'Once-a-week executive summary — content published, follower growth, site traffic, API costs, cron health, and key decisions made during the week.',
+      'Daily Cost Report':          'Nightly summary of token usage and API costs across all agents, broken down by session type. Sent to Tim via Telegram.',
+      'Nightly Extraction':         'Overnight data extraction and processing tasks.',
+      'Nightly Git Backup':         'Runs overnight — commits all changed workspace files to GitHub so nothing is lost between sessions. A safety net in case something goes wrong.',
 
       // Atlas coding
-      'Build':                      'Atlas builds new features or pages from scratch',
-      'Refactor':                   'Atlas restructures existing code for clarity or performance',
-      'Debug':                      'Atlas investigates and fixes bugs',
+      'Build':                      'Atlas coding agent building a new feature, page, or component from scratch. Triggered on-demand by Cliff when Tim requests something built. Cost varies by task complexity.',
+      'Refactor':                   'Atlas restructuring or cleaning up existing code without changing what it does. Triggered on-demand.',
+      'Debug':                      'Atlas investigating and fixing a bug. Triggered on-demand when something is broken.',
 
       // Subagent / misc
-      'Cliff (Subagent Run)':       'Cliff spawned a sub-agent for an isolated task',
-      'Samantha (Subagent Run)':    'Samantha spawned a sub-agent for an isolated task',
-      'Scout (Subagent Run)':       'Scout spawned a sub-agent for an isolated task',
-      'Atlas (Subagent Run)':       'Atlas spawned a sub-agent for an isolated task',
-      'Heartbeat':                  'Scheduled health poll — checks inbox, runs lightweight tasks',
-      'Live Sessions Refresh':      'Snapshots active sessions for the portal live-sessions display',
-      'Session Previews Refresh':   'Captures session task/response previews for portal detail panels',
+      'Cliff (Subagent Run)':       'Cliff spawned a short-lived helper session for an isolated task — like checking a file or running a quick script.',
+      'Samantha (Subagent Run)':    'Samantha spawned a short-lived helper session for an isolated task.',
+      'Scout (Subagent Run)':       'Scout spawned a short-lived helper session for an isolated task.',
+      'Atlas (Subagent Run)':       'Atlas spawned a short-lived helper session for an isolated task.',
+      'Heartbeat':                  'Periodic health poll — checks the agent inbox for messages, verifies systems are running, and handles lightweight background tasks.',
+      'Live Sessions Refresh':      'Every 5 minutes, checks which AI sessions are currently running and writes the results to a file the portal reads. This is how the Agents page knows who\'s online and what they\'re doing.',
+      'Session Previews Refresh':   'Every 10 minutes, grabs the task description and latest response from each recent session so the portal can show what each session was working on when you click into it.',
     };
     const _getTaskTooltip = name => _taskTooltips[name] || null;
 
