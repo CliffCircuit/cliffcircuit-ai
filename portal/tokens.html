@@ -318,7 +318,7 @@
     function _renderRunsCell(count, storeKey, sessions) {
       if (!sessions || sessions.length <= 1) return String(count);
       _sessionStore[storeKey] = sessions;
-      return `<span style="position:relative;">${count}<button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" style="position:absolute;top:-2px;right:-16px;background:none;border:1px solid #4b5563;border-radius:3px;color:#9ca3af;cursor:pointer;font-size:9px;padding:0 3px;line-height:1.2;" title="Show individual sessions">+</button></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 4px;line-height:1.4;" title="Show individual sessions">+</button></span>`;
     }
     function _toggleSessionExpand(storeKey, btn) {
       // Find the parent TR
