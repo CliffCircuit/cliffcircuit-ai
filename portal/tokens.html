@@ -226,17 +226,12 @@
         </table>
       </div>
 
-      <div class="card p-5 mb-8">
-        <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
-        <div id="tok-insights" class="space-y-3 text-sm text-gray-500">Loading...</div>
-      </div>
-
       <!-- Live Sessions (from openclaw session stores) -->
       <div id="live-sessions-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
             <h3 class="text-sm font-semibold text-white">Live Sessions</h3>
-            <p class="text-xs text-gray-600 mt-0.5">Currently active sessions across all agents — sorted oldest first to catch long-running sessions</p>
+            <p class="text-xs text-gray-600 mt-0.5">Active sessions sorted by length — catch long-running sessions before they become expensive</p>
           </div>
           <div class="flex items-center gap-2">
             <span id="live-updated" class="text-xs text-gray-600">Loading...</span>
@@ -248,10 +243,16 @@
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
             <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Context</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Age</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session Length</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
           </tr></thead>
-          <tbody id="live-sess-body"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+          <tbody id="live-sess-body"><tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
+      </div>
+
+      <div class="card p-5 mb-8">
+        <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
+        <div id="tok-insights" class="space-y-3 text-sm text-gray-500">Loading...</div>
       </div>
 
     </div>
@@ -810,7 +811,7 @@
 
         const sessions = data.sessions || [];
         if (sessions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No active sessions</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">No active sessions</td></tr>';
           return;
         }
 
@@ -823,6 +824,7 @@
           const friendlyKey = typeof sessionKeyToFriendly === 'function' ? sessionKeyToFriendly(s.key, '') : s.key;
           const ctxBarCls = s.ctxPct >= 75 ? 'bg-red-500' : s.ctxPct >= 50 ? 'bg-yellow-500' : 'bg-green-500';
           const ctxTextCls = s.ctxPct >= 75 ? 'text-red-400' : s.ctxPct >= 50 ? 'text-yellow-400' : 'text-gray-300';
+          const lengthCls = (s.sessionLengthMs||0) > 14400000 ? 'text-red-400 font-semibold' : (s.sessionLengthMs||0) > 3600000 ? 'text-yellow-400' : 'text-gray-300';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
             <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyKey)}</td>
             <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aName}</span></td>
@@ -833,13 +835,14 @@
                 <div class="${ctxBarCls} h-1 rounded-full" style="width:${Math.min(s.ctxPct, 100)}%"></div>
               </div>
             </td>
-            <td class="px-4 py-1.5 text-right text-xs text-gray-400">${s.age}</td>
+            <td class="px-4 py-1.5 text-right text-xs ${lengthCls}">${s.sessionLength || '—'}</td>
+            <td class="px-4 py-1.5 text-right text-xs text-gray-400">${s.lastActivity || '—'}</td>
           </tr>`;
         }).join('');
       } catch (e) {
         // Silently fail — file may not exist yet
         const tbody = document.getElementById('live-sess-body');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Live session data not available</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600">Live session data not available</td></tr>';
       }
     }
 
