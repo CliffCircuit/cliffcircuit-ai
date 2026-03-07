@@ -79,7 +79,7 @@
     }
 
     // A job is "parked" if its next run is more than 1 year away (far-future placeholder)
-    const TWO_YEARS_MS = 2 * 365.25 * 24 * 60 * 60 * 1000;
+    const TWO_YEARS_MS = 180 * 24 * 60 * 60 * 1000; // 6 months — catches "parked" far-future crons
     function isParked(j) {
       return j.nextRunMs && (j.nextRunMs - Date.now()) > TWO_YEARS_MS;
     }
@@ -398,9 +398,9 @@
           const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
           const fmtTok = (t, j) => {
             if (!t) return '<span class="text-gray-700">—</span>';
-            if (j && j.lastRunInputTokens && j.lastRunOutputTokens) {
-              const inK = (j.lastRunInputTokens/1000).toFixed(1);
-              const outK = (j.lastRunOutputTokens/1000).toFixed(1);
+            if (j && (j.lastRunInputTokens != null || j.lastRunOutputTokens != null)) {
+              const inK = ((j.lastRunInputTokens||0)/1000).toFixed(1);
+              const outK = ((j.lastRunOutputTokens||0)/1000).toFixed(1);
               const c = t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400';
               return `<span class="${c} font-medium">${inK}K / ${outK}K</span>`;
             }
@@ -577,10 +577,10 @@
         // Fetch both cron:* sessions (main agent) and agent:*:cron:* sessions (other agents)
         const [res1, res2] = await Promise.all([
           _sb.from('session_snapshots')
-            .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+            .select('session_key,agent_id,model,input_tokens,output_tokens,cache_read,cache_write,total_tokens,cost_total_usd,duration_ms,last_seen_at')
             .like('session_key', 'cron:%').order('last_seen_at', { ascending: false }).limit(500),
           _sb.from('session_snapshots')
-            .select('session_key,agent_id,model,input_tokens,output_tokens,total_tokens,cost_total_usd,duration_ms,last_seen_at')
+            .select('session_key,agent_id,model,input_tokens,output_tokens,cache_read,cache_write,total_tokens,cost_total_usd,duration_ms,last_seen_at')
             .like('session_key', 'agent:%:cron:%').order('last_seen_at', { ascending: false }).limit(500)
         ]);
         const allRows = [...(res1.data||[]), ...(res2.data||[])];
@@ -611,7 +611,7 @@
           const snap = tokenMap[c.name];
           if (snap) {
             c.lastRunTokens = snap.total_tokens;
-            c.lastRunInputTokens = snap.input_tokens;
+            c.lastRunInputTokens = (snap.input_tokens||0) + (snap.cache_read||0) + (snap.cache_write||0);
             c.lastRunOutputTokens = snap.output_tokens;
             c.lastDurationMs = snap.duration_ms;
             c.lastRunModel = snap.model;
