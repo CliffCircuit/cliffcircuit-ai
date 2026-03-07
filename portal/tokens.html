@@ -181,6 +181,7 @@
           <div class="cost-view-switcher">
             <button class="cost-view-btn cost-view-active" data-view="agent" onclick="setCostChartView('agent')">By Agent</button>
             <button class="cost-view-btn" data-view="model" onclick="setCostChartView('model')">By Model</button>
+            <button class="cost-view-btn" data-view="task" onclick="setCostChartView('task')">By Task</button>
           </div>
           <div id="cost-chart-legend" class="cost-chart-legend"></div>
         </div>
@@ -292,7 +293,7 @@
     window._taskAgentMap = {};
     window._costChartView = 'agent';  // default: stacked by agent over time
     window._costChartItems = [];     // cached items for re-render on view switch
-    window._costChartHidden = { agent: new Set(), model: new Set() }; // legend toggle state per view
+    window._costChartHidden = { agent: new Set(), model: new Set(), task: new Set() }; // legend toggle state per view
 
     // ── Local helpers (match old page exactly) ────────────────────────
     const _fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
@@ -889,7 +890,7 @@
     };
     const _agentNames = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
     // Color palette for models (assigned dynamically, consistent per render)
-    const _modelColorPalette = ['#6366f1','#14b8a6','#22c55e','#f97316','#a855f7','#ec4899','#eab308','#06b6d4','#f43f5e','#84cc16'];
+    const _modelColorPalette = ['#6366f1','#14b8a6','#22c55e','#f97316','#a855f7','#ec4899','#eab308','#06b6d4','#f43f5e','#84cc16','#8b5cf6','#0ea5e9','#d946ef','#f59e0b','#10b981','#ef4444','#3b82f6','#78716c','#fb923c','#a3e635'];
     const _defaultSegmentColor = '#6b7280';
 
     function setCostChartView(view) {
@@ -948,7 +949,7 @@
       const view = window._costChartView || 'agent';
       const titleEl = document.getElementById('cost-chart-title');
       if (titleEl) {
-        const titles = { agent: 'Cost Over Time \u2014 By Agent', model: 'Cost Over Time \u2014 By Model' };
+        const titles = { agent: 'Cost Over Time \u2014 By Agent', model: 'Cost Over Time \u2014 By Model', task: 'Cost Over Time \u2014 By Task' };
         titleEl.textContent = titles[view] || 'Cost Over Time';
       }
       _renderStackedCostChart(items, view);
@@ -987,6 +988,8 @@
         if (mode === 'agent') {
           const raw = s.agent_type || s.agent_id || 'unknown';
           segKey = (raw === 'main') ? 'cliff' : raw;
+        } else if (mode === 'task') {
+          segKey = s.display_name || s.task_name || 'Unknown';
         } else {
           segKey = typeof friendlyModel === 'function' ? friendlyModel(s.model) : (s.model || 'Unknown');
         }
@@ -1025,6 +1028,7 @@
       if (mode === 'agent') {
         sortedSegKeys.forEach(k => { colorMap[k] = _agentColors[k] || _defaultSegmentColor; });
       } else {
+        // Both 'model' and 'task' modes use dynamically assigned colors
         sortedSegKeys.forEach((k, i) => { colorMap[k] = _modelColorPalette[i % _modelColorPalette.length]; });
       }
 
@@ -1065,9 +1069,9 @@
         const tooltipLines = segs.map(seg => {
           const name = mode === 'agent' ? (_agentNames[seg.key] || seg.key) : seg.key;
           const color = colorMap[seg.key];
-          return `<div style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></span><span>${esc(name)}</span><span style="color:#facc15;font-weight:600;margin-left:auto;padding-left:12px;">$${seg.cost.toFixed(4)}</span></div>`;
+          return `<div style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></span><span>${esc(name)}</span><span style="color:#facc15;font-weight:600;margin-left:auto;padding-left:12px;">$${seg.cost.toFixed(2)}</span></div>`;
         }).join('');
-        const tooltipTotal = `<div style="border-top:1px solid #374151;margin-top:6px;padding-top:6px;font-weight:700;color:#fff;display:flex;justify-content:space-between;"><span>Total</span><span style="color:#facc15;">$${totalCost.toFixed(4)}</span></div>`;
+        const tooltipTotal = `<div style="border-top:1px solid #374151;margin-top:6px;padding-top:6px;font-weight:700;color:#fff;display:flex;justify-content:space-between;"><span>Total</span><span style="color:#facc15;">$${totalCost.toFixed(2)}</span></div>`;
 
         return `<div class="cost-bar-col">
           <div class="cost-bar-tooltip">
@@ -1086,7 +1090,7 @@
       // 7. Render interactive legend
       if (legendEl) {
         legendEl.innerHTML = sortedSegKeys.map(sk => {
-          const name = mode === 'agent' ? (_agentNames[sk] || sk) : sk;
+          const name = mode === 'agent' ? (_agentNames[sk] || sk) : sk; // task and model modes use the key directly
           const color = colorMap[sk];
           const isHidden = hiddenSet.has(sk);
           const hiddenCls = isHidden ? ' cost-legend-hidden' : '';
