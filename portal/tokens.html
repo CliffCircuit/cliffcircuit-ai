@@ -20,15 +20,16 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     /* Cost Bar Chart — Stacked */
-    .cost-chart-wrap { padding: 24px 20px 20px; border-top: 1px solid #1f2937; }
+    .cost-chart-wrap { padding: 24px 20px 20px; border-top: 1px solid #1f2937; overflow: visible; }
     .cost-chart-title { font-size: 12px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .cost-chart-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, #374151 0%, transparent 100%); }
-    .cost-chart-container { position: relative; }
+    .cost-chart-range-label { font-size: 11px; color: #4b5563; margin-bottom: 12px; margin-top: -10px; }
+    .cost-chart-container { position: relative; overflow: visible; }
     .cost-chart-grid { position: absolute; top: 0; left: 0; right: 0; height: 200px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; z-index: 0; }
     .cost-chart-gridline { display: flex; align-items: center; gap: 8px; }
     .cost-chart-gridline-val { font-size: 10px; color: #4b5563; min-width: 48px; text-align: right; }
     .cost-chart-gridline-line { flex: 1; height: 1px; background: #1f2937; }
-    .cost-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding: 0 12px 0 60px; position: relative; z-index: 1; }
+    .cost-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding: 0 24px 0 60px; position: relative; z-index: 1; overflow: visible; }
     .cost-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; position: relative; max-width: 120px; }
     .cost-stacked-bar { width: 100%; max-width: 72px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; min-height: 4px; border-radius: 6px 6px 3px 3px; overflow: hidden; transform-origin: bottom; animation: costBarGrow 0.7s cubic-bezier(0.22,1,0.36,1) forwards; transform: scaleY(0); }
     .cost-stacked-segment { width: 100%; transition: filter 0.2s ease; }
@@ -201,6 +202,7 @@
         <!-- Cost Bar Chart (stacked over time) -->
         <div id="cost-bar-chart-wrap" class="cost-chart-wrap" style="display:none;">
           <div id="cost-chart-title" class="cost-chart-title">Cost Over Time — By Agent</div>
+          <div id="cost-chart-range-label" class="cost-chart-range-label"></div>
           <div id="cost-bar-chart" class="cost-chart"></div>
           <div class="cost-view-switcher">
             <button class="cost-view-btn cost-view-active" data-view="agent" onclick="setCostChartView('agent')">By Agent</button>
@@ -634,7 +636,19 @@
       const respEl = document.querySelector('#sdp-response-' + CSS.escape(sid) + ' .sdp-text');
       if (!taskEl || !respEl) return;
 
-      // Strategy 1: Try session-previews.json (static file, fast and reliable)
+      // Strategy 1: Try atlas_jobs table in Supabase (most reliable)
+      try {
+        const { data, error } = await _sb.from('atlas_jobs')
+          .select('task_prompt,response_summary')
+          .eq('session_id', sid)
+          .limit(1);
+        if (!error && data && data.length > 0) {
+          _applyPreview(taskEl, respEl, data[0].task_prompt, data[0].response_summary);
+          return;
+        }
+      } catch(e) { /* continue to other strategies */ }
+
+      // Strategy 2: Try session-previews.json (static file, fast and reliable)
       try {
         const previews = await _loadSessionPreviews();
         if (previews) {
@@ -646,7 +660,7 @@
         }
       } catch(e) { /* continue to gateway */ }
 
-      // Strategy 2: Try gateway WebSocket sessions.preview (requires auth)
+      // Strategy 3: Try gateway WebSocket sessions.preview (requires auth)
       try {
         const result = await _gwRequest('sessions.preview', { keys: [sessionKey], limit: 20, maxChars: 2000 });
         const preview = result?.previews?.[0];
@@ -659,13 +673,25 @@
         }
       } catch(e) { /* gateway unavailable */ }
 
-      // No preview data available
-      taskEl.textContent = 'Preview not available for this session';
-      taskEl.classList.remove('sdp-loading');
-      taskEl.classList.add('sdp-empty');
-      respEl.textContent = 'Session content is refreshed periodically — check back shortly';
-      respEl.classList.remove('sdp-loading');
-      respEl.classList.add('sdp-empty');
+      // No preview data available — check if session is from before atlas_jobs existed
+      const rawRow = _sessionDataMap[sid]?._raw;
+      const sessionDate = rawRow?.first_seen_at ? new Date(rawRow.first_seen_at) : null;
+      const cutoffDate = new Date('2026-03-07T00:00:00');
+      if (sessionDate && sessionDate < cutoffDate) {
+        taskEl.textContent = 'Task details not available for sessions before March 7, 2026';
+        taskEl.classList.remove('sdp-loading');
+        taskEl.classList.add('sdp-empty');
+        respEl.textContent = '';
+        respEl.classList.remove('sdp-loading');
+        respEl.classList.add('sdp-empty');
+      } else {
+        taskEl.textContent = 'Preview not available for this session';
+        taskEl.classList.remove('sdp-loading');
+        taskEl.classList.add('sdp-empty');
+        respEl.textContent = 'Session content is refreshed periodically — check back shortly';
+        respEl.classList.remove('sdp-loading');
+        respEl.classList.add('sdp-empty');
+      }
     }
 
     const _localModelPricing = m => {

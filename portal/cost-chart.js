@@ -77,6 +77,8 @@ function _getTimeBuckets(range) {
   return 'daily';
 }
 
+const _rangeLabels = { '1h': 'Last 1 Hour', '24h': 'Last 24 Hours', 'today': 'Today', 'yesterday': 'Yesterday', '7d': 'Last 7 Days', 'week': 'This Week', '30d': 'Last 30 Days', 'month': 'This Month' };
+
 function renderCostBarChart(items) {
   window._costChartItems = items;
   const view = window._costChartView || 'agent';
@@ -84,6 +86,12 @@ function renderCostBarChart(items) {
   if (titleEl) {
     const titles = { agent: 'Cost Over Time \u2014 By Agent', model: 'Cost Over Time \u2014 By Model', task: 'Cost Over Time \u2014 By Task' };
     titleEl.textContent = titles[view] || 'Cost Over Time';
+  }
+  // Update active time range label
+  const rangeLabelEl = document.getElementById('cost-chart-range-label');
+  if (rangeLabelEl) {
+    const range = window._globalRange || 'today';
+    rangeLabelEl.textContent = _rangeLabels[range] || range;
   }
   _renderStackedCostChart(items, view);
 }
