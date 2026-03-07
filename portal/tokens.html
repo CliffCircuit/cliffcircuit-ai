@@ -112,28 +112,13 @@
       <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-semibold text-white">Agent Sessions — Summary</h3>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions (Summary)</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — sessions, cost, and tokens per job type</p>
           </div>
           <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
         <!-- Dynamic agent portrait cards -->
         <div id="summary-agent-portraits" class="border-b border-gray-800"></div>
-        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="grp-sub-runs" class="text-2xl font-bold text-white">&mdash;</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
-            <div id="grp-sub-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="grp-sub-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
-            <div id="grp-sub-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
-          </div>
-        </div>
         <table class="w-full text-sm">
           <thead><tr class="border-b border-gray-800 bg-gray-900">
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Task</th>
@@ -154,7 +139,7 @@
       <div id="coding-section" class="card overflow-hidden mb-8">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-semibold text-white">Agent Sessions — Raw</h3>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions (Raw)</h3>
             <p class="text-xs text-gray-600 mt-0.5">Individual session records from the database</p>
           </div>
           <div class="flex gap-2 items-center">
@@ -393,11 +378,22 @@
       applyGlobalFilters();
     }
 
+    function _getProviderFromFriendlyModel(label) {
+      // Map friendly model labels (e.g. "Sonnet 4.6") back to provider
+      if (!label) return 'Unknown';
+      const l = label.toLowerCase();
+      if (l.includes('opus') || l.includes('sonnet') || l.includes('haiku')) return 'Anthropic';
+      if (l.includes('gemini')) return 'Google';
+      if (l.includes('grok')) return 'xAI';
+      if (l.includes('gpt') || l.includes('o1')) return 'OpenAI';
+      return 'Other';
+    }
+
     function setGlobalProvider(p) {
       window._globalProvider = p;
       // Reset model filter if it doesn't match the new provider
       if (p !== 'all' && window._globalModel !== 'all') {
-        const modelProvider = _getProviderFromModel(window._globalModel);
+        const modelProvider = _getProviderFromFriendlyModel(window._globalModel);
         if (modelProvider !== p) {
           window._globalModel = 'all';
           const mSel = document.getElementById('global-model');
@@ -444,6 +440,11 @@
       const sorted = Object.keys(modelLabels).sort();
       sel.innerHTML = '<option value="all">All Models</option>' +
         sorted.map(m => `<option value="${esc(m)}"${m===cur?' selected':''}>${esc(m)}</option>`).join('');
+      // Reset stale selection if current model no longer exists in options
+      if (cur !== 'all' && !sorted.includes(cur)) {
+        window._globalModel = 'all';
+        sel.value = 'all';
+      }
     }
 
     function applyGlobalFilters() {
@@ -458,6 +459,11 @@
       const filtered = agent === 'all' ? taskNames : taskNames.filter(t => (window._agentTaskMap[agent]||[]).includes(t));
       sel.innerHTML = '<option value="all">All Tasks</option>' +
         filtered.map(t => `<option value="${esc(t)}"${t===cur?' selected':''}>${esc(t)}</option>`).join('');
+      // Reset stale selection if current task no longer exists in options
+      if (cur !== 'all' && !filtered.includes(cur)) {
+        window._globalTask = 'all';
+        sel.value = 'all';
+      }
     }
 
     function _populateAgentDropdown(agentNames) {
@@ -469,6 +475,11 @@
       const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', 'claude-code': 'Claude Code' };
       sel.innerHTML = '<option value="all">All Agents</option>' +
         filtered.map(a => `<option value="${a}"${a===cur?' selected':''}>${labels[a]||a}</option>`).join('');
+      // Reset stale selection if current agent no longer exists in options
+      if (cur !== 'all' && !filtered.includes(cur)) {
+        window._globalAgent = 'all';
+        sel.value = 'all';
+      }
     }
 
     // ── Supabase query (server-side time filter, matches old page) ────
@@ -528,21 +539,22 @@
       'claude-code': { alias: 'claude-code',name: 'Claude Code', avatar: '',                             accentClass: 'text-purple-400' },
     };
 
-    function renderSummaryPortraits(rows) {
+    function renderSummaryPortraits(items) {
       const container = document.getElementById('summary-agent-portraits');
       if (!container) return;
 
       const agentFilter = window._globalAgent || 'all';
 
       // Aggregate per agent — merge "main" and "cliff" into "cliff"
+      // Accepts processed items (agent_type, tokens_in, tokens_out, estimated_cost_usd)
       const agentData = {};
-      for (const r of rows) {
-        const raw = r.agent_id || 'unknown';
+      for (const r of items) {
+        const raw = r.agent_type || r.agent_id || 'unknown';
         const id = (raw === 'main') ? 'cliff' : raw;
         if (!agentData[id]) agentData[id] = { sessions: 0, tokens: 0, cost: 0 };
         agentData[id].sessions++;
-        agentData[id].tokens += r.total_tokens || 0;
-        agentData[id].cost += r.cost_total_usd || 0;
+        agentData[id].tokens += (r.tokens_in || 0) + (r.tokens_out || 0);
+        agentData[id].cost += r.estimated_cost_usd || r.cost_total_usd || 0;
       }
 
       // Filter: if specific agent selected, only show that one
@@ -590,9 +602,7 @@
 
     // ── Agent Sessions section (table) ────────────────────────────────
     function renderAgentSessionsSection(rows) {
-      // Render dynamic portrait cards in summary section
-      renderSummaryPortraits(rows);
-
+      // Portrait rendering moved to renderTokenSections() so it reflects all global filters
       // (Agent Sessions table removed — data still flows to Summary + Raw sections below)
     }
 
@@ -646,8 +656,18 @@
       });
       window._allDbSubItems = allDbItems;
 
-      // Add sub items to agent-task map
-      allDbItems.forEach(s => {
+      // Apply provider and model filters
+      const providerFilter = window._globalProvider || 'all';
+      const modelFilter = window._globalModel || 'all';
+      const filteredDbItems = allDbItems.filter(s => {
+        if (providerFilter !== 'all' && _getProviderFromModel(s.model) !== providerFilter) return false;
+        if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model) !== modelFilter) return false;
+        return true;
+      });
+
+      // Build agent-task maps from provider/model-filtered items
+      // so dropdowns only show tasks/agents with matching sessions
+      filteredDbItems.forEach(s => {
         const a = agentNorm(s.agent_type);
         const t = s.display_name || s.task_name;
         if (!t) return;
@@ -659,24 +679,21 @@
       window._agentTaskMap = atMap;
       window._taskAgentMap = taMap;
 
-      const subTaskNames = [...new Set(allDbItems.map(s => s.display_name || s.task_name).filter(Boolean))];
+      const subTaskNames = [...new Set(filteredDbItems.map(s => s.display_name || s.task_name).filter(Boolean))];
       const allTaskNames = [...new Set(subTaskNames)].sort();
       const allAgentNames = [...new Set(Object.keys(atMap))].sort();
       _populateTaskDropdown(allTaskNames);
       _populateAgentDropdown(allAgentNames);
+      // Provider dropdown: populated from ALL items (not filtered by provider/model)
+      // so users can always see + switch to any available provider
       _populateProviderDropdown(allDbItems);
+      // Model dropdown: filtered by selected provider only (not by model itself)
       _populateModelDropdown(allDbItems);
 
-      // Apply provider and model filters
-      const providerFilter = window._globalProvider || 'all';
-      const modelFilter = window._globalModel || 'all';
-      const filteredDbItems = allDbItems.filter(s => {
-        if (providerFilter !== 'all' && _getProviderFromModel(s.model) !== providerFilter) return false;
-        if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model) !== modelFilter) return false;
-        return true;
-      });
-
       window._cronTotals = { tokensIn: 0, tokensOut: 0, cost: 0, sessions: 0 };
+
+      // ── Agent portrait cards (reflect all global filters) ─────────
+      renderSummaryPortraits(filteredDbItems);
 
       // ── Grouped Agent Sessions Summary ────────────────────────────
       renderGrouped(filteredDbItems, cutoffStart, cutoffEnd);
