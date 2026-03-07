@@ -406,9 +406,7 @@
       if (hasMulti) {
         return `${count} <button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button>`;
       }
-      if (hasSingle) {
-        return `${count} <button onclick="event.stopPropagation();_toggleSingleSessionDetail('${storeKey}',this.closest('tr'))" title="Show session detail" style="${btnStyle}">+</button>`;
-      }
+      // Single session or zero — invisible placeholder keeps alignment consistent
       return `${count} <span style="${btnStyle}visibility:hidden;">+</span>`;
     }
     const _singleSessionSidCache = {}; // storeKey → stable sid
