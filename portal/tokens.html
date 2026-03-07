@@ -517,13 +517,12 @@
       const costCacheW = raw.cost_cache_write_usd != null ? '$' + raw.cost_cache_write_usd.toFixed(4) : '—';
       const costTotal = raw.cost_total_usd != null ? '$' + raw.cost_total_usd.toFixed(4) : '—';
 
-      // Token breakdown
-      const tokInput = raw.input_tokens != null ? raw.input_tokens.toLocaleString() : '—';
+      // Token breakdown — Input = cache_read + input_tokens (true total input)
+      const rawInput = (raw.cache_read || 0) + (raw.input_tokens || 0);
+      const tokInput = rawInput > 0 ? rawInput.toLocaleString() : '—';
       const tokOutput = raw.output_tokens != null ? raw.output_tokens.toLocaleString() : '—';
-      const tokCacheR = raw.cache_read != null ? raw.cache_read.toLocaleString() : '—';
-      const tokCacheW = raw.cache_write != null ? raw.cache_write.toLocaleString() : '—';
-      const ctxTokens = raw.context_tokens ? raw.context_tokens.toLocaleString() : '—';
-      const ctxPct = raw.percent_used != null ? raw.percent_used + '%' : '—';
+      const rawCacheW = raw.cache_write || 0;
+      const tokTotal = (rawInput + (raw.output_tokens || 0) + rawCacheW).toLocaleString();
 
       // Model info
       const modelFull = typeof friendlyModel === 'function' ? friendlyModel(raw.model || s.model) : (raw.model || s.model || '—');
@@ -552,9 +551,8 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;font-size:12px;">
               <div><span style="color:#6b7280">Input:</span> <span style="color:#d1d5db">${tokInput}</span></div>
               <div><span style="color:#6b7280">Output:</span> <span style="color:#d1d5db">${tokOutput}</span></div>
-              <div><span style="color:#6b7280">Cache Read:</span> <span style="color:#d1d5db">${tokCacheR}</span></div>
-              <div><span style="color:#6b7280">Cache Write:</span> <span style="color:#d1d5db">${tokCacheW}</span></div>
-              <div><span style="color:#6b7280">Context:</span> <span style="color:#d1d5db">${ctxTokens} (${ctxPct} used)</span></div>
+              ${rawCacheW > 0 ? '<div><span style="color:#6b7280">Cache Write:</span> <span style="color:#d1d5db">' + rawCacheW.toLocaleString() + '</span></div>' : ''}
+              <div><span style="color:#6b7280">Total:</span> <strong style="color:#d1d5db">${tokTotal}</strong></div>
             </div>
           </div>
           <div class="sdp-section">
