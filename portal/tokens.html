@@ -262,6 +262,7 @@
       return `<span style="display:inline-flex;align-items:center;gap:6px;">${label}<button onclick="event.stopPropagation();_toggleModelExpand('${rowId}')" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 4px;line-height:1.4;" title="Show per-model breakdown">+${keys.length}</button></span>`;
     }
     const _grpBreakdownStore = {};
+    const _expandedTasks = new Set(); // persist expanded state across re-renders
     function _toggleModelExpand(rowId) {
       const parentRow = document.getElementById(rowId);
       if (!parentRow) return;
@@ -273,14 +274,17 @@
         next = next.nextElementSibling;
         toRemove.remove();
       }
+      const taskName = parentRow.dataset.taskName || '';
       if (expanded) {
         parentRow.dataset.expanded = '0';
         parentRow.style.opacity = '';
+        _expandedTasks.delete(taskName);
         return;
       }
       // Insert sub-rows
       parentRow.dataset.expanded = '1';
       parentRow.style.opacity = '0.4';
+      _expandedTasks.add(taskName);
       const bd = _grpBreakdownStore[rowId] || {};
       const entries = Object.entries(bd).sort((a,b) => b[1].cost - a[1].cost);
       const maxCost = entries[0] ? entries[0][1].cost : 1;
@@ -839,6 +843,14 @@
           <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
         </tr>`;
       }).join('');
+
+      // Re-expand previously expanded rows
+      _expandedTasks.forEach(task => {
+        const rows = body.querySelectorAll('tr[data-task-name]');
+        rows.forEach(r => {
+          if (r.dataset.taskName === task) _toggleModelExpand(r.id);
+        });
+      });
 
       // Efficiency insights — cost-aware, actionable rules
       const insights = [];
