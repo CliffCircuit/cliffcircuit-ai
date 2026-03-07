@@ -94,6 +94,29 @@
         </div>
       </div>
 
+      <!-- Live Sessions (from openclaw sessions) -->
+      <div id="live-sessions-section" class="card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Live Sessions</h3>
+            <p class="text-xs text-gray-600 mt-0.5">Currently active sessions across all agents — updated every 5 minutes</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="live-updated" class="text-xs text-gray-600">Loading...</span>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Context</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
+          </tr></thead>
+          <tbody id="live-sess-body"><tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
       <!-- Agent Sessions - Summary -->
       <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
@@ -768,6 +791,58 @@
       }
     }
 
+    // ── Live Sessions (from live-sessions.json) ─────────────────────
+    async function loadLiveSessions() {
+      try {
+        const res = await fetch('/portal/live-sessions.json?t=' + Date.now());
+        if (!res.ok) throw new Error('Not found');
+        const data = await res.json();
+        const tbody = document.getElementById('live-sess-body');
+        const updatedEl = document.getElementById('live-updated');
+        if (!tbody) return;
+
+        // Time since generated
+        if (updatedEl && data.generatedAt) {
+          const ago = Date.now() - new Date(data.generatedAt).getTime();
+          const agoStr = ago < 60000 ? 'just now' : ago < 3600000 ? Math.round(ago/60000) + 'm ago' : Math.round(ago/3600000) + 'h ago';
+          updatedEl.textContent = 'Updated ' + agoStr;
+        }
+
+        const sessions = data.sessions || [];
+        if (sessions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">No active sessions</td></tr>';
+          return;
+        }
+
+        const agentColors = { main: 'text-indigo-400', cliff: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400', atlas: 'text-orange-400' };
+        const agentNames = { main: 'Cliff', cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' };
+
+        tbody.innerHTML = sessions.map(s => {
+          const aCls = agentColors[s.agent] || 'text-gray-400';
+          const aName = agentNames[s.agent] || s.agent;
+          const friendlyKey = typeof sessionKeyToFriendly === 'function' ? sessionKeyToFriendly(s.key, '') : s.key;
+          const ctxBarCls = s.ctxPct >= 75 ? 'bg-red-500' : s.ctxPct >= 50 ? 'bg-yellow-500' : 'bg-green-500';
+          const ctxTextCls = s.ctxPct >= 75 ? 'text-red-400' : s.ctxPct >= 50 ? 'text-yellow-400' : 'text-gray-300';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyKey)}</td>
+            <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aName}</span></td>
+            <td class="px-4 py-1.5 text-xs">${_modelShortT(s.model)}</td>
+            <td class="px-4 py-1.5 text-right text-xs">
+              <span class="${ctxTextCls}">${s.usedTokensK}k / ${s.maxTokensK}k (${s.ctxPct}%)</span>
+              <div class="bg-gray-800 rounded-full h-1 mt-1" style="width:60px;display:inline-block;vertical-align:middle;margin-left:6px;">
+                <div class="${ctxBarCls} h-1 rounded-full" style="width:${Math.min(s.ctxPct, 100)}%"></div>
+              </div>
+            </td>
+            <td class="px-4 py-1.5 text-right text-xs text-gray-400">${s.age}</td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        // Silently fail — file may not exist yet
+        const tbody = document.getElementById('live-sess-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-600">Live session data not available</td></tr>';
+      }
+    }
+
     // ── Raw table ─────────────────────────────────────────────────────
     function renderRawTable(allDbItems) {
       const items = allDbItems || window._allDbSubItems;
@@ -851,6 +926,9 @@
       if (d && d.crons && d.crons.length) window._cronList = d.crons;
       // Kick off the Supabase-powered rendering
       loadAndRenderAgentSessions();
+      // Load live sessions data
+      loadLiveSessions();
+      setInterval(loadLiveSessions, 300000); // refresh every 5 min
     }).then(ok => {
       if (!ok) return;
       // Poll every 30s as fallback
