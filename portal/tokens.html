@@ -449,10 +449,11 @@
 
       const agentFilter = window._globalAgent || 'all';
 
-      // Aggregate per agent
+      // Aggregate per agent — merge "main" and "cliff" into "cliff"
       const agentData = {};
       for (const r of rows) {
-        const id = r.agent_id || 'unknown';
+        const raw = r.agent_id || 'unknown';
+        const id = (raw === 'main') ? 'cliff' : raw;
         if (!agentData[id]) agentData[id] = { sessions: 0, tokens: 0, cost: 0 };
         agentData[id].sessions++;
         agentData[id].tokens += r.total_tokens || 0;
@@ -462,8 +463,7 @@
       // Filter: if specific agent selected, only show that one
       let agentIds = Object.keys(agentData);
       if (agentFilter !== 'all') {
-        const mappedId = agentFilter === 'cliff' ? 'main' : agentFilter;
-        agentIds = agentIds.filter(id => id === mappedId);
+        agentIds = agentIds.filter(id => id === agentFilter);
       }
 
       if (agentIds.length === 0) {
@@ -471,30 +471,36 @@
         return;
       }
 
-      // Determine grid cols based on count
-      const cols = agentIds.length >= 4 ? 4 : agentIds.length >= 3 ? 3 : agentIds.length >= 2 ? 2 : 1;
+      // Sort: known agents first (cliff, samantha, scout, atlas), then alphabetical
+      const knownOrder = ['cliff','samantha','scout','atlas'];
+      agentIds.sort((a,b) => {
+        const ai = knownOrder.indexOf(a), bi = knownOrder.indexOf(b);
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+        return a.localeCompare(b);
+      });
 
       const cards = agentIds.map(id => {
         const cfg = _agentPortraitConfig[id] || { alias: id, name: _agentLabel[id] || id, avatar: '', accentClass: 'text-gray-400' };
         const d = agentData[id];
         const avatarHtml = cfg.avatar
-          ? `<img src="${cfg.avatar}" alt="${esc(cfg.name)}" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" />
-             <div class="absolute left-0 top-0 h-full w-32" style="background:linear-gradient(to right, transparent 55%, #111827 100%);"></div>`
-          : '';
-        return `<div class="relative overflow-hidden" style="min-height:90px;">
+          ? `<img src="${cfg.avatar}" alt="${esc(cfg.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
+          : `<div style="width:48px;height:48px;border-radius:50%;background:#374151;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:18px;color:#9ca3af;">${esc(cfg.name.charAt(0))}</span></div>`;
+        return `<div style="background:#111827;border:1px solid #1f2937;border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;min-width:0;">
           ${avatarHtml}
-          <div class="relative px-5 py-4 ${cfg.avatar ? 'pl-36' : ''}">
-            <div class="text-xs ${cfg.accentClass} font-semibold uppercase tracking-wide mb-2">${esc(cfg.name)}</div>
-            <div class="flex items-end gap-4">
-              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div class="text-xl font-bold text-white">${d.sessions}</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div class="text-xl font-bold text-white">${_fmtK(d.tokens)}</div></div>
-              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div class="text-xl font-bold text-yellow-400">$${d.cost.toFixed(2)}</div></div>
+          <div style="min-width:0;">
+            <div class="${cfg.accentClass}" style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">${esc(cfg.name)}</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <div><div style="font-size:11px;color:#6b7280;">Sessions</div><div style="font-size:16px;font-weight:700;color:#fff;">${d.sessions}</div></div>
+              <div><div style="font-size:11px;color:#6b7280;">Tokens</div><div style="font-size:16px;font-weight:700;color:#fff;">${_fmtK(d.tokens)}</div></div>
+              <div><div style="font-size:11px;color:#6b7280;">Cost</div><div style="font-size:16px;font-weight:700;color:#facc15;">$${d.cost.toFixed(2)}</div></div>
             </div>
           </div>
         </div>`;
       }).join('');
 
-      container.innerHTML = `<div class="grid grid-cols-${cols} divide-x divide-gray-800">${cards}</div>`;
+      container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;padding:16px;">${cards}</div>`;
     }
 
     // ── Agent Sessions section (table) ────────────────────────────────
