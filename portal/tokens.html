@@ -399,12 +399,34 @@
     const _sessionDataMap = {}; // keyed by session_id → full session object
     let _sessionDetailOpenId = null; // currently-open detail panel session_id
     function _renderRunsCell(count, storeKey, sessions) {
-      const hasExpand = sessions && sessions.length > 1;
-      if (hasExpand) _sessionStore[storeKey] = sessions;
-      const btnStyle = hasExpand
-        ? 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;'
-        : 'background:none;border:1px solid transparent;border-radius:4px;color:transparent;font-size:12px;padding:1px 5px;line-height:1;pointer-events:none;';
-      return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button ${hasExpand ? `onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions"` : ''} style="${btnStyle}">+</button></span>`;
+      const hasMulti = sessions && sessions.length > 1;
+      const hasSingle = sessions && sessions.length === 1;
+      if (hasMulti || hasSingle) _sessionStore[storeKey] = sessions;
+      if (hasMulti) {
+        const btnStyle = 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;';
+        return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button></span>`;
+      }
+      if (hasSingle) {
+        // Single session — make the count itself clickable to toggle detail panel
+        return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;"><span onclick="event.stopPropagation();_toggleSingleSessionDetail('${storeKey}',this)" title="View session details" style="cursor:pointer;color:#9ca3af;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">${count}</span></span>`;
+      }
+      return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}</span>`;
+    }
+    const _singleSessionSidCache = {}; // storeKey → stable sid
+    function _toggleSingleSessionDetail(storeKey, el) {
+      const parentRow = el.closest('tr');
+      if (!parentRow) return;
+      const sessions = _sessionStore[storeKey] || [];
+      if (sessions.length !== 1) return;
+      const s = sessions[0];
+      // Use stable sid — cache it so toggle-off works
+      if (!_singleSessionSidCache[storeKey]) {
+        _singleSessionSidCache[storeKey] = s._raw?.session_id || s.label || ('s-' + Math.random().toString(36).slice(2));
+      }
+      const sid = _singleSessionSidCache[storeKey];
+      _sessionDataMap[sid] = s;
+      // Delegate to _toggleSessionDetail which handles open/close toggle
+      _toggleSessionDetail(sid, parentRow);
     }
     function _toggleSessionExpand(storeKey, btn) {
       const parentRow = btn.closest('tr');
@@ -562,6 +584,11 @@
       const existing = document.querySelector('.session-detail-panel-row');
       if (existing) existing.remove();
       _sessionDetailOpenId = null;
+    }
+
+    function _toggleRawSessionDetail(sid, rowEl) {
+      // Toggle detail panel for raw table rows — reuses _toggleSessionDetail
+      _toggleSessionDetail(sid, rowEl);
     }
 
     // Gateway WebSocket for session preview (shared connection)
@@ -1659,7 +1686,10 @@ function _renderStackedCostChart(items, mode) {
       if (filtered.length === 0) {
         dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
       } else {
-        dbSubBody.innerHTML = visible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+        dbSubBody.innerHTML = visible.map(s => {
+          const rawSid = s._raw?.session_id || s.label || ('raw-' + Math.random().toString(36).slice(2));
+          _sessionDataMap[rawSid] = s;
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-raw-sid="${esc(rawSid)}" onclick="_toggleRawSessionDetail('${esc(rawSid)}',this)">
           <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}${_getTaskTooltip(s.display_name || s.task_name) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(s.display_name || s.task_name)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[s.agent_type] || 'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
           <td class="px-4 py-2 text-xs">${_modelShortT(s.model)}</td>
@@ -1667,7 +1697,7 @@ function _renderStackedCostChart(items, mode) {
           <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(s.tokens_in||0)} / ${_fmtK(s.tokens_out||0)}</td>
           <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
           <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap text-right">${_fmtTs(s.started_at)}</td>
-        </tr>`).join('');
+        </tr>`; }).join('');
       }
       const toggleBtn = document.getElementById('db-subagent-toggle');
       if (filtered.length <= 20) toggleBtn.classList.add('hidden');
