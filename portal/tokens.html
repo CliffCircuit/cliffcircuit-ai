@@ -185,6 +185,31 @@
       </div>
 
 
+      <!-- Stuck Sessions (from openclaw session stores) -->
+      <div id="live-sessions-section" class="card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Stuck Sessions</h3>
+            <p class="text-xs text-gray-600 mt-0.5">Watchdog — cron sessions over 1h or persistent sessions over 8h that may need intervention</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="live-updated" class="text-xs text-gray-600">Loading...</span>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-gray-800 bg-gray-900">
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
+            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Context</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session Length</th>
+            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
+          </tr></thead>
+          <tbody id="live-sess-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
       <div class="card p-5 mb-8">
         <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
         <div id="tok-insights" class="space-y-3 text-sm text-gray-500">Loading...</div>
@@ -678,7 +703,69 @@
       }
     }
 
-    // ── Live Sessions (from live-sessions.json) ─────────────────────
+    // ── Stuck Sessions (from live-sessions.json) ───────────────────
+    async function loadLiveSessions() {
+      try {
+        const res = await fetch('/portal/live-sessions.json?t=' + Date.now());
+        if (!res.ok) throw new Error('Not found');
+        const data = await res.json();
+        const tbody = document.getElementById('live-sess-body');
+        const updatedEl = document.getElementById('live-updated');
+        if (!tbody) return;
+
+        if (updatedEl && data.generatedAt) {
+          const ago = Date.now() - new Date(data.generatedAt).getTime();
+          const agoStr = ago < 60000 ? 'just now' : ago < 3600000 ? Math.round(ago/60000) + 'm ago' : Math.round(ago/3600000) + 'h ago';
+          updatedEl.textContent = 'Updated ' + agoStr;
+        }
+
+        const allSessions = data.sessions || [];
+        const sessions = allSessions.filter(s => s.isStuck);
+
+        const headerEl = document.querySelector('#live-sessions-section h3');
+        if (headerEl) {
+          headerEl.innerHTML = sessions.length > 0
+            ? 'Stuck Sessions <span class="ml-2 px-2 py-0.5 rounded-full text-xs bg-red-900 text-red-300">' + sessions.length + ' stuck</span>'
+            : 'Stuck Sessions <span class="ml-2 px-2 py-0.5 rounded-full text-xs bg-green-900 text-green-300">All Clear</span>';
+        }
+
+        if (sessions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-green-600">No stuck sessions — all systems running normally (' + allSessions.length + ' active)</td></tr>';
+          return;
+        }
+
+        const agentColors = { main: 'text-indigo-400', cliff: 'text-indigo-400', samantha: 'text-teal-400', scout: 'text-green-400', atlas: 'text-orange-400' };
+        const agentNames = { main: 'Cliff', cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' };
+
+        tbody.innerHTML = sessions.map(s => {
+          const aCls = agentColors[s.agent] || 'text-gray-400';
+          const aName = agentNames[s.agent] || s.agent;
+          const friendlyKey = typeof sessionKeyToFriendly === 'function' ? sessionKeyToFriendly(s.key, '') : s.key;
+          const ctxBarCls = s.ctxPct >= 75 ? 'bg-red-500' : s.ctxPct >= 50 ? 'bg-yellow-500' : 'bg-green-500';
+          const ctxTextCls = s.ctxPct >= 75 ? 'text-red-400' : s.ctxPct >= 50 ? 'text-yellow-400' : 'text-gray-300';
+          const tokIn = s.tokensIn != null ? _fmtK(s.tokensIn) : '—';
+          const tokOut = s.tokensOut != null ? _fmtK(s.tokensOut) : '—';
+          const reasonHtml = s.stuckReason ? '<div class="text-xs text-red-400 mt-0.5">' + esc(s.stuckReason) + '</div>' : '';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors bg-red-950/20">
+            <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyKey)}${reasonHtml}</td>
+            <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aName}</span></td>
+            <td class="px-4 py-1.5 text-xs">${_modelShortT(s.model)}</td>
+            <td class="px-4 py-1.5 text-right text-xs text-white">${tokIn} / ${tokOut}</td>
+            <td class="px-4 py-1.5 text-right text-xs">
+              <span class="${ctxTextCls}">${s.ctxUsedK || s.usedTokensK}k / ${s.ctxMaxK || s.maxTokensK}k (${s.ctxPct}%)</span>
+              <div class="bg-gray-800 rounded-full h-1 mt-1" style="width:60px;display:inline-block;vertical-align:middle;margin-left:6px;">
+                <div class="${ctxBarCls} h-1 rounded-full" style="width:${Math.min(s.ctxPct, 100)}%"></div>
+              </div>
+            </td>
+            <td class="px-4 py-1.5 text-right text-xs text-red-400 font-semibold">${s.sessionLength || '—'}</td>
+            <td class="px-4 py-1.5 text-right text-xs text-gray-400">${s.lastActivity || '—'}</td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        const tbody = document.getElementById('live-sess-body');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Live session data not available</td></tr>';
+      }
+    }
 
     // ── Raw table ─────────────────────────────────────────────────────
     function renderRawTable(allDbItems) {
@@ -763,7 +850,9 @@
       if (d && d.crons && d.crons.length) window._cronList = d.crons;
       // Kick off the Supabase-powered rendering
       loadAndRenderAgentSessions();
-      // Load live sessions data
+      // Load stuck sessions watchdog
+      loadLiveSessions();
+      setInterval(loadLiveSessions, 300000);
 
     }).then(ok => {
       if (!ok) return;
