@@ -13,7 +13,7 @@
     <div id="portal-nav"></div>
     <div class="p-6 max-w-7xl mx-auto">
 
-      <!-- Header + Global Filter Bar -->
+      <!-- Global Filter Bar -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
           <div>
@@ -57,26 +57,26 @@
         </div>
       </div>
 
-      <!-- Summary Cards -->
+      <!-- Summary cards -->
       <div class="grid grid-cols-4 gap-4 mb-8">
         <div class="card p-5">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-          <div id="tok-total" class="text-3xl font-bold text-white">—</div>
+          <div id="tok-total" class="text-3xl font-bold text-white">&mdash;</div>
           <div id="tok-total-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
         </div>
         <div class="card p-5">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost</div>
-          <div id="tok-cost" class="text-3xl font-bold text-yellow-400">—</div>
+          <div id="tok-cost" class="text-3xl font-bold text-yellow-400">&mdash;</div>
           <div class="text-xs text-gray-600 mt-1">all sessions combined</div>
         </div>
         <div class="card p-5">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-          <div id="tok-runs" class="text-3xl font-bold text-indigo-400">—</div>
+          <div id="tok-runs" class="text-3xl font-bold text-indigo-400">&mdash;</div>
           <div id="tok-runs-sub" class="text-xs text-gray-600 mt-1">all agents</div>
         </div>
         <div class="card p-5">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Avg Tokens / Session</div>
-          <div id="tok-avg" class="text-xl font-bold text-teal-400">—</div>
+          <div id="tok-avg" class="text-xl font-bold text-teal-400">&mdash;</div>
           <div id="tok-avg-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
         </div>
       </div>
@@ -87,22 +87,22 @@
           <div>
             <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — sessions, cost, and tokens per job type</p>
-            <p class="text-xs text-gray-700 mt-1">Key: <span class="text-gray-500">Web UI (Heartbeat+Chat)</span> = heartbeats + webchat in same session &middot; <span class="text-gray-500">Tim (Telegram DM)</span> = your direct Telegram messages &middot; <span class="text-gray-500">Heartbeat</span> = scheduled health checks (now on Haiku)</p>
+            <p class="text-xs text-gray-700 mt-1">Key: <span class="text-gray-500">Web UI (Heartbeat+Chat)</span> = heartbeats + webchat in same session &nbsp;&middot;&nbsp; <span class="text-gray-500">Tim (Telegram DM)</span> = your direct Telegram messages &nbsp;&middot;&nbsp; <span class="text-gray-500">Heartbeat</span> = scheduled health checks (now on Haiku)</p>
           </div>
           <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="grp-sub-runs" class="text-2xl font-bold text-white">—</div>
+            <div id="grp-sub-runs" class="text-2xl font-bold text-white">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
-            <div id="grp-sub-cost" class="text-2xl font-bold text-yellow-400">—</div>
+            <div id="grp-sub-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="grp-sub-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="grp-sub-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
             <div id="grp-sub-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
@@ -132,27 +132,27 @@
           <div class="flex gap-2 items-center">
             <div class="flex flex-col items-end gap-1">
               <div class="flex gap-2 items-center">
-                <select id="raw-task-filter" onchange="filterRawTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+                <select id="raw-task-filter" onchange="window.filterRawTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
                   <option value="all">All Tasks</option>
                 </select>
-                <button id="db-subagent-toggle" onclick="toggleRawShowAll()" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Show All</button>
+                <button id="db-subagent-toggle" onclick="toggleDbSubagents()" class="text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors">Show All</button>
               </div>
-              <span class="text-xs text-gray-600 italic">View filter - does not affect summary totals</span>
+              <span class="text-xs text-gray-600 italic">View filter &middot; does not affect summary totals</span>
             </div>
           </div>
         </div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="db-sub-total" class="text-2xl font-bold text-white">—</div>
+            <div id="db-sub-total" class="text-2xl font-bold text-white">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
-            <div id="db-sub-cost" class="text-2xl font-bold text-yellow-400">—</div>
+            <div id="db-sub-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="db-sub-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="db-sub-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
             <div id="db-sub-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
@@ -185,15 +185,15 @@
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="ag-total-runs" class="text-2xl font-bold text-white">—</div>
+            <div id="ag-total-runs" class="text-2xl font-bold text-white">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
-            <div id="ag-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
+            <div id="ag-total-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="ag-total-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="ag-total-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
             <div id="ag-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
@@ -205,9 +205,9 @@
             <div class="relative px-5 py-4 pl-36">
               <div class="text-xs text-indigo-400 font-semibold uppercase tracking-wide mb-2">Cliff</div>
               <div class="flex items-end gap-4">
-                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-cliff-runs" class="text-xl font-bold text-white">—</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-cliff-tokens" class="text-xl font-bold text-white">—</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-cliff-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-cliff-runs" class="text-xl font-bold text-white">&mdash;</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-cliff-tokens" class="text-xl font-bold text-white">&mdash;</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-cliff-cost" class="text-xl font-bold text-yellow-400">&mdash;</div></div>
               </div>
             </div>
           </div>
@@ -218,9 +218,9 @@
             <div class="relative px-5 py-4 pl-36">
               <div class="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-2">Samantha</div>
               <div class="flex items-end gap-4">
-                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-samantha-runs" class="text-xl font-bold text-white">—</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-samantha-tokens" class="text-xl font-bold text-white">—</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-samantha-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-samantha-runs" class="text-xl font-bold text-white">&mdash;</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-samantha-tokens" class="text-xl font-bold text-white">&mdash;</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-samantha-cost" class="text-xl font-bold text-yellow-400">&mdash;</div></div>
               </div>
             </div>
           </div>
@@ -231,9 +231,9 @@
             <div class="relative px-5 py-4 pl-36">
               <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Scout</div>
               <div class="flex items-end gap-4">
-                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-scout-runs" class="text-xl font-bold text-white">—</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-scout-tokens" class="text-xl font-bold text-white">—</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-scout-cost" class="text-xl font-bold text-yellow-400">—</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-scout-runs" class="text-xl font-bold text-white">&mdash;</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-scout-tokens" class="text-xl font-bold text-white">&mdash;</div></div>
+                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-scout-cost" class="text-xl font-bold text-yellow-400">&mdash;</div></div>
               </div>
             </div>
           </div>
@@ -263,15 +263,15 @@
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="cron-total-runs" class="text-2xl font-bold text-white">—</div>
+            <div id="cron-total-runs" class="text-2xl font-bold text-white">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Cost (USD)</div>
-            <div id="cron-total-cost" class="text-2xl font-bold text-yellow-400">—</div>
+            <div id="cron-total-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
           </div>
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="cron-total-tokens" class="text-xl font-bold text-indigo-400">—</div>
+            <div id="cron-total-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
             <div id="cron-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
@@ -299,205 +299,239 @@
     </div>
   </div>
 
-  <script src="/portal/portal-common.js?v=7"></script>
+  <script src="/portal/portal-common.js?v=8"></script>
   <script>
-    // ── State ──────────────────────────────────────────────
-    window._globalRange = 'today';
-    window._globalAgent = 'all';
-    window._globalTask  = 'all';
+    // ══════════════════════════════════════════════════════════════════
+    // Token Usage — standalone page
+    // Extracted from portal-old.html (the working version)
+    // ══════════════════════════════════════════════════════════════════
+
+    // ── State ─────────────────────────────────────────────────────────
+    window._globalRange  = 'today';
+    window._globalAgent  = 'all';
+    window._globalTask   = 'all';
+    window._tokenRange   = 'today';
     window._dbSubShowAll = false;
     window._dbRawTaskFilter = 'all';
-    window._allItems = [];
+    window._sbSessionRows = [];
+    window._allDbSubItems = [];
     window._cronTotals = { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
     window._subTotals  = { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+    window._agentTaskMap = {};
+    window._taskAgentMap = {};
 
-    const modelShortT = m => modelShort(m);
-    const agentCls2 = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400' };
-    const agentName = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', 'claude-code':'Claude Code' };
+    // ── Local helpers (match old page exactly) ────────────────────────
+    const _fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
+    const _fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
+    const _fmtTs = ts => ts ? new Date(ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' }) + ' PT' : '—';
 
-    // ── Filter Controls ───────────────────────────────────
-    function setGlobalRange(v) { window._globalRange = v; applyGlobalFilters(); }
-    function setGlobalAgent(v) { window._globalAgent = v; applyGlobalFilters(); }
-    function setGlobalTask(v) { window._globalTask = v; applyGlobalFilters(); }
-    function filterRawTask(v) { window._dbRawTaskFilter = v; renderRawTable(); }
-    function toggleRawShowAll() { window._dbSubShowAll = !window._dbSubShowAll; renderRawTable(); }
+    const _agentCls = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400', atlas:'text-orange-400' };
+    const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
+
+    const _modelShortT = m => {
+      if (!m) return '<span class="text-gray-700">—</span>';
+      const s = m.toLowerCase();
+      if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
+      if (s.includes('opus')) return '<span class="text-purple-400">Opus</span>';
+      if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return '<span class="text-indigo-400">Sonnet 4.6</span>';
+      if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return '<span class="text-indigo-400">Sonnet 4.5</span>';
+      if (s.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
+      if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return '<span class="text-yellow-600">Haiku 4.5</span>';
+      if (s.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
+      if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return '<span class="text-green-400">Gemini 3.1 Flash Lite</span>';
+      if (s.includes('gemini-2.5-flash')) return '<span class="text-green-400">Gemini 2.5 Flash</span>';
+      if (s.includes('gemini-2.5-pro')) return '<span class="text-green-400">Gemini 2.5 Pro</span>';
+      if (s.includes('gemini')) return '<span class="text-green-400">Gemini</span>';
+      if (s.includes('grok')) return '<span class="text-orange-400">Grok</span>';
+      return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
+    };
+
+    const _localModelPricing = m => {
+      if (!m) return { input: 3.0, cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
+      if (m.includes('haiku'))  return { input: 0.80, cacheRead: 0.08, cacheWrite: 1.0,  output: 4.0  };
+      if (m.includes('sonnet')) return { input: 3.0,  cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
+      if (m.includes('opus'))   return { input: 15.0, cacheRead: 1.50, cacheWrite: 18.75,output: 75.0 };
+      return { input: 3.0, cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
+    };
+    const _calcCost = (p, tokInput, tokCacheRead, tokCacheWrite, tokOut) =>
+      (tokInput * p.input + tokCacheRead * p.cacheRead + tokCacheWrite * p.cacheWrite + tokOut * p.output) / 1e6;
+
+    // Cron task → sub-agent task name mapping
+    const _cronTaskMap = {
+      'samantha-publish':       'Publish',
+      'samantha-writer':        'Draft Articles',
+      'samantha-cliff-tweets':  'Cliff Tweets',
+      'samantha-tim-tweets':    'Tim Posts',
+      'samantha-media':         'Media',
+      'samantha-recycle-writer':'Recycle Rejected',
+      'samantha-recycle-media': 'Media',
+      'portal-data-refresh':    'Portal Data Refresh',
+      'social-monitoring':      'Social Monitoring',
+      'github-monitoring':      'GitHub Monitoring',
+      'cliff-article-review':   'Article Review',
+      'pipeline-health-check':  'Pipeline Health Check',
+      'morning-check-in':       'Morning Check-in',
+      'evening-check':          'Evening Check',
+      'weekly-report':          'Weekly Report',
+    };
+
+    // ── Toggle ────────────────────────────────────────────────────────
+    function toggleDbSubagents() {
+      window._dbSubShowAll = !window._dbSubShowAll;
+      renderAllSections();
+    }
+
+    // ── Global Filter Controls ────────────────────────────────────────
+    function setGlobalRange(r) {
+      window._globalRange = r;
+      window._tokenRange = r;
+      const sel = document.getElementById('global-range');
+      if (sel) sel.value = r;
+      applyGlobalFilters();
+    }
+    function setGlobalAgent(a) {
+      window._globalAgent = a;
+      if (a !== 'all' && window._globalTask !== 'all') {
+        const validTasks = window._agentTaskMap[a] || [];
+        if (!validTasks.includes(window._globalTask)) {
+          window._globalTask = 'all';
+          const tSel = document.getElementById('global-task');
+          if (tSel) tSel.value = 'all';
+        }
+      }
+      applyGlobalFilters();
+    }
+    function setGlobalTask(t) {
+      window._globalTask = t;
+      if (t !== 'all' && window._globalAgent !== 'all') {
+        const validAgents = window._taskAgentMap[t] || [];
+        if (!validAgents.includes(window._globalAgent)) {
+          window._globalAgent = 'all';
+          const aSel = document.getElementById('global-agent');
+          if (aSel) aSel.value = 'all';
+        }
+      }
+      applyGlobalFilters();
+    }
 
     function applyGlobalFilters() {
-      renderSubGrouped();
-      renderRawTable();
-      renderAgentSessions();
-      renderPerJobBreakdown();
-      renderInsights();
+      loadAndRenderAgentSessions();
     }
 
-    // ── Time / Agent Filter ───────────────────────────────
-    function filterByPeriodAndAgent(items) {
-      const range = window._globalRange || 'today';
+    function _populateTaskDropdown(taskNames) {
+      const sel = document.getElementById('global-task');
+      if (!sel) return;
+      const cur = window._globalTask || 'all';
       const agent = window._globalAgent || 'all';
-      const task  = window._globalTask || 'all';
-      const now = Date.now();
-      const n = new Date();
-      const todayStart = new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
-      const yestStart  = todayStart - 86400000;
-      const weekStart  = todayStart - n.getDay() * 86400000;
-      const monthStart = new Date(n.getFullYear(), n.getMonth(), 1).getTime();
-      return items.filter(s => {
-        if (task !== 'all' && (s.display_name || s.task_name || '') !== task) return false;
-        if (agent !== 'all') {
-          const sa = (s.agent_type || '').toLowerCase();
-          const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
-          const allowed = agentMap[agent] || [agent];
-          if (!allowed.some(a => sa.includes(a))) return false;
-        }
-        const ts = s.started_at || 0;
-        if (range === '1h')   return ts >= now - 3600000;
-        if (range === '24h')  return ts >= now - 86400000;
-        if (range === '7d')   return ts >= now - 7*86400000;
-        if (range === '30d')  return ts >= now - 30*86400000;
-        if (range === 'today')     return ts >= todayStart;
-        if (range === 'yesterday') return ts >= yestStart && ts < todayStart;
-        if (range === 'week')      return ts >= weekStart;
-        if (range === 'month')     return ts >= monthStart;
-        return ts >= todayStart;
-      });
+      const filtered = agent === 'all' ? taskNames : taskNames.filter(t => (window._agentTaskMap[agent]||[]).includes(t));
+      sel.innerHTML = '<option value="all">All Tasks</option>' +
+        filtered.map(t => `<option value="${esc(t)}"${t===cur?' selected':''}>${esc(t)}</option>`).join('');
     }
 
-    // ── Helpers ────────────────────────────────────────────
-    const fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
-    const fmtTs = ts => ts ? new Date(ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' }) + ' PT' : '—';
-
-    // ── Summary Cards ─────────────────────────────────────
-    function updateSummaryCards() {
-      const cron = window._cronTotals || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
-      const sub  = window._subTotals  || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
-      const combIn = cron.tokensIn + sub.tokensIn;
-      const combOut = cron.tokensOut + sub.tokensOut;
-      const combCost = cron.cost + sub.cost;
-      const combSessions = cron.sessions + sub.sessions;
-      const avgIn = combSessions ? Math.round(combIn / combSessions) : 0;
-      const avgOut = combSessions ? Math.round(combOut / combSessions) : 0;
-      const el = id => document.getElementById(id);
-      if (el('tok-total')) el('tok-total').innerHTML = fmtK(combIn) + ' / ' + fmtK(combOut);
-      if (el('tok-cost'))  el('tok-cost').textContent = '$' + combCost.toFixed(2);
-      if (el('tok-runs'))  el('tok-runs').textContent = combSessions;
-      if (el('tok-avg'))   el('tok-avg').innerHTML = fmtK(avgIn) + ' / ' + fmtK(avgOut);
+    function _populateAgentDropdown(agentNames) {
+      const sel = document.getElementById('global-agent');
+      if (!sel) return;
+      const cur = window._globalAgent || 'all';
+      const task = window._globalTask || 'all';
+      const filtered = task === 'all' ? agentNames : agentNames.filter(a => (window._taskAgentMap[task]||[]).includes(a));
+      const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', 'claude-code': 'Claude Code' };
+      sel.innerHTML = '<option value="all">All Agents</option>' +
+        filtered.map(a => `<option value="${a}"${a===cur?' selected':''}>${labels[a]||a}</option>`).join('');
     }
 
-    // ── Sub-agent Sessions (Grouped) ──────────────────────
-    function renderSubGrouped() {
-      const allNonCron = window._allItems.filter(i => !i.is_cron);
-      const filtered = filterByPeriodAndAgent(allNonCron);
-      const groups = {};
-      for (const s of filtered) {
-        const key = s.display_name || s.task_name || s.agent_type || 'Unknown';
-        if (!groups[key]) groups[key] = { task: key, agent: s.agent_type, model: s.model, runs: 0, totalDur: 0, tokensIn: 0, tokensOut: 0, totalCost: 0 };
-        groups[key].runs++;
-        groups[key].totalDur += s.duration_ms || 0;
-        groups[key].tokensIn += s.tokens_in || 0;
-        groups[key].tokensOut += s.tokens_out || 0;
-        groups[key].totalCost += s.estimated_cost_usd || 0;
+    // ── Supabase query (server-side time filter, matches old page) ────
+    async function loadAndRenderAgentSessions() {
+      const range = window._globalRange || 'today';
+      const agentFilter = window._globalAgent || 'all';
+      const now = new Date();
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      let cutoffStart, cutoffEnd = now.toISOString();
+
+      if      (range === '1h')        cutoffStart = new Date(now - 3600000).toISOString();
+      else if (range === '24h')       cutoffStart = new Date(now - 86400000).toISOString();
+      else if (range === 'today')     cutoffStart = todayMidnight.toISOString();
+      else if (range === 'yesterday') { cutoffStart = new Date(todayMidnight - 86400000).toISOString(); cutoffEnd = todayMidnight.toISOString(); }
+      else if (range === '7d')        cutoffStart = new Date(now - 7*86400000).toISOString();
+      else if (range === 'week')      cutoffStart = new Date(todayMidnight - todayMidnight.getDay()*86400000).toISOString();
+      else if (range === '30d')       cutoffStart = new Date(now - 30*86400000).toISOString();
+      else if (range === 'month')     cutoffStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      else                            cutoffStart = todayMidnight.toISOString();
+
+      let query = _sb.from('session_snapshots')
+        .select('session_id,session_key,agent_id,model,input_tokens,output_tokens,cache_read,cache_write,total_tokens,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
+        .gte('last_seen_at', cutoffStart)
+        .lte('last_seen_at', cutoffEnd)
+        .order('last_seen_at', { ascending: false })
+        .limit(500);
+
+      if (agentFilter !== 'all') {
+        const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
+        query = query.eq('agent_id', agentId);
       }
-      const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
-      const totalRuns = sorted.reduce((s,r) => s + r.runs, 0);
-      const totalCost = sorted.reduce((s,r) => s + r.totalCost, 0);
-      const totalIn   = sorted.reduce((s,r) => s + r.tokensIn, 0);
-      const totalOut  = sorted.reduce((s,r) => s + r.tokensOut, 0);
-      set('grp-sub-runs', totalRuns);
-      set('grp-sub-cost', '$' + totalCost.toFixed(2));
-      set('grp-sub-tokens', fmtK(totalIn) + ' / ' + fmtK(totalOut));
-      const sub = document.getElementById('grp-sub-tokens-sub'); if (sub) sub.textContent = 'in / out';
-      window._subTotals = { tokensIn: totalIn, tokensOut: totalOut, cost: totalCost, sessions: totalRuns };
-      updateSummaryCards();
 
-      const body = document.getElementById('grp-subagent-body');
-      if (sorted.length === 0) { body.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>'; return; }
-      const maxCost = sorted[0].totalCost || 1;
-      body.innerHTML = sorted.map(g => {
-        const barPct = Math.round((g.totalCost / maxCost) * 100);
-        const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
-        const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
+      const { data, error } = await query;
+      if (error) { console.error('[token] session_snapshots error:', error); return; }
+      window._sbSessionRows = data || [];
+      renderAgentSessionsSection(data || []);
+      renderTokenSections();
+    }
+
+    // ── Agent Sessions section (portrait cards + table) ───────────────
+    function renderAgentSessionsSection(rows) {
+      // Per-agent mini cards
+      for (const [agentId, alias] of [['main','cliff'],['samantha','samantha'],['scout','scout']]) {
+        const agentRows = rows.filter(r => r.agent_id === agentId);
+        const sessions  = agentRows.length;
+        const tokens    = agentRows.reduce((s,r) => s + (r.total_tokens||0), 0);
+        const cost      = agentRows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
+        const el = id => document.getElementById(id);
+        if (el(`ag-${alias}-runs`))   el(`ag-${alias}-runs`).textContent  = sessions;
+        if (el(`ag-${alias}-tokens`)) el(`ag-${alias}-tokens`).textContent = _fmtK(tokens);
+        if (el(`ag-${alias}-cost`))   el(`ag-${alias}-cost`).textContent  = '$' + cost.toFixed(2);
+      }
+
+      // Summary totals
+      const totSessions  = rows.length;
+      const totTokensIn  = rows.reduce((s,r) => s + ((r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0)), 0);
+      const totTokensOut = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
+      const totCost      = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
+      const el = id => document.getElementById(id);
+      if (el('ag-total-runs'))   el('ag-total-runs').textContent   = totSessions;
+      if (el('ag-total-cost'))   el('ag-total-cost').textContent   = '$' + totCost.toFixed(2);
+      if (el('ag-total-tokens')) el('ag-total-tokens').innerHTML   = _fmtK(totTokensIn) + ' / ' + _fmtK(totTokensOut);
+
+      // Table
+      const tbody = document.getElementById('agent-sess-body');
+      if (!tbody) return;
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
+        return;
+      }
+      const nowMs = Date.now();
+      const _timeAgo = ts => {
+        if (!ts) return '—';
+        const ms = nowMs - new Date(ts).getTime();
+        if (ms < 60000)    return Math.round(ms/1000) + 's ago';
+        if (ms < 3600000)  return Math.round(ms/60000) + 'm ago';
+        if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
+        return Math.round(ms/86400000) + 'd ago';
+      };
+      tbody.innerHTML = rows.slice(0, 10).map(r => {
+        const aCls   = _agentCls[r.agent_id] || 'text-gray-400';
+        const aLbl   = _agentLabel[r.agent_id] || fmtAgent(r.agent_id);
+        const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
+        const friendlyName = sessionKeyToFriendly(r.session_key, r.session_id);
+        const tokIn = (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0);
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}</td>
-          <td class="px-4 py-2 text-xs"><span class="${agentCls2[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
-          <td class="px-4 py-2 text-xs text-gray-400">${modelShortT(g.model)}</td>
-          <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
-          <td class="px-4 py-2 text-right text-gray-400 text-xs">${fmtDur(Math.round(g.totalDur/g.runs))}</td>
-          <td class="px-4 py-2 text-right text-white text-xs">${fmtK(g.tokensIn)} / ${fmtK(g.tokensOut)}</td>
-          <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
-          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(2) : '<$0.01'}</td>
-          <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
+          <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyName)}</td>
+          <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
+          <td class="px-4 py-1.5 text-xs">${_modelShortT(r.model)}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-white">${_fmtK(tokIn)} / ${_fmtK(r.output_tokens||0)}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-400">${_fmtDur(r.duration_ms || (Date.now() - new Date(r.first_seen_at).getTime()))}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
+          <td class="px-4 py-1.5 text-right text-xs text-gray-600">${_timeAgo(r.last_seen_at)}</td>
         </tr>`;
       }).join('');
-    }
-
-    // ── Raw Table ─────────────────────────────────────────
-    function renderRawTable() {
-      const filtered = filterByPeriodAndAgent(window._allItems);
-      const taskFilter = window._dbRawTaskFilter || 'all';
-      const finalFiltered = taskFilter === 'all' ? filtered : filtered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
-      const total = finalFiltered.length;
-      const cost = finalFiltered.reduce((s,x) => s + (x.estimated_cost_usd || 0), 0);
-      const tIn = finalFiltered.reduce((s,x) => s + (x.tokens_in || 0), 0);
-      const tOut = finalFiltered.reduce((s,x) => s + (x.tokens_out || 0), 0);
-      set('db-sub-total', total);
-      set('db-sub-cost', '$' + cost.toFixed(2));
-      set('db-sub-tokens', fmtK(tIn) + ' / ' + fmtK(tOut));
-      const sub = document.getElementById('db-sub-tokens-sub'); if (sub) sub.textContent = 'in / out';
-
-      const visible = window._dbSubShowAll ? finalFiltered : finalFiltered.slice(0, 10);
-      const body = document.getElementById('db-subagent-body');
-      if (visible.length === 0) { body.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>'; }
-      else {
-        body.innerHTML = visible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}</td>
-          <td class="px-4 py-2 text-xs"><span class="${agentCls2[s.agent_type]||'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
-          <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
-          <td class="px-4 py-2 text-gray-400 text-xs">${fmtDur(s.duration_ms)}</td>
-          <td class="px-4 py-2 text-right text-white text-xs">${fmtK(s.tokens_in||0)} / ${fmtK(s.tokens_out||0)}</td>
-          <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
-          <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap text-right">${fmtTs(s.started_at)}</td>
-        </tr>`).join('');
-      }
-      const toggleBtn = document.getElementById('db-subagent-toggle');
-      if (finalFiltered.length <= 10) toggleBtn.classList.add('hidden');
-      else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 10' : 'Show All (' + finalFiltered.length + ' sessions)'; }
-    }
-
-    // ── Agent Sessions (with avatars) ─────────────────────
-    function renderAgentSessions() {
-      const filtered = filterByPeriodAndAgent(window._allItems);
-      // Per-agent stats
-      const agentIds = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'] };
-      let totalRuns = 0, totalCost = 0, totalIn = 0, totalOut = 0;
-      for (const [name, ids] of Object.entries(agentIds)) {
-        const agentItems = filtered.filter(s => ids.some(a => (s.agent_type||'').toLowerCase().includes(a)));
-        const runs = agentItems.length;
-        const cost = agentItems.reduce((s,x) => s + (x.estimated_cost_usd||0), 0);
-        const tIn = agentItems.reduce((s,x) => s + (x.tokens_in||0), 0);
-        const tOut = agentItems.reduce((s,x) => s + (x.tokens_out||0), 0);
-        set('ag-'+name+'-runs', runs);
-        set('ag-'+name+'-tokens', fmtK(tIn + tOut));
-        set('ag-'+name+'-cost', '$' + cost.toFixed(2));
-        totalRuns += runs; totalCost += cost; totalIn += tIn; totalOut += tOut;
-      }
-      set('ag-total-runs', totalRuns);
-      set('ag-total-cost', '$' + totalCost.toFixed(2));
-      set('ag-total-tokens', fmtK(totalIn) + ' / ' + fmtK(totalOut));
-      const sub = document.getElementById('ag-total-tokens-sub'); if (sub) sub.textContent = 'in / out';
-
-      // Table rows (most recent first, limit 20)
-      const sorted = [...filtered].sort((a,b) => (b.started_at||0) - (a.started_at||0)).slice(0, 20);
-      const body = document.getElementById('agent-sess-body');
-      if (sorted.length === 0) { body.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>'; return; }
-      body.innerHTML = sorted.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-        <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label||'')}">${esc((s.display_name||s.task_name||s.label||'—').slice(0,50))}</td>
-        <td class="px-4 py-2 text-xs"><span class="${agentCls2[s.agent_type]||'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
-        <td class="px-4 py-2 text-xs">${modelShortT(s.model)}</td>
-        <td class="px-4 py-2 text-right text-white text-xs">${fmtK(s.tokens_in||0)} / ${fmtK(s.tokens_out||0)}</td>
-        <td class="px-4 py-2 text-right text-gray-400 text-xs">${fmtDur(s.duration_ms)}</td>
-        <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
-        <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap text-right">${fmtTs(s.started_at)}</td>
-      </tr>`).join('');
 
       // Realtime dot
       const dot = document.getElementById('sb-realtime-dot');
@@ -506,134 +540,354 @@
       if (label) { label.textContent = 'Live'; label.className = 'text-xs text-green-500'; }
     }
 
-    // ── Per-Job Breakdown (cron only) ─────────────────────
-    function renderPerJobBreakdown() {
-      const cronItems = window._allItems.filter(i => i.is_cron);
-      const filtered = filterByPeriodAndAgent(cronItems);
+    // ── Main render (Per-Job + Grouped + Raw + Insights) ──────────────
+    function renderTokenSections() {
+      const range = window._tokenRange || 'today';
+      const agentFilter = window._globalAgent || 'all';
+      const taskFilter  = window._globalTask  || 'all';
+      const now = Date.now();
+      const n = new Date();
+      const cutoff = (() => {
+        if (range === '1h')        return now - 3600000;
+        if (range === '24h')       return now - 86400000;
+        if (range === 'today')     return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+        if (range === 'yesterday') { const y = new Date(n.getFullYear(), n.getMonth(), n.getDate()-1); return [y.getTime(), y.getTime()+86400000]; }
+        if (range === '7d')        return now - 7*86400000;
+        if (range === 'week')      { const d = n.getDay(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()-d).getTime(); }
+        if (range === '30d')       return now - 30*86400000;
+        if (range === 'month')     return new Date(n.getFullYear(), n.getMonth(), 1).getTime();
+        return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+      })();
+      const cutoffEnd = Array.isArray(cutoff) ? cutoff[1] : now;
+      const cutoffStart = Array.isArray(cutoff) ? cutoff[0] : cutoff;
+
+      const sbRows = window._sbSessionRows || [];
+
+      // ── Per-Job Breakdown (cron rows only) ──────────────────────────
+      const jobGroupMap = {};
+      sbRows.forEach(r => {
+        if (!r.session_key || !(r.session_key.startsWith('cron:') || r.session_key.includes(':cron:'))) return;
+        const cronName = cronTaskFromKey(r.session_key);
+        if (!cronName) return;
+        const ts = r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0;
+        if (ts < cutoffStart || ts >= cutoffEnd) return;
+        const agentId = (r.agent_id || '').toLowerCase();
+        if (agentFilter !== 'all') {
+          const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
+          const allowed = agentMap[agentFilter] || [agentFilter];
+          if (!allowed.some(a => agentId.includes(a))) return;
+        }
+        if (!jobGroupMap[cronName]) jobGroupMap[cronName] = { name: cronName, agent: agentId, model: r.model, rows: [] };
+        jobGroupMap[cronName].rows.push(r);
+      });
+
+      const jobStats = Object.values(jobGroupMap).map(g => {
+        const rows = g.rows;
+        const tokInput     = rows.reduce((s,r) => s + (r.input_tokens||0), 0);
+        const tokCacheRead = rows.reduce((s,r) => s + (r.cache_read||0), 0);
+        const tokCacheWrite= rows.reduce((s,r) => s + (r.cache_write||0), 0);
+        const tokensOut    = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
+        const tokensIn     = rows.reduce((s,r) => s + (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0), 0);
+        const tokens       = tokensIn + tokensOut;
+        const runs         = rows.length;
+        const p = _localModelPricing(g.model);
+        const cost = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0) ||
+                     _calcCost(p, tokInput, tokCacheRead, tokCacheWrite, tokensOut);
+        const displayName  = CRON_DISPLAY[g.name] || g.name.replace(/-/g,' ');
+        return { id: g.name, name: displayName, rawName: g.name, agent: g.agent, model: g.model,
+                 tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
+      }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
+
+      // Build agent-task maps
+      const agentNorm = a => { if (!a) return 'cliff'; if (a === 'main' || a === 'cliff') return 'cliff'; return a.toLowerCase(); };
+      const atMap = {}, taMap = {};
+      jobStats.forEach(j => {
+        const a = agentNorm(j.agent);
+        if (!atMap[a]) atMap[a] = [];
+        if (!atMap[a].includes(j.name)) atMap[a].push(j.name);
+        if (!taMap[j.name]) taMap[j.name] = [];
+        if (!taMap[j.name].includes(a)) taMap[j.name].push(a);
+      });
+
+      // Build allDbItems from sbRows (all rows, not just cron)
+      const allDbItems = sbRows.map(r => {
+        const isCron = r.session_key && (r.session_key.startsWith('cron:') || r.session_key.includes(':cron:'));
+        const cronName = isCron ? cronTaskFromKey(r.session_key) : null;
+        const displayName = sessionKeyToFriendly(r.session_key, r.session_id);
+        const runMs = (() => { const m = r.session_key?.match(/:run:(\d+)$/); return m ? parseInt(m[1]) : null; })();
+        const durationMs = r.duration_ms || (r.last_seen_at && r.first_seen_at
+          ? new Date(r.last_seen_at) - new Date(r.first_seen_at) : 0);
+        return {
+          display_name: displayName,
+          task_name:    cronName || (isCron ? 'unknown' : 'direct'),
+          agent_type:   r.agent_id,
+          model:        r.model,
+          duration_ms:  durationMs,
+          tokens_in:    (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0),
+          tokens_out:   r.output_tokens || 0,
+          estimated_cost_usd: r.cost_total_usd || 0,
+          started_at:   runMs || (r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0),
+          label:        r.session_key,
+        };
+      });
+      window._allDbSubItems = allDbItems;
+
+      // Add sub items to agent-task map
+      allDbItems.forEach(s => {
+        const a = agentNorm(s.agent_type);
+        const t = s.display_name || s.task_name;
+        if (!t) return;
+        if (!atMap[a]) atMap[a] = [];
+        if (!atMap[a].includes(t)) atMap[a].push(t);
+        if (!taMap[t]) taMap[t] = [];
+        if (!taMap[t].includes(a)) taMap[t].push(a);
+      });
+      window._agentTaskMap = atMap;
+      window._taskAgentMap = taMap;
+
+      const subTaskNames = [...new Set(allDbItems.map(s => s.display_name || s.task_name).filter(Boolean))];
+      const cronTaskNames = jobStats.map(j => j.name);
+      const allTaskNames = [...new Set([...cronTaskNames, ...subTaskNames])].sort();
+      const allAgentNames = [...new Set(Object.keys(atMap))].sort();
+      _populateTaskDropdown(allTaskNames);
+      _populateAgentDropdown(allAgentNames);
+
+      // Apply task filter to per-job
+      const filteredJobStats = taskFilter === 'all' ? jobStats : jobStats.filter(j => j.name === taskFilter);
+
+      const totalTokensIn  = jobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
+      const totalTokensOut = jobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
+      const totalRuns      = jobStats.reduce((s,j) => s+j.runs, 0);
+      const totalCost      = jobStats.reduce((s,j) => s+j.cost, 0);
+
+      window._cronTotals = { tokensIn: totalTokensIn, tokensOut: totalTokensOut, cost: totalCost, sessions: totalRuns };
+
+      // Per-Job table
+      const cronTotalRuns    = filteredJobStats.reduce((s,j) => s+j.runs, 0);
+      const cronTotalCost    = filteredJobStats.reduce((s,j) => s+j.cost, 0);
+      const cronTotalTokIn   = filteredJobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
+      const cronTotalTokOut  = filteredJobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
+      set('cron-total-runs', cronTotalRuns);
+      set('cron-total-cost', '$' + cronTotalCost.toFixed(2));
+      const cronToksEl = document.getElementById('cron-total-tokens');
+      if (cronToksEl) cronToksEl.innerHTML = _fmtK(cronTotalTokIn) + ' / ' + _fmtK(cronTotalTokOut);
+
+      const tbody = document.getElementById('tok-job-body');
+      if (filteredJobStats.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No data for this range</td></tr>';
+      } else {
+        const maxTokens = (filteredJobStats[0] || {tokens:1}).tokens;
+        tbody.innerHTML = filteredJobStats.map(j => {
+          const barPct = Math.round((j.tokens / maxTokens) * 100);
+          const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
+          const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
+          const taskLabel = _cronTaskMap[j.rawName||j.name] ? `<div class="text-gray-600 text-xs mt-0.5">&rarr; ${_cronTaskMap[j.rawName||j.name]}</div>` : '';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-1 text-xs font-bold text-gray-200">${esc(j.name)}${taskLabel}</td>
+            <td class="px-4 py-1 text-xs"><span class="${_agentCls[j.agent]||'text-gray-400'}">${_agentLabel[j.agent]||j.agent||'—'}</span></td>
+            <td class="px-4 py-1 text-xs">${_modelShortT(j.model)}</td>
+            <td class="px-4 py-1 text-right text-white text-xs font-bold">${j.runs}</td>
+            <td class="px-4 py-1 text-right text-white text-xs">${_fmtK(j.tokensIn||0)} / ${_fmtK(j.tokensOut||0)}</td>
+            <td class="px-4 py-1 text-right text-gray-400 text-xs">${_fmtK(j.avg)}</td>
+            <td class="px-4 py-1 text-right text-yellow-400 text-xs font-semibold">${costStr}</td>
+            <td class="px-4 py-1" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
+          </tr>`;
+        }).join('');
+      }
+
+      // ── Grouped Sub-agent Summary ───────────────────────────────────
+      renderGrouped(allDbItems, cutoffStart, cutoffEnd);
+
+      // ── Raw table ───────────────────────────────────────────────────
+      renderRawTable(allDbItems);
+
+      // ── Efficiency Insights ─────────────────────────────────────────
+      renderInsights(jobStats);
+    }
+
+    // ── Grouped sub-agent ─────────────────────────────────────────────
+    function renderGrouped(allDbItems, cutoffStart, cutoffEnd) {
+      const agent = window._globalAgent || 'all';
+      const taskF = window._globalTask || 'all';
+      const items = (allDbItems || window._allDbSubItems).filter(s => {
+        if (taskF !== 'all' && (s.display_name || s.task_name || '') !== taskF) return false;
+        if (agent !== 'all') {
+          const sa = (s.agent_type || '').toLowerCase();
+          const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
+          const allowed = agentMap[agent] || [agent];
+          if (!allowed.some(a => sa.includes(a))) return false;
+        }
+        return true;
+      });
+
       const groups = {};
-      for (const s of filtered) {
-        const key = s.display_name || s.task_name || 'Unknown';
-        if (!groups[key]) groups[key] = { task: key, rawName: s.task_name, agent: s.agent_type, model: s.model, runs: 0, tokensIn: 0, tokensOut: 0, totalCost: 0 };
+      for (const s of items) {
+        const key = s.display_name || s.task_name || s.agent_type || 'Unknown';
+        if (!groups[key]) groups[key] = { task: key, agent: s.agent_type, model: s.model, runs: 0, totalDur: 0, tokensIn: 0, tokensOut: 0, totalCost: 0 };
         groups[key].runs++;
+        groups[key].totalDur += s.duration_ms || 0;
         groups[key].tokensIn += s.tokens_in || 0;
         groups[key].tokensOut += s.tokens_out || 0;
         groups[key].totalCost += s.estimated_cost_usd || 0;
       }
-      const sorted = Object.values(groups).sort((a,b) => (b.tokensIn+b.tokensOut) - (a.tokensIn+a.tokensOut));
-      const totalRuns = sorted.reduce((s,r) => s + r.runs, 0);
-      const totalCost = sorted.reduce((s,r) => s + r.totalCost, 0);
-      const totalIn   = sorted.reduce((s,r) => s + r.tokensIn, 0);
-      const totalOut  = sorted.reduce((s,r) => s + r.tokensOut, 0);
-      set('cron-total-runs', totalRuns);
-      set('cron-total-cost', '$' + totalCost.toFixed(2));
-      set('cron-total-tokens', fmtK(totalIn) + ' / ' + fmtK(totalOut));
-      window._cronTotals = { tokensIn: totalIn, tokensOut: totalOut, cost: totalCost, sessions: totalRuns };
-      updateSummaryCards();
 
-      const body = document.getElementById('tok-job-body');
-      if (sorted.length === 0) { body.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No data for this range</td></tr>'; return; }
-      const maxTokens = sorted[0] ? (sorted[0].tokensIn + sorted[0].tokensOut) : 1;
+      const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
+      const totalRuns   = sorted.reduce((s,r) => s + r.runs, 0);
+      const totalCost   = sorted.reduce((s,r) => s + r.totalCost, 0);
+      const totalTokIn  = sorted.reduce((s,r) => s + r.tokensIn, 0);
+      const totalTokOut = sorted.reduce((s,r) => s + r.tokensOut, 0);
+      set('grp-sub-runs', totalRuns);
+      set('grp-sub-cost', '$' + totalCost.toFixed(2));
+      const grpTokEl = document.getElementById('grp-sub-tokens');
+      if (grpTokEl) grpTokEl.textContent = _fmtK(totalTokIn) + ' / ' + _fmtK(totalTokOut);
+      const grpSubEl = document.getElementById('grp-sub-tokens-sub');
+      if (grpSubEl) grpSubEl.textContent = 'in / out';
+      window._subTotals = { tokensIn: totalTokIn, tokensOut: totalTokOut, cost: totalCost, sessions: totalRuns };
+      _updateSummaryCards();
+
+      const body = document.getElementById('grp-subagent-body');
+      if (sorted.length === 0) {
+        body.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
+        return;
+      }
+      const maxCost = sorted[0] ? sorted[0].totalCost : 1;
       body.innerHTML = sorted.map(g => {
-        const tokens = g.tokensIn + g.tokensOut;
-        const avg = g.runs ? Math.round(tokens / g.runs) : 0;
-        const barPct = Math.round((tokens / maxTokens) * 100);
+        const barPct = Math.round((g.totalCost / maxCost) * 100);
         const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
-        const costStr = g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(3) : '<$0.01';
+        const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-1 text-xs font-bold text-gray-200">${esc(g.task)}</td>
-          <td class="px-4 py-1 text-xs"><span class="${agentCls2[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
-          <td class="px-4 py-1 text-xs">${modelShortT(g.model)}</td>
-          <td class="px-4 py-1 text-right text-white text-xs font-bold">${g.runs}</td>
-          <td class="px-4 py-1 text-right text-white text-xs">${fmtK(g.tokensIn||0)} / ${fmtK(g.tokensOut||0)}</td>
-          <td class="px-4 py-1 text-right text-gray-400 text-xs">${fmtK(avg)}</td>
-          <td class="px-4 py-1 text-right text-yellow-400 text-xs font-semibold">${costStr}</td>
-          <td class="px-4 py-1" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}</td>
+          <td class="px-4 py-2 text-xs"><span class="${_agentCls[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
+          <td class="px-4 py-2 text-xs text-gray-400">${_modelShortT(g.model)}</td>
+          <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
+          <td class="px-4 py-2 text-right text-gray-400 text-xs">${_fmtDur(Math.round(g.totalDur/g.runs))}</td>
+          <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(g.tokensIn)} / ${_fmtK(g.tokensOut)}</td>
+          <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
+          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${g.totalCost >= 0.01 ? '$' + g.totalCost.toFixed(2) : '<$0.01'}</td>
+          <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
         </tr>`;
       }).join('');
     }
 
-    // ── Populate task dropdown ─────────────────────────────
-    function populateTaskDropdowns(items) {
-      const taskNames = [...new Set(items.map(s => s.display_name || s.task_name || 'Unknown'))].sort();
-      const opts = '<option value="all">All Tasks</option>' + taskNames.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
-      const globalSel = document.getElementById('global-task');
-      const rawSel = document.getElementById('raw-task-filter');
-      if (globalSel) globalSel.innerHTML = opts;
-      if (rawSel) rawSel.innerHTML = opts;
+    // ── Raw table ─────────────────────────────────────────────────────
+    function renderRawTable(allDbItems) {
+      const items = allDbItems || window._allDbSubItems;
+      const globalTask = window._globalTask || 'all';
+      const taskFilter = window._dbRawTaskFilter || 'all';
+      const globalTaskFiltered = globalTask === 'all' ? items
+        : items.filter(s => (s.display_name || s.task_name || 'Unknown') === globalTask);
+      const filtered = taskFilter === 'all' ? globalTaskFiltered
+        : globalTaskFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
+
+      const total   = filtered.length;
+      const cost    = filtered.reduce((s,x) => s + (x.estimated_cost_usd || 0), 0);
+      const toksIn  = filtered.reduce((s,x) => s + (x.tokens_in  || 0), 0);
+      const toksOut = filtered.reduce((s,x) => s + (x.tokens_out || 0), 0);
+      set('db-sub-total', total);
+      set('db-sub-cost', '$' + cost.toFixed(2));
+      const dbTokEl = document.getElementById('db-sub-tokens');
+      if (dbTokEl) dbTokEl.textContent = _fmtK(toksIn) + ' / ' + _fmtK(toksOut);
+      const dbSubEl = document.getElementById('db-sub-tokens-sub');
+      if (dbSubEl) dbSubEl.textContent = 'in / out';
+
+      // Populate raw task filter
+      const taskSel = document.getElementById('raw-task-filter');
+      if (taskSel) {
+        const currentFilter = taskSel.value || 'all';
+        const taskNames = [...new Set(items.map(s => s.display_name || s.task_name || 'Unknown'))].sort();
+        taskSel.innerHTML = '<option value="all">All Tasks</option>' +
+          taskNames.map(t => `<option value="${esc(t)}"${t === currentFilter ? ' selected' : ''}>${esc(t)}</option>`).join('');
+      }
+
+      const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
+      const dbSubBody = document.getElementById('db-subagent-body');
+      if (filtered.length === 0) {
+        dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
+      } else {
+        dbSubBody.innerHTML = visible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}</td>
+          <td class="px-4 py-2 text-xs"><span class="${_agentCls[s.agent_type] || 'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
+          <td class="px-4 py-2 text-xs">${_modelShortT(s.model)}</td>
+          <td class="px-4 py-2 text-gray-400 text-xs">${_fmtDur(s.duration_ms)}</td>
+          <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(s.tokens_in||0)} / ${_fmtK(s.tokens_out||0)}</td>
+          <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
+          <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap text-right">${_fmtTs(s.started_at)}</td>
+        </tr>`).join('');
+      }
+      const toggleBtn = document.getElementById('db-subagent-toggle');
+      if (filtered.length <= 20) toggleBtn.classList.add('hidden');
+      else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 20' : 'Show All (' + filtered.length + ' sessions)'; }
     }
 
-    // ── Insights ──────────────────────────────────────────
-    function renderInsights() {
-      const allItems = window._allItems;
-      const jobMap = {};
-      for (const s of allItems) {
-        const key = s.display_name || s.task_name || 'Unknown';
-        if (!jobMap[key]) jobMap[key] = { name: key, runs: 0, tokens: 0 };
-        jobMap[key].runs++;
-        jobMap[key].tokens += (s.tokens_in || 0) + (s.tokens_out || 0);
-      }
-      const jobStats = Object.values(jobMap).map(j => ({ ...j, avg: j.runs ? Math.round(j.tokens / j.runs) : 0 }));
+    window.filterRawTask = function(val) {
+      window._dbRawTaskFilter = val;
+      renderRawTable();
+    };
+
+    // ── Summary cards (combined cron + sub-agent) ─────────────────────
+    function _updateSummaryCards() {
+      const cron = window._cronTotals || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+      const sub  = window._subTotals  || { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
+      const combIn       = cron.tokensIn  + sub.tokensIn;
+      const combOut      = cron.tokensOut + sub.tokensOut;
+      const combCost     = cron.cost      + sub.cost;
+      const combSessions = cron.sessions  + sub.sessions;
+      const avgIn  = combSessions ? Math.round(combIn  / combSessions) : 0;
+      const avgOut = combSessions ? Math.round(combOut / combSessions) : 0;
+      const el = id => document.getElementById(id);
+      if (el('tok-total')) el('tok-total').innerHTML    = _fmtK(combIn) + ' / ' + _fmtK(combOut);
+      if (el('tok-cost'))  el('tok-cost').textContent   = '$' + combCost.toFixed(2);
+      if (el('tok-runs'))  el('tok-runs').textContent   = combSessions;
+      if (el('tok-avg'))   el('tok-avg').innerHTML      = _fmtK(avgIn) + ' / ' + _fmtK(avgOut);
+    }
+
+    // ── Efficiency Insights ───────────────────────────────────────────
+    function renderInsights(jobStats) {
       const insights = [];
       jobStats.forEach(j => {
-        if (j.avg > 80000) insights.push({ level: 'warn', msg: `<strong>${esc(j.name)}</strong> averages ${fmtK(j.avg)} tokens/run — high context load. Consider reducing frequency or adding an early-exit check.` });
-        if (j.runs > 20 && j.avg < 5000) insights.push({ level: 'ok', msg: `<strong>${esc(j.name)}</strong> is efficient at ${fmtK(j.avg)} avg tokens/run across ${j.runs} runs.` });
-        if (j.name === 'portal-data-refresh' && j.runs > 30) insights.push({ level: 'info', msg: `<strong>portal-data-refresh</strong> runs every minute (${j.runs}x today). Consider reducing to every 2-5 min to cut ~${fmtK(Math.round(j.tokens*0.6))} tokens/day.` });
+        if (j.avg > 80000) insights.push({ level: 'warn', msg: `<strong>${esc(j.name)}</strong> averages ${_fmtK(j.avg)} tokens/run — high context load. Consider reducing frequency or adding an early-exit check.` });
+        if (j.runs > 20 && j.avg < 5000) insights.push({ level: 'ok', msg: `<strong>${esc(j.name)}</strong> is efficient at ${_fmtK(j.avg)} avg tokens/run across ${j.runs} runs.` });
+        if (j.name === 'portal-data-refresh' && j.runs > 30) insights.push({ level: 'info', msg: `<strong>portal-data-refresh</strong> runs every minute (${j.runs}x today). Consider reducing to every 2-5 min to cut ~${_fmtK(Math.round(j.tokens*0.6))} tokens/day.` });
       });
       if (insights.length === 0) insights.push({ level: 'ok', msg: 'No efficiency issues detected.' });
       document.getElementById('tok-insights').innerHTML = insights.map(i => {
-        const icon = i.level === 'warn' ? '⚠️' : i.level === 'ok' ? '✅' : 'ℹ️';
+        const icon = i.level === 'warn' ? '\u26a0\ufe0f' : i.level === 'ok' ? '\u2705' : '\u2139\ufe0f';
         const cls = i.level === 'warn' ? 'text-yellow-400' : i.level === 'ok' ? 'text-green-400' : 'text-blue-400';
         return `<div class="flex gap-2"><span>${icon}</span><span class="${cls}">${i.msg}</span></div>`;
       }).join('');
     }
 
-    // ── Main data load ────────────────────────────────────
-    async function loadTokenData() {
-      try {
-        const { data: rows, error } = await _sb.from('session_snapshots')
-          .select('session_id,session_key,agent_id,model,input_tokens,output_tokens,cache_read_tokens,cache_write_tokens,total_tokens,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
-          .gt('total_tokens', 0)
-          .order('last_seen_at', { ascending: false })
-          .limit(2000);
-        if (error) { console.error('Token data error:', error); return; }
-        if (!rows || !rows.length) return;
+    // ── Convenience re-render ─────────────────────────────────────────
+    function renderAllSections() {
+      renderTokenSections();
+    }
 
-        window._allItems = rows.map(r => {
-          const isCron = (r.session_key || '').includes('cron:');
-          const taskName = cronTaskFromKey(r.session_key);
-          const agentId = r.agent_id || (r.session_key ? r.session_key.split(':')[1] : 'main');
-          const displayName = taskName ? (CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ')) : sessionKeyToFriendly(r.session_key, r.session_id);
-          const p = modelPricing(r.model);
-          const costCalc = r.cost_total_usd || (((r.input_tokens||0)*p.input + (r.output_tokens||0)*p.output + (r.cache_read_tokens||0)*p.cacheRead + (r.cache_write_tokens||0)*p.cacheWrite) / 1e6);
-          const runMs = r.first_seen_at ? new Date(r.first_seen_at).getTime() : (r.last_seen_at ? new Date(r.last_seen_at).getTime() : 0);
-          return {
-            session_id: r.session_id, session_key: r.session_key, agent_type: agentId,
-            model: r.model, tokens_in: r.input_tokens || 0, tokens_out: r.output_tokens || 0,
-            estimated_cost_usd: costCalc, duration_ms: r.duration_ms || 0,
-            task_name: taskName, display_name: displayName,
-            started_at: runMs, label: r.session_key, is_cron: isCron
-          };
+    // ── Init ──────────────────────────────────────────────────────────
+    initPortal('tokens', function(d) {
+      // data.json loaded — store cron list for name resolution
+      if (d && d.crons && d.crons.length) window._cronList = d.crons;
+      // Kick off the Supabase-powered rendering
+      loadAndRenderAgentSessions();
+    }).then(ok => {
+      if (!ok) return;
+      // Poll every 30s as fallback
+      setInterval(() => { loadAndRenderAgentSessions(); }, 30000);
+      // Realtime subscription for instant updates
+      _sb.channel('tokens-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'session_snapshots' }, () => {
+          loadAndRenderAgentSessions();
+        })
+        .subscribe(status => {
+          const dot = document.getElementById('sb-realtime-dot');
+          const label = document.getElementById('sb-realtime-label');
+          if (status === 'SUBSCRIBED') {
+            if (dot) { dot.className = 'w-2 h-2 rounded-full bg-green-500'; dot.style.boxShadow = '0 0 6px #4ade80'; }
+            if (label) { label.textContent = 'Live'; label.className = 'text-xs text-green-500'; }
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            if (dot) { dot.className = 'w-2 h-2 rounded-full bg-red-500'; dot.style.boxShadow = 'none'; }
+            if (label) { label.textContent = 'Disconnected'; label.className = 'text-xs text-red-400'; }
+          }
         });
-
-        populateTaskDropdowns(window._allItems);
-        renderSubGrouped();
-        renderRawTable();
-        renderAgentSessions();
-        renderPerJobBreakdown();
-        renderInsights();
-      } catch(e) { console.error('loadTokenData error:', e); }
-    }
-
-    function renderTokensPage(d) {
-      // Token data loaded directly from Supabase — no DATA render needed
-    }
-
-    initPortal('tokens', renderTokensPage).then(async ok => {
-      if (ok) {
-        await _sessionLabelsReady;
-        loadTokenData();
-        setupRealtime(null, () => { loadTokenData(); });
-      }
     });
   </script>
 </body>
