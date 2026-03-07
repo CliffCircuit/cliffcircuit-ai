@@ -571,6 +571,7 @@
     }
 
     function applyGlobalFilters() {
+      _grpManualRefresh = true;
       loadAndRenderAgentSessions();
     }
 
@@ -826,7 +827,11 @@
     }
 
     // ── Grouped sub-agent ─────────────────────────────────────────────
+    let _grpManualRefresh = false; // set true when user changes filters
     function renderGrouped(allDbItems, cutoffStart, cutoffEnd) {
+      // Skip auto-refresh re-render if user has something expanded (prevents flicker)
+      if (!_grpManualRefresh && (_expandedTasks.size > 0 || _expandedSessions.size > 0)) return;
+      _grpManualRefresh = false;
       const agent = window._globalAgent || 'all';
       const taskF = window._globalTask || 'all';
       const items = (allDbItems || window._allDbSubItems).filter(s => {
@@ -903,18 +908,8 @@
         </tr>`;
       }).join('');
 
-      // Re-expand previously expanded model rows + session drill-downs
-      _expandedTasks.forEach(task => {
-        const rows = body.querySelectorAll('tr[data-task-name]');
-        rows.forEach(r => {
-          if (r.dataset.taskName === task) _toggleModelExpand(r.id);
-        });
-      });
-      // Re-expand session drill-downs
-      _expandedSessions.forEach(storeKey => {
-        const btn = body.querySelector(`button[onclick*="${storeKey}"]`);
-        if (btn) _toggleSessionExpand(storeKey, btn);
-      });
+      // Note: when something is expanded, auto-refresh skips this function entirely
+      // (see guard at top). No need to re-expand — the DOM is untouched.
 
       // Efficiency insights — cost-aware, actionable rules
       const insights = [];
@@ -1101,6 +1096,7 @@
       // should NOT re-trigger the full Supabase fetch (it has its own 30s poll + realtime)
       if (_tokensInitialLoad) return;
       _tokensInitialLoad = true;
+      _grpManualRefresh = true;
       loadAndRenderAgentSessions();
       // Load stuck sessions watchdog
       loadLiveSessions();
