@@ -45,6 +45,7 @@ const CRON_UUID_MAP = {
   '4b0a52f3-d7c7-439a-bd93-ca90a030d200': 'samantha-tim-tweets',
   '50e0a780-c5ae-4d24-bf14-714e535de315': 'atlas-build',
   'befa343c-3f24-40bf-97ab-102954820866': 'atlas-refactor',
+  'da0de825-baa9-4356-989c-24aa5a2b370b': 'atlas-refactor',
   '47cfaf3a-ca98-4eb5-9851-b12ee18641fa': 'atlas-debug',
   '6cef6a39-3fde-4575-9208-947d53f6a425': 'atlas-debug',
   'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
