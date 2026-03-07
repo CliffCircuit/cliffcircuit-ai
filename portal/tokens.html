@@ -226,6 +226,10 @@
         </table>
       </div>
 
+      <div class="card p-5 mb-8">
+        <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
+        <div id="tok-insights" class="space-y-3 text-sm text-gray-500">Loading...</div>
+      </div>
 
     </div>
   </div>
@@ -409,7 +413,7 @@
       const cur = window._globalAgent || 'all';
       const task = window._globalTask || 'all';
       const filtered = task === 'all' ? agentNames : agentNames.filter(a => (window._taskAgentMap[task]||[]).includes(a));
-      const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', 'claude-code': 'Claude Code' };
+      const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', 'claude-code': 'Claude Code' };
       sel.innerHTML = '<option value="all">All Agents</option>' +
         filtered.map(a => `<option value="${a}"${a===cur?' selected':''}>${labels[a]||a}</option>`).join('');
     }
@@ -562,6 +566,7 @@
         if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
         return Math.round(ms/86400000) + 'd ago';
       };
+      rows.sort((a,b) => (b.duration_ms||0) - (a.duration_ms||0));
       tbody.innerHTML = rows.slice(0, 10).map(r => {
         const aCls   = _agentCls[r.agent_id] || 'text-gray-400';
         const aLbl   = _agentLabel[r.agent_id] || fmtAgent(r.agent_id);
@@ -726,6 +731,27 @@
           <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
         </tr>`;
       }).join('');
+
+      // Efficiency insights
+      const insights = [];
+      const groupedStats = Object.values(groups);
+      groupedStats.forEach(g => {
+        const totalTokens = (g.tokensIn || 0) + (g.tokensOut || 0);
+        const avgTokens = g.runs > 0 ? Math.round(totalTokens / g.runs) : 0;
+        if (avgTokens > 80000) insights.push({ level: "warn", msg: `<strong>${esc(g.task)}</strong> averages ${_fmtK(avgTokens)} tokens/run — high context load. Consider reducing frequency or adding an early-exit check.` });
+        if (g.runs > 20 && avgTokens < 5000) insights.push({ level: "ok", msg: `<strong>${esc(g.task)}</strong> is efficient at ${_fmtK(avgTokens)} avg tokens/run across ${g.runs} runs.` });
+        if (g.task === "Portal Data Refresh" && g.runs > 30) insights.push({ level: "info", msg: `<strong>Portal Data Refresh</strong> runs every minute (${g.runs}x today). Consider reducing to every 2-5 min.` });
+      });
+      if (insights.length === 0) insights.push({ level: "ok", msg: "No efficiency issues detected." });
+
+      const insightsEl = document.getElementById("tok-insights");
+      if (insightsEl) {
+        insightsEl.innerHTML = insights.map(i => {
+          const icon = i.level === "warn" ? "\u26A0" : i.level === "ok" ? "\u2713" : "i";
+          const cls = i.level === "warn" ? "text-yellow-400" : i.level === "ok" ? "text-green-400" : "text-blue-400";
+          return `<div class="flex gap-2 items-start"><span class="${cls} font-bold">${icon}</span><span class="${cls}">${i.msg}</span></div>`;
+        }).join("");
+      }
     }
 
     // ── Raw table ─────────────────────────────────────────────────────

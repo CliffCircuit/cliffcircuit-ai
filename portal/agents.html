@@ -334,7 +334,7 @@
             : s.includes('gpt') || s.includes('openai') || s.includes('o1') ? 'openai'
             : 'anthropic';
         }
-        if (el('thinking-level')) { el('thinking-level').textContent = level.charAt(0).toUpperCase() + level.slice(1); el('thinking-level').className = meta.color + ' text-sm font-semibold'; }
+        if (el('thinking-level')) { const display = level === "off" ? "OFF" : level.charAt(0).toUpperCase() + level.slice(1); el('thinking-level').textContent = display; el('thinking-level').className = meta.color + ' text-sm font-semibold'; }
         if (el('thinking-desc')) el('thinking-desc').textContent = meta.desc;
 
         // Status dot — online/offline based on sessions
@@ -395,7 +395,7 @@
         const tbody = document.getElementById(`${n}-jobs-body`);
         if (tbody) {
           const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
-          const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
+          const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {off:{l:'OFF',c:'text-gray-400'},low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
           const fmtTok = (t, j) => {
             if (!t) return '<span class="text-gray-700">—</span>';
             if (j && (j.lastRunInputTokens != null || j.lastRunOutputTokens != null)) {
