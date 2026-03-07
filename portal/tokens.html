@@ -402,11 +402,14 @@
       const hasMulti = sessions && sessions.length > 1;
       const hasSingle = sessions && sessions.length === 1;
       if (hasMulti || hasSingle) _sessionStore[storeKey] = sessions;
+      const btnStyle = 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;min-width:18px;display:inline-block;text-align:center;';
       if (hasMulti) {
-        const btnStyle = 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;';
         return `${count} <button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button>`;
       }
-      return `${count}`;
+      if (hasSingle) {
+        return `${count} <button onclick="event.stopPropagation();_toggleSingleSessionDetail('${storeKey}',this.closest('tr'))" title="Show session detail" style="${btnStyle}">+</button>`;
+      }
+      return `${count} <span style="${btnStyle}visibility:hidden;">+</span>`;
     }
     const _singleSessionSidCache = {}; // storeKey → stable sid
     function _toggleSingleSessionDetail(storeKey, parentRow) {
