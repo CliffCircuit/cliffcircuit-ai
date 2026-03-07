@@ -39,6 +39,10 @@
     .cost-bar-col:hover .cost-bar-value { color: #fef08a; }
     .cost-bar-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px 16px; font-size: 11px; color: #e5e7eb; white-space: nowrap; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.7); pointer-events: none; line-height: 1.6; }
     .cost-bar-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #374151; }
+    .cost-bar-tooltip.tt-anchor-right { left: auto; right: 0; transform: none; }
+    .cost-bar-tooltip.tt-anchor-right::after { left: auto; right: 12px; transform: none; }
+    .cost-bar-tooltip.tt-anchor-left { left: 0; transform: none; }
+    .cost-bar-tooltip.tt-anchor-left::after { left: 12px; transform: none; }
     .cost-bar-col:hover .cost-bar-tooltip { display: block; }
     .cost-chart-empty { text-align: center; padding: 32px 0; color: #4b5563; font-size: 13px; }
     @keyframes costBarGrow { to { transform: scaleY(1); } }
@@ -1123,6 +1127,26 @@
           if (item && item.dataset.seg) _toggleCostLegend(item.dataset.seg);
         };
       }
+
+      // 8. Tooltip overflow prevention — reposition on hover
+      chart.addEventListener('mouseenter', function(e) {
+        const col = e.target.closest('.cost-bar-col');
+        if (!col) return;
+        const tip = col.querySelector('.cost-bar-tooltip');
+        if (!tip) return;
+        // Reset any previous anchor class
+        tip.classList.remove('tt-anchor-right', 'tt-anchor-left');
+        // Force display so we can measure
+        tip.style.display = 'block';
+        const tipRect = tip.getBoundingClientRect();
+        const chartRect = chart.getBoundingClientRect();
+        if (tipRect.right > chartRect.right - 4) {
+          tip.classList.add('tt-anchor-right');
+        } else if (tipRect.left < chartRect.left + 4) {
+          tip.classList.add('tt-anchor-left');
+        }
+        tip.style.display = '';
+      }, true);
     }
 
     // ── Grouped sub-agent ─────────────────────────────────────────────
