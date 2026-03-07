@@ -59,6 +59,8 @@
     .cost-legend-item:hover { opacity: 0.85; }
     .cost-legend-item.cost-legend-hidden { opacity: 0.35; }
     .cost-legend-item.cost-legend-hidden .cost-legend-label { text-decoration: line-through; }
+    .cost-legend-toggle-all { font-size: 11px; color: #6b7280; cursor: pointer; user-select: none; transition: color 0.15s ease; margin-right: 4px; white-space: nowrap; }
+    .cost-legend-toggle-all:hover { color: #9ca3af; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -912,6 +914,20 @@
       renderCostBarChart(window._costChartItems);
     }
 
+    function _toggleAllCostLegend() {
+      const mode = window._costChartView || 'agent';
+      const hiddenSet = window._costChartHidden[mode];
+      const allKeys = window._costChartAllSegKeys || [];
+      if (hiddenSet.size === 0) {
+        // All visible → deselect all
+        allKeys.forEach(k => hiddenSet.add(k));
+      } else {
+        // Some or all hidden → select all
+        hiddenSet.clear();
+      }
+      renderCostBarChart(window._costChartItems);
+    }
+
     function _ensureChartContainer() {
       const wrap = document.getElementById('cost-bar-chart-wrap');
       const chart = document.getElementById('cost-bar-chart');
@@ -1087,9 +1103,13 @@
         </div>`;
       }).join('');
 
-      // 7. Render interactive legend
+      // 7. Render interactive legend with select/deselect all toggle
+      window._costChartAllSegKeys = sortedSegKeys;
       if (legendEl) {
-        legendEl.innerHTML = sortedSegKeys.map(sk => {
+        const allVisible = hiddenSet.size === 0;
+        const toggleLabel = allVisible ? 'Deselect All' : 'Select All';
+        const toggleHtml = `<span class="cost-legend-toggle-all" title="${toggleLabel}">${toggleLabel}</span>`;
+        legendEl.innerHTML = toggleHtml + sortedSegKeys.map(sk => {
           const name = mode === 'agent' ? (_agentNames[sk] || sk) : sk; // task and model modes use the key directly
           const color = colorMap[sk];
           const isHidden = hiddenSet.has(sk);
@@ -1098,6 +1118,7 @@
         }).join('');
         // Attach click handlers via delegation
         legendEl.onclick = function(e) {
+          if (e.target.closest('.cost-legend-toggle-all')) { _toggleAllCostLegend(); return; }
           const item = e.target.closest('.cost-legend-item');
           if (item && item.dataset.seg) _toggleCostLegend(item.dataset.seg);
         };
