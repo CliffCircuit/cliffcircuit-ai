@@ -1401,6 +1401,31 @@ function _renderStackedCostChart(items, mode) {
     }
   }
 
+  // Filter out buckets outside the selected time range.
+  // Cost spreading can create buckets far outside the window (e.g. a 12-hour session
+  // spreads cost into hours well before 'Last 1 Hour'). Compute the range boundaries
+  // using the same logic as the main query and drop any out-of-range bucket keys.
+  const _now = Date.now();
+  const _n = new Date(_now);
+  const _rangeCalc = (() => {
+    if (range === '1h')        return { s: _now - 3600000, e: _now };
+    if (range === '24h')       return { s: _now - 86400000, e: _now };
+    if (range === 'today')     return { s: new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()).getTime(), e: _now };
+    if (range === 'yesterday') { const y = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()-1); return { s: y.getTime(), e: y.getTime()+86400000 }; }
+    if (range === '7d')        return { s: _now - 7*86400000, e: _now };
+    if (range === 'week')      { const d = _n.getDay(); return { s: new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()-d).getTime(), e: _now }; }
+    if (range === '30d')       return { s: _now - 30*86400000, e: _now };
+    if (range === 'month')     return { s: new Date(_n.getFullYear(), _n.getMonth(), 1).getTime(), e: _now };
+    return { s: new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()).getTime(), e: _now };
+  })();
+  // Compute bucket keys for the range boundaries so we can do a string compare
+  const _rangeStartKey = _bucketKeyAndLabel(new Date(_rangeCalc.s), isHourly).timeKey;
+  const _rangeEndKey = _bucketKeyAndLabel(new Date(_rangeCalc.e), isHourly).timeKey;
+  // Remove any buckets outside [_rangeStartKey, _rangeEndKey]
+  for (const bk of Object.keys(buckets)) {
+    if (bk < _rangeStartKey || bk > _rangeEndKey) delete buckets[bk];
+  }
+
   const timePeriods = Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
 
   if (timePeriods.length === 0) {
