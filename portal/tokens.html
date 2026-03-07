@@ -733,17 +733,30 @@
         </tr>`;
       }).join('');
 
-      // Efficiency insights
+      // Efficiency insights — cost-aware, actionable rules
       const insights = [];
       const groupedStats = Object.values(groups);
+      const totalSpend = groupedStats.reduce((s,g) => s + g.totalCost, 0);
       groupedStats.forEach(g => {
-        const totalTokens = (g.tokensIn || 0) + (g.tokensOut || 0);
-        const avgTokens = g.runs > 0 ? Math.round(totalTokens / g.runs) : 0;
-        if (avgTokens > 80000) insights.push({ level: "warn", msg: `<strong>${esc(g.task)}</strong> averages ${_fmtK(avgTokens)} tokens/run — high context load. Consider reducing frequency or adding an early-exit check.` });
-        if (g.runs > 20 && avgTokens < 5000) insights.push({ level: "ok", msg: `<strong>${esc(g.task)}</strong> is efficient at ${_fmtK(avgTokens)} avg tokens/run across ${g.runs} runs.` });
-        if (g.task === "Portal Data Refresh" && g.runs > 30) insights.push({ level: "info", msg: `<strong>Portal Data Refresh</strong> runs every minute (${g.runs}x today). Consider reducing to every 2-5 min.` });
+        const avgCost = g.runs > 0 ? g.totalCost / g.runs : 0;
+        const avgTokens = g.runs > 0 ? Math.round((g.tokensIn + g.tokensOut) / g.runs) : 0;
+        const avgDur = g.runs > 0 ? g.totalDur / g.runs : 0;
+        const costShare = totalSpend > 0 ? g.totalCost / totalSpend : 0;
+        // High cost per run (> $1/run)
+        if (avgCost > 1.0) insights.push({ level: 'warn', msg: `<strong>${esc(g.task)}</strong> costs $${avgCost.toFixed(2)}/run avg across ${g.runs} runs ($${g.totalCost.toFixed(2)} total). Review if this task needs a cheaper model or shorter context.` });
+        // Cost hog — single task > 50% of total spend
+        else if (costShare > 0.5 && g.totalCost > 1.0) insights.push({ level: 'warn', msg: `<strong>${esc(g.task)}</strong> accounts for ${Math.round(costShare*100)}% of total spend ($${g.totalCost.toFixed(2)}). Consider whether frequency or model tier can be reduced.` });
+        // Long average duration (> 30 min per run)
+        if (avgDur > 1800000 && g.runs >= 2) insights.push({ level: 'info', msg: `<strong>${esc(g.task)}</strong> averages ${Math.round(avgDur/60000)}m per run — potentially stuck or doing too much work per session.` });
+        // High frequency + low value (many runs, very cheap each — could reduce frequency)
+        if (g.runs > 40 && avgCost < 0.01) insights.push({ level: 'info', msg: `<strong>${esc(g.task)}</strong> ran ${g.runs}x but costs almost nothing per run. Consider reducing frequency to save overhead.` });
+        // Efficient tasks worth celebrating
+        if (g.runs >= 5 && avgCost < 0.05 && avgCost > 0) insights.push({ level: 'ok', msg: `<strong>${esc(g.task)}</strong> is efficient: $${avgCost.toFixed(3)}/run across ${g.runs} runs.` });
       });
-      if (insights.length === 0) insights.push({ level: "ok", msg: "No efficiency issues detected." });
+      // Overall spend context
+      if (totalSpend > 10) insights.unshift({ level: 'warn', msg: `Total spend this period: <strong>$${totalSpend.toFixed(2)}</strong>. Review top cost drivers above.` });
+      else if (totalSpend > 0) insights.unshift({ level: 'ok', msg: `Total spend this period: <strong>$${totalSpend.toFixed(2)}</strong>.` });
+      if (insights.length === 0) insights.push({ level: 'ok', msg: 'No efficiency issues detected.' });
 
       const insightsEl = document.getElementById("tok-insights");
       if (insightsEl) {
