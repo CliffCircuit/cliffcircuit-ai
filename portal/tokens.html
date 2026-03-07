@@ -54,7 +54,11 @@
     /* Legend */
     .cost-chart-legend { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 12px; padding: 8px 0; }
     .cost-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #9ca3af; }
-    .cost-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .cost-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; transition: opacity 0.2s ease; }
+    .cost-legend-item { cursor: pointer; user-select: none; transition: opacity 0.2s ease; }
+    .cost-legend-item:hover { opacity: 0.85; }
+    .cost-legend-item.cost-legend-hidden { opacity: 0.35; }
+    .cost-legend-item.cost-legend-hidden .cost-legend-label { text-decoration: line-through; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -288,6 +292,7 @@
     window._taskAgentMap = {};
     window._costChartView = 'agent';  // default: stacked by agent over time
     window._costChartItems = [];     // cached items for re-render on view switch
+    window._costChartHidden = { agent: new Set(), model: new Set() }; // legend toggle state per view
 
     // ── Local helpers (match old page exactly) ────────────────────────
     const _fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
@@ -895,6 +900,17 @@
       renderCostBarChart(window._costChartItems);
     }
 
+    function _toggleCostLegend(segKey) {
+      const mode = window._costChartView || 'agent';
+      const hiddenSet = window._costChartHidden[mode];
+      if (hiddenSet.has(segKey)) {
+        hiddenSet.delete(segKey);
+      } else {
+        hiddenSet.add(segKey);
+      }
+      renderCostBarChart(window._costChartItems);
+    }
+
     function _ensureChartContainer() {
       const wrap = document.getElementById('cost-bar-chart-wrap');
       const chart = document.getElementById('cost-bar-chart');
@@ -997,14 +1013,7 @@
 
       wrap.style.display = '';
 
-      // 2. Compute max total cost per period (for scaling)
-      const periodTotals = timePeriods.map(([, b]) =>
-        Object.values(b.segments).reduce((sum, seg) => sum + seg.cost, 0)
-      );
-      const maxCost = Math.max(...periodTotals) || 1;
-      _renderChartGrid(container, maxCost);
-
-      // 3. Build color map for segments
+      // 2. Build color map for segments
       const sortedSegKeys = [...allSegKeys].sort((a, b) => {
         // Sort by total cost descending for consistent ordering
         const aCost = timePeriods.reduce((s, [, bk]) => s + (bk.segments[a]?.cost || 0), 0);
@@ -1019,25 +1028,40 @@
         sortedSegKeys.forEach((k, i) => { colorMap[k] = _modelColorPalette[i % _modelColorPalette.length]; });
       }
 
-      // 4. Render stacked bars
+      // 4. Determine hidden segments for this view
+      const hiddenSet = window._costChartHidden[mode] || new Set();
+
+      // 5. Compute visible max cost (excluding hidden segments) for scaling
+      const visiblePeriodTotals = timePeriods.map(([, b]) =>
+        Object.entries(b.segments)
+          .filter(([sk]) => !hiddenSet.has(sk))
+          .reduce((sum, [, seg]) => sum + seg.cost, 0)
+      );
+      const visibleMaxCost = Math.max(...visiblePeriodTotals) || 1;
+      _renderChartGrid(container, visibleMaxCost);
+
+      // 6. Render stacked bars — per-bar sort: largest cost at bottom
       chart.innerHTML = timePeriods.map(([key, bucket], colIdx) => {
-        const totalCost = Object.values(bucket.segments).reduce((s, seg) => s + seg.cost, 0);
-        const barHeightPct = Math.max((totalCost / maxCost) * 100, 2);
+        // Filter out hidden segments, then sort per-bar by cost descending (largest first = bottom)
+        const segs = Object.entries(bucket.segments)
+          .filter(([sk, seg]) => !hiddenSet.has(sk) && seg.cost > 0)
+          .map(([sk, seg]) => ({ key: sk, ...seg }))
+          .sort((a, b) => b.cost - a.cost);
+
+        const totalCost = segs.reduce((s, seg) => s + seg.cost, 0);
+        const barHeightPct = Math.max((totalCost / visibleMaxCost) * 100, 2);
         const delay = (colIdx * 0.06).toFixed(2);
 
-        // Build stacked segments (bottom-up: highest cost at bottom)
-        const segs = sortedSegKeys
-          .filter(sk => bucket.segments[sk] && bucket.segments[sk].cost > 0)
-          .map(sk => ({ key: sk, ...bucket.segments[sk] }));
-
-        // Reverse so highest-cost is at bottom visually (flex column goes top-down)
+        // Build stacked segments: segs is sorted desc (largest first).
+        // In CSS flex-direction:column, first child is at top.
+        // We want largest at bottom, so reverse: smallest first (top) → largest last (bottom).
         const segmentsHtml = [...segs].reverse().map(seg => {
           const segPct = totalCost > 0 ? (seg.cost / totalCost) * 100 : 0;
           const color = colorMap[seg.key];
           return `<div class="cost-stacked-segment" style="height:${segPct}%;background:${color};"></div>`;
         }).join('');
 
-        // Tooltip breakdown
+        // Tooltip breakdown (sorted by cost desc)
         const tooltipLines = segs.map(seg => {
           const name = mode === 'agent' ? (_agentNames[seg.key] || seg.key) : seg.key;
           const color = colorMap[seg.key];
@@ -1059,13 +1083,20 @@
         </div>`;
       }).join('');
 
-      // 5. Render legend
+      // 7. Render interactive legend
       if (legendEl) {
         legendEl.innerHTML = sortedSegKeys.map(sk => {
           const name = mode === 'agent' ? (_agentNames[sk] || sk) : sk;
           const color = colorMap[sk];
-          return `<div class="cost-legend-item"><span class="cost-legend-swatch" style="background:${color};"></span>${esc(name)}</div>`;
+          const isHidden = hiddenSet.has(sk);
+          const hiddenCls = isHidden ? ' cost-legend-hidden' : '';
+          return `<div class="cost-legend-item${hiddenCls}" data-seg="${esc(sk)}" title="Click to ${isHidden ? 'show' : 'hide'}"><span class="cost-legend-swatch" style="background:${color};"></span><span class="cost-legend-label">${esc(name)}</span></div>`;
         }).join('');
+        // Attach click handlers via delegation
+        legendEl.onclick = function(e) {
+          const item = e.target.closest('.cost-legend-item');
+          if (item && item.dataset.seg) _toggleCostLegend(item.dataset.seg);
+        };
       }
     }
 
