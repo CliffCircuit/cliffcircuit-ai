@@ -66,6 +66,20 @@
               <option value="all" selected>All Tasks</option>
             </select>
           </div>
+          <div class="w-px h-4 bg-gray-700"></div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Provider</span>
+            <select id="global-provider" onchange="setGlobalProvider(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all" selected>All Providers</option>
+            </select>
+          </div>
+          <div class="w-px h-4 bg-gray-700"></div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Model</span>
+            <select id="global-model" onchange="setGlobalModel(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
+              <option value="all" selected>All Models</option>
+            </select>
+          </div>
           <div class="ml-auto text-xs text-gray-600 italic">Global filters affect all sections and summary totals</div>
         </div>
       </div>
@@ -227,9 +241,11 @@
 
     // ── State ─────────────────────────────────────────────────────────
     window._globalRange  = 'today';
-    window._globalAgent  = 'all';
-    window._globalTask   = 'all';
-    window._tokenRange   = 'today';
+    window._globalAgent    = 'all';
+    window._globalTask     = 'all';
+    window._globalProvider = 'all';
+    window._globalModel    = 'all';
+    window._tokenRange     = 'today';
     window._dbSubShowAll = false;
     window._dbRawTaskFilter = 'all';
     window._sbSessionRows = [];
@@ -375,6 +391,59 @@
         }
       }
       applyGlobalFilters();
+    }
+
+    function setGlobalProvider(p) {
+      window._globalProvider = p;
+      // Reset model filter if it doesn't match the new provider
+      if (p !== 'all' && window._globalModel !== 'all') {
+        const modelProvider = _getProviderFromModel(window._globalModel);
+        if (modelProvider !== p) {
+          window._globalModel = 'all';
+          const mSel = document.getElementById('global-model');
+          if (mSel) mSel.value = 'all';
+        }
+      }
+      applyGlobalFilters();
+    }
+    function setGlobalModel(m) {
+      window._globalModel = m;
+      applyGlobalFilters();
+    }
+
+    function _getProviderFromModel(rawModel) {
+      if (!rawModel) return 'Unknown';
+      const m = rawModel.toLowerCase();
+      if (m.includes('claude') || m.includes('anthropic')) return 'Anthropic';
+      if (m.includes('gemini') || m.includes('google')) return 'Google';
+      if (m.includes('grok') || m.includes('xai')) return 'xAI';
+      if (m.includes('gpt') || m.includes('openai') || m.includes('o1')) return 'OpenAI';
+      return 'Other';
+    }
+
+    function _populateProviderDropdown(items) {
+      const sel = document.getElementById('global-provider');
+      if (!sel) return;
+      const cur = window._globalProvider || 'all';
+      const providers = [...new Set(items.map(s => _getProviderFromModel(s.model)))].sort();
+      sel.innerHTML = '<option value="all">All Providers</option>' +
+        providers.map(p => `<option value="${esc(p)}"${p===cur?' selected':''}>${esc(p)}</option>`).join('');
+    }
+
+    function _populateModelDropdown(items) {
+      const sel = document.getElementById('global-model');
+      if (!sel) return;
+      const cur = window._globalModel || 'all';
+      const provFilter = window._globalProvider || 'all';
+      const filtered = provFilter === 'all' ? items : items.filter(s => _getProviderFromModel(s.model) === provFilter);
+      const modelLabels = {};
+      filtered.forEach(s => {
+        const label = typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model;
+        if (label && label !== 'Unknown') modelLabels[label] = true;
+      });
+      const sorted = Object.keys(modelLabels).sort();
+      sel.innerHTML = '<option value="all">All Models</option>' +
+        sorted.map(m => `<option value="${esc(m)}"${m===cur?' selected':''}>${esc(m)}</option>`).join('');
     }
 
     function applyGlobalFilters() {
@@ -595,14 +664,25 @@
       const allAgentNames = [...new Set(Object.keys(atMap))].sort();
       _populateTaskDropdown(allTaskNames);
       _populateAgentDropdown(allAgentNames);
+      _populateProviderDropdown(allDbItems);
+      _populateModelDropdown(allDbItems);
+
+      // Apply provider and model filters
+      const providerFilter = window._globalProvider || 'all';
+      const modelFilter = window._globalModel || 'all';
+      const filteredDbItems = allDbItems.filter(s => {
+        if (providerFilter !== 'all' && _getProviderFromModel(s.model) !== providerFilter) return false;
+        if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model) !== modelFilter) return false;
+        return true;
+      });
 
       window._cronTotals = { tokensIn: 0, tokensOut: 0, cost: 0, sessions: 0 };
 
       // ── Grouped Agent Sessions Summary ────────────────────────────
-      renderGrouped(allDbItems, cutoffStart, cutoffEnd);
+      renderGrouped(filteredDbItems, cutoffStart, cutoffEnd);
 
       // ── Raw table ───────────────────────────────────────────────────
-      renderRawTable(allDbItems);
+      renderRawTable(filteredDbItems);
     }
 
     // ── Grouped sub-agent ─────────────────────────────────────────────
