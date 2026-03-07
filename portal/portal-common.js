@@ -252,48 +252,55 @@ function resolveModelAlias(m) {
   return MODEL_ALIASES[key] || m;
 }
 
+// friendlyModel / modelShort use resolveModelAlias first, then this
+// ordered list. EVERY entry must include a version number — no bare names.
+// If a new model family appears, add it WITH its version here.
+const _MODEL_RULES = [
+  // Anthropic
+  { match: ['opus-4-6','opus-4.6'],                  label: 'Opus 4.6',              color: 'text-purple-400' },
+  { match: ['opus-4'],                               label: 'Opus 4',                color: 'text-purple-400' },
+  { match: ['opus'],                                 label: 'Opus 4.6',              color: 'text-purple-400' },  // bare → current default
+  { match: ['sonnet-4-6','sonnet-4.6'],              label: 'Sonnet 4.6',            color: 'text-indigo-400' },
+  { match: ['sonnet-4-5','sonnet-4.5'],              label: 'Sonnet 4.5',            color: 'text-indigo-400' },
+  { match: ['sonnet'],                               label: 'Sonnet 4.6',            color: 'text-indigo-400' },
+  { match: ['haiku-4-5','haiku-4.5'],                label: 'Haiku 4.5',             color: 'text-yellow-600' },
+  { match: ['haiku-3-5','haiku-3.5'],                label: 'Haiku 3.5',             color: 'text-yellow-600' },
+  { match: ['haiku'],                                label: 'Haiku 4.5',             color: 'text-yellow-600' },
+  // Google
+  { match: ['gemini-3.1-flash-lite','flash-lite'],   label: 'Gemini 3.1 Flash Lite', color: 'text-green-400' },
+  { match: ['gemini-3.1-pro'],                       label: 'Gemini 3.1 Pro',        color: 'text-green-400' },
+  { match: ['gemini-2.5-flash'],                     label: 'Gemini 2.5 Flash',      color: 'text-green-400' },
+  { match: ['gemini-2.5-pro'],                       label: 'Gemini 2.5 Pro',        color: 'text-green-400' },
+  { match: ['gemini'],                               label: 'Gemini 2.5 Flash',      color: 'text-green-400' },
+  // xAI
+  { match: ['grok-4.1-fast','grok-4-1-fast'],        label: 'Grok 4.1 Fast',         color: 'text-orange-400' },
+  { match: ['grok-4.1','grok-4-1'],                  label: 'Grok 4.1',              color: 'text-orange-400' },
+  { match: ['grok'],                                 label: 'Grok 4.1',              color: 'text-orange-400' },
+  // OpenAI
+  { match: ['gpt-4o'],                               label: 'GPT-4o',                color: 'text-gray-400' },
+  { match: ['gpt-4'],                                label: 'GPT-4',                 color: 'text-gray-400' },
+  { match: ['o1'],                                   label: 'o1',                    color: 'text-gray-400' },
+];
+
+function _resolveModelRule(m) {
+  if (!m) return null;
+  const s = m.toLowerCase();
+  return _MODEL_RULES.find(r => r.match.some(p => s.includes(p))) || null;
+}
+
 function friendlyModel(m) {
   m = resolveModelAlias(m);
   if (!m || m === 'Unknown') return 'Unknown';
-  const s = m.toLowerCase();
-  if (s.includes('opus-4-6') || s.includes('opus-4.6')) return 'Opus 4.6';
-  if (s.includes('opus-4')) return 'Opus 4';
-  if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return 'Sonnet 4.6';
-  if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return 'Sonnet 4.5';
-  if (s.includes('sonnet-4')) return 'Sonnet 4';
-  if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return 'Haiku 4.5';
-  if (s.includes('haiku-3-5') || s.includes('haiku-3.5')) return 'Haiku 3.5';
-  if (s.includes('haiku')) return 'Haiku';
-  if (s.includes('gemini-3.1-pro')) return 'Gemini 3.1 Pro';
-  if (s.includes('gemini-3.1-flash-lite')) return 'Gemini 3.1 Flash Lite';
-  if (s.includes('gemini-2.5-flash')) return 'Gemini 2.5 Flash';
-  if (s.includes('gemini-2.5-pro')) return 'Gemini 2.5 Pro';
-  if (s.includes('gemini')) return 'Gemini';
-  if (s.includes('grok-4.1-fast') || s.includes('grok-4-1-fast')) return 'Grok 4.1 Fast';
-  if (s.includes('grok-4.1') || s.includes('grok-4-1')) return 'Grok 4.1';
-  if (s.includes('grok')) return 'Grok';
-  if (s.includes('gpt-4o')) return 'GPT-4o';
-  if (s.includes('gpt-4')) return 'GPT-4';
-  if (s.includes('o1')) return 'o1';
-  return m.split('/').pop().replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase());
+  const rule = _resolveModelRule(m);
+  if (rule) return rule.label;
+  return m.split('/').pop().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function modelShort(m) {
   m = resolveModelAlias(m);
   if (!m) return '<span class="text-gray-700">—</span>';
-  const s = m.toLowerCase();
-  if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
-  if (s.includes('opus')) return '<span class="text-purple-400">Opus</span>';
-  if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return '<span class="text-indigo-400">Sonnet 4.6</span>';
-  if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return '<span class="text-indigo-400">Sonnet 4.5</span>';
-  if (s.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
-  if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return '<span class="text-yellow-600">Haiku 4.5</span>';
-  if (s.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
-  if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return '<span class="text-green-400">Gemini 3.1 Flash Lite</span>';
-  if (s.includes('gemini-2.5-flash')) return '<span class="text-green-400">Gemini 2.5 Flash</span>';
-  if (s.includes('gemini-2.5-pro')) return '<span class="text-green-400">Gemini 2.5 Pro</span>';
-  if (s.includes('gemini')) return '<span class="text-green-400">Gemini</span>';
-  if (s.includes('grok')) return '<span class="text-orange-400">Grok</span>';
+  const rule = _resolveModelRule(m);
+  if (rule) return `<span class="${rule.color}">${rule.label}</span>`;
   return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
 }
 

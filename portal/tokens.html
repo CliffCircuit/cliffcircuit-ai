@@ -259,24 +259,8 @@
     const _agentCls = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400', atlas:'text-orange-400' };
     const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
 
-    const _modelShortT = m => {
-      m = typeof resolveModelAlias === 'function' ? resolveModelAlias(m) : m;
-      if (!m) return '<span class="text-gray-700">—</span>';
-      const s = m.toLowerCase();
-      if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
-      if (s.includes('opus')) return '<span class="text-purple-400">Opus</span>';
-      if (s.includes('sonnet-4-6') || s.includes('sonnet-4.6')) return '<span class="text-indigo-400">Sonnet 4.6</span>';
-      if (s.includes('sonnet-4-5') || s.includes('sonnet-4.5')) return '<span class="text-indigo-400">Sonnet 4.5</span>';
-      if (s.includes('sonnet')) return '<span class="text-indigo-400">Sonnet</span>';
-      if (s.includes('haiku-4-5') || s.includes('haiku-4.5')) return '<span class="text-yellow-600">Haiku 4.5</span>';
-      if (s.includes('haiku')) return '<span class="text-yellow-600">Haiku</span>';
-      if (s.includes('gemini-3.1-flash-lite') || s.includes('flash-lite')) return '<span class="text-green-400">Gemini 3.1 Flash Lite</span>';
-      if (s.includes('gemini-2.5-flash')) return '<span class="text-green-400">Gemini 2.5 Flash</span>';
-      if (s.includes('gemini-2.5-pro')) return '<span class="text-green-400">Gemini 2.5 Pro</span>';
-      if (s.includes('gemini')) return '<span class="text-green-400">Gemini</span>';
-      if (s.includes('grok')) return '<span class="text-orange-400">Grok</span>';
-      return `<span class="text-gray-400">${m.split('/').pop()}</span>`;
-    };
+    // Use the shared modelShort from portal-common.js (loaded before this script)
+    const _modelShortT = m => modelShort(m);
 
     const _localModelPricing = m => {
       if (!m) return { input: 3.0, cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
