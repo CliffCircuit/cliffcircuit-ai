@@ -54,6 +54,9 @@ let CRON_UUID_MAP = {
   '90ace20f-a8f6-43e1-857c-8087c828e279': 'atlas-build',
   '1158c2df-37aa-427e-930e-cf656bbf8e45': 'atlas-refactor',
   'ce615ff6-3724-4fb9-bc9c-51ccd3d619d8': 'atlas-debug',
+  '30c6adee-0d05-402a-8c1c-3a84a0bc2cee': 'atlas-build',
+  '52ae9266-274f-487d-bb1d-9583a65ba9fe': 'atlas-refactor',
+  'bc4e7a7d-c7e1-4459-9814-e4347a524707': 'atlas-debug',
   '087d28b7-261a-4261-926a-cb0b4e7a2825': 'daily-cost-report',
   'fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5': 'evening-check',
 };
