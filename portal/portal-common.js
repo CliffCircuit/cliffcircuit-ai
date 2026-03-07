@@ -523,6 +523,9 @@ async function loadData() {
         if (dj.sites)       DATA.sites       = dj.sites;
         if (dj.credentials) DATA.credentials = dj.credentials;
         if (dj.disk)        DATA.disk        = dj.disk;
+        if (dj.twitter)     DATA.twitter     = dj.twitter;
+        // Re-render so twitter stats appear after async merge
+        (window._pageRenderers || []).forEach(fn => { try { fn(DATA); } catch(e) { console.error('Renderer error:', e); } });
       }
     });
 
