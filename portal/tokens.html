@@ -269,7 +269,7 @@
       const expanded = parentRow.dataset.expanded === '1';
       // Remove existing sub-rows
       let next = parentRow.nextElementSibling;
-      while (next && next.classList.contains('model-sub-row')) {
+      while (next && (next.classList.contains('model-sub-row') || next.classList.contains('session-detail-row'))) {
         const toRemove = next;
         next = next.nextElementSibling;
         toRemove.remove();
@@ -289,7 +289,7 @@
       const entries = Object.entries(bd).sort((a,b) => b[1].cost - a[1].cost);
       const maxCost = entries[0] ? entries[0][1].cost : 1;
       let insertAfter = parentRow;
-      entries.forEach(([model, d]) => {
+      entries.forEach(([model, d], idx) => {
         const barPct = Math.round((d.cost / maxCost) * 100);
         const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
         const tr = document.createElement('tr');
@@ -301,12 +301,66 @@
           <td class="px-4 py-2 text-gray-500 text-xs font-medium" style="padding-left:28px;">${shortTask}</td>
           <td class="px-4 py-2 text-xs"><span class="${parentRow.dataset.agentCls || 'text-gray-400'}">${parentRow.dataset.agentLabel || ''}</span></td>
           <td class="px-4 py-2 text-xs text-gray-300">${model}</td>
-          <td class="px-4 py-2 text-right text-white text-xs font-bold">${d.count}</td>
+          <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(d.count, 'msub-' + rowId + '-' + idx, d.sessions)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${d.count > 0 ? _fmtDur(Math.round(d.dur / d.count)) : '\u2014'}</td>
           <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(d.tokIn)} / ${_fmtK(d.tokOut)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${d.count > 0 && (d.cost/d.count) >= 0.01 ? '$' + (d.cost/d.count).toFixed(3) : '<$0.01'}</td>
           <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${d.cost >= 0.01 ? '$' + d.cost.toFixed(2) : '<$0.01'}</td>
           <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>`;
+        insertAfter.after(tr);
+        insertAfter = tr;
+      });
+    }
+
+    // Session drill-down — expand individual sessions from runs count
+    const _sessionStore = {};
+    const _expandedSessions = new Set();
+    function _renderRunsCell(count, storeKey, sessions) {
+      if (!sessions || sessions.length <= 1) return String(count);
+      _sessionStore[storeKey] = sessions;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;">${count}<button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:10px;padding:0 4px;line-height:1.3;" title="Show individual sessions">+</button></span>`;
+    }
+    function _toggleSessionExpand(storeKey, btn) {
+      // Find the parent TR
+      const parentRow = btn.closest('tr');
+      if (!parentRow) return;
+      const expanded = parentRow.dataset.sessExpanded === '1';
+      // Remove existing session sub-rows
+      let next = parentRow.nextElementSibling;
+      while (next && next.classList.contains('session-detail-row')) {
+        const toRemove = next;
+        next = next.nextElementSibling;
+        toRemove.remove();
+      }
+      if (expanded) {
+        parentRow.dataset.sessExpanded = '0';
+        _expandedSessions.delete(storeKey);
+        return;
+      }
+      parentRow.dataset.sessExpanded = '1';
+      _expandedSessions.add(storeKey);
+      const sessions = _sessionStore[storeKey] || [];
+      const sorted = [...sessions].sort((a,b) => new Date(b.first_seen_at||0) - new Date(a.first_seen_at||0));
+      let insertAfter = parentRow;
+      sorted.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = 'session-detail-row border-b border-gray-900/50';
+        tr.style.cssText = 'background:rgba(30,40,55,0.5);';
+        const when = s.first_seen_at ? new Date(s.first_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
+        const dur = _fmtDur(s.duration_ms);
+        const tokIn = _fmtK(s.tokens_in || 0);
+        const tokOut = _fmtK(s.tokens_out || 0);
+        const cost = (s.estimated_cost_usd || 0) >= 0.01 ? '$' + (s.estimated_cost_usd||0).toFixed(2) : '<$0.01';
+        tr.innerHTML = `
+          <td class="px-4 py-1 text-gray-600 text-xs" style="padding-left:36px;">${when}</td>
+          <td class="px-4 py-1 text-xs"></td>
+          <td class="px-4 py-1 text-xs text-gray-500">${_modelShortT(s.model)}</td>
+          <td class="px-4 py-1 text-right text-gray-500 text-xs">1</td>
+          <td class="px-4 py-1 text-right text-gray-400 text-xs">${dur}</td>
+          <td class="px-4 py-1 text-right text-gray-300 text-xs">${tokIn} / ${tokOut}</td>
+          <td class="px-4 py-1 text-right text-gray-500 text-xs"></td>
+          <td class="px-4 py-1 text-right text-yellow-400/70 text-xs">${cost}</td>
+          <td class="px-4 py-1"></td>`;
         insertAfter.after(tr);
         insertAfter = tr;
       });
@@ -786,7 +840,7 @@
       const groups = {};
       for (const s of items) {
         const key = s.display_name || s.task_name || s.agent_type || 'Unknown';
-        if (!groups[key]) groups[key] = { task: key, agent: s.agent_type, model: s.model, runs: 0, totalDur: 0, tokensIn: 0, tokensOut: 0, totalCost: 0, modelBreakdown: {} };
+        if (!groups[key]) groups[key] = { task: key, agent: s.agent_type, model: s.model, runs: 0, totalDur: 0, tokensIn: 0, tokensOut: 0, totalCost: 0, modelBreakdown: {}, allSessions: [] };
         groups[key].runs++;
         groups[key].totalDur += s.duration_ms || 0;
         groups[key].tokensIn += s.tokens_in || 0;
@@ -794,12 +848,14 @@
         groups[key].totalCost += s.estimated_cost_usd || 0;
         // Track per-model breakdown
         const mLabel = _modelShortT(s.model);
-        if (!groups[key].modelBreakdown[mLabel]) groups[key].modelBreakdown[mLabel] = { count: 0, cost: 0, dur: 0, tokIn: 0, tokOut: 0 };
+        if (!groups[key].modelBreakdown[mLabel]) groups[key].modelBreakdown[mLabel] = { count: 0, cost: 0, dur: 0, tokIn: 0, tokOut: 0, sessions: [] };
         groups[key].modelBreakdown[mLabel].count++;
         groups[key].modelBreakdown[mLabel].cost += s.estimated_cost_usd || 0;
         groups[key].modelBreakdown[mLabel].dur += s.duration_ms || 0;
         groups[key].modelBreakdown[mLabel].tokIn += s.tokens_in || 0;
         groups[key].modelBreakdown[mLabel].tokOut += s.tokens_out || 0;
+        groups[key].modelBreakdown[mLabel].sessions.push(s);
+        groups[key].allSessions.push(s);
       }
 
       const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
@@ -835,7 +891,7 @@
           <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
-          <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
+          <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, 'grp-' + rowId, g.allSessions)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${_fmtDur(Math.round(g.totalDur/g.runs))}</td>
           <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(g.tokensIn)} / ${_fmtK(g.tokensOut)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
