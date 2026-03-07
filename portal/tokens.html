@@ -80,7 +80,7 @@
               <option value="all" selected>All Models</option>
             </select>
           </div>
-          <div class="ml-auto text-xs text-gray-600 italic">Global filters affect all sections and summary totals</div>
+
         </div>
       </div>
 
@@ -421,9 +421,14 @@
       const sel = document.getElementById('global-provider');
       if (!sel) return;
       const cur = window._globalProvider || 'all';
-      const providers = [...new Set(items.map(s => _getProviderFromModel(s.model)))].sort();
+      const providers = [...new Set(items.map(s => _getProviderFromModel(s.model)).filter(p => p !== 'Unknown'))].sort();
       sel.innerHTML = '<option value="all">All Providers</option>' +
         providers.map(p => `<option value="${esc(p)}"${p===cur?' selected':''}>${esc(p)}</option>`).join('');
+      // Reset stale selection if current provider no longer exists in options
+      if (cur !== 'all' && !providers.includes(cur)) {
+        window._globalProvider = 'all';
+        sel.value = 'all';
+      }
     }
 
     function _populateModelDropdown(items) {
@@ -916,7 +921,7 @@
 
     window.filterRawTask = function(val) {
       window._dbRawTaskFilter = val;
-      renderRawTable();
+      renderAllSections();
     };
 
     // ── Summary cards (combined cron + sub-agent) ─────────────────────
