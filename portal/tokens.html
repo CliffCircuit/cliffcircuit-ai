@@ -903,12 +903,17 @@
         </tr>`;
       }).join('');
 
-      // Re-expand previously expanded rows
+      // Re-expand previously expanded model rows + session drill-downs
       _expandedTasks.forEach(task => {
         const rows = body.querySelectorAll('tr[data-task-name]');
         rows.forEach(r => {
           if (r.dataset.taskName === task) _toggleModelExpand(r.id);
         });
+      });
+      // Re-expand session drill-downs
+      _expandedSessions.forEach(storeKey => {
+        const btn = body.querySelector(`button[onclick*="${storeKey}"]`);
+        if (btn) _toggleSessionExpand(storeKey, btn);
       });
 
       // Efficiency insights — cost-aware, actionable rules
@@ -1104,13 +1109,13 @@
     }).then(ok => {
       if (!ok) return;
       // Poll every 30s as fallback
-      setInterval(() => { loadAndRenderAgentSessions(); }, 30000);
+      setInterval(() => { loadAndRenderAgentSessions(); }, 120000);
       // Realtime subscription for instant updates (debounced to avoid rapid re-renders)
       let _rtDebounce = null;
       _sb.channel('tokens-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'session_snapshots' }, () => {
           clearTimeout(_rtDebounce);
-          _rtDebounce = setTimeout(() => loadAndRenderAgentSessions(), 10000);
+          _rtDebounce = setTimeout(() => loadAndRenderAgentSessions(), 30000);
         })
         .subscribe(status => {
           const dot = document.getElementById('sb-realtime-dot');
