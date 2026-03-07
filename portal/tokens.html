@@ -510,7 +510,7 @@
             <div class="sdp-meta">
               <span>Sent: <strong style="color:#d1d5db">${esc(sentAt)}</strong></span>
               <span>Completed: <strong style="color:#d1d5db">${esc(completedAt)}</strong></span>
-              <span>Duration: <strong style="color:#d1d5db">${_fmtDur(s.duration_ms)}</strong></span>
+              <span>Duration: <strong id="sdp-dur-${esc(sid)}" style="color:#d1d5db">${_fmtDur(s.duration_ms)}</strong></span>
               <span>Kind: <strong style="color:#d1d5db">${esc(kind)}</strong></span>
             </div>
             <button class="sdp-close" onclick="event.stopPropagation();_closeSessionDetail()" title="Close">&times;</button>
@@ -639,11 +639,18 @@
       // Strategy 1: Try atlas_jobs table in Supabase (most reliable)
       try {
         const { data, error } = await _sb.from('atlas_jobs')
-          .select('task_prompt,response_summary')
+          .select('task_prompt,response_summary,duration_seconds')
           .eq('session_id', sid)
+          .order('created_at', { ascending: false })
           .limit(1);
         if (!error && data && data.length > 0) {
-          _applyPreview(taskEl, respEl, data[0].task_prompt, data[0].response_summary);
+          const row = data[0];
+          // Update duration with exact seconds if available
+          if (row.duration_seconds != null) {
+            const durEl = document.getElementById('sdp-dur-' + sid);
+            if (durEl) durEl.textContent = row.duration_seconds + 's';
+          }
+          _applyPreview(taskEl, respEl, row.task_prompt, row.response_summary);
           return;
         }
       } catch(e) { /* continue to other strategies */ }
