@@ -517,16 +517,16 @@
         const cfg = _agentPortraitConfig[id] || { alias: id, name: _agentLabel[id] || id, avatar: '', accentClass: 'text-gray-400' };
         const d = agentData[id];
         const avatarHtml = cfg.avatar
-          ? `<img src="${cfg.avatar}" alt="${esc(cfg.name)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;" />`
-          : `<div style="width:48px;height:48px;border-radius:50%;background:#374151;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:18px;color:#9ca3af;">${esc(cfg.name.charAt(0))}</span></div>`;
-        return `<div style="background:#111827;border:1px solid #1f2937;border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;min-width:0;">
+          ? `<img src="${cfg.avatar}" alt="${esc(cfg.name)}" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" /><div class="absolute left-0 top-0 h-full w-32" style="background:linear-gradient(to right, transparent 55%, #111827 100%);"></div>`
+          : '';
+        return `<div class="relative overflow-hidden" style="min-height:90px;background:#111827;border:1px solid #1f2937;border-radius:8px;">
           ${avatarHtml}
-          <div style="min-width:0;">
+          <div class="relative px-5 py-4 ${cfg.avatar ? 'pl-36' : 'pl-5'}">
             <div class="${cfg.accentClass}" style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">${esc(cfg.name)}</div>
             <div style="display:flex;gap:16px;flex-wrap:wrap;">
-              <div><div style="font-size:11px;color:#6b7280;">Sessions</div><div style="font-size:16px;font-weight:700;color:#fff;">${d.sessions}</div></div>
-              <div><div style="font-size:11px;color:#6b7280;">Tokens</div><div style="font-size:16px;font-weight:700;color:#fff;">${_fmtK(d.tokens)}</div></div>
-              <div><div style="font-size:11px;color:#6b7280;">Cost</div><div style="font-size:16px;font-weight:700;color:#facc15;">$${d.cost.toFixed(2)}</div></div>
+              <div><div style="font-size:11px;color:#6b7280;">Sessions</div><div style="font-size:20px;font-weight:700;color:#fff;">${d.sessions}</div></div>
+              <div><div style="font-size:11px;color:#6b7280;">Tokens</div><div style="font-size:20px;font-weight:700;color:#fff;">${_fmtK(d.tokens)}</div></div>
+              <div><div style="font-size:11px;color:#6b7280;">Cost</div><div style="font-size:20px;font-weight:700;color:#facc15;">$${d.cost.toFixed(2)}</div></div>
             </div>
           </div>
         </div>`;
