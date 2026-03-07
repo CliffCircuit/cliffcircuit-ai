@@ -59,6 +59,9 @@ let CRON_UUID_MAP = {
   'bc4e7a7d-c7e1-4459-9814-e4347a524707': 'atlas-debug',
   '087d28b7-261a-4261-926a-cb0b4e7a2825': 'daily-cost-report',
   'fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5': 'evening-check',
+  'bad6da5e-eecf-4484-8059-a641d1ba7897': 'live-sessions-refresh',
+  'f79a2ad0-c1eb-4fde-9a22-d860cec98e8a': 'live-sessions-refresh',
+  '1285e486-058b-4c41-b461-6d2522cfdbd9': 'live-sessions-refresh',
 };
 
 // Dynamically merge live cron UUIDs so new/recreated crons resolve automatically
@@ -100,6 +103,7 @@ const CRON_DISPLAY = {
   'atlas-debug':             'Debug',
   'evening-check':           'Evening Check',
   'daily-cost-report':       'Daily Cost Report',
+  'live-sessions-refresh':   'Live Sessions Refresh',
 };
 
 // ── Route cron jobs to agents by name prefix ────────────────────────────
