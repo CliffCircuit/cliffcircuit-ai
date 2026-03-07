@@ -791,21 +791,21 @@
 
       // Content pipeline — Cliff
       'Article Review':             'Cliff reads drafted articles and decides: approve, reject, or request changes. Acts as quality control before anything gets published.',
-      'Scheduler':                  'The central pipeline brain — reviews drafts, assigns publish times to approved content, and triggers publishing. Runs every 30 minutes to keep the content pipeline moving automatically.',
+      'Scheduler':                  'The central pipeline brain — reviews drafts, assigns publish times to approved content, and triggers publishing.',
 
       // Infrastructure — Scout
-      'Portal Refresh':             'Scout rebuilds the portal\'s data file with the latest content queue, Twitter stats, site health, and cron info, then pushes to GitHub so the dashboard stays current. Runs every few minutes.',
+      'Portal Refresh':             'Scout rebuilds the portal\'s data file with the latest content queue, Twitter stats, site health, and cron info, then pushes to GitHub so the dashboard stays current.',
       'Social Monitoring':          'Monitors Twitter/X for mentions of @CliffCircuit and @timharris707, tracks follower counts, and flags any notable engagement.',
       'GitHub Monitoring':          'Watches the GitHub repos for new issues, pull requests, or unexpected activity.',
 
       // Infrastructure — Cliff
-      'Pipeline Health':            'Every 2 hours during business hours — verifies all cron jobs are healthy, both websites are responding, the content queue isn\'t stuck, Twitter credentials work, and disk space is fine.',
-      'Morning Check-In':           'Good morning briefing sent to Tim via Telegram. Covers today\'s calendar, urgent emails, weather, and what the agents did overnight.',
+      'Pipeline Health':            'Verifies all cron jobs are healthy, both websites are responding, the content queue isn\'t stuck, Twitter credentials work, and disk space is fine.',
+      'Morning Check-In':           'Morning briefing sent to Tim via Telegram. Covers today\'s calendar, urgent emails, weather, and what the agents did overnight.',
       'Evening Check':              'End-of-day review — what got done today, anything left unfinished, and notes for tomorrow.',
-      'Weekly Report':              'Once-a-week executive summary — content published, follower growth, site traffic, API costs, cron health, and key decisions made during the week.',
-      'Daily Cost Report':          'Nightly summary of token usage and API costs across all agents, broken down by session type. Sent to Tim via Telegram.',
-      'Nightly Extraction':         'Overnight data extraction and processing tasks.',
-      'Nightly Git Backup':         'Runs overnight — commits all changed workspace files to GitHub so nothing is lost between sessions. A safety net in case something goes wrong.',
+      'Weekly Report':              'Executive summary — content published, follower growth, site traffic, API costs, cron health, and key decisions made during the week.',
+      'Daily Cost Report':          'Summary of token usage and API costs across all agents, broken down by session type. Sent to Tim via Telegram.',
+      'Nightly Extraction':         'Data extraction and processing tasks that run overnight.',
+      'Nightly Git Backup':         'Commits all changed workspace files to GitHub so nothing is lost between sessions. A safety net in case something goes wrong.',
 
       // Atlas coding
       'Build':                      'Atlas coding agent building a new feature, page, or component from scratch. Triggered on-demand by Cliff when Tim requests something built. Cost varies by task complexity.',
@@ -818,10 +818,61 @@
       'Scout (Subagent Run)':       'Scout spawned a short-lived helper session for an isolated task.',
       'Atlas (Subagent Run)':       'Atlas spawned a short-lived helper session for an isolated task.',
       'Heartbeat':                  'Periodic health poll — checks the agent inbox for messages, verifies systems are running, and handles lightweight background tasks.',
-      'Live Sessions Refresh':      'Every 5 minutes, checks which AI sessions are currently running and writes the results to a file the portal reads. This is how the Agents page knows who\'s online and what they\'re doing.',
-      'Session Previews Refresh':   'Every 10 minutes, grabs the task description and latest response from each recent session so the portal can show what each session was working on when you click into it.',
+      'Live Sessions Refresh':      'Checks which AI sessions are currently running and writes the results to a file the portal reads. This is how the Agents page knows who\'s online and what they\'re doing.',
+      'Session Previews Refresh':   'Grabs the task description and latest response from each recent session so the portal can show what each session was working on when you click into it.',
     };
-    const _getTaskTooltip = name => _taskTooltips[name] || null;
+
+    // Look up cron schedule for a display name by reverse-mapping CRON_DISPLAY
+    function _getCronSchedule(displayName) {
+      if (!displayName || !window._cronList) return null;
+      // Build reverse map: display name → cron name(s)
+      const reverseDisplay = {};
+      if (typeof CRON_DISPLAY === 'object') {
+        for (const [cronName, dispName] of Object.entries(CRON_DISPLAY)) {
+          reverseDisplay[dispName] = reverseDisplay[dispName] || [];
+          reverseDisplay[dispName].push(cronName);
+        }
+      }
+      const cronNames = reverseDisplay[displayName];
+      if (cronNames) {
+        for (const cn of cronNames) {
+          const cron = window._cronList.find(c => c.name === cn);
+          if (cron && cron.schedule && cron.schedule !== '—') return cron.schedule;
+        }
+      }
+      // Fallback: try matching by auto-formatted name (e.g. 'Session Previews Refresh' → 'session-previews-refresh')
+      const slugified = displayName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const fallback = window._cronList.find(c => c.name === slugified);
+      if (fallback && fallback.schedule && fallback.schedule !== '—') return fallback.schedule;
+      return null;
+    }
+
+    function _fmtCronSchedule(schedule) {
+      if (!schedule) return null;
+      const everyMatch = schedule.match(/^every\s+(\d+)m$/);
+      if (everyMatch) return 'every ' + everyMatch[1] + 'm';
+      const everyH = schedule.match(/^every\s+(\d+)h$/);
+      if (everyH) return 'every ' + everyH[1] + 'h';
+      // Cron expression — produce a human-readable summary
+      const parts = schedule.split(/\s+/);
+      if (parts.length >= 5) {
+        const [min, hour, dom, mon, dow] = parts;
+        if (dow !== '*' && hour !== '*') return `${dow === '0' ? 'Sun' : dow === '1' ? 'Mon' : dow === '2' ? 'Tue' : dow === '3' ? 'Wed' : dow === '4' ? 'Thu' : dow === '5' ? 'Fri' : dow === '6' ? 'Sat' : dow} at ${hour}:${min.padStart(2,'0')}`;
+        if (hour.includes('-')) return `hourly (${hour})`;
+        if (hour !== '*' && min !== '*') return `daily at ${hour}:${min.padStart(2,'0')}`;
+        if (min !== '*' && hour === '*') return `every hour at :${min.padStart(2,'0')}`;
+      }
+      return schedule;
+    }
+
+    const _getTaskTooltip = function(name) {
+      const base = _taskTooltips[name];
+      if (!base) return null;
+      const sched = _getCronSchedule(name);
+      if (!sched) return base;
+      const formatted = _fmtCronSchedule(sched);
+      return formatted ? base + ' \u00b7 Schedule: ' + formatted : base;
+    };
 
     // ── Toggle ────────────────────────────────────────────────────────
     function toggleDbSubagents() {
@@ -1542,7 +1593,7 @@ function _renderStackedCostChart(items, mode) {
         _grpBreakdownStore[rowId] = g.modelBreakdown;
         const grpStoreKey = 'grp-' + rowId;
         return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" onclick="if(!event.target.closest('button'))_handleSummaryRowClick('${grpStoreKey}',this)">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, grpStoreKey, g.allSessions)}</td>
@@ -1698,7 +1749,7 @@ function _renderStackedCostChart(items, mode) {
           const rawSid = s._raw?.session_id || s.label || ('raw-' + Math.random().toString(36).slice(2));
           _sessionDataMap[rawSid] = s;
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-raw-sid="${esc(rawSid)}" onclick="_toggleRawSessionDetail('${esc(rawSid)}',this)">
-          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}${_getTaskTooltip(s.display_name || s.task_name) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(s.display_name || s.task_name)) + '">&#9432;</span>' : ''}</td>
+          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}${_getTaskTooltip(s.display_name || s.task_name) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(s.display_name || s.task_name)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[s.agent_type] || 'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
           <td class="px-4 py-2 text-xs">${_modelShortT(s.model)}</td>
           <td class="px-4 py-2 text-gray-400 text-xs">${_fmtDur(s.duration_ms)}</td>
