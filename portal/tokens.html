@@ -1372,17 +1372,47 @@ function _renderStackedCostChart(items, mode) {
     const totalTokIn = s.tokens_in || 0;
     const totalTokOut = s.tokens_out || 0;
 
-    // Place full session cost in the bucket where it ended (last_seen_at).
-    // This ensures bar totals match the header total — no proportional spreading.
+    // Determine session time range
     const endTs = s.last_seen_at ? new Date(s.last_seen_at) : null;
-    const bucketDate = (endTs && !isNaN(endTs)) ? endTs : startTs;
-    const { timeKey, timeLabel } = _bucketKeyAndLabel(bucketDate, bucketMode);
-    if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
-    if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
-    buckets[timeKey].segments[segKey].cost += totalCost;
-    buckets[timeKey].segments[segKey].sessions += 1;
-    buckets[timeKey].segments[segKey].tokIn += totalTokIn;
-    buckets[timeKey].segments[segKey].tokOut += totalTokOut;
+    const startMs = startTs.getTime();
+    const endMs = (endTs && !isNaN(endTs) && endTs.getTime() > startMs) ? endTs.getTime() : startMs;
+    const totalDuration = endMs - startMs;
+
+    if (totalDuration < bucketSizeMs) {
+      // Session fits within a single bucket — fast path (no spreading needed)
+      const { timeKey, timeLabel } = _bucketKeyAndLabel(startTs, bucketMode);
+      if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
+      if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+      buckets[timeKey].segments[segKey].cost += totalCost;
+      buckets[timeKey].segments[segKey].sessions += 1;
+      buckets[timeKey].segments[segKey].tokIn += totalTokIn;
+      buckets[timeKey].segments[segKey].tokOut += totalTokOut;
+    } else {
+      // Session spans multiple buckets — spread cost proportionally
+      let cursorMs = _bucketStartMs(startTs, bucketMode);
+      let sessionCounted = false;
+      while (cursorMs < endMs) {
+        const bucketEnd = cursorMs + bucketSizeMs;
+        // Overlap: max(start, bucketStart) to min(end, bucketEnd)
+        const overlapStart = Math.max(startMs, cursorMs);
+        const overlapEnd = Math.min(endMs, bucketEnd);
+        const overlapMs = overlapEnd - overlapStart;
+        if (overlapMs > 0) {
+          const fraction = overlapMs / totalDuration;
+          const { timeKey, timeLabel } = _bucketKeyAndLabel(new Date(overlapStart), bucketMode);
+          if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
+          if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+          buckets[timeKey].segments[segKey].cost += totalCost * fraction;
+          if (!sessionCounted) {
+            buckets[timeKey].segments[segKey].sessions += 1; // count session once (in first bucket)
+            sessionCounted = true;
+          }
+          buckets[timeKey].segments[segKey].tokIn += totalTokIn * fraction;
+          buckets[timeKey].segments[segKey].tokOut += totalTokOut * fraction;
+        }
+        cursorMs = bucketEnd;
+      }
+    }
   }
 
   // Filter out buckets outside the selected time range.
