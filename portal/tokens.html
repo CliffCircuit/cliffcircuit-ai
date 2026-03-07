@@ -65,6 +65,24 @@
     .cost-legend-item.cost-legend-hidden .cost-legend-label { text-decoration: line-through; }
     .cost-legend-toggle-all { font-size: 11px; color: #6b7280; cursor: pointer; user-select: none; transition: color 0.15s ease; margin-right: 4px; white-space: nowrap; }
     .cost-legend-toggle-all:hover { color: #9ca3af; }
+    /* Session Detail Panel */
+    .session-detail-row { cursor: pointer; }
+    .session-detail-row:hover { background: rgba(30,40,55,0.7) !important; }
+    .session-detail-panel { background: #0f1520; border: 1px solid #1e293b; border-radius: 8px; margin: 0 12px; padding: 0; overflow: hidden; }
+    .session-detail-panel .sdp-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; border-bottom: 1px solid #1e293b; }
+    .session-detail-panel .sdp-meta { font-size: 11px; color: #6b7280; display: flex; gap: 16px; flex-wrap: wrap; }
+    .session-detail-panel .sdp-meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .session-detail-panel .sdp-close { background: none; border: none; color: #4b5563; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1; }
+    .session-detail-panel .sdp-close:hover { color: #9ca3af; background: #1f2937; }
+    .session-detail-panel .sdp-section { padding: 12px 16px; }
+    .session-detail-panel .sdp-section + .sdp-section { border-top: 1px solid #1e293b; }
+    .session-detail-panel .sdp-label { font-size: 10px; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .session-detail-panel .sdp-text { font-size: 12px; color: #d1d5db; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; }
+    .session-detail-panel .sdp-text::-webkit-scrollbar { width: 4px; }
+    .session-detail-panel .sdp-text::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    .session-detail-panel .sdp-text::-webkit-scrollbar-track { background: transparent; }
+    .session-detail-panel .sdp-loading { text-align: center; padding: 24px; color: #4b5563; font-size: 12px; }
+    .session-detail-panel .sdp-empty { color: #4b5563; font-style: italic; font-size: 12px; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -376,6 +394,8 @@
     // Session drill-down — expand individual sessions from runs count
     const _sessionStore = {};
     const _expandedSessions = new Set();
+    const _sessionDataMap = {}; // keyed by session_id → full session object
+    let _sessionDetailOpenId = null; // currently-open detail panel session_id
     function _renderRunsCell(count, storeKey, sessions) {
       const hasExpand = sessions && sessions.length > 1;
       if (hasExpand) _sessionStore[storeKey] = sessions;
@@ -385,17 +405,17 @@
       return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button ${hasExpand ? `onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions"` : ''} style="${btnStyle}">+</button></span>`;
     }
     function _toggleSessionExpand(storeKey, btn) {
-      // Find the parent TR
       const parentRow = btn.closest('tr');
       if (!parentRow) return;
       const expanded = parentRow.dataset.sessExpanded === '1';
-      // Remove existing session sub-rows
+      // Remove existing session sub-rows and detail panels
       let next = parentRow.nextElementSibling;
-      while (next && next.classList.contains('session-detail-row')) {
+      while (next && (next.classList.contains('session-detail-row') || next.classList.contains('session-detail-panel-row'))) {
         const toRemove = next;
         next = next.nextElementSibling;
         toRemove.remove();
       }
+      _sessionDetailOpenId = null;
       if (expanded) {
         parentRow.dataset.sessExpanded = '0';
         _expandedSessions.delete(storeKey);
@@ -407,9 +427,13 @@
       const sorted = [...sessions].sort((a,b) => new Date(b.first_seen_at||0) - new Date(a.first_seen_at||0));
       let insertAfter = parentRow;
       sorted.forEach(s => {
+        const sid = s._raw?.session_id || s.label || ('s-' + Math.random().toString(36).slice(2));
+        _sessionDataMap[sid] = s;
         const tr = document.createElement('tr');
         tr.className = 'session-detail-row border-b border-gray-900/50';
-        tr.style.cssText = 'background:rgba(30,40,55,0.5);';
+        tr.style.cssText = 'background:rgba(30,40,55,0.5);cursor:pointer;';
+        tr.dataset.sessionDetailId = sid;
+        tr.onclick = function(e) { if (e.target.closest('button')) return; _toggleSessionDetail(sid, this); };
         const when = s.first_seen_at ? new Date(s.first_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
         const dur = _fmtDur(s.duration_ms);
         const tokIn = _fmtK(s.tokens_in || 0);
@@ -428,6 +452,202 @@
         insertAfter.after(tr);
         insertAfter = tr;
       });
+    }
+
+    // ── Session Detail Panel ─────────────────────────────────────────
+    function _toggleSessionDetail(sid, rowEl) {
+      // Close existing panel
+      const existing = document.querySelector('.session-detail-panel-row');
+      if (existing) {
+        const wasSame = existing.dataset.forSession === sid;
+        existing.remove();
+        _sessionDetailOpenId = null;
+        if (wasSame) return; // toggled off
+      }
+      const s = _sessionDataMap[sid];
+      if (!s) return;
+      _sessionDetailOpenId = sid;
+      const raw = s._raw || {};
+      const panelRow = document.createElement('tr');
+      panelRow.className = 'session-detail-panel-row';
+      panelRow.dataset.forSession = sid;
+      const td = document.createElement('td');
+      td.colSpan = 9;
+      td.style.cssText = 'padding: 4px 8px 12px 28px; background: transparent;';
+
+      // Format timestamps
+      const fmtTs = v => v ? new Date(v).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true }) : '—';
+      const sentAt = fmtTs(raw.first_seen_at);
+      const completedAt = fmtTs(raw.last_seen_at);
+
+      // Cost breakdown
+      const costIn = raw.cost_input_usd != null ? '$' + raw.cost_input_usd.toFixed(4) : '—';
+      const costOut = raw.cost_output_usd != null ? '$' + raw.cost_output_usd.toFixed(4) : '—';
+      const costCacheR = raw.cost_cache_read_usd != null ? '$' + raw.cost_cache_read_usd.toFixed(4) : '—';
+      const costCacheW = raw.cost_cache_write_usd != null ? '$' + raw.cost_cache_write_usd.toFixed(4) : '—';
+      const costTotal = raw.cost_total_usd != null ? '$' + raw.cost_total_usd.toFixed(4) : '—';
+
+      // Token breakdown
+      const tokInput = raw.input_tokens != null ? raw.input_tokens.toLocaleString() : '—';
+      const tokOutput = raw.output_tokens != null ? raw.output_tokens.toLocaleString() : '—';
+      const tokCacheR = raw.cache_read != null ? raw.cache_read.toLocaleString() : '—';
+      const tokCacheW = raw.cache_write != null ? raw.cache_write.toLocaleString() : '—';
+      const ctxTokens = raw.context_tokens ? raw.context_tokens.toLocaleString() : '—';
+      const ctxPct = raw.percent_used != null ? raw.percent_used + '%' : '—';
+
+      // Model info
+      const modelFull = typeof friendlyModel === 'function' ? friendlyModel(raw.model || s.model) : (raw.model || s.model || '—');
+      const thinking = raw.thinking_level || '—';
+      const kind = raw.kind || '—';
+      const sessionKey = s.label || raw.session_key || '—';
+      const sessionId = raw.session_id || '—';
+
+      td.innerHTML = `
+        <div class="session-detail-panel">
+          <div class="sdp-header">
+            <div class="sdp-meta">
+              <span>Sent: <strong style="color:#d1d5db">${esc(sentAt)}</strong></span>
+              <span>Completed: <strong style="color:#d1d5db">${esc(completedAt)}</strong></span>
+              <span>Duration: <strong style="color:#d1d5db">${_fmtDur(s.duration_ms)}</strong></span>
+              <span>Kind: <strong style="color:#d1d5db">${esc(kind)}</strong></span>
+            </div>
+            <button class="sdp-close" onclick="event.stopPropagation();_closeSessionDetail()" title="Close">&times;</button>
+          </div>
+          <div class="sdp-section">
+            <div class="sdp-label">Model</div>
+            <div style="font-size:12px;color:#e5e7eb;">${esc(modelFull)}${thinking !== '—' ? ' <span style="color:#6b7280">(thinking: ' + esc(thinking) + ')</span>' : ''}</div>
+          </div>
+          <div class="sdp-section">
+            <div class="sdp-label">Token Breakdown</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;font-size:12px;">
+              <div><span style="color:#6b7280">Input:</span> <span style="color:#d1d5db">${tokInput}</span></div>
+              <div><span style="color:#6b7280">Output:</span> <span style="color:#d1d5db">${tokOutput}</span></div>
+              <div><span style="color:#6b7280">Cache Read:</span> <span style="color:#d1d5db">${tokCacheR}</span></div>
+              <div><span style="color:#6b7280">Cache Write:</span> <span style="color:#d1d5db">${tokCacheW}</span></div>
+              <div><span style="color:#6b7280">Context:</span> <span style="color:#d1d5db">${ctxTokens} (${ctxPct} used)</span></div>
+            </div>
+          </div>
+          <div class="sdp-section">
+            <div class="sdp-label">Cost Breakdown</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;font-size:12px;">
+              <div><span style="color:#6b7280">Input:</span> <span style="color:#d1d5db">${costIn}</span></div>
+              <div><span style="color:#6b7280">Output:</span> <span style="color:#d1d5db">${costOut}</span></div>
+              <div><span style="color:#6b7280">Cache Read:</span> <span style="color:#d1d5db">${costCacheR}</span></div>
+              <div><span style="color:#6b7280">Cache Write:</span> <span style="color:#d1d5db">${costCacheW}</span></div>
+              <div><span style="color:#6b7280">Total:</span> <strong style="color:#facc15">${costTotal}</strong></div>
+            </div>
+          </div>
+          <div class="sdp-section" id="sdp-task-${esc(sid)}">
+            <div class="sdp-label">Task</div>
+            <div class="sdp-text sdp-loading">Loading...</div>
+          </div>
+          <div class="sdp-section" id="sdp-response-${esc(sid)}">
+            <div class="sdp-label">Response</div>
+            <div class="sdp-text sdp-loading">Loading...</div>
+          </div>
+          <div class="sdp-section" style="padding:8px 16px;">
+            <div style="font-size:10px;color:#374151;font-family:monospace;">Session: ${esc(sessionKey)}<br>ID: ${esc(sessionId)}</div>
+          </div>
+        </div>`;
+      panelRow.appendChild(td);
+      rowEl.after(panelRow);
+
+      // Fetch task/response from session previews
+      _fetchSessionPreview(sid, sessionKey);
+    }
+
+    function _closeSessionDetail() {
+      const existing = document.querySelector('.session-detail-panel-row');
+      if (existing) existing.remove();
+      _sessionDetailOpenId = null;
+    }
+
+    // Gateway WebSocket for session preview (shared connection)
+    let _gwWs = null;
+    let _gwWsPending = {};
+    let _gwWsSeq = 0;
+    function _gwRequest(method, params) {
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => { delete _gwWsPending[id]; reject(new Error('timeout')); }, 8000);
+        const id = 'req-' + (++_gwWsSeq);
+        _gwWsPending[id] = { resolve: d => { clearTimeout(timeout); resolve(d); }, reject: e => { clearTimeout(timeout); reject(e); } };
+        if (!_gwWs || _gwWs.readyState !== WebSocket.OPEN) {
+          // Attempt WebSocket connection to gateway
+          try {
+            _gwWs = new WebSocket('wss://gateway.cliffcircuit.ai');
+            _gwWs.onopen = () => {
+              // Send connect (unauthenticated — may fail, that's OK)
+              const connId = 'req-conn';
+              _gwWs.send(JSON.stringify({ type: 'req', id: connId, method: 'connect', params: { minProtocol: 3, maxProtocol: 3, client: { id: 'portal-preview', version: '1.0', platform: 'web', mode: 'webchat' }, role: 'operator', scopes: [], caps: [] } }));
+              // Wait briefly for hello, then send the actual request
+              setTimeout(() => {
+                try { _gwWs.send(JSON.stringify({ type: 'req', id, method, params })); } catch(e) { _gwWsPending[id]?.reject(e); delete _gwWsPending[id]; }
+              }, 500);
+            };
+            _gwWs.onmessage = ev => {
+              try {
+                const msg = JSON.parse(ev.data);
+                if (msg.type === 'res' && _gwWsPending[msg.id]) {
+                  const p = _gwWsPending[msg.id];
+                  delete _gwWsPending[msg.id];
+                  msg.ok ? p.resolve(msg.payload) : p.reject(new Error(msg.error?.message || 'request failed'));
+                }
+              } catch(e) {}
+            };
+            _gwWs.onerror = () => { Object.values(_gwWsPending).forEach(p => p.reject(new Error('ws error'))); _gwWsPending = {}; };
+            _gwWs.onclose = () => { _gwWs = null; Object.values(_gwWsPending).forEach(p => p.reject(new Error('ws closed'))); _gwWsPending = {}; };
+          } catch(e) { delete _gwWsPending[id]; reject(e); }
+        } else {
+          try { _gwWs.send(JSON.stringify({ type: 'req', id, method, params })); } catch(e) { delete _gwWsPending[id]; reject(e); }
+        }
+      });
+    }
+
+    async function _fetchSessionPreview(sid, sessionKey) {
+      const taskEl = document.querySelector('#sdp-task-' + CSS.escape(sid) + ' .sdp-text');
+      const respEl = document.querySelector('#sdp-response-' + CSS.escape(sid) + ' .sdp-text');
+      if (!taskEl || !respEl) return;
+
+      // Strategy 1: Try gateway WebSocket sessions.preview
+      try {
+        const result = await _gwRequest('sessions.preview', { keys: [sessionKey], limit: 20, maxChars: 2000 });
+        const preview = result?.previews?.[0];
+        if (preview && preview.status === 'ok' && preview.items?.length > 0) {
+          const items = preview.items;
+          // First user message = task prompt
+          const userMsg = items.find(m => m.role === 'user');
+          const asstMsg = [...items].reverse().find(m => m.role === 'assistant');
+          taskEl.textContent = userMsg?.text || 'No task prompt found in session';
+          taskEl.classList.remove('sdp-loading');
+          respEl.textContent = asstMsg?.text || 'No response found in session';
+          respEl.classList.remove('sdp-loading');
+          return;
+        }
+      } catch(e) { /* gateway unavailable, try fallback */ }
+
+      // Strategy 2: Try session-previews.json (static file from cron)
+      try {
+        const res = await fetch('/portal/session-previews.json?t=' + Date.now());
+        if (res.ok) {
+          const data = await res.json();
+          const preview = data[sessionKey] || data[sid];
+          if (preview) {
+            taskEl.textContent = preview.task || 'No task prompt recorded';
+            taskEl.classList.remove('sdp-loading');
+            respEl.textContent = preview.response || 'No response recorded';
+            respEl.classList.remove('sdp-loading');
+            return;
+          }
+        }
+      } catch(e) { /* fallback below */ }
+
+      // No preview data available
+      taskEl.textContent = 'Task/response content requires gateway access (unavailable from static portal)';
+      taskEl.classList.remove('sdp-loading');
+      taskEl.classList.add('sdp-empty');
+      respEl.textContent = 'Connect to the OpenClaw dashboard for full session history';
+      respEl.classList.remove('sdp-loading');
+      respEl.classList.add('sdp-empty');
     }
 
     const _localModelPricing = m => {
@@ -684,7 +904,7 @@
       let offset = 0;
       while (true) {
         let query = _sb.from('session_snapshots')
-          .select('session_id,session_key,agent_id,model,input_tokens,output_tokens,cache_read,cache_write,total_tokens,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
+          .select('session_id,session_key,agent_id,kind,model,thinking_level,input_tokens,output_tokens,cache_read,cache_write,total_tokens,context_tokens,percent_used,cost_input_usd,cost_output_usd,cost_cache_read_usd,cost_cache_write_usd,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
           .gte('last_seen_at', cutoffStart)
           .lte('last_seen_at', cutoffEnd)
           .order('last_seen_at', { ascending: false })
@@ -831,6 +1051,9 @@
           estimated_cost_usd: r.cost_total_usd || 0,
           started_at:   runMs || (r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0),
           label:        r.session_key,
+          first_seen_at: r.first_seen_at,
+          last_seen_at:  r.last_seen_at,
+          _raw:          r,
         };
       });
       window._allDbSubItems = allDbItems;
