@@ -810,9 +810,21 @@
           updatedEl.textContent = 'Updated ' + agoStr;
         }
 
-        const sessions = data.sessions || [];
+        const allSessions = data.sessions || [];
+        const sessions = allSessions.filter(s => s.isStuck);
+
+        // Update header with stuck count badge
+        const headerEl = document.querySelector('#live-sessions-section h3');
+        if (headerEl) {
+          if (sessions.length > 0) {
+            headerEl.innerHTML = 'Stuck Sessions <span class="ml-2 px-2 py-0.5 rounded-full text-xs bg-red-900 text-red-300">' + sessions.length + ' stuck</span>';
+          } else {
+            headerEl.innerHTML = 'Stuck Sessions <span class="ml-2 px-2 py-0.5 rounded-full text-xs bg-green-900 text-green-300">All Clear</span>';
+          }
+        }
+
         if (sessions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No active sessions</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-green-600">No stuck sessions — all systems running normally (' + allSessions.length + ' active)</td></tr>';
           return;
         }
 
@@ -825,11 +837,11 @@
           const friendlyKey = typeof sessionKeyToFriendly === 'function' ? sessionKeyToFriendly(s.key, '') : s.key;
           const ctxBarCls = s.ctxPct >= 75 ? 'bg-red-500' : s.ctxPct >= 50 ? 'bg-yellow-500' : 'bg-green-500';
           const ctxTextCls = s.ctxPct >= 75 ? 'text-red-400' : s.ctxPct >= 50 ? 'text-yellow-400' : 'text-gray-300';
-          const lengthCls = (s.sessionLengthMs||0) > 14400000 ? 'text-red-400 font-semibold' : (s.sessionLengthMs||0) > 3600000 ? 'text-yellow-400' : 'text-gray-300';
           const tokIn = s.tokensIn != null ? _fmtK(s.tokensIn) : '—';
           const tokOut = s.tokensOut != null ? _fmtK(s.tokensOut) : '—';
-          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-            <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyKey)}</td>
+          const reasonHtml = s.stuckReason ? '<div class="text-xs text-red-400 mt-0.5">' + esc(s.stuckReason) + '</div>' : '';
+          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors bg-red-950/20">
+            <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyKey)}${reasonHtml}</td>
             <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aName}</span></td>
             <td class="px-4 py-1.5 text-xs">${_modelShortT(s.model)}</td>
             <td class="px-4 py-1.5 text-right text-xs text-white">${tokIn} / ${tokOut}</td>
@@ -839,7 +851,7 @@
                 <div class="${ctxBarCls} h-1 rounded-full" style="width:${Math.min(s.ctxPct, 100)}%"></div>
               </div>
             </td>
-            <td class="px-4 py-1.5 text-right text-xs ${lengthCls}">${s.sessionLength || '—'}</td>
+            <td class="px-4 py-1.5 text-right text-xs text-red-400 font-semibold">${s.sessionLength || '—'}</td>
             <td class="px-4 py-1.5 text-right text-xs text-gray-400">${s.lastActivity || '—'}</td>
           </tr>`;
         }).join('');
