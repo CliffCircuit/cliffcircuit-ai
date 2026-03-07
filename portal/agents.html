@@ -84,7 +84,15 @@
       return j.nextRunMs && (j.nextRunMs - Date.now()) > TWO_YEARS_MS;
     }
     function jobScheduleLabel(j) {
-      return isParked(j) ? '<span class="text-gray-600 italic">Parked</span>' : esc(humanCron(j.schedule||'—'));
+      if (isParked(j)) return '<span class="text-gray-600 italic">Parked</span>';
+      const sched = humanCron(j.schedule || '—');
+      // If schedule is just a dash but we have a real nextRunMs, show the scheduled date
+      if ((sched === '—' || sched === '\u2014') && j.nextRunMs) {
+        const d = new Date(j.nextRunMs);
+        const opts = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Los_Angeles' };
+        return '<span class="text-yellow-500">' + esc(d.toLocaleString('en-US', opts)) + '</span>';
+      }
+      return esc(sched);
     }
     function jobNextLabel(j) {
       return isParked(j) ? '—' : esc(j.nextRun || (j.nextRunMs ? timeAgo(j.nextRunMs) : '—'));
