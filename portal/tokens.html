@@ -1301,23 +1301,45 @@ function _renderStackedCostChart(items, mode) {
   const TZ = 'America/Los_Angeles';
 
   // 1. Bucket items into time periods, tracking per-segment costs
+  //    Cost is spread proportionally across all buckets the session spans.
   const buckets = {};   // key -> { label, segments: { segKey -> { cost, sessions, tokIn, tokOut } } }
   const allSegKeys = new Set();
 
-  for (const s of items) {
-    const ts = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
-    if (!ts || isNaN(ts)) continue;
-
-    let timeKey, timeLabel;
-    if (bucketMode === 'hourly') {
-      const hStr = ts.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
-      const dateKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
-      timeKey = dateKey + ' ' + ts.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
-      timeLabel = hStr;
-    } else {
-      timeKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
-      timeLabel = ts.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' });
+  // Helper: get the start-of-bucket (hour or day) as epoch ms in the display TZ
+  function _bucketStartMs(date, isHourly) {
+    // Build a date string in TZ then parse back to get bucket boundary
+    const parts = date.toLocaleString('en-US', {
+      timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    }).replace(/,/g, '');
+    // parts like "03/07/2026 14:30:15"
+    const m = parts.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)/);
+    if (!m) return date.getTime();
+    if (isHourly) {
+      return new Date(`${m[3]}-${m[1]}-${m[2]}T${m[4]}:00:00`).getTime();
     }
+    return new Date(`${m[3]}-${m[1]}-${m[2]}T00:00:00`).getTime();
+  }
+
+  function _bucketKeyAndLabel(date, isHourly) {
+    if (isHourly) {
+      const hStr = date.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
+      const dateKey = date.toLocaleDateString('en-CA', { timeZone: TZ });
+      const timeKey = dateKey + ' ' + date.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
+      return { timeKey, timeLabel: hStr };
+    }
+    return {
+      timeKey: date.toLocaleDateString('en-CA', { timeZone: TZ }),
+      timeLabel: date.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' })
+    };
+  }
+
+  const isHourly = bucketMode === 'hourly';
+  const bucketSizeMs = isHourly ? 3600000 : 86400000; // 1 hour or 1 day in ms
+
+  for (const s of items) {
+    const startTs = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
+    if (!startTs || isNaN(startTs)) continue;
 
     // Determine segment key
     let segKey;
@@ -1329,14 +1351,53 @@ function _renderStackedCostChart(items, mode) {
     } else {
       segKey = typeof friendlyModel === 'function' ? friendlyModel(s.model) : (s.model || 'Unknown');
     }
-
-    if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
-    if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
-    buckets[timeKey].segments[segKey].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
-    buckets[timeKey].segments[segKey].sessions++;
-    buckets[timeKey].segments[segKey].tokIn += s.tokens_in || 0;
-    buckets[timeKey].segments[segKey].tokOut += s.tokens_out || 0;
     allSegKeys.add(segKey);
+
+    const totalCost = s.estimated_cost_usd || s.cost_total_usd || 0;
+    const totalTokIn = s.tokens_in || 0;
+    const totalTokOut = s.tokens_out || 0;
+
+    // Determine session time range
+    const endTs = s.last_seen_at ? new Date(s.last_seen_at) : null;
+    const startMs = startTs.getTime();
+    const endMs = (endTs && !isNaN(endTs) && endTs.getTime() > startMs) ? endTs.getTime() : startMs;
+    const totalDuration = endMs - startMs;
+
+    if (totalDuration < bucketSizeMs) {
+      // Session fits within a single bucket — fast path (no spreading needed)
+      const { timeKey, timeLabel } = _bucketKeyAndLabel(startTs, isHourly);
+      if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
+      if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+      buckets[timeKey].segments[segKey].cost += totalCost;
+      buckets[timeKey].segments[segKey].sessions += 1;
+      buckets[timeKey].segments[segKey].tokIn += totalTokIn;
+      buckets[timeKey].segments[segKey].tokOut += totalTokOut;
+    } else {
+      // Session spans multiple buckets — spread cost proportionally
+      let cursorMs = _bucketStartMs(startTs, isHourly);
+      let sessionCounted = false;
+      while (cursorMs < endMs) {
+        const bucketEnd = cursorMs + bucketSizeMs;
+        // Overlap: max(start, bucketStart) to min(end, bucketEnd)
+        const overlapStart = Math.max(startMs, cursorMs);
+        const overlapEnd = Math.min(endMs, bucketEnd);
+        const overlapMs = overlapEnd - overlapStart;
+        if (overlapMs > 0) {
+          const fraction = overlapMs / totalDuration;
+          const { timeKey, timeLabel } = _bucketKeyAndLabel(new Date(overlapStart), isHourly);
+          if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
+          if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+          buckets[timeKey].segments[segKey].cost += totalCost * fraction;
+          if (!sessionCounted) {
+            buckets[timeKey].segments[segKey].sessions += 1; // count session once (in first bucket)
+            sessionCounted = true;
+          }
+          buckets[timeKey].segments[segKey].tokIn += totalTokIn * fraction;
+          buckets[timeKey].segments[segKey].tokOut += totalTokOut * fraction;
+        }
+        cursorMs = bucketEnd;
+      }
+    }
   }
 
   const timePeriods = Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
