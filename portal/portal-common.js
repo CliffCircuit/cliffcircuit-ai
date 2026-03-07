@@ -305,7 +305,7 @@ function sessionKeyToFriendly(key, sessionId) {
     const agentId = agentCronMatch[1];
     const cronUuid = agentCronMatch[2];
     const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[agentId] || agentId;
-    return agentLabel + ' Cron (' + cronUuid.slice(0, 8) + ')';
+    return agentLabel + ' Task';
   }
   // Subagent sessions: agent:X:subagent:UUID
   const subagentMatch = key.match(/^agent:([^:]+):subagent:/);
