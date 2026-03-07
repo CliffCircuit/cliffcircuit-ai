@@ -325,16 +325,17 @@ function sessionKeyToFriendly(key, sessionId) {
   if (key.startsWith('cron:')) {
     const m = key.match(/^cron:([^:]+)/);
     if (m && CRON_DISPLAY[m[1]]) return CRON_DISPLAY[m[1]];
-    return m ? m[1].replace(/-/g,' ') : 'Cron';
+    return m ? m[1].replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) : 'Cron';
   }
   const agentCronMatch = key.match(/^agent:([^:]+):cron:([^:]+)/);
   if (agentCronMatch) {
     const taskName = cronTaskFromKey(key);
-    if (taskName) return CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ');
+    if (taskName) return CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    // Fallback for unresolved cron UUIDs — use agent's default task name
     const agentId = agentCronMatch[1];
-    const cronUuid = agentCronMatch[2];
+    const agentDefaultTask = { atlas: 'Build', samantha: 'Article Writer', scout: 'Portal Refresh' };
     const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[agentId] || agentId;
-    return agentLabel + ' Task';
+    return agentDefaultTask[agentId] || (agentLabel + ' Task');
   }
   // Subagent sessions: agent:X:subagent:UUID
   const subagentMatch = key.match(/^agent:([^:]+):subagent:/);
