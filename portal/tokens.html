@@ -404,17 +404,12 @@
       if (hasMulti || hasSingle) _sessionStore[storeKey] = sessions;
       if (hasMulti) {
         const btnStyle = 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;';
-        return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}<button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button></span>`;
+        return `${count} <button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button>`;
       }
-      if (hasSingle) {
-        // Single session — make the count itself clickable to toggle detail panel
-        return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;"><span onclick="event.stopPropagation();_toggleSingleSessionDetail('${storeKey}',this)" title="View session details" style="cursor:pointer;color:#9ca3af;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;">${count}</span></span>`;
-      }
-      return `<span style="display:inline-flex;align-items:center;gap:6px;justify-content:flex-end;">${count}</span>`;
+      return `${count}`;
     }
     const _singleSessionSidCache = {}; // storeKey → stable sid
-    function _toggleSingleSessionDetail(storeKey, el) {
-      const parentRow = el.closest('tr');
+    function _toggleSingleSessionDetail(storeKey, parentRow) {
       if (!parentRow) return;
       const sessions = _sessionStore[storeKey] || [];
       if (sessions.length !== 1) return;
@@ -427,6 +422,17 @@
       _sessionDataMap[sid] = s;
       // Delegate to _toggleSessionDetail which handles open/close toggle
       _toggleSessionDetail(sid, parentRow);
+    }
+    // Handle click on grouped summary row — route to single-session detail or multi-session expand
+    function _handleSummaryRowClick(storeKey, rowEl) {
+      const sessions = _sessionStore[storeKey] || [];
+      if (sessions.length === 1) {
+        _toggleSingleSessionDetail(storeKey, rowEl);
+      } else if (sessions.length > 1) {
+        // Find the expand button inside this row and delegate
+        const btn = rowEl.querySelector('button');
+        if (btn) _toggleSessionExpand(storeKey, btn);
+      }
     }
     function _toggleSessionExpand(storeKey, btn) {
       const parentRow = btn.closest('tr');
@@ -1533,11 +1539,12 @@ function _renderStackedCostChart(items, mode) {
         const agentCls = _agentCls[g.agent] || 'text-gray-400';
         const agentLabel = fmtAgent(g.agent);
         _grpBreakdownStore[rowId] = g.modelBreakdown;
-        return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}">
+        const grpStoreKey = 'grp-' + rowId;
+        return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" onclick="if(!event.target.closest('button'))_handleSummaryRowClick('${grpStoreKey}',this)">
           <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
-          <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, 'grp-' + rowId, g.allSessions)}</td>
+          <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, grpStoreKey, g.allSessions)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${_fmtDur(Math.round(g.totalDur/g.runs))}</td>
           <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(g.tokensIn)} / ${_fmtK(g.tokensOut)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${(g.totalCost/g.runs) >= 0.01 ? '$' + (g.totalCost/g.runs).toFixed(3) : '<$0.01'}</td>
