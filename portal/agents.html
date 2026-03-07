@@ -90,7 +90,7 @@
       if ((sched === '—' || sched === '\u2014') && j.nextRunMs) {
         const d = new Date(j.nextRunMs);
         const opts = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Los_Angeles' };
-        return '<span class="text-yellow-500">' + esc(d.toLocaleString('en-US', opts)) + '</span>';
+        return esc(d.toLocaleString('en-US', opts));
       }
       return esc(sched);
     }
