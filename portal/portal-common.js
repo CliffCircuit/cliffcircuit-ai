@@ -13,7 +13,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Canonical Naming Maps (THE single source of truth) ──────────────────
-const CRON_UUID_MAP = {
+// Mutable so we can merge live cron data at runtime
+let CRON_UUID_MAP = {
   'af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1': 'samantha-publish',
   '785dc24f-e15b-420b-a7e5-0116f5e60e93': 'portal-data-refresh',
   '01a338f9-8be9-4ab8-82d9-a050f64bdaf6': 'pipeline-health-check',
@@ -51,6 +52,16 @@ const CRON_UUID_MAP = {
   'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
   'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
 };
+
+// Dynamically merge live cron UUIDs so new/recreated crons resolve automatically
+fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
+  .then(r => r.json())
+  .then(d => {
+    (d.crons || []).forEach(c => {
+      if (c.id && c.name) CRON_UUID_MAP[c.id] = c.name;
+    });
+  })
+  .catch(() => {});
 
 const CRON_DISPLAY = {
   'samantha-draft':          'Article Draft',
