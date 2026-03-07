@@ -1269,7 +1269,8 @@ function _renderChartGrid(container, maxCost) {
 }
 
 function _getTimeBuckets(range) {
-  if (range === '1h' || range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
+  if (range === '1h') return '10min';
+  if (range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
   return 'daily';
 }
 
@@ -1306,8 +1307,8 @@ function _renderStackedCostChart(items, mode) {
   const buckets = {};   // key -> { label, segments: { segKey -> { cost, sessions, tokIn, tokOut } } }
   const allSegKeys = new Set();
 
-  // Helper: get the start-of-bucket (hour or day) as epoch ms in the display TZ
-  function _bucketStartMs(date, isHourly) {
+  // Helper: get the start-of-bucket as epoch ms in the display TZ
+  function _bucketStartMs(date, bMode) {
     // Build a date string in TZ then parse back to get bucket boundary
     const parts = date.toLocaleString('en-US', {
       timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -1316,14 +1317,28 @@ function _renderStackedCostChart(items, mode) {
     // parts like "03/07/2026 14:30:15"
     const m = parts.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)/);
     if (!m) return date.getTime();
-    if (isHourly) {
+    if (bMode === '10min') {
+      const min10 = String(Math.floor(parseInt(m[5]) / 10) * 10).padStart(2, '0');
+      return new Date(`${m[3]}-${m[1]}-${m[2]}T${m[4]}:${min10}:00`).getTime();
+    }
+    if (bMode === 'hourly') {
       return new Date(`${m[3]}-${m[1]}-${m[2]}T${m[4]}:00:00`).getTime();
     }
     return new Date(`${m[3]}-${m[1]}-${m[2]}T00:00:00`).getTime();
   }
 
-  function _bucketKeyAndLabel(date, isHourly) {
-    if (isHourly) {
+  function _bucketKeyAndLabel(date, bMode) {
+    if (bMode === '10min') {
+      const dateKey = date.toLocaleDateString('en-CA', { timeZone: TZ });
+      const hm = date.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false });
+      // Floor minute to nearest 10
+      const hmParts = hm.match(/(\d+):(\d+)/);
+      const min10 = hmParts ? String(Math.floor(parseInt(hmParts[2]) / 10) * 10).padStart(2, '0') : '00';
+      const label = hmParts ? `${hmParts[1]}:${min10}` : hm;
+      const timeKey = dateKey + ' ' + (hmParts ? `${hmParts[1]}:${min10}` : hm);
+      return { timeKey, timeLabel: label };
+    }
+    if (bMode === 'hourly') {
       const hStr = date.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
       const dateKey = date.toLocaleDateString('en-CA', { timeZone: TZ });
       const timeKey = dateKey + ' ' + date.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
@@ -1335,8 +1350,7 @@ function _renderStackedCostChart(items, mode) {
     };
   }
 
-  const isHourly = bucketMode === 'hourly';
-  const bucketSizeMs = isHourly ? 3600000 : 86400000; // 1 hour or 1 day in ms
+  const bucketSizeMs = bucketMode === '10min' ? 600000 : bucketMode === 'hourly' ? 3600000 : 86400000;
 
   for (const s of items) {
     const startTs = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
@@ -1358,47 +1372,17 @@ function _renderStackedCostChart(items, mode) {
     const totalTokIn = s.tokens_in || 0;
     const totalTokOut = s.tokens_out || 0;
 
-    // Determine session time range
+    // Place full session cost in the bucket where it ended (last_seen_at).
+    // This ensures bar totals match the header total — no proportional spreading.
     const endTs = s.last_seen_at ? new Date(s.last_seen_at) : null;
-    const startMs = startTs.getTime();
-    const endMs = (endTs && !isNaN(endTs) && endTs.getTime() > startMs) ? endTs.getTime() : startMs;
-    const totalDuration = endMs - startMs;
-
-    if (totalDuration < bucketSizeMs) {
-      // Session fits within a single bucket — fast path (no spreading needed)
-      const { timeKey, timeLabel } = _bucketKeyAndLabel(startTs, isHourly);
-      if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
-      if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
-      buckets[timeKey].segments[segKey].cost += totalCost;
-      buckets[timeKey].segments[segKey].sessions += 1;
-      buckets[timeKey].segments[segKey].tokIn += totalTokIn;
-      buckets[timeKey].segments[segKey].tokOut += totalTokOut;
-    } else {
-      // Session spans multiple buckets — spread cost proportionally
-      let cursorMs = _bucketStartMs(startTs, isHourly);
-      let sessionCounted = false;
-      while (cursorMs < endMs) {
-        const bucketEnd = cursorMs + bucketSizeMs;
-        // Overlap: max(start, bucketStart) to min(end, bucketEnd)
-        const overlapStart = Math.max(startMs, cursorMs);
-        const overlapEnd = Math.min(endMs, bucketEnd);
-        const overlapMs = overlapEnd - overlapStart;
-        if (overlapMs > 0) {
-          const fraction = overlapMs / totalDuration;
-          const { timeKey, timeLabel } = _bucketKeyAndLabel(new Date(overlapStart), isHourly);
-          if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
-          if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
-          buckets[timeKey].segments[segKey].cost += totalCost * fraction;
-          if (!sessionCounted) {
-            buckets[timeKey].segments[segKey].sessions += 1; // count session once (in first bucket)
-            sessionCounted = true;
-          }
-          buckets[timeKey].segments[segKey].tokIn += totalTokIn * fraction;
-          buckets[timeKey].segments[segKey].tokOut += totalTokOut * fraction;
-        }
-        cursorMs = bucketEnd;
-      }
-    }
+    const bucketDate = (endTs && !isNaN(endTs)) ? endTs : startTs;
+    const { timeKey, timeLabel } = _bucketKeyAndLabel(bucketDate, bucketMode);
+    if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
+    if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+    buckets[timeKey].segments[segKey].cost += totalCost;
+    buckets[timeKey].segments[segKey].sessions += 1;
+    buckets[timeKey].segments[segKey].tokIn += totalTokIn;
+    buckets[timeKey].segments[segKey].tokOut += totalTokOut;
   }
 
   // Filter out buckets outside the selected time range.
@@ -1419,8 +1403,8 @@ function _renderStackedCostChart(items, mode) {
     return { s: new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()).getTime(), e: _now };
   })();
   // Compute bucket keys for the range boundaries so we can do a string compare
-  const _rangeStartKey = _bucketKeyAndLabel(new Date(_rangeCalc.s), isHourly).timeKey;
-  const _rangeEndKey = _bucketKeyAndLabel(new Date(_rangeCalc.e), isHourly).timeKey;
+  const _rangeStartKey = _bucketKeyAndLabel(new Date(_rangeCalc.s), bucketMode).timeKey;
+  const _rangeEndKey = _bucketKeyAndLabel(new Date(_rangeCalc.e), bucketMode).timeKey;
   // Remove any buckets outside [_rangeStartKey, _rangeEndKey]
   for (const bk of Object.keys(buckets)) {
     if (bk < _rangeStartKey || bk > _rangeEndKey) delete buckets[bk];
