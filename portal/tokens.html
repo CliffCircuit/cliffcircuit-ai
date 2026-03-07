@@ -7,6 +7,19 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    .info-tip { position: relative; cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
+    .info-tip:hover { color: #a5b4fc; }
+    .info-tip:hover::after {
+      content: attr(data-tip);
+      position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+      margin-left: 8px;
+      background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
+      padding: 8px 12px; font-size: 11px; font-weight: 400; white-space: normal;
+      width: max-content; max-width: 320px; z-index: 9999; pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+  </style>
 </head>
 <body class="min-h-screen">
   <div id="portal" class="min-h-screen">
@@ -81,15 +94,17 @@
         </div>
       </div>
 
-      <!-- Agent Sessions Summary -->
+      <!-- Agent Sessions - Summary -->
       <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-semibold text-white">Agent Sessions Summary</h3>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions — Summary</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — sessions, cost, and tokens per job type</p>
           </div>
           <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
+        <!-- Dynamic agent portrait cards -->
+        <div id="summary-agent-portraits" class="border-b border-gray-800"></div>
         <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
           <div>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
@@ -196,47 +211,7 @@
             <div id="ag-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
           </div>
         </div>
-        <div class="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
-          <!-- Cliff -->
-          <div class="relative overflow-hidden" style="min-height:90px;">
-            <img src="/portal/cliff-avatar.jpg" alt="Cliff" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" />
-            <div class="absolute left-0 top-0 h-full w-32" style="background:linear-gradient(to right, transparent 55%, #111827 100%);"></div>
-            <div class="relative px-5 py-4 pl-36">
-              <div class="text-xs text-indigo-400 font-semibold uppercase tracking-wide mb-2">Cliff</div>
-              <div class="flex items-end gap-4">
-                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-cliff-runs" class="text-xl font-bold text-white">&mdash;</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-cliff-tokens" class="text-xl font-bold text-white">&mdash;</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-cliff-cost" class="text-xl font-bold text-yellow-400">&mdash;</div></div>
-              </div>
-            </div>
-          </div>
-          <!-- Samantha -->
-          <div class="relative overflow-hidden" style="min-height:90px;">
-            <img src="/portal/samantha-avatar.jpg" alt="Samantha" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" />
-            <div class="absolute left-0 top-0 h-full w-32" style="background:linear-gradient(to right, transparent 55%, #111827 100%);"></div>
-            <div class="relative px-5 py-4 pl-36">
-              <div class="text-xs text-teal-400 font-semibold uppercase tracking-wide mb-2">Samantha</div>
-              <div class="flex items-end gap-4">
-                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-samantha-runs" class="text-xl font-bold text-white">&mdash;</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-samantha-tokens" class="text-xl font-bold text-white">&mdash;</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-samantha-cost" class="text-xl font-bold text-yellow-400">&mdash;</div></div>
-              </div>
-            </div>
-          </div>
-          <!-- Scout -->
-          <div class="relative overflow-hidden" style="min-height:90px;">
-            <img src="/portal/scout-avatar.jpg" alt="Scout" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" />
-            <div class="absolute left-0 top-0 h-full w-32" style="background:linear-gradient(to right, transparent 55%, #111827 100%);"></div>
-            <div class="relative px-5 py-4 pl-36">
-              <div class="text-xs text-green-400 font-semibold uppercase tracking-wide mb-2">Scout</div>
-              <div class="flex items-end gap-4">
-                <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div id="ag-scout-runs" class="text-xl font-bold text-white">&mdash;</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div id="ag-scout-tokens" class="text-xl font-bold text-white">&mdash;</div></div>
-                <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div id="ag-scout-cost" class="text-xl font-bold text-yellow-400">&mdash;</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
+
         <table class="w-full text-sm">
           <thead><tr class="border-b border-gray-800 bg-gray-900">
             <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
@@ -458,19 +433,74 @@
       renderTokenSections();
     }
 
-    // ── Agent Sessions section (portrait cards + table) ───────────────
-    function renderAgentSessionsSection(rows) {
-      // Per-agent mini cards
-      for (const [agentId, alias] of [['main','cliff'],['samantha','samantha'],['scout','scout']]) {
-        const agentRows = rows.filter(r => r.agent_id === agentId);
-        const sessions  = agentRows.length;
-        const tokens    = agentRows.reduce((s,r) => s + (r.total_tokens||0), 0);
-        const cost      = agentRows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
-        const el = id => document.getElementById(id);
-        if (el(`ag-${alias}-runs`))   el(`ag-${alias}-runs`).textContent  = sessions;
-        if (el(`ag-${alias}-tokens`)) el(`ag-${alias}-tokens`).textContent = _fmtK(tokens);
-        if (el(`ag-${alias}-cost`))   el(`ag-${alias}-cost`).textContent  = '$' + cost.toFixed(2);
+    // ── Agent portrait config ─────────────────────────────────────────
+    const _agentPortraitConfig = {
+      main:          { alias: 'cliff',      name: 'Cliff',       avatar: '/portal/cliff-avatar.jpg',     accentClass: 'text-indigo-400' },
+      cliff:         { alias: 'cliff',      name: 'Cliff',       avatar: '/portal/cliff-avatar.jpg',     accentClass: 'text-indigo-400' },
+      samantha:      { alias: 'samantha',   name: 'Samantha',    avatar: '/portal/samantha-avatar.jpg',  accentClass: 'text-teal-400'   },
+      scout:         { alias: 'scout',      name: 'Scout',       avatar: '/portal/scout-avatar.jpg',     accentClass: 'text-green-400'  },
+      atlas:         { alias: 'atlas',      name: 'Atlas',       avatar: '/portal/atlas-avatar.png',     accentClass: 'text-orange-400' },
+      'claude-code': { alias: 'claude-code',name: 'Claude Code', avatar: '',                             accentClass: 'text-purple-400' },
+    };
+
+    function renderSummaryPortraits(rows) {
+      const container = document.getElementById('summary-agent-portraits');
+      if (!container) return;
+
+      const agentFilter = window._globalAgent || 'all';
+
+      // Aggregate per agent
+      const agentData = {};
+      for (const r of rows) {
+        const id = r.agent_id || 'unknown';
+        if (!agentData[id]) agentData[id] = { sessions: 0, tokens: 0, cost: 0 };
+        agentData[id].sessions++;
+        agentData[id].tokens += r.total_tokens || 0;
+        agentData[id].cost += r.cost_total_usd || 0;
       }
+
+      // Filter: if specific agent selected, only show that one
+      let agentIds = Object.keys(agentData);
+      if (agentFilter !== 'all') {
+        const mappedId = agentFilter === 'cliff' ? 'main' : agentFilter;
+        agentIds = agentIds.filter(id => id === mappedId);
+      }
+
+      if (agentIds.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      // Determine grid cols based on count
+      const cols = agentIds.length >= 4 ? 4 : agentIds.length >= 3 ? 3 : agentIds.length >= 2 ? 2 : 1;
+
+      const cards = agentIds.map(id => {
+        const cfg = _agentPortraitConfig[id] || { alias: id, name: _agentLabel[id] || id, avatar: '', accentClass: 'text-gray-400' };
+        const d = agentData[id];
+        const avatarHtml = cfg.avatar
+          ? `<img src="${cfg.avatar}" alt="${esc(cfg.name)}" class="absolute left-0 top-0 h-full w-32 object-cover object-top" style="opacity:0.7;" />
+             <div class="absolute left-0 top-0 h-full w-32" style="background:linear-gradient(to right, transparent 55%, #111827 100%);"></div>`
+          : '';
+        return `<div class="relative overflow-hidden" style="min-height:90px;">
+          ${avatarHtml}
+          <div class="relative px-5 py-4 ${cfg.avatar ? 'pl-36' : ''}">
+            <div class="text-xs ${cfg.accentClass} font-semibold uppercase tracking-wide mb-2">${esc(cfg.name)}</div>
+            <div class="flex items-end gap-4">
+              <div><div class="text-xs text-gray-500 mb-0.5">Sessions</div><div class="text-xl font-bold text-white">${d.sessions}</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Tokens</div><div class="text-xl font-bold text-white">${_fmtK(d.tokens)}</div></div>
+              <div><div class="text-xs text-gray-500 mb-0.5">Cost</div><div class="text-xl font-bold text-yellow-400">$${d.cost.toFixed(2)}</div></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      container.innerHTML = `<div class="grid grid-cols-${cols} divide-x divide-gray-800">${cards}</div>`;
+    }
+
+    // ── Agent Sessions section (table) ────────────────────────────────
+    function renderAgentSessionsSection(rows) {
+      // Render dynamic portrait cards in summary section
+      renderSummaryPortraits(rows);
 
       // Summary totals
       const totSessions  = rows.length;
@@ -651,7 +681,7 @@
         const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
         const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)} <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-700 text-gray-400 text-[9px] font-bold cursor-help ml-1 align-middle" title="${esc(_getTaskTooltip(g.task))}">?</span></td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)} <span class="info-tip" data-tip="${esc(_getTaskTooltip(g.task))}">&#9432;</span></td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_modelShortT(g.model)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
