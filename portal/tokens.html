@@ -260,6 +260,7 @@
     const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
 
     const _modelShortT = m => {
+      m = typeof resolveModelAlias === 'function' ? resolveModelAlias(m) : m;
       if (!m) return '<span class="text-gray-700">—</span>';
       const s = m.toLowerCase();
       if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';

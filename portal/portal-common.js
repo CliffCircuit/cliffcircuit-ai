@@ -237,7 +237,23 @@ function fmtLabel(raw) {
   return LABEL_DISPLAY[raw.toLowerCase()] || (raw.charAt(0).toUpperCase() + raw.slice(1));
 }
 
+// ── Master model alias table (single source of truth) ───────────────────
+// Short aliases → full canonical model string so all display functions resolve versions.
+const MODEL_ALIASES = {
+  'opus':    'anthropic/claude-opus-4-6',
+  'sonnet':  'anthropic/claude-sonnet-4-6',
+  'haiku':   'anthropic/claude-haiku-4-5',
+  'flash':   'google/gemini-2.5-flash',
+  'grok':    'xai/grok-4.1',
+};
+function resolveModelAlias(m) {
+  if (!m) return m;
+  const key = m.toLowerCase().trim();
+  return MODEL_ALIASES[key] || m;
+}
+
 function friendlyModel(m) {
+  m = resolveModelAlias(m);
   if (!m || m === 'Unknown') return 'Unknown';
   const s = m.toLowerCase();
   if (s.includes('opus-4-6') || s.includes('opus-4.6')) return 'Opus 4.6';
@@ -263,6 +279,7 @@ function friendlyModel(m) {
 }
 
 function modelShort(m) {
+  m = resolveModelAlias(m);
   if (!m) return '<span class="text-gray-700">—</span>';
   const s = m.toLowerCase();
   if (s.includes('opus-4-6') || s.includes('opus-4.6')) return '<span class="text-purple-400">Opus 4.6</span>';
