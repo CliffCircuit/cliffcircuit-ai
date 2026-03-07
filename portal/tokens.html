@@ -251,36 +251,59 @@
     // Use the shared modelShort from portal-common.js (loaded before this script)
     const _modelShortT = m => modelShort(m);
 
-    // Model breakdown popover for summary table
-    let _activeModelPopover = null;
-    function _renderModelCell(g) {
+    // Model breakdown — expand summary row into per-model sub-rows
+    function _renderModelCell(g, rowId) {
       const keys = Object.keys(g.modelBreakdown || {});
-      const primary = _modelShortT(g.model);
-      if (keys.length <= 1) return esc(primary);
-      // Multiple models — show icon button
-      const bd = Object.entries(g.modelBreakdown).sort((a,b) => b[1].count - a[1].count);
-      const rows = bd.map(([m, d]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;"><span style="color:#e5e7eb;">${esc(m)}</span><span style="color:#9ca3af;">${d.count} run${d.count!==1?'s':''} &middot; $${d.cost.toFixed(2)}</span></div>`).join('');
-      const popId = 'mpop-' + Math.random().toString(36).slice(2,8);
-      return `<span style="position:relative;display:inline-flex;align-items:center;gap:4px;">${esc(bd[0][0])}<button onclick="event.stopPropagation();_toggleModelPop('${popId}')" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:10px;padding:1px 5px;line-height:1.3;vertical-align:middle;" title="Model breakdown">${keys.length}</button><div id="${popId}" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:8px 12px;min-width:220px;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,.5);font-size:11px;">${rows}</div></span>`;
+      const primary = Object.entries(g.modelBreakdown).sort((a,b) => b[1].count - a[1].count)[0];
+      const label = primary ? esc(primary[0]) : esc(_modelShortT(g.model));
+      if (keys.length <= 1) return label;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;">${label}<button onclick="event.stopPropagation();_toggleModelExpand('${rowId}')" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:10px;padding:1px 5px;line-height:1.3;" title="Show per-model breakdown">${keys.length}</button></span>`;
     }
-    function _toggleModelPop(id) {
-      if (_activeModelPopover && _activeModelPopover !== id) {
-        const prev = document.getElementById(_activeModelPopover);
-        if (prev) prev.style.display = 'none';
+    function _toggleModelExpand(rowId) {
+      const parentRow = document.getElementById(rowId);
+      if (!parentRow) return;
+      const expanded = parentRow.dataset.expanded === '1';
+      // Remove existing sub-rows
+      let next = parentRow.nextElementSibling;
+      while (next && next.classList.contains('model-sub-row')) {
+        const toRemove = next;
+        next = next.nextElementSibling;
+        toRemove.remove();
       }
-      const el = document.getElementById(id);
-      if (!el) return;
-      const showing = el.style.display !== 'none';
-      el.style.display = showing ? 'none' : 'block';
-      _activeModelPopover = showing ? null : id;
+      if (expanded) {
+        parentRow.dataset.expanded = '0';
+        parentRow.style.opacity = '';
+        return;
+      }
+      // Insert sub-rows
+      parentRow.dataset.expanded = '1';
+      parentRow.style.opacity = '0.4';
+      const bd = JSON.parse(parentRow.dataset.modelBreakdown || '{}');
+      const entries = Object.entries(bd).sort((a,b) => b[1].cost - a[1].cost);
+      const maxCost = entries[0] ? entries[0][1].cost : 1;
+      let insertAfter = parentRow;
+      entries.forEach(([model, d]) => {
+        const barPct = Math.round((d.cost / maxCost) * 100);
+        const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
+        const tr = document.createElement('tr');
+        tr.className = 'model-sub-row border-b border-gray-900 hover:bg-gray-800 transition-colors';
+        tr.style.cssText = 'background:rgba(55,65,81,0.25);';
+        const taskName = esc(parentRow.dataset.taskName || '');
+        const shortTask = taskName.length > 20 ? taskName.slice(0,20) + '\u2026' : taskName;
+        tr.innerHTML = `
+          <td class="px-4 py-2 text-gray-500 text-xs font-medium" style="padding-left:28px;">${shortTask}</td>
+          <td class="px-4 py-2 text-xs"><span class="${parentRow.dataset.agentCls || 'text-gray-400'}">${parentRow.dataset.agentLabel || ''}</span></td>
+          <td class="px-4 py-2 text-xs text-gray-300">${esc(model)}</td>
+          <td class="px-4 py-2 text-right text-white text-xs font-bold">${d.count}</td>
+          <td class="px-4 py-2 text-right text-gray-400 text-xs">${d.count > 0 ? _fmtDur(Math.round(d.dur / d.count)) : '\u2014'}</td>
+          <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(d.tokIn)} / ${_fmtK(d.tokOut)}</td>
+          <td class="px-4 py-2 text-right text-gray-400 text-xs">${d.count > 0 && (d.cost/d.count) >= 0.01 ? '$' + (d.cost/d.count).toFixed(3) : '<$0.01'}</td>
+          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${d.cost >= 0.01 ? '$' + d.cost.toFixed(2) : '<$0.01'}</td>
+          <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>`;
+        insertAfter.after(tr);
+        insertAfter = tr;
+      });
     }
-    document.addEventListener('click', () => {
-      if (_activeModelPopover) {
-        const el = document.getElementById(_activeModelPopover);
-        if (el) el.style.display = 'none';
-        _activeModelPopover = null;
-      }
-    });
 
     const _localModelPricing = m => {
       if (!m) return { input: 3.0, cacheRead: 0.30, cacheWrite: 3.75, output: 15.0 };
@@ -764,9 +787,12 @@
         groups[key].totalCost += s.estimated_cost_usd || 0;
         // Track per-model breakdown
         const mLabel = _modelShortT(s.model);
-        if (!groups[key].modelBreakdown[mLabel]) groups[key].modelBreakdown[mLabel] = { count: 0, cost: 0 };
+        if (!groups[key].modelBreakdown[mLabel]) groups[key].modelBreakdown[mLabel] = { count: 0, cost: 0, dur: 0, tokIn: 0, tokOut: 0 };
         groups[key].modelBreakdown[mLabel].count++;
         groups[key].modelBreakdown[mLabel].cost += s.estimated_cost_usd || 0;
+        groups[key].modelBreakdown[mLabel].dur += s.duration_ms || 0;
+        groups[key].modelBreakdown[mLabel].tokIn += s.tokens_in || 0;
+        groups[key].modelBreakdown[mLabel].tokOut += s.tokens_out || 0;
       }
 
       const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
@@ -789,14 +815,19 @@
         return;
       }
       const maxCost = sorted[0] ? sorted[0].totalCost : 1;
+      let _grpRowIdx = 0;
       body.innerHTML = sorted.map(g => {
+        const rowId = 'grp-row-' + (_grpRowIdx++);
         const barPct = Math.round((g.totalCost / maxCost) * 100);
         const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
         const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
-        return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
+        const agentCls = _agentCls[g.agent] || 'text-gray-400';
+        const agentLabel = fmtAgent(g.agent);
+        const bdJson = esc(JSON.stringify(g.modelBreakdown));
+        return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" data-model-breakdown="${bdJson}">
           <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
-          <td class="px-4 py-2 text-xs"><span class="${_agentCls[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
-          <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g)}</td>
+          <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
+          <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${_fmtDur(Math.round(g.totalDur/g.runs))}</td>
           <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(g.tokensIn)} / ${_fmtK(g.tokensOut)}</td>
