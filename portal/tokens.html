@@ -402,12 +402,11 @@
       const hasMulti = sessions && sessions.length > 1;
       const hasSingle = sessions && sessions.length === 1;
       if (hasMulti || hasSingle) _sessionStore[storeKey] = sessions;
-      const wrapStyle = 'display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;min-width:44px;';
       if (hasMulti) {
-        const btnStyle = 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;flex-shrink:0;';
-        return `<span style="${wrapStyle}">${count} <button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button></span>`;
+        const btnStyle = 'background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;';
+        return `${count} <button onclick="event.stopPropagation();_toggleSessionExpand('${storeKey}',this)" title="Show individual sessions" style="${btnStyle}">+</button>`;
       }
-      return `<span style="${wrapStyle}"><span>${count}</span><span style="width:22px;flex-shrink:0;"></span></span>`;
+      return `${count}`;
     }
     const _singleSessionSidCache = {}; // storeKey → stable sid
     function _toggleSingleSessionDetail(storeKey, parentRow) {
@@ -1269,90 +1268,13 @@ function _renderChartGrid(container, maxCost) {
 }
 
 function _getTimeBuckets(range) {
-  if (range === '1h') return '10min';
-  if (range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
+  if (range === '1h' || range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
   return 'daily';
 }
 
 const _rangeLabels = { '1h': 'Last 1 Hour', '24h': 'Last 24 Hours', 'today': 'Today', 'yesterday': 'Yesterday', '7d': 'Last 7 Days', 'week': 'This Week', '30d': 'Last 30 Days', 'month': 'This Month' };
 
-// ── Fetch per-turn cost data from session_turns table ──────────
-async function _fetchSessionTurns() {
-  const range = window._globalRange || 'today';
-  const agentFilter = window._globalAgent || 'all';
-  const now = new Date();
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let cutoffStart, cutoffEnd = now.toISOString();
-
-  if      (range === '1h')        cutoffStart = new Date(now - 3600000).toISOString();
-  else if (range === '24h')       cutoffStart = new Date(now - 86400000).toISOString();
-  else if (range === 'today')     cutoffStart = todayMidnight.toISOString();
-  else if (range === 'yesterday') { cutoffStart = new Date(todayMidnight - 86400000).toISOString(); cutoffEnd = todayMidnight.toISOString(); }
-  else if (range === '7d')        cutoffStart = new Date(now - 7*86400000).toISOString();
-  else if (range === 'week')      cutoffStart = new Date(todayMidnight - todayMidnight.getDay()*86400000).toISOString();
-  else if (range === '30d')       cutoffStart = new Date(now - 30*86400000).toISOString();
-  else if (range === 'month')     cutoffStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  else                            cutoffStart = todayMidnight.toISOString();
-
-  const PAGE_SIZE = 1000;
-  let allTurns = [];
-  let offset = 0;
-  while (true) {
-    let query = _sb.from('session_turns')
-      .select('session_id,session_key,agent_id,turn_at,model,input_tokens,output_tokens,cache_read,cache_write,total_tokens,cost_total')
-      .gte('turn_at', cutoffStart)
-      .lte('turn_at', cutoffEnd)
-      .order('turn_at', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1);
-
-    if (agentFilter !== 'all') {
-      const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
-      query = query.eq('agent_id', agentId);
-    }
-
-    const { data, error } = await query;
-    if (error) { console.error('[token] session_turns error:', error); return []; }
-    const rows = data || [];
-    allTurns = allTurns.concat(rows);
-    if (rows.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
-  }
-
-  // Apply provider and model filters client-side
-  const providerFilter = window._globalProvider || 'all';
-  const modelFilter = window._globalModel || 'all';
-  const taskFilter = window._globalTask || 'all';
-
-  return allTurns.filter(t => {
-    if (providerFilter !== 'all' && _getProviderFromModel(t.model) !== providerFilter) return false;
-    if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(t.model) : t.model) !== modelFilter) return false;
-    if (taskFilter !== 'all') {
-      const isCron = t.session_key && (t.session_key.startsWith('cron:') || t.session_key.includes(':cron:'));
-      const displayName = typeof sessionKeyToFriendly === 'function' ? sessionKeyToFriendly(t.session_key, t.session_id) : t.session_key;
-      if (displayName !== taskFilter) return false;
-    }
-    return true;
-  }).map(t => {
-    const isCron = t.session_key && (t.session_key.startsWith('cron:') || t.session_key.includes(':cron:'));
-    const cronName = isCron && typeof cronTaskFromKey === 'function' ? cronTaskFromKey(t.session_key) : null;
-    const displayName = typeof sessionKeyToFriendly === 'function' ? sessionKeyToFriendly(t.session_key, t.session_id) : t.session_key;
-    return {
-      display_name: displayName,
-      task_name:    cronName || (isCron ? 'unknown' : 'direct'),
-      agent_type:   t.agent_id,
-      agent_id:     t.agent_id,
-      model:        t.model,
-      estimated_cost_usd: t.cost_total || 0,
-      cost_total_usd:     t.cost_total || 0,
-      tokens_in:    (t.input_tokens || 0) + (t.cache_read || 0) + (t.cache_write || 0),
-      tokens_out:   t.output_tokens || 0,
-      started_at:   new Date(t.turn_at).getTime(),
-      last_seen_at: t.turn_at,  // same as started_at — point event, no spreading
-    };
-  });
-}
-
-async function renderCostBarChart(items) {
+function renderCostBarChart(items) {
   window._costChartItems = items;
   const view = window._costChartView || 'agent';
   const titleEl = document.getElementById('cost-chart-title');
@@ -1366,9 +1288,7 @@ async function renderCostBarChart(items) {
     const range = window._globalRange || 'today';
     rangeLabelEl.textContent = _rangeLabels[range] || range;
   }
-  // Fetch per-turn data from session_turns for granular cost bucketing
-  const turnItems = await _fetchSessionTurns();
-  _renderStackedCostChart(turnItems, view);
+  _renderStackedCostChart(items, view);
 }
 
 function _renderStackedCostChart(items, mode) {
@@ -1380,37 +1300,24 @@ function _renderStackedCostChart(items, mode) {
   const bucketMode = _getTimeBuckets(range);
   const TZ = 'America/Los_Angeles';
 
-  // 1. Bucket turn items into time periods by turn_at timestamp.
-  //    Each turn is a discrete cost event — no proportional spreading needed.
+  // 1. Bucket items into time periods, tracking per-segment costs
   const buckets = {};   // key -> { label, segments: { segKey -> { cost, sessions, tokIn, tokOut } } }
   const allSegKeys = new Set();
 
-  function _bucketKeyAndLabel(date, bMode) {
-    if (bMode === '10min') {
-      const dateKey = date.toLocaleDateString('en-CA', { timeZone: TZ });
-      const hm = date.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false });
-      // Floor minute to nearest 10
-      const hmParts = hm.match(/(\d+):(\d+)/);
-      const min10 = hmParts ? String(Math.floor(parseInt(hmParts[2]) / 10) * 10).padStart(2, '0') : '00';
-      const label = hmParts ? `${hmParts[1]}:${min10}` : hm;
-      const timeKey = dateKey + ' ' + (hmParts ? `${hmParts[1]}:${min10}` : hm);
-      return { timeKey, timeLabel: label };
-    }
-    if (bMode === 'hourly') {
-      const hStr = date.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
-      const dateKey = date.toLocaleDateString('en-CA', { timeZone: TZ });
-      const timeKey = dateKey + ' ' + date.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
-      return { timeKey, timeLabel: hStr };
-    }
-    return {
-      timeKey: date.toLocaleDateString('en-CA', { timeZone: TZ }),
-      timeLabel: date.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' })
-    };
-  }
-
   for (const s of items) {
-    const turnTs = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
-    if (!turnTs || isNaN(turnTs)) continue;
+    const ts = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
+    if (!ts || isNaN(ts)) continue;
+
+    let timeKey, timeLabel;
+    if (bucketMode === 'hourly') {
+      const hStr = ts.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
+      const dateKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
+      timeKey = dateKey + ' ' + ts.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
+      timeLabel = hStr;
+    } else {
+      timeKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
+      timeLabel = ts.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' });
+    }
 
     // Determine segment key
     let segKey;
@@ -1422,20 +1329,14 @@ function _renderStackedCostChart(items, mode) {
     } else {
       segKey = typeof friendlyModel === 'function' ? friendlyModel(s.model) : (s.model || 'Unknown');
     }
-    allSegKeys.add(segKey);
 
-    const cost = s.estimated_cost_usd || s.cost_total_usd || 0;
-    const tokIn = s.tokens_in || 0;
-    const tokOut = s.tokens_out || 0;
-
-    // Each turn goes into exactly one bucket based on its timestamp
-    const { timeKey, timeLabel } = _bucketKeyAndLabel(turnTs, bucketMode);
     if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
-    if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, turns: 0, tokIn: 0, tokOut: 0 };
-    buckets[timeKey].segments[segKey].cost += cost;
-    buckets[timeKey].segments[segKey].turns += 1;
-    buckets[timeKey].segments[segKey].tokIn += tokIn;
-    buckets[timeKey].segments[segKey].tokOut += tokOut;
+    if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+    buckets[timeKey].segments[segKey].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
+    buckets[timeKey].segments[segKey].sessions++;
+    buckets[timeKey].segments[segKey].tokIn += s.tokens_in || 0;
+    buckets[timeKey].segments[segKey].tokOut += s.tokens_out || 0;
+    allSegKeys.add(segKey);
   }
 
   const timePeriods = Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
