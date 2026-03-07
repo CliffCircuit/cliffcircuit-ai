@@ -16,9 +16,11 @@
       margin-left: 8px;
       background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
       padding: 8px 12px; font-size: 11px; font-weight: 400; white-space: normal;
-      width: max-content; max-width: 320px; z-index: 50; pointer-events: none;
+      width: max-content; max-width: 320px; z-index: 9999; pointer-events: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
+    /* Allow tooltips to escape card bounds */
+    .card { overflow: visible !important; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -66,7 +68,7 @@
     </div>
   </div>
 
-  <script src="/portal/portal-common.js?v=5"></script>
+  <script src="/portal/portal-common.js?v=6"></script>
   <script>
     if (!window._jobMap) window._jobMap = {};
 
