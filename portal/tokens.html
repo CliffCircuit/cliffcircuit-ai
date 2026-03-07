@@ -1029,10 +1029,14 @@
     }
 
     // ── Init ──────────────────────────────────────────────────────────
+    let _tokensInitialLoad = false;
     initPortal('tokens', function(d) {
       // data.json loaded — store cron list for name resolution
       if (d && d.crons && d.crons.length) window._cronList = d.crons;
-      // Kick off the Supabase-powered rendering
+      // Only kick off Supabase rendering on first load — subsequent data.json polls
+      // should NOT re-trigger the full Supabase fetch (it has its own 30s poll + realtime)
+      if (_tokensInitialLoad) return;
+      _tokensInitialLoad = true;
       loadAndRenderAgentSessions();
       // Load stuck sessions watchdog
       loadLiveSessions();
