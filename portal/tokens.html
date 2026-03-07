@@ -566,7 +566,8 @@
         if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
         return Math.round(ms/86400000) + 'd ago';
       };
-      rows.sort((a,b) => (b.duration_ms||0) - (a.duration_ms||0));
+      const _dur = r => r.duration_ms || (r.first_seen_at ? Date.now() - new Date(r.first_seen_at).getTime() : 0);
+      rows.sort((a,b) => _dur(b) - _dur(a));
       tbody.innerHTML = rows.slice(0, 10).map(r => {
         const aCls   = _agentCls[r.agent_id] || 'text-gray-400';
         const aLbl   = _agentLabel[r.agent_id] || fmtAgent(r.agent_id);
