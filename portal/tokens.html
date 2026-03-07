@@ -1042,10 +1042,12 @@
       if (!ok) return;
       // Poll every 30s as fallback
       setInterval(() => { loadAndRenderAgentSessions(); }, 30000);
-      // Realtime subscription for instant updates
+      // Realtime subscription for instant updates (debounced to avoid rapid re-renders)
+      let _rtDebounce = null;
       _sb.channel('tokens-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'session_snapshots' }, () => {
-          loadAndRenderAgentSessions();
+          clearTimeout(_rtDebounce);
+          _rtDebounce = setTimeout(() => loadAndRenderAgentSessions(), 10000);
         })
         .subscribe(status => {
           const dot = document.getElementById('sb-realtime-dot');
