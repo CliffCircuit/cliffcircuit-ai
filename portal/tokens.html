@@ -19,7 +19,7 @@
       width: max-content; max-width: 320px; z-index: 9999; pointer-events: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
-    /* Cost Bar Chart */
+    /* Cost Bar Chart — Stacked */
     .cost-chart-wrap { padding: 24px 20px 20px; border-top: 1px solid #1f2937; }
     .cost-chart-title { font-size: 12px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .cost-chart-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, #374151 0%, transparent 100%); }
@@ -28,22 +28,18 @@
     .cost-chart-gridline { display: flex; align-items: center; gap: 8px; }
     .cost-chart-gridline-val { font-size: 10px; color: #4b5563; min-width: 48px; text-align: right; }
     .cost-chart-gridline-line { flex: 1; height: 1px; background: #1f2937; }
-    .cost-chart { display: flex; align-items: flex-end; gap: 20px; height: 200px; padding: 0 12px 0 60px; position: relative; z-index: 1; }
+    .cost-chart { display: flex; align-items: flex-end; gap: 12px; height: 200px; padding: 0 12px 0 60px; position: relative; z-index: 1; }
     .cost-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; position: relative; max-width: 120px; }
-    .cost-bar { width: 100%; max-width: 72px; border-radius: 8px 8px 3px 3px; position: relative; min-height: 4px; transform-origin: bottom; animation: costBarGrow 0.7s cubic-bezier(0.22,1,0.36,1) forwards; transform: scaleY(0); transition: filter 0.2s ease; }
-    .cost-bar-cliff { background: linear-gradient(180deg, #a5b4fc 0%, #818cf8 30%, #4f46e5 100%); box-shadow: 0 0 16px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
-    .cost-bar-samantha { background: linear-gradient(180deg, #99f6e4 0%, #5eead4 30%, #14b8a6 100%); box-shadow: 0 0 16px rgba(20,184,166,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
-    .cost-bar-scout { background: linear-gradient(180deg, #bbf7d0 0%, #86efac 30%, #22c55e 100%); box-shadow: 0 0 16px rgba(34,197,94,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
-    .cost-bar-atlas { background: linear-gradient(180deg, #fed7aa 0%, #fdba74 30%, #f97316 100%); box-shadow: 0 0 16px rgba(249,115,22,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
-    .cost-bar-claude-code { background: linear-gradient(180deg, #ddd6fe 0%, #c4b5fd 30%, #a855f7 100%); box-shadow: 0 0 16px rgba(168,85,247,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
-    .cost-bar-default { background: linear-gradient(180deg, #d1d5db 0%, #9ca3af 30%, #6b7280 100%); box-shadow: 0 0 16px rgba(107,114,128,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .cost-stacked-bar { width: 100%; max-width: 72px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; min-height: 4px; border-radius: 6px 6px 3px 3px; overflow: hidden; transform-origin: bottom; animation: costBarGrow 0.7s cubic-bezier(0.22,1,0.36,1) forwards; transform: scaleY(0); }
+    .cost-stacked-segment { width: 100%; transition: filter 0.2s ease; }
+    .cost-stacked-segment:first-child { border-radius: 6px 6px 0 0; }
+    .cost-bar-col:hover .cost-stacked-segment { filter: brightness(1.15) saturate(1.1); }
     .cost-bar-label { font-size: 11px; color: #9ca3af; font-weight: 500; white-space: nowrap; letter-spacing: 0.02em; }
     .cost-bar-value { font-size: 11px; color: #facc15; font-weight: 700; opacity: 0; animation: costValFade 0.4s ease forwards 0.6s; text-shadow: 0 0 8px rgba(250,204,21,0.3); }
-    .cost-bar-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 10px 14px; font-size: 11px; color: #e5e7eb; white-space: nowrap; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: none; line-height: 1.5; }
+    .cost-bar-col:hover .cost-bar-value { color: #fef08a; }
+    .cost-bar-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 12px 16px; font-size: 11px; color: #e5e7eb; white-space: nowrap; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.7); pointer-events: none; line-height: 1.6; }
     .cost-bar-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #374151; }
     .cost-bar-col:hover .cost-bar-tooltip { display: block; }
-    .cost-bar-col:hover .cost-bar { filter: brightness(1.25) saturate(1.1); }
-    .cost-bar-col:hover .cost-bar-value { color: #fef08a; }
     .cost-chart-empty { text-align: center; padding: 32px 0; color: #4b5563; font-size: 13px; }
     @keyframes costBarGrow { to { transform: scaleY(1); } }
     @keyframes costValFade { to { opacity: 1; } }
@@ -55,6 +51,10 @@
     .cost-view-btn:not(:first-child) { border-left: none; }
     .cost-view-btn:hover:not(.cost-view-active) { color: #9ca3af; border-color: #4b5563; }
     .cost-view-btn.cost-view-active { background: #1f2937; color: #e5e7eb; border-color: #4f46e5; z-index: 1; position: relative; }
+    /* Legend */
+    .cost-chart-legend { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 12px; padding: 8px 0; }
+    .cost-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #9ca3af; }
+    .cost-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -170,15 +170,15 @@
           </tr></thead>
           <tbody id="grp-subagent-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
-        <!-- Cost Bar Chart -->
+        <!-- Cost Bar Chart (stacked over time) -->
         <div id="cost-bar-chart-wrap" class="cost-chart-wrap" style="display:none;">
-          <div id="cost-chart-title" class="cost-chart-title">Cost by Time</div>
+          <div id="cost-chart-title" class="cost-chart-title">Cost Over Time — By Agent</div>
           <div id="cost-bar-chart" class="cost-chart"></div>
           <div class="cost-view-switcher">
-            <button class="cost-view-btn cost-view-active" data-view="time" onclick="setCostChartView('time')">By Time</button>
-            <button class="cost-view-btn" data-view="agent" onclick="setCostChartView('agent')">By Agent</button>
+            <button class="cost-view-btn cost-view-active" data-view="agent" onclick="setCostChartView('agent')">By Agent</button>
             <button class="cost-view-btn" data-view="model" onclick="setCostChartView('model')">By Model</button>
           </div>
+          <div id="cost-chart-legend" class="cost-chart-legend"></div>
         </div>
       </div>
 
@@ -286,7 +286,7 @@
     window._subTotals  = { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
     window._agentTaskMap = {};
     window._taskAgentMap = {};
-    window._costChartView = 'time';  // default: time range view
+    window._costChartView = 'agent';  // default: stacked by agent over time
     window._costChartItems = [];     // cached items for re-render on view switch
 
     // ── Local helpers (match old page exactly) ────────────────────────
@@ -873,14 +873,25 @@
       renderRawTable(filteredDbItems);
     }
 
-    // ── Cost Bar Chart (multi-view) ─────────────────────────────────
+    // ── Cost Bar Chart (stacked over time) ──────────────────────────
+    // Color palette for agents
+    const _agentColors = {
+      cliff:        '#6366f1',
+      samantha:     '#14b8a6',
+      scout:        '#22c55e',
+      atlas:        '#f97316',
+      'claude-code':'#a855f7',
+    };
+    const _agentNames = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
+    // Color palette for models (assigned dynamically, consistent per render)
+    const _modelColorPalette = ['#6366f1','#14b8a6','#22c55e','#f97316','#a855f7','#ec4899','#eab308','#06b6d4','#f43f5e','#84cc16'];
+    const _defaultSegmentColor = '#6b7280';
+
     function setCostChartView(view) {
       window._costChartView = view;
-      // Update switcher button states
       document.querySelectorAll('.cost-view-btn').forEach(btn => {
         btn.classList.toggle('cost-view-active', btn.dataset.view === view);
       });
-      // Re-render chart with cached items
       renderCostBarChart(window._costChartItems);
     }
 
@@ -912,207 +923,150 @@
     }
 
     function _getTimeBuckets(range) {
-      const now = new Date();
-      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      if (range === '1h' || range === '24h' || range === 'today' || range === 'yesterday') {
-        // Hourly buckets
-        return 'hourly';
-      }
-      // Daily buckets for multi-day ranges
+      if (range === '1h' || range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
       return 'daily';
-    }
-
-    function _formatHour(d) {
-      const h = d.getHours();
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const h12 = h % 12 || 12;
-      return h12 + ampm;
-    }
-
-    function _formatDay(d) {
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return months[d.getMonth()] + ' ' + d.getDate();
     }
 
     function renderCostBarChart(items) {
       window._costChartItems = items;
-      const view = window._costChartView || 'time';
+      const view = window._costChartView || 'agent';
       const titleEl = document.getElementById('cost-chart-title');
       if (titleEl) {
-        const titles = { time: 'Cost by Time', agent: 'Cost by Agent', model: 'Cost by Model' };
-        titleEl.textContent = titles[view] || 'Cost';
+        const titles = { agent: 'Cost Over Time \u2014 By Agent', model: 'Cost Over Time \u2014 By Model' };
+        titleEl.textContent = titles[view] || 'Cost Over Time';
       }
-      if (view === 'time') return _renderCostBarChartByTime(items);
-      if (view === 'model') return _renderCostBarChartByModel(items);
-      return _renderCostBarChartByAgent(items);
+      _renderStackedCostChart(items, view);
     }
 
-    // ── By Agent ─────────────────────────────────────────────────────
-    function _renderCostBarChartByAgent(items) {
+    function _renderStackedCostChart(items, mode) {
       const els = _ensureChartContainer();
       if (!els) return;
       const { wrap, chart, container } = els;
-      const agentCosts = {};
-      for (const s of items) {
-        const raw = s.agent_type || s.agent_id || 'unknown';
-        const id = (raw === 'main') ? 'cliff' : raw;
-        if (!agentCosts[id]) agentCosts[id] = { cost: 0, sessions: 0, tokensIn: 0, tokensOut: 0 };
-        agentCosts[id].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
-        agentCosts[id].sessions++;
-        agentCosts[id].tokensIn += s.tokens_in || 0;
-        agentCosts[id].tokensOut += s.tokens_out || 0;
-      }
-      const entries = Object.entries(agentCosts).sort((a,b) => b[1].cost - a[1].cost);
-      if (entries.length === 0) {
-        wrap.style.display = '';
-        chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
-        const oldGrid = container.querySelector('.cost-chart-grid');
-        if (oldGrid) oldGrid.remove();
-        return;
-      }
-      wrap.style.display = '';
-      const maxCost = entries[0][1].cost || 1;
-      _renderChartGrid(container, maxCost);
-
-      const barClasses = { cliff:'cost-bar-cliff', samantha:'cost-bar-samantha', scout:'cost-bar-scout', atlas:'cost-bar-atlas', 'claude-code':'cost-bar-claude-code' };
-      const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
-      const totalCost = entries.reduce((s,e) => s + e[1].cost, 0);
-      chart.innerHTML = entries.map(([id, d], i) => {
-        const pct = Math.max((d.cost / maxCost) * 100, 2);
-        const cls = barClasses[id] || 'cost-bar-default';
-        const name = labels[id] || id;
-        const delay = (i * 0.1).toFixed(2);
-        const costPct = totalCost > 0 ? ((d.cost / totalCost) * 100).toFixed(1) : '0';
-        return `<div class="cost-bar-col">
-          <div class="cost-bar-tooltip">
-            <div style="font-weight:600;color:#fff;margin-bottom:4px;">${esc(name)}</div>
-            <div>Cost: <span style="color:#facc15;font-weight:700;">$${d.cost.toFixed(4)}</span></div>
-            <div>Share: ${costPct}% of total</div>
-            <div>Sessions: ${d.sessions}</div>
-            <div>Tokens: ${_fmtK(d.tokensIn)} in / ${_fmtK(d.tokensOut)} out</div>
-          </div>
-          <div class="cost-bar-value">$${d.cost.toFixed(2)}</div>
-          <div class="cost-bar ${cls}" style="height:${pct}%;animation-delay:${delay}s;"></div>
-          <div class="cost-bar-label">${esc(name)}</div>
-        </div>`;
-      }).join('');
-    }
-
-    // ── By Time ──────────────────────────────────────────────────────
-    function _renderCostBarChartByTime(items) {
-      const els = _ensureChartContainer();
-      if (!els) return;
-      const { wrap, chart, container } = els;
+      const legendEl = document.getElementById('cost-chart-legend');
       const range = window._globalRange || 'today';
       const bucketMode = _getTimeBuckets(range);
-
-      // Bucket items by time period
-      const buckets = {};
       const TZ = 'America/Los_Angeles';
+
+      // 1. Bucket items into time periods, tracking per-segment costs
+      const buckets = {};   // key -> { label, segments: { segKey -> { cost, sessions, tokIn, tokOut } } }
+      const allSegKeys = new Set();
+
       for (const s of items) {
         const ts = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
         if (!ts || isNaN(ts)) continue;
-        let key, label;
+
+        let timeKey, timeLabel;
         if (bucketMode === 'hourly') {
-          // Bucket by hour in display TZ
           const hStr = ts.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
           const dateKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
-          key = dateKey + ' ' + ts.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
-          label = hStr;
+          timeKey = dateKey + ' ' + ts.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
+          timeLabel = hStr;
         } else {
-          // Bucket by day
-          key = ts.toLocaleDateString('en-CA', { timeZone: TZ });
-          const parts = ts.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' });
-          label = parts;
+          timeKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
+          timeLabel = ts.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' });
         }
-        if (!buckets[key]) buckets[key] = { label, cost: 0, sessions: 0, tokensIn: 0, tokensOut: 0 };
-        buckets[key].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
-        buckets[key].sessions++;
-        buckets[key].tokensIn += s.tokens_in || 0;
-        buckets[key].tokensOut += s.tokens_out || 0;
+
+        // Determine segment key
+        let segKey;
+        if (mode === 'agent') {
+          const raw = s.agent_type || s.agent_id || 'unknown';
+          segKey = (raw === 'main') ? 'cliff' : raw;
+        } else {
+          segKey = typeof friendlyModel === 'function' ? friendlyModel(s.model) : (s.model || 'Unknown');
+        }
+
+        if (!buckets[timeKey]) buckets[timeKey] = { label: timeLabel, segments: {} };
+        if (!buckets[timeKey].segments[segKey]) buckets[timeKey].segments[segKey] = { cost: 0, sessions: 0, tokIn: 0, tokOut: 0 };
+        buckets[timeKey].segments[segKey].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
+        buckets[timeKey].segments[segKey].sessions++;
+        buckets[timeKey].segments[segKey].tokIn += s.tokens_in || 0;
+        buckets[timeKey].segments[segKey].tokOut += s.tokens_out || 0;
+        allSegKeys.add(segKey);
       }
 
-      // Sort chronologically
-      const entries = Object.entries(buckets).sort((a,b) => a[0].localeCompare(b[0]));
-      if (entries.length === 0) {
+      const timePeriods = Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
+
+      if (timePeriods.length === 0) {
         wrap.style.display = '';
         chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
         const oldGrid = container.querySelector('.cost-chart-grid');
         if (oldGrid) oldGrid.remove();
+        if (legendEl) legendEl.innerHTML = '';
         return;
       }
+
       wrap.style.display = '';
-      const maxCost = Math.max(...entries.map(e => e[1].cost)) || 1;
+
+      // 2. Compute max total cost per period (for scaling)
+      const periodTotals = timePeriods.map(([, b]) =>
+        Object.values(b.segments).reduce((sum, seg) => sum + seg.cost, 0)
+      );
+      const maxCost = Math.max(...periodTotals) || 1;
       _renderChartGrid(container, maxCost);
 
-      const totalCost = entries.reduce((s,e) => s + e[1].cost, 0);
-      // Use indigo gradient for time bars
-      chart.innerHTML = entries.map(([key, d], i) => {
-        const pct = Math.max((d.cost / maxCost) * 100, 2);
-        const delay = (i * 0.06).toFixed(2);
-        const costPct = totalCost > 0 ? ((d.cost / totalCost) * 100).toFixed(1) : '0';
+      // 3. Build color map for segments
+      const sortedSegKeys = [...allSegKeys].sort((a, b) => {
+        // Sort by total cost descending for consistent ordering
+        const aCost = timePeriods.reduce((s, [, bk]) => s + (bk.segments[a]?.cost || 0), 0);
+        const bCost = timePeriods.reduce((s, [, bk]) => s + (bk.segments[b]?.cost || 0), 0);
+        return bCost - aCost;
+      });
+
+      const colorMap = {};
+      if (mode === 'agent') {
+        sortedSegKeys.forEach(k => { colorMap[k] = _agentColors[k] || _defaultSegmentColor; });
+      } else {
+        sortedSegKeys.forEach((k, i) => { colorMap[k] = _modelColorPalette[i % _modelColorPalette.length]; });
+      }
+
+      // 4. Render stacked bars
+      chart.innerHTML = timePeriods.map(([key, bucket], colIdx) => {
+        const totalCost = Object.values(bucket.segments).reduce((s, seg) => s + seg.cost, 0);
+        const barHeightPct = Math.max((totalCost / maxCost) * 100, 2);
+        const delay = (colIdx * 0.06).toFixed(2);
+
+        // Build stacked segments (bottom-up: highest cost at bottom)
+        const segs = sortedSegKeys
+          .filter(sk => bucket.segments[sk] && bucket.segments[sk].cost > 0)
+          .map(sk => ({ key: sk, ...bucket.segments[sk] }));
+
+        // Reverse so highest-cost is at bottom visually (flex column goes top-down)
+        const segmentsHtml = [...segs].reverse().map(seg => {
+          const segPct = totalCost > 0 ? (seg.cost / totalCost) * 100 : 0;
+          const color = colorMap[seg.key];
+          return `<div class="cost-stacked-segment" style="height:${segPct}%;background:${color};"></div>`;
+        }).join('');
+
+        // Tooltip breakdown
+        const tooltipLines = segs.map(seg => {
+          const name = mode === 'agent' ? (_agentNames[seg.key] || seg.key) : seg.key;
+          const color = colorMap[seg.key];
+          return `<div style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};flex-shrink:0;"></span><span>${esc(name)}</span><span style="color:#facc15;font-weight:600;margin-left:auto;padding-left:12px;">$${seg.cost.toFixed(4)}</span></div>`;
+        }).join('');
+        const tooltipTotal = `<div style="border-top:1px solid #374151;margin-top:6px;padding-top:6px;font-weight:700;color:#fff;display:flex;justify-content:space-between;"><span>Total</span><span style="color:#facc15;">$${totalCost.toFixed(4)}</span></div>`;
+
         return `<div class="cost-bar-col">
           <div class="cost-bar-tooltip">
-            <div style="font-weight:600;color:#fff;margin-bottom:4px;">${esc(d.label)}</div>
-            <div>Cost: <span style="color:#facc15;font-weight:700;">$${d.cost.toFixed(4)}</span></div>
-            <div>Share: ${costPct}% of total</div>
-            <div>Sessions: ${d.sessions}</div>
-            <div>Tokens: ${_fmtK(d.tokensIn)} in / ${_fmtK(d.tokensOut)} out</div>
+            <div style="font-weight:600;color:#fff;margin-bottom:6px;">${esc(bucket.label)}</div>
+            ${tooltipLines}
+            ${tooltipTotal}
           </div>
-          <div class="cost-bar-value">$${d.cost.toFixed(2)}</div>
-          <div class="cost-bar cost-bar-cliff" style="height:${pct}%;animation-delay:${delay}s;"></div>
-          <div class="cost-bar-label">${esc(d.label)}</div>
+          <div class="cost-bar-value">$${totalCost.toFixed(2)}</div>
+          <div class="cost-stacked-bar" style="height:${barHeightPct}%;animation-delay:${delay}s;">
+            ${segmentsHtml}
+          </div>
+          <div class="cost-bar-label">${esc(bucket.label)}</div>
         </div>`;
       }).join('');
-    }
 
-    // ── By Model ─────────────────────────────────────────────────────
-    function _renderCostBarChartByModel(items) {
-      const els = _ensureChartContainer();
-      if (!els) return;
-      const { wrap, chart, container } = els;
-      const modelCosts = {};
-      for (const s of items) {
-        const label = typeof friendlyModel === 'function' ? friendlyModel(s.model) : (s.model || 'Unknown');
-        if (!modelCosts[label]) modelCosts[label] = { cost: 0, sessions: 0, tokensIn: 0, tokensOut: 0 };
-        modelCosts[label].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
-        modelCosts[label].sessions++;
-        modelCosts[label].tokensIn += s.tokens_in || 0;
-        modelCosts[label].tokensOut += s.tokens_out || 0;
+      // 5. Render legend
+      if (legendEl) {
+        legendEl.innerHTML = sortedSegKeys.map(sk => {
+          const name = mode === 'agent' ? (_agentNames[sk] || sk) : sk;
+          const color = colorMap[sk];
+          return `<div class="cost-legend-item"><span class="cost-legend-swatch" style="background:${color};"></span>${esc(name)}</div>`;
+        }).join('');
       }
-      const entries = Object.entries(modelCosts).sort((a,b) => b[1].cost - a[1].cost);
-      if (entries.length === 0) {
-        wrap.style.display = '';
-        chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
-        const oldGrid = container.querySelector('.cost-chart-grid');
-        if (oldGrid) oldGrid.remove();
-        return;
-      }
-      wrap.style.display = '';
-      const maxCost = entries[0][1].cost || 1;
-      _renderChartGrid(container, maxCost);
-
-      // Color cycle for models
-      const modelBarClasses = ['cost-bar-cliff', 'cost-bar-samantha', 'cost-bar-scout', 'cost-bar-atlas', 'cost-bar-claude-code', 'cost-bar-default'];
-      const totalCost = entries.reduce((s,e) => s + e[1].cost, 0);
-      chart.innerHTML = entries.map(([label, d], i) => {
-        const pct = Math.max((d.cost / maxCost) * 100, 2);
-        const cls = modelBarClasses[i % modelBarClasses.length];
-        const delay = (i * 0.1).toFixed(2);
-        const costPct = totalCost > 0 ? ((d.cost / totalCost) * 100).toFixed(1) : '0';
-        return `<div class="cost-bar-col">
-          <div class="cost-bar-tooltip">
-            <div style="font-weight:600;color:#fff;margin-bottom:4px;">${esc(label)}</div>
-            <div>Cost: <span style="color:#facc15;font-weight:700;">$${d.cost.toFixed(4)}</span></div>
-            <div>Share: ${costPct}% of total</div>
-            <div>Sessions: ${d.sessions}</div>
-            <div>Tokens: ${_fmtK(d.tokensIn)} in / ${_fmtK(d.tokensOut)} out</div>
-          </div>
-          <div class="cost-bar-value">$${d.cost.toFixed(2)}</div>
-          <div class="cost-bar ${cls}" style="height:${pct}%;animation-delay:${delay}s;"></div>
-          <div class="cost-bar-label">${esc(label)}</div>
-        </div>`;
-      }).join('');
     }
 
     // ── Grouped sub-agent ─────────────────────────────────────────────
