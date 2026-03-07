@@ -47,6 +47,14 @@
     .cost-chart-empty { text-align: center; padding: 32px 0; color: #4b5563; font-size: 13px; }
     @keyframes costBarGrow { to { transform: scaleY(1); } }
     @keyframes costValFade { to { opacity: 1; } }
+    /* Cost chart view switcher */
+    .cost-view-switcher { display: flex; gap: 0; margin-top: 16px; justify-content: center; }
+    .cost-view-btn { background: transparent; border: 1px solid #374151; color: #6b7280; font-size: 12px; font-weight: 500; padding: 5px 16px; cursor: pointer; transition: all 0.15s ease; letter-spacing: 0.02em; }
+    .cost-view-btn:first-child { border-radius: 6px 0 0 6px; }
+    .cost-view-btn:last-child { border-radius: 0 6px 6px 0; }
+    .cost-view-btn:not(:first-child) { border-left: none; }
+    .cost-view-btn:hover:not(.cost-view-active) { color: #9ca3af; border-color: #4b5563; }
+    .cost-view-btn.cost-view-active { background: #1f2937; color: #e5e7eb; border-color: #4f46e5; z-index: 1; position: relative; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -162,10 +170,15 @@
           </tr></thead>
           <tbody id="grp-subagent-body"><tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
         </table>
-        <!-- Cost per Agent Bar Chart -->
+        <!-- Cost Bar Chart -->
         <div id="cost-bar-chart-wrap" class="cost-chart-wrap" style="display:none;">
-          <div class="cost-chart-title">Cost by Agent</div>
+          <div id="cost-chart-title" class="cost-chart-title">Cost by Time</div>
           <div id="cost-bar-chart" class="cost-chart"></div>
+          <div class="cost-view-switcher">
+            <button class="cost-view-btn cost-view-active" data-view="time" onclick="setCostChartView('time')">By Time</button>
+            <button class="cost-view-btn" data-view="agent" onclick="setCostChartView('agent')">By Agent</button>
+            <button class="cost-view-btn" data-view="model" onclick="setCostChartView('model')">By Model</button>
+          </div>
         </div>
       </div>
 
@@ -273,6 +286,8 @@
     window._subTotals  = { tokensIn:0, tokensOut:0, cost:0, sessions:0 };
     window._agentTaskMap = {};
     window._taskAgentMap = {};
+    window._costChartView = 'time';  // default: time range view
+    window._costChartItems = [];     // cached items for re-render on view switch
 
     // ── Local helpers (match old page exactly) ────────────────────────
     const _fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
@@ -858,12 +873,85 @@
       renderRawTable(filteredDbItems);
     }
 
-    // ── Cost per Agent Bar Chart ─────────────────────────────────────
-    function renderCostBarChart(items) {
+    // ── Cost Bar Chart (multi-view) ─────────────────────────────────
+    function setCostChartView(view) {
+      window._costChartView = view;
+      // Update switcher button states
+      document.querySelectorAll('.cost-view-btn').forEach(btn => {
+        btn.classList.toggle('cost-view-active', btn.dataset.view === view);
+      });
+      // Re-render chart with cached items
+      renderCostBarChart(window._costChartItems);
+    }
+
+    function _ensureChartContainer() {
       const wrap = document.getElementById('cost-bar-chart-wrap');
       const chart = document.getElementById('cost-bar-chart');
-      if (!wrap || !chart) return;
-      // Aggregate cost per agent
+      if (!wrap || !chart) return null;
+      const container = wrap.querySelector('.cost-chart-container') || (() => {
+        const div = document.createElement('div');
+        div.className = 'cost-chart-container';
+        chart.parentNode.insertBefore(div, chart);
+        div.appendChild(chart);
+        return div;
+      })();
+      return { wrap, chart, container };
+    }
+
+    function _renderChartGrid(container, maxCost) {
+      const oldGrid = container.querySelector('.cost-chart-grid');
+      if (oldGrid) oldGrid.remove();
+      const gridSteps = [1, 0.75, 0.5, 0.25, 0];
+      const gridHtml = `<div class="cost-chart-grid" style="padding-left:0;">` +
+        gridSteps.map(frac => {
+          const val = maxCost * frac;
+          const label = val >= 1 ? '$' + val.toFixed(0) : val >= 0.01 ? '$' + val.toFixed(2) : val > 0 ? '$' + val.toFixed(3) : '$0';
+          return `<div class="cost-chart-gridline"><span class="cost-chart-gridline-val">${label}</span><span class="cost-chart-gridline-line"></span></div>`;
+        }).join('') + '</div>';
+      container.insertAdjacentHTML('afterbegin', gridHtml);
+    }
+
+    function _getTimeBuckets(range) {
+      const now = new Date();
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (range === '1h' || range === '24h' || range === 'today' || range === 'yesterday') {
+        // Hourly buckets
+        return 'hourly';
+      }
+      // Daily buckets for multi-day ranges
+      return 'daily';
+    }
+
+    function _formatHour(d) {
+      const h = d.getHours();
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return h12 + ampm;
+    }
+
+    function _formatDay(d) {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[d.getMonth()] + ' ' + d.getDate();
+    }
+
+    function renderCostBarChart(items) {
+      window._costChartItems = items;
+      const view = window._costChartView || 'time';
+      const titleEl = document.getElementById('cost-chart-title');
+      if (titleEl) {
+        const titles = { time: 'Cost by Time', agent: 'Cost by Agent', model: 'Cost by Model' };
+        titleEl.textContent = titles[view] || 'Cost';
+      }
+      if (view === 'time') return _renderCostBarChartByTime(items);
+      if (view === 'model') return _renderCostBarChartByModel(items);
+      return _renderCostBarChartByAgent(items);
+    }
+
+    // ── By Agent ─────────────────────────────────────────────────────
+    function _renderCostBarChartByAgent(items) {
+      const els = _ensureChartContainer();
+      if (!els) return;
+      const { wrap, chart, container } = els;
       const agentCosts = {};
       for (const s of items) {
         const raw = s.agent_type || s.agent_id || 'unknown';
@@ -878,44 +966,23 @@
       if (entries.length === 0) {
         wrap.style.display = '';
         chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
-        // Remove grid if present
-        const oldGrid = wrap.querySelector('.cost-chart-grid');
+        const oldGrid = container.querySelector('.cost-chart-grid');
         if (oldGrid) oldGrid.remove();
         return;
       }
       wrap.style.display = '';
       const maxCost = entries[0][1].cost || 1;
-
-      // Build Y-axis gridlines (4 lines: 0%, 25%, 50%, 75%, 100%)
-      const gridSteps = [1, 0.75, 0.5, 0.25, 0];
-      const gridHtml = `<div class="cost-chart-grid" style="padding-left:0;">` +
-        gridSteps.map(frac => {
-          const val = maxCost * frac;
-          const label = val >= 1 ? '$' + val.toFixed(0) : val >= 0.01 ? '$' + val.toFixed(2) : val > 0 ? '$' + val.toFixed(3) : '$0';
-          return `<div class="cost-chart-gridline"><span class="cost-chart-gridline-val">${label}</span><span class="cost-chart-gridline-line"></span></div>`;
-        }).join('') + '</div>';
-
-      // Replace grid in container
-      const container = wrap.querySelector('.cost-chart-container') || (() => {
-        const div = document.createElement('div');
-        div.className = 'cost-chart-container';
-        // Move chart into container
-        chart.parentNode.insertBefore(div, chart);
-        div.appendChild(chart);
-        return div;
-      })();
-      const oldGrid = container.querySelector('.cost-chart-grid');
-      if (oldGrid) oldGrid.remove();
-      container.insertAdjacentHTML('afterbegin', gridHtml);
+      _renderChartGrid(container, maxCost);
 
       const barClasses = { cliff:'cost-bar-cliff', samantha:'cost-bar-samantha', scout:'cost-bar-scout', atlas:'cost-bar-atlas', 'claude-code':'cost-bar-claude-code' };
       const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
+      const totalCost = entries.reduce((s,e) => s + e[1].cost, 0);
       chart.innerHTML = entries.map(([id, d], i) => {
         const pct = Math.max((d.cost / maxCost) * 100, 2);
         const cls = barClasses[id] || 'cost-bar-default';
         const name = labels[id] || id;
         const delay = (i * 0.1).toFixed(2);
-        const costPct = entries[0][1].cost > 0 ? ((d.cost / entries.reduce((s,e) => s + e[1].cost, 0)) * 100).toFixed(1) : '0';
+        const costPct = totalCost > 0 ? ((d.cost / totalCost) * 100).toFixed(1) : '0';
         return `<div class="cost-bar-col">
           <div class="cost-bar-tooltip">
             <div style="font-weight:600;color:#fff;margin-bottom:4px;">${esc(name)}</div>
@@ -927,6 +994,123 @@
           <div class="cost-bar-value">$${d.cost.toFixed(2)}</div>
           <div class="cost-bar ${cls}" style="height:${pct}%;animation-delay:${delay}s;"></div>
           <div class="cost-bar-label">${esc(name)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── By Time ──────────────────────────────────────────────────────
+    function _renderCostBarChartByTime(items) {
+      const els = _ensureChartContainer();
+      if (!els) return;
+      const { wrap, chart, container } = els;
+      const range = window._globalRange || 'today';
+      const bucketMode = _getTimeBuckets(range);
+
+      // Bucket items by time period
+      const buckets = {};
+      const TZ = 'America/Los_Angeles';
+      for (const s of items) {
+        const ts = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
+        if (!ts || isNaN(ts)) continue;
+        let key, label;
+        if (bucketMode === 'hourly') {
+          // Bucket by hour in display TZ
+          const hStr = ts.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
+          const dateKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
+          key = dateKey + ' ' + ts.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
+          label = hStr;
+        } else {
+          // Bucket by day
+          key = ts.toLocaleDateString('en-CA', { timeZone: TZ });
+          const parts = ts.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' });
+          label = parts;
+        }
+        if (!buckets[key]) buckets[key] = { label, cost: 0, sessions: 0, tokensIn: 0, tokensOut: 0 };
+        buckets[key].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
+        buckets[key].sessions++;
+        buckets[key].tokensIn += s.tokens_in || 0;
+        buckets[key].tokensOut += s.tokens_out || 0;
+      }
+
+      // Sort chronologically
+      const entries = Object.entries(buckets).sort((a,b) => a[0].localeCompare(b[0]));
+      if (entries.length === 0) {
+        wrap.style.display = '';
+        chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
+        const oldGrid = container.querySelector('.cost-chart-grid');
+        if (oldGrid) oldGrid.remove();
+        return;
+      }
+      wrap.style.display = '';
+      const maxCost = Math.max(...entries.map(e => e[1].cost)) || 1;
+      _renderChartGrid(container, maxCost);
+
+      const totalCost = entries.reduce((s,e) => s + e[1].cost, 0);
+      // Use indigo gradient for time bars
+      chart.innerHTML = entries.map(([key, d], i) => {
+        const pct = Math.max((d.cost / maxCost) * 100, 2);
+        const delay = (i * 0.06).toFixed(2);
+        const costPct = totalCost > 0 ? ((d.cost / totalCost) * 100).toFixed(1) : '0';
+        return `<div class="cost-bar-col">
+          <div class="cost-bar-tooltip">
+            <div style="font-weight:600;color:#fff;margin-bottom:4px;">${esc(d.label)}</div>
+            <div>Cost: <span style="color:#facc15;font-weight:700;">$${d.cost.toFixed(4)}</span></div>
+            <div>Share: ${costPct}% of total</div>
+            <div>Sessions: ${d.sessions}</div>
+            <div>Tokens: ${_fmtK(d.tokensIn)} in / ${_fmtK(d.tokensOut)} out</div>
+          </div>
+          <div class="cost-bar-value">$${d.cost.toFixed(2)}</div>
+          <div class="cost-bar cost-bar-cliff" style="height:${pct}%;animation-delay:${delay}s;"></div>
+          <div class="cost-bar-label">${esc(d.label)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── By Model ─────────────────────────────────────────────────────
+    function _renderCostBarChartByModel(items) {
+      const els = _ensureChartContainer();
+      if (!els) return;
+      const { wrap, chart, container } = els;
+      const modelCosts = {};
+      for (const s of items) {
+        const label = typeof friendlyModel === 'function' ? friendlyModel(s.model) : (s.model || 'Unknown');
+        if (!modelCosts[label]) modelCosts[label] = { cost: 0, sessions: 0, tokensIn: 0, tokensOut: 0 };
+        modelCosts[label].cost += s.estimated_cost_usd || s.cost_total_usd || 0;
+        modelCosts[label].sessions++;
+        modelCosts[label].tokensIn += s.tokens_in || 0;
+        modelCosts[label].tokensOut += s.tokens_out || 0;
+      }
+      const entries = Object.entries(modelCosts).sort((a,b) => b[1].cost - a[1].cost);
+      if (entries.length === 0) {
+        wrap.style.display = '';
+        chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
+        const oldGrid = container.querySelector('.cost-chart-grid');
+        if (oldGrid) oldGrid.remove();
+        return;
+      }
+      wrap.style.display = '';
+      const maxCost = entries[0][1].cost || 1;
+      _renderChartGrid(container, maxCost);
+
+      // Color cycle for models
+      const modelBarClasses = ['cost-bar-cliff', 'cost-bar-samantha', 'cost-bar-scout', 'cost-bar-atlas', 'cost-bar-claude-code', 'cost-bar-default'];
+      const totalCost = entries.reduce((s,e) => s + e[1].cost, 0);
+      chart.innerHTML = entries.map(([label, d], i) => {
+        const pct = Math.max((d.cost / maxCost) * 100, 2);
+        const cls = modelBarClasses[i % modelBarClasses.length];
+        const delay = (i * 0.1).toFixed(2);
+        const costPct = totalCost > 0 ? ((d.cost / totalCost) * 100).toFixed(1) : '0';
+        return `<div class="cost-bar-col">
+          <div class="cost-bar-tooltip">
+            <div style="font-weight:600;color:#fff;margin-bottom:4px;">${esc(label)}</div>
+            <div>Cost: <span style="color:#facc15;font-weight:700;">$${d.cost.toFixed(4)}</span></div>
+            <div>Share: ${costPct}% of total</div>
+            <div>Sessions: ${d.sessions}</div>
+            <div>Tokens: ${_fmtK(d.tokensIn)} in / ${_fmtK(d.tokensOut)} out</div>
+          </div>
+          <div class="cost-bar-value">$${d.cost.toFixed(2)}</div>
+          <div class="cost-bar ${cls}" style="height:${pct}%;animation-delay:${delay}s;"></div>
+          <div class="cost-bar-label">${esc(label)}</div>
         </div>`;
       }).join('');
     }
