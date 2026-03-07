@@ -184,48 +184,6 @@
         </table>
       </div>
 
-      <!-- Agent Sessions (Supabase Live) -->
-      <div id="agent-sessions-section" class="card overflow-hidden mb-6">
-        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-semibold text-white">Agent Sessions</h3>
-            <p class="text-xs text-gray-600 mt-0.5">Cliff, Samantha, Scout — direct sessions from Supabase, live</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <div id="sb-realtime-dot" class="w-2 h-2 rounded-full bg-gray-600" style="transition:background 0.4s"></div>
-            <span id="sb-realtime-label" class="text-xs text-gray-600">Connecting...</span>
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="ag-total-runs" class="text-2xl font-bold text-white">&mdash;</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost (USD)</div>
-            <div id="ag-total-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="ag-total-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
-            <div id="ag-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
-          </div>
-        </div>
-
-        <table class="w-full text-sm">
-          <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Session</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Duration</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Last Active</th>
-          </tr></thead>
-          <tbody id="agent-sess-body"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
 
       <div class="card p-5 mb-8">
         <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
@@ -541,56 +499,7 @@
       // Render dynamic portrait cards in summary section
       renderSummaryPortraits(rows);
 
-      // Summary totals
-      const totSessions  = rows.length;
-      const totTokensIn  = rows.reduce((s,r) => s + ((r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0)), 0);
-      const totTokensOut = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
-      const totCost      = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0);
-      const el = id => document.getElementById(id);
-      if (el('ag-total-runs'))   el('ag-total-runs').textContent   = totSessions;
-      if (el('ag-total-cost'))   el('ag-total-cost').textContent   = '$' + totCost.toFixed(2);
-      if (el('ag-total-tokens')) el('ag-total-tokens').innerHTML   = _fmtK(totTokensIn) + ' / ' + _fmtK(totTokensOut);
-
-      // Table
-      const tbody = document.getElementById('agent-sess-body');
-      if (!tbody) return;
-      if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
-        return;
-      }
-      const nowMs = Date.now();
-      const _timeAgo = ts => {
-        if (!ts) return '—';
-        const ms = nowMs - new Date(ts).getTime();
-        if (ms < 60000)    return Math.round(ms/1000) + 's ago';
-        if (ms < 3600000)  return Math.round(ms/60000) + 'm ago';
-        if (ms < 86400000) return Math.round(ms/3600000) + 'h ago';
-        return Math.round(ms/86400000) + 'd ago';
-      };
-      const _dur = r => r.duration_ms || (r.first_seen_at ? Date.now() - new Date(r.first_seen_at).getTime() : 0);
-      rows.sort((a,b) => _dur(b) - _dur(a));
-      tbody.innerHTML = rows.slice(0, 10).map(r => {
-        const aCls   = _agentCls[r.agent_id] || 'text-gray-400';
-        const aLbl   = _agentLabel[r.agent_id] || fmtAgent(r.agent_id);
-        const costStr = (r.cost_total_usd||0) >= 0.001 ? '$' + r.cost_total_usd.toFixed(3) : '<$0.001';
-        const friendlyName = sessionKeyToFriendly(r.session_key, r.session_id);
-        const tokIn = (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0);
-        return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyName)}${_getTaskTooltip(friendlyName) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(friendlyName)) + '">&#9432;</span>' : ''}</td>
-          <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
-          <td class="px-4 py-1.5 text-xs">${_modelShortT(r.model)}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-white">${_fmtK(tokIn)} / ${_fmtK(r.output_tokens||0)}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-gray-400">${_fmtDur(r.duration_ms || (Date.now() - new Date(r.first_seen_at).getTime()))}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-yellow-400">${costStr}</td>
-          <td class="px-4 py-1.5 text-right text-xs text-gray-600">${_timeAgo(r.last_seen_at)}</td>
-        </tr>`;
-      }).join('');
-
-      // Realtime dot
-      const dot = document.getElementById('sb-realtime-dot');
-      const label = document.getElementById('sb-realtime-label');
-      if (dot) dot.className = 'w-2 h-2 rounded-full bg-green-500';
-      if (label) { label.textContent = 'Live'; label.className = 'text-xs text-green-500'; }
+      // (Agent Sessions table removed — data still flows to Summary + Raw sections below)
     }
 
     // ── Main render (Grouped + Raw) ───────────────────────────────────
