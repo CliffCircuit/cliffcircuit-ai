@@ -54,7 +54,7 @@ let CRON_UUID_MAP = {
 };
 
 // Dynamically merge live cron UUIDs so new/recreated crons resolve automatically
-fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
+const _cronMapReady = fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
   .then(r => r.json())
   .then(d => {
     (d.crons || []).forEach(c => {
@@ -303,8 +303,9 @@ function sessionKeyToFriendly(key, sessionId) {
     const taskName = cronTaskFromKey(key);
     if (taskName) return CRON_DISPLAY[taskName] || taskName.replace(/-/g,' ');
     const agentId = agentCronMatch[1];
+    const cronUuid = agentCronMatch[2];
     const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[agentId] || agentId;
-    return agentLabel + ' Cron';
+    return agentLabel + ' Cron (' + cronUuid.slice(0, 8) + ')';
   }
   // Subagent sessions: agent:X:subagent:UUID
   const subagentMatch = key.match(/^agent:([^:]+):subagent:/);
@@ -666,6 +667,9 @@ async function initPortal(pageName, renderFn) {
   }
   renderNav(pageName);
   if (renderFn) registerRenderer(renderFn);
+
+  // Ensure session labels + dynamic cron UUID map are loaded before any rendering
+  await Promise.all([_sessionLabelsReady, _cronMapReady]);
 
   const d = await loadData();
   if (d) {
