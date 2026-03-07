@@ -8,16 +8,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
   <style>
-    .info-tip { position: relative; cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
+    .info-tip { cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
     .info-tip:hover { color: #a5b4fc; }
-    .info-tip:hover::after {
-      content: attr(data-tip);
-      position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
-      margin-left: 8px;
+    #tip-popup {
+      position: fixed; z-index: 99999; pointer-events: none; display: none;
       background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
-      padding: 8px 12px; font-size: 11px; font-weight: 400; white-space: normal;
-      width: max-content; max-width: 320px; z-index: 9999; pointer-events: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      padding: 10px 14px; font-size: 12px; font-weight: 400; white-space: normal;
+      width: max-content; max-width: 360px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
     }
     /* Cost Bar Chart — Stacked */
     .cost-chart-wrap { padding: 24px 20px 20px; border-top: 1px solid #1f2937; overflow: visible; }
@@ -1828,6 +1826,32 @@ function _renderStackedCostChart(items, mode) {
           }
         });
     });
+  </script>
+  <div id="tip-popup"></div>
+  <script>
+  // Global tooltip for .info-tip elements — uses fixed positioning so overflow:hidden can't clip it
+  (function(){
+    const popup = document.getElementById('tip-popup');
+    document.addEventListener('mouseover', function(e){
+      const tip = e.target.closest('.info-tip');
+      if (!tip || !tip.dataset.tip) { popup.style.display='none'; return; }
+      popup.textContent = tip.dataset.tip;
+      popup.style.display = 'block';
+      const r = tip.getBoundingClientRect();
+      let left = r.right + 10;
+      let top = r.top + r.height/2 - popup.offsetHeight/2;
+      // If it would overflow the right edge, flip to left side
+      if (left + popup.offsetWidth > window.innerWidth - 16) left = r.left - popup.offsetWidth - 10;
+      // Keep within vertical bounds
+      if (top < 8) top = 8;
+      if (top + popup.offsetHeight > window.innerHeight - 8) top = window.innerHeight - popup.offsetHeight - 8;
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+    });
+    document.addEventListener('mouseout', function(e){
+      if (e.target.closest('.info-tip')) popup.style.display='none';
+    });
+  })();
   </script>
 </body>
 </html>
