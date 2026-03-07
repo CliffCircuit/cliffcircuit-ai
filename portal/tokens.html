@@ -306,21 +306,64 @@
       'weekly-report':          'Weekly Report',
     };
 
-    // Task tooltip descriptions
+    // Task tooltip descriptions — canonical database keyed by display name
     const _taskTooltips = {
-      'Tim (Telegram DM)': 'Direct Telegram messages from Tim',
-      'Web UI (Heartbeat+Chat)': 'Heartbeats + web chat in same session',
-      'Heartbeat': 'Scheduled health checks (runs on Haiku)',
-      'Portal Refresh': 'Regenerates portal data.json',
-      'Cliff Article Review': 'Reviews and schedules drafted articles',
-      'Samantha Writer': 'Drafts new articles',
-      'Samantha Publish': 'Publishes scheduled content',
-      'Samantha Cliff Tweets': 'Generates Cliff twitter posts',
-      'Samantha Tim Tweets': 'Generates Tim twitter posts',
-      'Pipeline Health Check': 'System health monitoring',
-      'Cliff Scheduler': 'Schedules approved content',
+      // Direct / interactive sessions
+      'Tim (Telegram DM)':          'Live conversation with Tim via Telegram',
+      'Tim (Signal DM)':            'Live conversation with Tim via Signal',
+      'Web UI (Heartbeat+Chat)':    'Cliff main session — handles heartbeats and web dashboard chat',
+      'Atlas (Telegram DM)':        'Atlas coding agent responding to Tim in Telegram',
+      'Atlas (Web UI)':             'Atlas session via the web dashboard',
+      'Samantha (Telegram DM)':     'Samantha responding to Tim in Telegram',
+      'Scout (Telegram DM)':        'Scout responding to Tim in Telegram',
+
+      // Group chat
+      'Cliff (Chat Hub)':           'Cliff in the multi-agent Telegram group',
+      'Samantha (Chat Hub)':        'Samantha in the multi-agent Telegram group',
+      'Scout (Chat Hub)':           'Scout in the multi-agent Telegram group',
+      'Atlas (Chat Hub)':           'Atlas in the multi-agent Telegram group',
+
+      // Content pipeline — Samantha
+      'Article Writer':             'Samantha drafts new blog articles with hero images',
+      'Article Draft':              'Samantha drafts new blog articles with hero images',
+      'Publish':                    'Publishes scheduled articles and tweets to live sites',
+      'Cliff Tweet':                'Samantha generates tweets posted from the Cliff account',
+      'Tim Tweet':                  'Samantha generates tweets posted from Tim account',
+      'Media / Images':             'Generates hero images and media assets for content',
+      'Recycle Writer':             'Samantha rewrites previously rejected articles',
+      'Recycle Media':              'Regenerates images for recycled articles',
+
+      // Content pipeline — Cliff
+      'Article Review':             'Cliff reviews drafted articles — approves, rejects, or requests changes',
+      'Scheduler':                  'Assigns publish times to approved content',
+
+      // Infrastructure — Scout
+      'Portal Refresh':             'Regenerates portal data.json and syncs to GitHub',
+      'Social Monitoring':          'Monitors Twitter mentions, followers, and engagement',
+      'GitHub Monitoring':          'Watches GitHub repos for new issues, PRs, and activity',
+
+      // Infrastructure — Cliff
+      'Pipeline Health':            'Checks cron errors, queue backlog, website status, and credentials',
+      'Morning Check-In':           'Daily morning briefing — weather, calendar, pipeline status',
+      'Evening Check':              'End-of-day summary and overnight task queue',
+      'Weekly Report':              'Weekly rollup of content published, costs, and metrics',
+      'Daily Cost Report':          'Summarizes token usage and API costs for the day',
+      'Nightly Extraction':         'Overnight data extraction and processing jobs',
+      'Nightly Git Backup':         'Automated git backup of workspace and config files',
+
+      // Atlas coding
+      'Build':                      'Atlas builds new features or pages from scratch',
+      'Refactor':                   'Atlas restructures existing code for clarity or performance',
+      'Debug':                      'Atlas investigates and fixes bugs',
+
+      // Subagent / misc
+      'Cliff (Subagent Run)':       'Cliff spawned a sub-agent for an isolated task',
+      'Samantha (Subagent Run)':    'Samantha spawned a sub-agent for an isolated task',
+      'Scout (Subagent Run)':       'Scout spawned a sub-agent for an isolated task',
+      'Atlas (Subagent Run)':       'Atlas spawned a sub-agent for an isolated task',
+      'Heartbeat':                  'Scheduled health poll — checks inbox, runs lightweight tasks',
     };
-    const _getTaskTooltip = name => _taskTooltips[name] || name;
+    const _getTaskTooltip = name => _taskTooltips[name] || null;
 
     // ── Toggle ────────────────────────────────────────────────────────
     function toggleDbSubagents() {
@@ -541,7 +584,7 @@
         const friendlyName = sessionKeyToFriendly(r.session_key, r.session_id);
         const tokIn = (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0);
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyName)}</td>
+          <td class="px-4 py-1.5 text-gray-300 text-xs">${esc(friendlyName)}${_getTaskTooltip(friendlyName) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(friendlyName)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-1.5 text-xs"><span class="${aCls}">${aLbl}</span></td>
           <td class="px-4 py-1.5 text-xs">${_modelShortT(r.model)}</td>
           <td class="px-4 py-1.5 text-right text-xs text-white">${_fmtK(tokIn)} / ${_fmtK(r.output_tokens||0)}</td>
@@ -687,7 +730,7 @@
         const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
         const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)} <span class="info-tip" data-tip="${esc(_getTaskTooltip(g.task))}">&#9432;</span></td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_modelShortT(g.model)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
@@ -736,7 +779,7 @@
         dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
       } else {
         dbSubBody.innerHTML = visible.map(s => `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))} <span class="info-tip" data-tip="${esc(_getTaskTooltip(s.display_name || s.task_name || ''))}">&#9432;</span></td>
+          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.label || '')}">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}${_getTaskTooltip(s.display_name || s.task_name) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(s.display_name || s.task_name)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[s.agent_type] || 'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
           <td class="px-4 py-2 text-xs">${_modelShortT(s.model)}</td>
           <td class="px-4 py-2 text-gray-400 text-xs">${_fmtDur(s.duration_ms)}</td>

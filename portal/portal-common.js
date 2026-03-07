@@ -51,6 +51,11 @@ let CRON_UUID_MAP = {
   '6cef6a39-3fde-4575-9208-947d53f6a425': 'atlas-debug',
   'a59a04ca-a788-4850-8e41-ca5c622da51d': 'atlas-debug',
   'f50b5756-82e2-4fd8-b8e4-d1b4045a1c20': 'samantha-media',
+  '90ace20f-a8f6-43e1-857c-8087c828e279': 'atlas-build',
+  '1158c2df-37aa-427e-930e-cf656bbf8e45': 'atlas-refactor',
+  'ce615ff6-3724-4fb9-bc9c-51ccd3d619d8': 'atlas-debug',
+  '087d28b7-261a-4261-926a-cb0b4e7a2825': 'daily-cost-report',
+  'fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5': 'evening-check',
 };
 
 // Dynamically merge live cron UUIDs so new/recreated crons resolve automatically
