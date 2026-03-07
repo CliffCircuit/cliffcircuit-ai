@@ -603,49 +603,67 @@
       });
     }
 
+    let _sessionPreviewCache = null; // cached session-previews.json data
+    let _sessionPreviewCacheTs = 0;
+    const _SESSION_PREVIEW_TTL = 60000; // re-fetch at most once per minute
+
+    async function _loadSessionPreviews() {
+      const now = Date.now();
+      if (_sessionPreviewCache && now - _sessionPreviewCacheTs < _SESSION_PREVIEW_TTL) return _sessionPreviewCache;
+      try {
+        const res = await fetch('/portal/session-previews.json?t=' + now);
+        if (res.ok) {
+          const data = await res.json();
+          _sessionPreviewCache = data.previews || data;
+          _sessionPreviewCacheTs = now;
+          return _sessionPreviewCache;
+        }
+      } catch(e) {}
+      return null;
+    }
+
+    function _applyPreview(taskEl, respEl, task, response) {
+      taskEl.textContent = task || 'No task prompt found';
+      taskEl.classList.remove('sdp-loading');
+      respEl.textContent = response || 'No response found';
+      respEl.classList.remove('sdp-loading');
+    }
+
     async function _fetchSessionPreview(sid, sessionKey) {
       const taskEl = document.querySelector('#sdp-task-' + CSS.escape(sid) + ' .sdp-text');
       const respEl = document.querySelector('#sdp-response-' + CSS.escape(sid) + ' .sdp-text');
       if (!taskEl || !respEl) return;
 
-      // Strategy 1: Try gateway WebSocket sessions.preview
+      // Strategy 1: Try session-previews.json (static file, fast and reliable)
+      try {
+        const previews = await _loadSessionPreviews();
+        if (previews) {
+          const preview = previews[sessionKey] || previews[sid];
+          if (preview) {
+            _applyPreview(taskEl, respEl, preview.task, preview.response);
+            return;
+          }
+        }
+      } catch(e) { /* continue to gateway */ }
+
+      // Strategy 2: Try gateway WebSocket sessions.preview (requires auth)
       try {
         const result = await _gwRequest('sessions.preview', { keys: [sessionKey], limit: 20, maxChars: 2000 });
         const preview = result?.previews?.[0];
         if (preview && preview.status === 'ok' && preview.items?.length > 0) {
           const items = preview.items;
-          // First user message = task prompt
           const userMsg = items.find(m => m.role === 'user');
           const asstMsg = [...items].reverse().find(m => m.role === 'assistant');
-          taskEl.textContent = userMsg?.text || 'No task prompt found in session';
-          taskEl.classList.remove('sdp-loading');
-          respEl.textContent = asstMsg?.text || 'No response found in session';
-          respEl.classList.remove('sdp-loading');
+          _applyPreview(taskEl, respEl, userMsg?.text, asstMsg?.text);
           return;
         }
-      } catch(e) { /* gateway unavailable, try fallback */ }
-
-      // Strategy 2: Try session-previews.json (static file from cron)
-      try {
-        const res = await fetch('/portal/session-previews.json?t=' + Date.now());
-        if (res.ok) {
-          const data = await res.json();
-          const preview = data[sessionKey] || data[sid];
-          if (preview) {
-            taskEl.textContent = preview.task || 'No task prompt recorded';
-            taskEl.classList.remove('sdp-loading');
-            respEl.textContent = preview.response || 'No response recorded';
-            respEl.classList.remove('sdp-loading');
-            return;
-          }
-        }
-      } catch(e) { /* fallback below */ }
+      } catch(e) { /* gateway unavailable */ }
 
       // No preview data available
-      taskEl.textContent = 'Task/response content requires gateway access (unavailable from static portal)';
+      taskEl.textContent = 'Preview not available for this session';
       taskEl.classList.remove('sdp-loading');
       taskEl.classList.add('sdp-empty');
-      respEl.textContent = 'Connect to the OpenClaw dashboard for full session history';
+      respEl.textContent = 'Session content is refreshed periodically — check back shortly';
       respEl.classList.remove('sdp-loading');
       respEl.classList.add('sdp-empty');
     }
