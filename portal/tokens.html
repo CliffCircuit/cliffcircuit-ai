@@ -259,7 +259,7 @@
       // breakdown keys are already HTML from modelShort(); use directly
       const label = primary ? primary[0] : _modelShortT(g.model);
       if (keys.length <= 1) return label;
-      return `<span style="display:inline-flex;align-items:center;gap:6px;">${label}<button onclick="event.stopPropagation();_toggleModelExpand('${rowId}')" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 4px;line-height:1.4;" title="Show per-model breakdown">+</button></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:6px;">${label}<button onclick="event.stopPropagation();_toggleModelExpand('${rowId}')" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 4px;line-height:1.4;" title="Show per-model breakdown">+${keys.length}</button></span>`;
     }
     const _grpBreakdownStore = {};
     function _toggleModelExpand(rowId) {
