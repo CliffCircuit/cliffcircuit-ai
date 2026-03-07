@@ -81,13 +81,12 @@
         </div>
       </div>
 
-      <!-- Sub-agent Sessions — Grouped Summary -->
+      <!-- Agent Sessions Summary -->
       <div id="subs-section" class="card overflow-hidden mb-6">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-semibold text-white">Sub-agent Sessions</h3>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions Summary</h3>
             <p class="text-xs text-gray-600 mt-0.5">Grouped by task — sessions, cost, and tokens per job type</p>
-            <p class="text-xs text-gray-700 mt-1">Key: <span class="text-gray-500">Web UI (Heartbeat+Chat)</span> = heartbeats + webchat in same session &nbsp;&middot;&nbsp; <span class="text-gray-500">Tim (Telegram DM)</span> = your direct Telegram messages &nbsp;&middot;&nbsp; <span class="text-gray-500">Heartbeat</span> = scheduled health checks (now on Haiku)</p>
           </div>
           <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
         </div>
@@ -122,11 +121,11 @@
         </table>
       </div>
 
-      <!-- Sub-agent Coding Sessions (Raw) -->
+      <!-- Agent Sessions — Raw -->
       <div id="coding-section" class="card overflow-hidden mb-8">
         <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-semibold text-white">Sub-agent Coding Sessions — Raw</h3>
+            <h3 class="text-sm font-semibold text-white">Agent Sessions — Raw</h3>
             <p class="text-xs text-gray-600 mt-0.5">Individual session records from the database</p>
           </div>
           <div class="flex gap-2 items-center">
@@ -252,49 +251,6 @@
         </table>
       </div>
 
-      <!-- Per-Job Breakdown -->
-      <div id="crons-section" class="card overflow-hidden mb-8">
-        <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <div>
-            <h3 class="text-sm font-semibold text-white">Per-Job Breakdown</h3>
-          </div>
-          <div class="text-xs text-gray-600 italic">Filtered by global settings above</div>
-        </div>
-        <div class="grid grid-cols-3 gap-4 px-5 py-4 border-b border-gray-800">
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>
-            <div id="cron-total-runs" class="text-2xl font-bold text-white">&mdash;</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Cost (USD)</div>
-            <div id="cron-total-cost" class="text-2xl font-bold text-yellow-400">&mdash;</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Tokens</div>
-            <div id="cron-total-tokens" class="text-xl font-bold text-indigo-400">&mdash;</div>
-            <div id="cron-total-tokens-sub" class="text-xs text-gray-500 mt-0.5">in / out</div>
-          </div>
-        </div>
-        <table class="w-full text-sm">
-          <thead><tr class="border-b border-gray-800 bg-gray-900">
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Job</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Agent</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Model</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Sessions</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Tokens In / Out</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Avg/Run</th>
-            <th class="text-right px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Cost</th>
-            <th class="text-left px-4 py-2 text-gray-500 text-xs uppercase tracking-wide">Usage</th>
-          </tr></thead>
-          <tbody id="tok-job-body"><tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">Loading...</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Efficiency Insights -->
-      <div class="card p-5 mb-8">
-        <h3 class="text-sm font-semibold text-white mb-4">Efficiency Insights</h3>
-        <div id="tok-insights" class="space-y-3 text-sm text-gray-500">Loading...</div>
-      </div>
 
     </div>
   </div>
@@ -374,6 +330,22 @@
       'evening-check':          'Evening Check',
       'weekly-report':          'Weekly Report',
     };
+
+    // Task tooltip descriptions
+    const _taskTooltips = {
+      'Tim (Telegram DM)': 'Direct Telegram messages from Tim',
+      'Web UI (Heartbeat+Chat)': 'Heartbeats + web chat in same session',
+      'Heartbeat': 'Scheduled health checks (runs on Haiku)',
+      'Portal Refresh': 'Regenerates portal data.json',
+      'Cliff Article Review': 'Reviews and schedules drafted articles',
+      'Samantha Writer': 'Drafts new articles',
+      'Samantha Publish': 'Publishes scheduled content',
+      'Samantha Cliff Tweets': 'Generates Cliff twitter posts',
+      'Samantha Tim Tweets': 'Generates Tim twitter posts',
+      'Pipeline Health Check': 'System health monitoring',
+      'Cliff Scheduler': 'Schedules approved content',
+    };
+    const _getTaskTooltip = name => _taskTooltips[name] || name;
 
     // ── Toggle ────────────────────────────────────────────────────────
     function toggleDbSubagents() {
@@ -550,7 +522,7 @@
       if (label) { label.textContent = 'Live'; label.className = 'text-xs text-green-500'; }
     }
 
-    // ── Main render (Per-Job + Grouped + Raw + Insights) ──────────────
+    // ── Main render (Grouped + Raw) ───────────────────────────────────
     function renderTokenSections() {
       const range = window._tokenRange || 'today';
       const agentFilter = window._globalAgent || 'all';
@@ -573,53 +545,11 @@
 
       const sbRows = window._sbSessionRows || [];
 
-      // ── Per-Job Breakdown (cron rows only) ──────────────────────────
-      const jobGroupMap = {};
-      sbRows.forEach(r => {
-        if (!r.session_key || !(r.session_key.startsWith('cron:') || r.session_key.includes(':cron:'))) return;
-        const cronName = cronTaskFromKey(r.session_key);
-        if (!cronName) return;
-        const ts = r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0;
-        if (ts < cutoffStart || ts >= cutoffEnd) return;
-        const agentId = (r.agent_id || '').toLowerCase();
-        if (agentFilter !== 'all') {
-          const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
-          const allowed = agentMap[agentFilter] || [agentFilter];
-          if (!allowed.some(a => agentId.includes(a))) return;
-        }
-        if (!jobGroupMap[cronName]) jobGroupMap[cronName] = { name: cronName, agent: agentId, model: r.model, rows: [] };
-        jobGroupMap[cronName].rows.push(r);
-      });
-
-      const jobStats = Object.values(jobGroupMap).map(g => {
-        const rows = g.rows;
-        const tokInput     = rows.reduce((s,r) => s + (r.input_tokens||0), 0);
-        const tokCacheRead = rows.reduce((s,r) => s + (r.cache_read||0), 0);
-        const tokCacheWrite= rows.reduce((s,r) => s + (r.cache_write||0), 0);
-        const tokensOut    = rows.reduce((s,r) => s + (r.output_tokens||0), 0);
-        const tokensIn     = rows.reduce((s,r) => s + (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0), 0);
-        const tokens       = tokensIn + tokensOut;
-        const runs         = rows.length;
-        const p = _localModelPricing(g.model);
-        const cost = rows.reduce((s,r) => s + (r.cost_total_usd||0), 0) ||
-                     _calcCost(p, tokInput, tokCacheRead, tokCacheWrite, tokensOut);
-        const displayName  = CRON_DISPLAY[g.name] || g.name.replace(/-/g,' ');
-        return { id: g.name, name: displayName, rawName: g.name, agent: g.agent, model: g.model,
-                 tokens, tokensIn, tokensOut, runs, avg: runs ? Math.round(tokens/runs) : 0, cost };
-      }).filter(j => j.runs > 0).sort((a,b) => b.tokens - a.tokens);
-
       // Build agent-task maps
       const agentNorm = a => { if (!a) return 'cliff'; if (a === 'main' || a === 'cliff') return 'cliff'; return a.toLowerCase(); };
       const atMap = {}, taMap = {};
-      jobStats.forEach(j => {
-        const a = agentNorm(j.agent);
-        if (!atMap[a]) atMap[a] = [];
-        if (!atMap[a].includes(j.name)) atMap[a].push(j.name);
-        if (!taMap[j.name]) taMap[j.name] = [];
-        if (!taMap[j.name].includes(a)) taMap[j.name].push(a);
-      });
 
-      // Build allDbItems from sbRows (all rows, not just cron)
+      // Build allDbItems from sbRows
       const allDbItems = sbRows.map(r => {
         const isCron = r.session_key && (r.session_key.startsWith('cron:') || r.session_key.includes(':cron:'));
         const cronName = isCron ? cronTaskFromKey(r.session_key) : null;
@@ -656,63 +586,18 @@
       window._taskAgentMap = taMap;
 
       const subTaskNames = [...new Set(allDbItems.map(s => s.display_name || s.task_name).filter(Boolean))];
-      const cronTaskNames = jobStats.map(j => j.name);
-      const allTaskNames = [...new Set([...cronTaskNames, ...subTaskNames])].sort();
+      const allTaskNames = [...new Set(subTaskNames)].sort();
       const allAgentNames = [...new Set(Object.keys(atMap))].sort();
       _populateTaskDropdown(allTaskNames);
       _populateAgentDropdown(allAgentNames);
 
-      // Apply task filter to per-job
-      const filteredJobStats = taskFilter === 'all' ? jobStats : jobStats.filter(j => j.name === taskFilter);
+      window._cronTotals = { tokensIn: 0, tokensOut: 0, cost: 0, sessions: 0 };
 
-      const totalTokensIn  = jobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
-      const totalTokensOut = jobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
-      const totalRuns      = jobStats.reduce((s,j) => s+j.runs, 0);
-      const totalCost      = jobStats.reduce((s,j) => s+j.cost, 0);
-
-      window._cronTotals = { tokensIn: totalTokensIn, tokensOut: totalTokensOut, cost: totalCost, sessions: totalRuns };
-
-      // Per-Job table
-      const cronTotalRuns    = filteredJobStats.reduce((s,j) => s+j.runs, 0);
-      const cronTotalCost    = filteredJobStats.reduce((s,j) => s+j.cost, 0);
-      const cronTotalTokIn   = filteredJobStats.reduce((s,j) => s+(j.tokensIn||0), 0);
-      const cronTotalTokOut  = filteredJobStats.reduce((s,j) => s+(j.tokensOut||0), 0);
-      set('cron-total-runs', cronTotalRuns);
-      set('cron-total-cost', '$' + cronTotalCost.toFixed(2));
-      const cronToksEl = document.getElementById('cron-total-tokens');
-      if (cronToksEl) cronToksEl.innerHTML = _fmtK(cronTotalTokIn) + ' / ' + _fmtK(cronTotalTokOut);
-
-      const tbody = document.getElementById('tok-job-body');
-      if (filteredJobStats.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600">No data for this range</td></tr>';
-      } else {
-        const maxTokens = (filteredJobStats[0] || {tokens:1}).tokens;
-        tbody.innerHTML = filteredJobStats.map(j => {
-          const barPct = Math.round((j.tokens / maxTokens) * 100);
-          const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
-          const costStr = j.cost >= 0.01 ? '$'+j.cost.toFixed(3) : '<$0.01';
-          const taskLabel = _cronTaskMap[j.rawName||j.name] ? `<div class="text-gray-600 text-xs mt-0.5">&rarr; ${_cronTaskMap[j.rawName||j.name]}</div>` : '';
-          return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-            <td class="px-4 py-1 text-xs font-bold text-gray-200">${esc(j.name)}${taskLabel}</td>
-            <td class="px-4 py-1 text-xs"><span class="${_agentCls[j.agent]||'text-gray-400'}">${_agentLabel[j.agent]||j.agent||'—'}</span></td>
-            <td class="px-4 py-1 text-xs">${_modelShortT(j.model)}</td>
-            <td class="px-4 py-1 text-right text-white text-xs font-bold">${j.runs}</td>
-            <td class="px-4 py-1 text-right text-white text-xs">${_fmtK(j.tokensIn||0)} / ${_fmtK(j.tokensOut||0)}</td>
-            <td class="px-4 py-1 text-right text-gray-400 text-xs">${_fmtK(j.avg)}</td>
-            <td class="px-4 py-1 text-right text-yellow-400 text-xs font-semibold">${costStr}</td>
-            <td class="px-4 py-1" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
-          </tr>`;
-        }).join('');
-      }
-
-      // ── Grouped Sub-agent Summary ───────────────────────────────────
+      // ── Grouped Agent Sessions Summary ────────────────────────────
       renderGrouped(allDbItems, cutoffStart, cutoffEnd);
 
       // ── Raw table ───────────────────────────────────────────────────
       renderRawTable(allDbItems);
-
-      // ── Efficiency Insights ─────────────────────────────────────────
-      renderInsights(jobStats);
     }
 
     // ── Grouped sub-agent ─────────────────────────────────────────────
@@ -766,7 +651,7 @@
         const barCls = barPct > 66 ? 'bg-red-500' : barPct > 33 ? 'bg-yellow-500' : 'bg-teal-500';
         const shortTask = g.task.length > 22 ? g.task.slice(0, 22) + '\u2026' : g.task;
         return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)}</td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium" title="${esc(g.task)}">${esc(shortTask)} <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-700 text-gray-400 text-[9px] font-bold cursor-help ml-1 align-middle" title="${esc(_getTaskTooltip(g.task))}">?</span></td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[g.agent]||'text-gray-400'}">${fmtAgent(g.agent)}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_modelShortT(g.model)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${g.runs}</td>
@@ -849,22 +734,6 @@
       if (el('tok-cost'))  el('tok-cost').textContent   = '$' + combCost.toFixed(2);
       if (el('tok-runs'))  el('tok-runs').textContent   = combSessions;
       if (el('tok-avg'))   el('tok-avg').innerHTML      = _fmtK(avgIn) + ' / ' + _fmtK(avgOut);
-    }
-
-    // ── Efficiency Insights ───────────────────────────────────────────
-    function renderInsights(jobStats) {
-      const insights = [];
-      jobStats.forEach(j => {
-        if (j.avg > 80000) insights.push({ level: 'warn', msg: `<strong>${esc(j.name)}</strong> averages ${_fmtK(j.avg)} tokens/run — high context load. Consider reducing frequency or adding an early-exit check.` });
-        if (j.runs > 20 && j.avg < 5000) insights.push({ level: 'ok', msg: `<strong>${esc(j.name)}</strong> is efficient at ${_fmtK(j.avg)} avg tokens/run across ${j.runs} runs.` });
-        if (j.name === 'portal-data-refresh' && j.runs > 30) insights.push({ level: 'info', msg: `<strong>portal-data-refresh</strong> runs every minute (${j.runs}x today). Consider reducing to every 2-5 min to cut ~${_fmtK(Math.round(j.tokens*0.6))} tokens/day.` });
-      });
-      if (insights.length === 0) insights.push({ level: 'ok', msg: 'No efficiency issues detected.' });
-      document.getElementById('tok-insights').innerHTML = insights.map(i => {
-        const icon = i.level === 'warn' ? '\u26a0\ufe0f' : i.level === 'ok' ? '\u2705' : '\u2139\ufe0f';
-        const cls = i.level === 'warn' ? 'text-yellow-400' : i.level === 'ok' ? 'text-green-400' : 'text-blue-400';
-        return `<div class="flex gap-2"><span>${icon}</span><span class="${cls}">${i.msg}</span></div>`;
-      }).join('');
     }
 
     // ── Convenience re-render ─────────────────────────────────────────
