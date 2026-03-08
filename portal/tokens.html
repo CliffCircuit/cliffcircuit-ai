@@ -14,7 +14,7 @@
       0%, 100% { opacity: 1; box-shadow: 0 0 4px 1px rgba(74,222,128,0.5); }
       50%      { opacity: 0.55; box-shadow: 0 0 8px 3px rgba(74,222,128,0.25); }
     }
-    .active-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-left: 4px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; animation: live-pulse 2s ease-in-out infinite; }
+    .active-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-left: 2px; margin-right: 2px; vertical-align: middle; flex-shrink: 0; animation: live-pulse 2s ease-in-out infinite; }
     #tip-popup {
       position: fixed; z-index: 99999; pointer-events: none; display: none;
       background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
@@ -1920,7 +1920,19 @@ function _renderStackedCostChart(items, mode) {
     }).then(ok => {
       // Always set up the 30s auto-refresh — even if initPortal partially failed,
       // refreshAllData() fetches data.json + live-sessions.json + Supabase fresh each cycle
+      // 30s auto-refresh interval
       setInterval(() => { _grpManualRefresh = true; refreshAllData(); }, 30000);
+
+      // Browsers throttle setInterval to ~60s+ in background tabs.
+      // When the tab becomes visible again, fire an immediate refresh if ≥25s elapsed.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && _lastRefreshAt && (Date.now() - _lastRefreshAt > 25000)) {
+          console.log('[tokens] tab became visible — triggering immediate refresh');
+          _grpManualRefresh = true;
+          refreshAllData();
+        }
+      });
+
       if (!ok) return;
       // Realtime subscription for faster updates (debounced 5s to batch rapid changes)
       let _rtDebounce = null;
