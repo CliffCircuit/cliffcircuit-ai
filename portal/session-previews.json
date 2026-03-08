@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-03-08T07:13:18.372Z",
-  "count": 468,
+  "generatedAt": "2026-03-08T07:28:19.415Z",
+  "count": 463,
   "previews": {
     "agent:main:cron:ca0f70f9-6972-494d-8910-4b65c58ddeae": {
       "task": "[cron:ca0f70f9-6972-494d-8910-4b65c58ddeae social-monitoring] You are Cliff. Monitor X/Twitter activity for @CliffCircuit and @timharris707.\n\nUse the twitterapi-io skill (key in keychain: twitterapi-io-key) to check:\n1. New followers for both accounts\n2. Any mentions or quote tweets\n3. Replies needing a response\n4. Any unusual engagement spikes\n\nWrite your summary by appending to this file ONLY (use the Write tool with append mode, or read-then-write):\n/Users/openclaw/.openclaw/workspace/memory/twitter-monitoring.md\n\nDO NOT use ~ in the path. DO NOT create a new file with today's date. The file name is always exactly: twitter-monitoring.md\n\nFormat to append:\n## [Date Time PT]\n- @CliffCircuit: [N] followers, [activity]\n- @TimHarris707: [N] followers, [activity]\n- Mentions/replies: [summary or 'none']\n- Action needed: [yes/no — what]\n\nIf anything needs immediate Tim attention (viral post, important mention, credential issue): flag it in your output. Otherwise just write the file and stop. Do NOT call the message tool.\nCurrent time: Sunday, March 1st, 2026 — 12:07 AM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
@@ -184,13 +184,13 @@
     },
     "agent:main:telegram:direct:8386624734": {
       "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.",
-      "response": "MEMORY.md updated. Migration is complete. Here's the full scorecard:\n\n✅ Workspace copied to Dropbox vault  \n✅ `openclaw.json` updated  \n✅ 18 scripts updated  \n✅ 12 LaunchAgent plists updated  \n✅ Gateway restarted, confirmed live  \n✅ Mirror folder deleted  \n✅ Mirror launchd disabled  \n✅ MEMORY.md updated  \n\nYou can now open Obsidian on your Mac and browse `openclaw-workspace` — MEMORY.md, SOUL.md, agent-inbox, all of it. Edit anything in there and I'll pick it up immediately next session. Pretty cool honestly.",
-      "sessionId": "ba0fde75-f484-4afc-aaaf-6ffc8960461b"
+      "response": "Now I have the full picture. The session that just ended (~11:24 PM) was all about **fixing memory** — the thing that's causing the exact problem you just described.\n\nHere's what we did:\n\n1. **Found the root cause of memory gaps** — we were running QMD (the backend the YouTube video guy calls unstable/experimental), and it was pointed at `~/life`, a PARA folder with no real content. Memory search has been broken or misfiring the whole time.\n\n2. **Switched to OpenClaw native hybrid search** (`builtin` backend) — BM25 + vector embeddings, OpenAI `text-embedding-3-small`, with MMR, temporal decay (recent notes rank higher), and **session memory** enabled.\n\n3. **Set up dashboards** — dashboard.cliffcircuit.com and dashboard2.cliffcircuit.com (two community ones).\n\n4. **Wired in jCodeMunch + jDocMunch** as native tools.\n\n5. You accidentally did a gateway restart instead of session reset — that's fine, no damage.\n\nSo the irony here is we just fixed memory, and this is the first session after the fix. The index is building in the background right now. It may not be fully warm yet which could explain why my session startup didn't pull the right context automatically. But the reads from the daily notes file worked once I looked at the right date.\n\nWhat was the third step from the video you wanted to tackle?",
+      "sessionId": "2414fce9-5349-4c84-ba4a-d20cdd463cf2"
     },
-    "ba0fde75-f484-4afc-aaaf-6ffc8960461b": {
+    "2414fce9-5349-4c84-ba4a-d20cdd463cf2": {
       "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.",
-      "response": "MEMORY.md updated. Migration is complete. Here's the full scorecard:\n\n✅ Workspace copied to Dropbox vault  \n✅ `openclaw.json` updated  \n✅ 18 scripts updated  \n✅ 12 LaunchAgent plists updated  \n✅ Gateway restarted, confirmed live  \n✅ Mirror folder deleted  \n✅ Mirror launchd disabled  \n✅ MEMORY.md updated  \n\nYou can now open Obsidian on your Mac and browse `openclaw-workspace` — MEMORY.md, SOUL.md, agent-inbox, all of it. Edit anything in there and I'll pick it up immediately next session. Pretty cool honestly.",
-      "sessionId": "ba0fde75-f484-4afc-aaaf-6ffc8960461b"
+      "response": "Now I have the full picture. The session that just ended (~11:24 PM) was all about **fixing memory** — the thing that's causing the exact problem you just described.\n\nHere's what we did:\n\n1. **Found the root cause of memory gaps** — we were running QMD (the backend the YouTube video guy calls unstable/experimental), and it was pointed at `~/life`, a PARA folder with no real content. Memory search has been broken or misfiring the whole time.\n\n2. **Switched to OpenClaw native hybrid search** (`builtin` backend) — BM25 + vector embeddings, OpenAI `text-embedding-3-small`, with MMR, temporal decay (recent notes rank higher), and **session memory** enabled.\n\n3. **Set up dashboards** — dashboard.cliffcircuit.com and dashboard2.cliffcircuit.com (two community ones).\n\n4. **Wired in jCodeMunch + jDocMunch** as native tools.\n\n5. You accidentally did a gateway restart instead of session reset — that's fine, no damage.\n\nSo the irony here is we just fixed memory, and this is the first session after the fix. The index is building in the background right now. It may not be fully warm yet which could explain why my session startup didn't pull the right context automatically. But the reads from the daily notes file worked once I looked at the right date.\n\nWhat was the third step from the video you wanted to tackle?",
+      "sessionId": "2414fce9-5349-4c84-ba4a-d20cdd463cf2"
     },
     "agent:main:telegram:group:-5298874391": {
       "task": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"428\",\n  \"sender_id\": \"8386624734\",\n  \"conversation_label\": \"Chat Hub id:-5298874391\",\n  \"sender\": \"Tim H\",\n  \"timestamp\": \"Fri 2026-03-06 08:20 PST\",\n  \"group_subject\": \"Chat Hub\",\n  \"is_group_chat\": true\n}\n```\n\nSender (untrusted metadata):\n```json\n{\n  \"label\": \"Tim H (8386624734)\",\n  \"id\": \"8386624734\",\n  \"name\": \"Tim H\"\n}\n```\n\nGood morning team. just touching base to make sure this group chat is still working",
@@ -218,31 +218,6 @@
       "sessionId": "005a0c1b-5027-4e10-b172-e7fe4bb78f4e"
     },
     "005a0c1b-5027-4e10-b172-e7fe4bb78f4e": {
-      "task": "[cron:1285e486-058b-4c41-b461-6d2522cfdbd9 live-sessions-refresh] Run this command and output the result verbatim: node /Users/openclaw/.openclaw/workspace/bin/live-sessions.js\nCurrent time: Friday, March 6th, 2026 — 11:23 PM (America/Los_Angeles)",
-      "response": "Wrote 4 sessions to /Users/openclaw/workspace/cliffcircuit-ai/portal/live-sessions.json",
-      "sessionId": "005a0c1b-5027-4e10-b172-e7fe4bb78f4e"
-    },
-    "agent:main:cron:1285e486-058b-4c41-b461-6d2522cfdbd9:run:f8780864-3228-4352-a09f-721c19a5f349": {
-      "task": "[cron:1285e486-058b-4c41-b461-6d2522cfdbd9 live-sessions-refresh] Run this command and output the result verbatim: node /Users/openclaw/.openclaw/workspace/bin/live-sessions.js\nCurrent time: Friday, March 6th, 2026 — 11:13 PM (America/Los_Angeles)",
-      "response": "Wrote 15 sessions to /Users/openclaw/workspace/cliffcircuit-ai/portal/live-sessions.json",
-      "sessionId": "f8780864-3228-4352-a09f-721c19a5f349"
-    },
-    "f8780864-3228-4352-a09f-721c19a5f349": {
-      "task": "[cron:1285e486-058b-4c41-b461-6d2522cfdbd9 live-sessions-refresh] Run this command and output the result verbatim: node /Users/openclaw/.openclaw/workspace/bin/live-sessions.js\nCurrent time: Friday, March 6th, 2026 — 11:13 PM (America/Los_Angeles)",
-      "response": "Wrote 15 sessions to /Users/openclaw/workspace/cliffcircuit-ai/portal/live-sessions.json",
-      "sessionId": "f8780864-3228-4352-a09f-721c19a5f349"
-    },
-    "agent:main:cron:1285e486-058b-4c41-b461-6d2522cfdbd9:run:01170a58-d619-4b36-9e99-19722ff7eced": {
-      "task": "[cron:1285e486-058b-4c41-b461-6d2522cfdbd9 live-sessions-refresh] Run this command and output the result verbatim: node /Users/openclaw/.openclaw/workspace/bin/live-sessions.js\nCurrent time: Friday, March 6th, 2026 — 11:18 PM (America/Los_Angeles)",
-      "response": "Wrote 4 sessions to /Users/openclaw/workspace/cliffcircuit-ai/portal/live-sessions.json",
-      "sessionId": "01170a58-d619-4b36-9e99-19722ff7eced"
-    },
-    "01170a58-d619-4b36-9e99-19722ff7eced": {
-      "task": "[cron:1285e486-058b-4c41-b461-6d2522cfdbd9 live-sessions-refresh] Run this command and output the result verbatim: node /Users/openclaw/.openclaw/workspace/bin/live-sessions.js\nCurrent time: Friday, March 6th, 2026 — 11:18 PM (America/Los_Angeles)",
-      "response": "Wrote 4 sessions to /Users/openclaw/workspace/cliffcircuit-ai/portal/live-sessions.json",
-      "sessionId": "01170a58-d619-4b36-9e99-19722ff7eced"
-    },
-    "agent:main:cron:1285e486-058b-4c41-b461-6d2522cfdbd9:run:005a0c1b-5027-4e10-b172-e7fe4bb78f4e": {
       "task": "[cron:1285e486-058b-4c41-b461-6d2522cfdbd9 live-sessions-refresh] Run this command and output the result verbatim: node /Users/openclaw/.openclaw/workspace/bin/live-sessions.js\nCurrent time: Friday, March 6th, 2026 — 11:23 PM (America/Los_Angeles)",
       "response": "Wrote 4 sessions to /Users/openclaw/workspace/cliffcircuit-ai/portal/live-sessions.json",
       "sessionId": "005a0c1b-5027-4e10-b172-e7fe4bb78f4e"
@@ -3681,26 +3656,6 @@
       "task": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"278\",\n  \"sender_id\": \"8386624734\",\n  \"conversation_label\": \"Chat Hub id:-5298874391\",\n  \"sender\": \"Tim H\",\n  \"timestamp\": \"Fri 2026-03-06 08:20 PST\",\n  \"group_subject\": \"Chat Hub\",\n  \"is_group_chat\": true\n}\n```\n\nSender (untrusted metadata):\n```json\n{\n  \"label\": \"Tim H (8386624734)\",\n  \"id\": \"8386624734\",\n  \"name\": \"Tim H\"\n}\n```\n\nGood morning team. just touching base to make sure this group chat is still working",
       "response": "Yes, I can see them all in the screenshot — my message, Atlas's, Samantha's, and Cliff's. Looks like everything posted fine. Interesting that Cliff's saying Samantha, Scout, and Atlas appear silent on his end though. Might be a sync/display issue on his client side, even though the messages made it through to the group.",
       "sessionId": "01097962-0389-42d3-9fae-f6f1b01e9c0e"
-    },
-    "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:02a73f86-5bb8-4c01-8047-7baf3b666188": {
-      "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 11:10 PM (America/Los_Angeles)",
-      "response": "Done. Portal data is fresh and pushed. Nothing to flag. ✅",
-      "sessionId": "02a73f86-5bb8-4c01-8047-7baf3b666188"
-    },
-    "02a73f86-5bb8-4c01-8047-7baf3b666188": {
-      "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 11:10 PM (America/Los_Angeles)",
-      "response": "Done. Portal data is fresh and pushed. Nothing to flag. ✅",
-      "sessionId": "02a73f86-5bb8-4c01-8047-7baf3b666188"
-    },
-    "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:9714f0a0-f4f6-4e21-911f-c9d3722c6052": {
-      "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 11:20 PM (America/Los_Angeles)",
-      "response": "Done. Portal data is current, all systems nominal. 🔍",
-      "sessionId": "9714f0a0-f4f6-4e21-911f-c9d3722c6052"
-    },
-    "9714f0a0-f4f6-4e21-911f-c9d3722c6052": {
-      "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 11:20 PM (America/Los_Angeles)",
-      "response": "Done. Portal data is current, all systems nominal. 🔍",
-      "sessionId": "9714f0a0-f4f6-4e21-911f-c9d3722c6052"
     },
     "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:0e000fa4-9626-4f2b-b9dc-c6a3a58bcf2b": {
       "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 11:30 PM (America/Los_Angeles)",
