@@ -1806,13 +1806,13 @@ function _renderStackedCostChart(items, mode) {
     }).then(ok => {
       if (!ok) return;
       // Poll every 30s as fallback
-      setInterval(() => { loadAndRenderAgentSessions(); }, 120000);
+      setInterval(() => { _grpManualRefresh = true; loadAndRenderAgentSessions(); }, 120000);
       // Realtime subscription for instant updates (debounced to avoid rapid re-renders)
       let _rtDebounce = null;
       _sb.channel('tokens-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'session_snapshots' }, () => {
           clearTimeout(_rtDebounce);
-          _rtDebounce = setTimeout(() => loadAndRenderAgentSessions(), 30000);
+          _rtDebounce = setTimeout(() => { _grpManualRefresh = true; loadAndRenderAgentSessions(); }, 30000);
         })
         .subscribe(status => {
           const dot = document.getElementById('sb-realtime-dot');
