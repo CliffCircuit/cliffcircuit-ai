@@ -3343,7 +3343,7 @@ function switchTab(t) {
       document.getElementById('cron-body').innerHTML = sortedCrons.length===0
         ? '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No cron data</td></tr>'
         : sortedCrons.map(c=>`<tr class="cron-row border-b border-gray-900 hover:bg-gray-800 transition-colors cursor-pointer" onclick="openJobDetail('${esc(c.name)}')">
-            <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(c.name||'—')} <span class="text-gray-600 text-xs">→</span></td>
+            <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(c.name||'—')}${activeDotHtml(c.name)} <span class="text-gray-600 text-xs">→</span></td>
             <td class="px-4 py-2.5 text-gray-400 text-xs">${esc(humanCron(c.schedule||'—'))}</td>
             <td class="px-4 py-2.5 text-xs">${agentLabel(c.agent||'main')}</td>
             <td class="px-4 py-2.5 text-xs">${modelShortH(c.model)}</td>
@@ -3826,4 +3826,4 @@ function switchTab(t) {
 </script>
 </body>
 </html>
-<!-- cache bust 20260303T201729Z -->
+<!-- cache bust 20260308T213200Z -->
