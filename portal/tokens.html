@@ -341,7 +341,8 @@
       return `<span style="display:inline-flex;align-items:center;gap:6px;">${label}<button onclick="event.stopPropagation();_toggleModelExpand('${rowId}')" style="background:none;border:1px solid #4b5563;border-radius:4px;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 4px;line-height:1.4;" title="Show per-model breakdown">+${keys.length}</button></span>`;
     }
     const _grpBreakdownStore = {};
-    const _expandedTasks = new Set(); // persist expanded state across re-renders
+    const _expandedTasks = new Set(); // persist expanded state across re-renders (keyed by task name)
+    const _expandedSessionTasks = new Set(); // persist session-expanded state across re-renders (keyed by task name)
     function _toggleModelExpand(rowId) {
       const parentRow = document.getElementById(rowId);
       if (!parentRow) return;
@@ -396,6 +397,7 @@
     const _expandedSessions = new Set();
     const _sessionDataMap = {}; // keyed by session_id → full session object
     let _sessionDetailOpenId = null; // currently-open detail panel session_id
+    let _sessionDetailSource = null; // 'grouped' or 'raw' — which table owns the open detail
     function _renderRunsCell(count, storeKey, sessions) {
       const hasMulti = sessions && sessions.length > 1;
       const hasSingle = sessions && sessions.length === 1;
@@ -420,6 +422,7 @@
       const sid = _singleSessionSidCache[storeKey];
       _sessionDataMap[sid] = s;
       // Delegate to _toggleSessionDetail which handles open/close toggle
+      _sessionDetailSource = 'grouped';
       _toggleSessionDetail(sid, parentRow);
     }
     // Handle click on grouped summary row — route to single-session detail or multi-session expand
@@ -428,8 +431,8 @@
       if (sessions.length === 1) {
         _toggleSingleSessionDetail(storeKey, rowEl);
       } else if (sessions.length > 1) {
-        // Find the expand button inside this row and delegate
-        const btn = rowEl.querySelector('button');
+        // Find the session expand button inside this row
+        const btn = rowEl.querySelector('button[title="Show individual sessions"]');
         if (btn) _toggleSessionExpand(storeKey, btn);
       }
     }
@@ -445,13 +448,16 @@
         toRemove.remove();
       }
       _sessionDetailOpenId = null;
+      const taskName = parentRow.dataset.taskName || '';
       if (expanded) {
         parentRow.dataset.sessExpanded = '0';
         _expandedSessions.delete(storeKey);
+        _expandedSessionTasks.delete(taskName);
         return;
       }
       parentRow.dataset.sessExpanded = '1';
       _expandedSessions.add(storeKey);
+      if (taskName) _expandedSessionTasks.add(taskName);
       const sessions = _sessionStore[storeKey] || [];
       const sorted = [...sessions].sort((a,b) => new Date(b.last_seen_at||0) - new Date(a.last_seen_at||0));
       let insertAfter = parentRow;
@@ -462,7 +468,7 @@
         tr.className = 'session-detail-row border-b border-gray-900/50';
         tr.style.cssText = 'background:rgba(30,40,55,0.5);cursor:pointer;';
         tr.dataset.sessionDetailId = sid;
-        tr.onclick = function(e) { if (e.target.closest('button')) return; _toggleSessionDetail(sid, this); };
+        tr.onclick = function(e) { if (e.target.closest('button')) return; _sessionDetailSource = 'grouped'; _toggleSessionDetail(sid, this); };
         const when = s.last_seen_at ? new Date(s.last_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
         const dur = _fmtDur(s.duration_ms);
         const tokIn = _fmtK(s.tokens_in || 0);
@@ -491,6 +497,7 @@
         const wasSame = existing.dataset.forSession === sid;
         existing.remove();
         _sessionDetailOpenId = null;
+        _sessionDetailSource = null;
         if (wasSame) return; // toggled off
       }
       const s = _sessionDataMap[sid];
@@ -587,10 +594,12 @@
       const existing = document.querySelector('.session-detail-panel-row');
       if (existing) existing.remove();
       _sessionDetailOpenId = null;
+      _sessionDetailSource = null;
     }
 
     function _toggleRawSessionDetail(sid, rowEl) {
       // Toggle detail panel for raw table rows — reuses _toggleSessionDetail
+      _sessionDetailSource = 'raw';
       _toggleSessionDetail(sid, rowEl);
     }
 
@@ -1529,8 +1538,8 @@ function _renderStackedCostChart(items, mode) {
     // ── Grouped sub-agent ─────────────────────────────────────────────
     let _grpManualRefresh = false; // set true when user changes filters
     function renderGrouped(allDbItems, cutoffStart, cutoffEnd) {
-      // Skip auto-refresh re-render if user has something expanded (prevents flicker)
-      if (!_grpManualRefresh && (_expandedTasks.size > 0 || _expandedSessions.size > 0)) return;
+      // Skip rebuild if a detail panel is open in the grouped table — prevents collapse on auto-refresh
+      if (_sessionDetailOpenId && _sessionDetailSource === 'grouped') return;
       _grpManualRefresh = false;
       const agent = window._globalAgent || 'all';
       const taskF = window._globalTask || 'all';
@@ -1586,6 +1595,11 @@ function _renderStackedCostChart(items, mode) {
         return;
       }
       const maxCost = sorted[0] ? sorted[0].totalCost : 1;
+      // Clear grouped detail panel state — DOM is about to be rebuilt
+      if (_sessionDetailSource === 'grouped') {
+        _sessionDetailOpenId = null;
+        _sessionDetailSource = null;
+      }
       let _grpRowIdx = 0;
       body.innerHTML = sorted.map(g => {
         const rowId = 'grp-row-' + (_grpRowIdx++);
@@ -1609,8 +1623,26 @@ function _renderStackedCostChart(items, mode) {
         </tr>`;
       }).join('');
 
-      // Note: when something is expanded, auto-refresh skips this function entirely
-      // (see guard at top). No need to re-expand — the DOM is untouched.
+      // Re-expand rows that were expanded before the re-render
+      if (_expandedTasks.size > 0 || _expandedSessionTasks.size > 0) {
+        const rows = body.querySelectorAll('tr[data-task-name]');
+        rows.forEach(row => {
+          const task = row.dataset.taskName || '';
+          const rowId = row.id;
+          // Re-expand model breakdown
+          if (_expandedTasks.has(task) && rowId && _grpBreakdownStore[rowId]) {
+            _toggleModelExpand(rowId);
+          }
+          // Re-expand session list
+          if (_expandedSessionTasks.has(task)) {
+            const storeKey = 'grp-' + rowId;
+            const btn = row.querySelector('button[title="Show individual sessions"]');
+            if (btn && _sessionStore[storeKey]) {
+              _toggleSessionExpand(storeKey, btn);
+            }
+          }
+        });
+      }
 
       // Efficiency insights — cost-aware, actionable rules
       const insights = [];
@@ -1716,6 +1748,8 @@ function _renderStackedCostChart(items, mode) {
 
     // ── Raw table ─────────────────────────────────────────────────────
     function renderRawTable(allDbItems) {
+      // Skip rebuild if a detail panel is open in the raw table — prevents collapse on auto-refresh
+      if (_sessionDetailOpenId && _sessionDetailSource === 'raw') return;
       const items = allDbItems || window._allDbSubItems;
       const globalTask = window._globalTask || 'all';
       const taskFilter = window._dbRawTaskFilter || 'all';
@@ -1761,6 +1795,7 @@ function _renderStackedCostChart(items, mode) {
           <td class="px-4 py-2 text-right text-yellow-400 text-xs">${(s.estimated_cost_usd||0) >= 0.01 ? '$' + s.estimated_cost_usd.toFixed(3) : '<$0.01'}</td>
           <td class="px-4 py-2 text-gray-500 text-xs whitespace-nowrap text-right">${_fmtTs(s.started_at)}</td>
         </tr>`; }).join('');
+
       }
       const toggleBtn = document.getElementById('db-subagent-toggle');
       if (filtered.length <= 20) toggleBtn.classList.add('hidden');
