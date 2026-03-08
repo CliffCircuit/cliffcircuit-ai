@@ -120,6 +120,7 @@ function cronAgentFromName(name) {
 const DIRECT_DISPLAY = {
   'main:telegram':     'Tim (Telegram DM)',
   'main:signal':       'Tim (Signal DM)',
+  'main:imessage':     'Tim (Messages DM)',
   'main:main':         'Web UI (Heartbeat+Chat)',
   'samantha:telegram': 'Samantha (Telegram DM)',
   'scout:telegram':    'Scout (Telegram DM)',
