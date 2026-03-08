@@ -455,6 +455,26 @@ async function main() {
     gateway,
     subagentSessions,
     execEvents,
+    sessionTickets: (() => {
+      // Scan atlas session dirs for tickets.json files
+      const sessionsDir = path.join(WORKSPACE, 'atlas/sessions');
+      const tickets = {};
+      try {
+        if (fs.existsSync(sessionsDir)) {
+          const dirs = fs.readdirSync(sessionsDir);
+          for (const dir of dirs) {
+            const ticketsFile = path.join(sessionsDir, dir, 'tickets.json');
+            if (fs.existsSync(ticketsFile)) {
+              try {
+                const t = JSON.parse(fs.readFileSync(ticketsFile, 'utf8'));
+                if (Array.isArray(t)) tickets[dir] = t;
+              } catch (e) { /* skip malformed */ }
+            }
+          }
+        }
+      } catch (e) { console.warn('tickets scan:', e.message); }
+      return tickets;
+    })(),
   };
 
   // ── Write + Push (uses workspace repo directly — no clone needed) ───
