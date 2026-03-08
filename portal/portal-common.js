@@ -6,6 +6,10 @@
 let SESSION_LABELS = {};
 const _sessionLabelsReady = fetch('/portal/session-labels.json?t=' + Date.now()).then(r => r.json()).then(d => { SESSION_LABELS = d || {}; }).catch(() => {});
 
+// ── Contacts (phone → name for iMessage resolution) ──
+let CONTACTS_MAP = {};
+const _contactsReady = fetch('/portal/contacts.json?t=' + Date.now()).then(r => r.json()).then(d => { CONTACTS_MAP = d || {}; }).catch(() => {});
+
 // ── Constants ────────────────────────────────────────────────────────────
 const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
 const SUPABASE_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
@@ -363,6 +367,12 @@ function sessionKeyToFriendly(key, sessionId) {
     const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas' }[mainMatch[1]] || mainMatch[1];
     if (mainMatch[1] === 'main') return 'Web UI (Heartbeat+Chat)';
     return agentLabel + ' (Web UI)';
+  }
+  // iMessage contact lookup: agent:X:imessage:direct:+PHONE
+  const imsgMatch = key.match(/^agent:[^:]+:imessage:direct:(\+\d+)$/);
+  if (imsgMatch) {
+    const contactName = CONTACTS_MAP[imsgMatch[1]];
+    if (contactName) return contactName + ' (Msgs DM)';
   }
   const directMatch = key.match(/^agent:([^:]+):([^:]+)(?::direct)?:/);
   if (directMatch) {
