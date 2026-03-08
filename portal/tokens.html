@@ -1701,8 +1701,15 @@ function _renderStackedCostChart(items, mode) {
         const grpStoreKey = 'grp-' + rowId;
         const grpHasActive = g.allSessions.some(s => _isSessionActive(s));
         const grpActiveDot = grpHasActive ? _activeDotHtml : '';
+        // Collect ticket badges for grouped sessions
+        let grpTicketBadge = '';
+        for (const sess of g.allSessions) {
+          const sk = sess.label || (sess._raw && sess._raw.session_key) || '';
+          const tix = _getSessionTickets(sk);
+          if (tix && tix.length) { grpTicketBadge = _ticketBadgeHtml(tix); break; }
+        }
         return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" onclick="if(!event.target.closest('button'))_handleSummaryRowClick('${grpStoreKey}',this)">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium"><span style="display:inline-flex;align-items:center;">${esc(shortTask)}${grpActiveDot}</span>${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium"><span style="display:inline-flex;align-items:center;">${esc(shortTask)}${grpActiveDot}${grpTicketBadge}</span>${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, grpStoreKey, g.allSessions)}</td>
@@ -1780,6 +1787,49 @@ function _renderStackedCostChart(items, mode) {
       return key ? _activeSessionKeys.has(key) : false;
     }
     const _activeDotHtml = '<span class="active-dot" title="Active session"></span>';
+
+    // ── Ticket System Helpers ──────────────────────────────────────
+    function _getSessionTickets(sessionKey) {
+      if (!window.DATA || !window.DATA.sessionTickets) return null;
+      // Try exact match first
+      if (window.DATA.sessionTickets[sessionKey]) return window.DATA.sessionTickets[sessionKey];
+      // Try matching by session key substring (atlas-review-* keys)
+      for (const [k, v] of Object.entries(window.DATA.sessionTickets)) {
+        if (sessionKey && sessionKey.includes(k)) return v;
+        if (k && k.includes(sessionKey)) return v;
+      }
+      return null;
+    }
+
+    function _ticketBadgeHtml(tickets) {
+      if (!tickets || !tickets.length) return '';
+      const count = tickets.length;
+      const allDone = tickets.every(t => t.status === 'done');
+      const anyReview = tickets.some(t => t.status === 'review');
+      const anyInProgress = tickets.some(t => t.status === 'in-progress');
+      let cls = 'ticket-badge-gray';
+      if (allDone) cls = 'ticket-badge-green';
+      else if (anyReview) cls = 'ticket-badge-yellow';
+      else if (anyInProgress) cls = 'ticket-badge-blue';
+      return `<span class="ticket-badge ${cls}">${count} ticket${count !== 1 ? 's' : ''}</span>`;
+    }
+
+    function _ticketListHtml(tickets) {
+      if (!tickets || !tickets.length) return '';
+      const pillCls = { 'todo': 'tkt-todo', 'in-progress': 'tkt-in-progress', 'review': 'tkt-review', 'done': 'tkt-done' };
+      const rows = tickets.map(t => {
+        const cls = pillCls[t.status] || 'tkt-todo';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:4px 0;">
+          <span style="color:#6b7280;font-size:11px;font-family:monospace;min-width:52px;">${esc(t.id)}</span>
+          <span class="tkt-pill ${cls}">${esc(t.status)}</span>
+          <span style="color:#d1d5db;font-size:12px;">${esc(t.title)}</span>
+        </div>`;
+      }).join('');
+      return `<div class="sdp-section">
+        <div class="sdp-label">Tickets</div>
+        <div style="padding:4px 0;">${rows}</div>
+      </div>`;
+    }
 
     // ── Stuck Sessions (from live-sessions.json) ───────────────────
     async function loadLiveSessions() {
