@@ -1624,8 +1624,10 @@ function _renderStackedCostChart(items, mode) {
         const agentLabel = fmtAgent(g.agent);
         _grpBreakdownStore[rowId] = g.modelBreakdown;
         const grpStoreKey = 'grp-' + rowId;
+        const grpHasActive = g.allSessions.some(s => _isSessionActive(s));
+        const grpActiveDot = grpHasActive ? _activeDotHtml : '';
         return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" onclick="if(!event.target.closest('button'))_handleSummaryRowClick('${grpStoreKey}',this)">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium">${esc(shortTask)}${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium"><span style="display:inline-flex;align-items:center;">${grpActiveDot}${esc(shortTask)}</span>${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, grpStoreKey, g.allSessions)}</td>
@@ -1708,10 +1710,11 @@ function _renderStackedCostChart(items, mode) {
     async function loadLiveSessions() {
       try {
         const res = await fetch('/portal/live-sessions.json?t=' + Date.now());
-        if (!res.ok) throw new Error('Not found');
+        if (!res.ok) throw new Error('live-sessions.json: ' + res.status);
         const data = await res.json();
         // Store active session keys for green dot indicators
         _activeSessionKeys = new Set((data.sessions || []).map(s => s.key));
+        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys');
         const tbody = document.getElementById('live-sess-body');
         const updatedEl = document.getElementById('live-updated');
         if (!tbody) return;
