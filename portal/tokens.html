@@ -14,7 +14,7 @@
       0%, 100% { opacity: 1; box-shadow: 0 0 4px 1px rgba(74,222,128,0.5); }
       50%      { opacity: 0.55; box-shadow: 0 0 8px 3px rgba(74,222,128,0.25); }
     }
-    .active-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-left: 7px; margin-right: 5px; vertical-align: middle; flex-shrink: 0; animation: live-pulse 2s ease-in-out infinite; }
+    .active-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-left: 4px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; animation: live-pulse 2s ease-in-out infinite; }
     #tip-popup {
       position: fixed; z-index: 99999; pointer-events: none; display: none;
       background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
@@ -1714,7 +1714,7 @@ function _renderStackedCostChart(items, mode) {
     // ── Stuck Sessions (from live-sessions.json) ───────────────────
     async function loadLiveSessions() {
       try {
-        const res = await fetch('/portal/live-sessions.json?t=' + Date.now());
+        const res = await fetch('/portal/live-sessions.json?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error('live-sessions.json: ' + res.status);
         const data = await res.json();
         // Store active session keys for green dot indicators
@@ -1866,13 +1866,23 @@ function _renderStackedCostChart(items, mode) {
     let _refreshInFlight = false;
     let _lastRefreshAt = 0;
     async function refreshAllData() {
-      if (_refreshInFlight) { console.log('[tokens] refresh skipped — already in flight'); return; }
+      // Safety valve: if previous refresh has been stuck for >25s, force-reset the flag
+      if (_refreshInFlight) {
+        if (_lastRefreshAt && (Date.now() - _lastRefreshAt > 25000)) {
+          console.warn('[tokens] refresh was stuck — force-resetting _refreshInFlight');
+          _refreshInFlight = false;
+        } else {
+          console.log('[tokens] refresh skipped — already in flight');
+          return;
+        }
+      }
       _refreshInFlight = true;
       const t0 = Date.now();
+      _lastRefreshAt = t0; // track when we STARTED so the safety valve can detect hangs
       try {
-        // 1. Re-fetch data.json with cache-busting (cron names, task labels, portal state)
+        // 1. Re-fetch data.json with cache-busting + no-store (bypass CDN/browser cache)
         try {
-          const djRes = await fetch('/portal/data.json?t=' + Date.now());
+          const djRes = await fetch('/portal/data.json?t=' + Date.now(), { cache: 'no-store' });
           if (djRes.ok) {
             const dj = await djRes.json();
             if (dj) {
@@ -1882,7 +1892,7 @@ function _renderStackedCostChart(items, mode) {
           }
         } catch (e) { console.warn('[tokens] data.json refresh failed:', e); }
         // 2. Fetch fresh live-sessions.json (for green-dot active indicators + active session keys)
-        await loadLiveSessions();
+        try { await loadLiveSessions(); } catch (e) { console.warn('[tokens] live-sessions refresh failed:', e); }
         // 3. Fetch fresh Supabase session data and re-render everything
         // loadAndRenderAgentSessions re-queries Supabase, stores fresh _sbSessionRows,
         // then calls renderTokenSections → renderGrouped + renderRawTable + _updateSummaryCards
