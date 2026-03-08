@@ -1704,7 +1704,7 @@ function _renderStackedCostChart(items, mode) {
       const key = s && (s.label || (s._raw && s._raw.session_key));
       return key ? _activeSessionKeys.has(key) : false;
     }
-    const _activeDotHtml = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:5px;vertical-align:middle;flex-shrink:0;" title="Active session"></span>';
+    const _activeDotHtml = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:5px;vertical-align:middle;flex-shrink:0;" title="Active session"></span>';
 
     // ── Stuck Sessions (from live-sessions.json) ───────────────────
     async function loadLiveSessions() {
@@ -1865,9 +1865,17 @@ function _renderStackedCostChart(items, mode) {
       _refreshInFlight = true;
       const t0 = Date.now();
       try {
-        // 1. Fetch fresh live-sessions.json (for green-dot active indicators)
+        // 1. Re-fetch data.json with cache-busting (cron names, task labels)
+        try {
+          const djRes = await fetch('/portal/data.json?t=' + Date.now());
+          if (djRes.ok) {
+            const dj = await djRes.json();
+            if (dj && dj.crons && dj.crons.length) window._cronList = dj.crons;
+          }
+        } catch (e) { console.warn('[tokens] data.json refresh failed:', e); }
+        // 2. Fetch fresh live-sessions.json (for green-dot active indicators)
         await loadLiveSessions();
-        // 2. Fetch fresh Supabase session data and re-render everything
+        // 3. Fetch fresh Supabase session data and re-render everything
         await loadAndRenderAgentSessions();
         _lastRefreshAt = Date.now();
         console.log('[tokens] refresh done in', Date.now() - t0, 'ms —', (window._sbSessionRows||[]).length, 'rows');
