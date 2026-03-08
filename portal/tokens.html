@@ -1865,17 +1865,22 @@ function _renderStackedCostChart(items, mode) {
       _refreshInFlight = true;
       const t0 = Date.now();
       try {
-        // 1. Re-fetch data.json with cache-busting (cron names, task labels)
+        // 1. Re-fetch data.json with cache-busting (cron names, task labels, portal state)
         try {
           const djRes = await fetch('/portal/data.json?t=' + Date.now());
           if (djRes.ok) {
             const dj = await djRes.json();
-            if (dj && dj.crons && dj.crons.length) window._cronList = dj.crons;
+            if (dj) {
+              if (dj.crons && dj.crons.length) window._cronList = dj.crons;
+              window._latestDataJson = dj; // store full payload for render functions
+            }
           }
         } catch (e) { console.warn('[tokens] data.json refresh failed:', e); }
-        // 2. Fetch fresh live-sessions.json (for green-dot active indicators)
+        // 2. Fetch fresh live-sessions.json (for green-dot active indicators + active session keys)
         await loadLiveSessions();
         // 3. Fetch fresh Supabase session data and re-render everything
+        // loadAndRenderAgentSessions re-queries Supabase, stores fresh _sbSessionRows,
+        // then calls renderTokenSections → renderGrouped + renderRawTable + _updateSummaryCards
         await loadAndRenderAgentSessions();
         _lastRefreshAt = Date.now();
         console.log('[tokens] refresh done in', Date.now() - t0, 'ms —', (window._sbSessionRows||[]).length, 'rows');
