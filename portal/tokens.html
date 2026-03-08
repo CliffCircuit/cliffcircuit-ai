@@ -1538,8 +1538,6 @@ function _renderStackedCostChart(items, mode) {
     // ── Grouped sub-agent ─────────────────────────────────────────────
     let _grpManualRefresh = false; // set true when user changes filters
     function renderGrouped(allDbItems, cutoffStart, cutoffEnd) {
-      // Skip rebuild if a detail panel is open in the grouped table — prevents collapse on auto-refresh
-      if (_sessionDetailOpenId && _sessionDetailSource === 'grouped') return;
       _grpManualRefresh = false;
       const agent = window._globalAgent || 'all';
       const taskF = window._globalTask || 'all';
@@ -1748,8 +1746,6 @@ function _renderStackedCostChart(items, mode) {
 
     // ── Raw table ─────────────────────────────────────────────────────
     function renderRawTable(allDbItems) {
-      // Skip rebuild if a detail panel is open in the raw table — prevents collapse on auto-refresh
-      if (_sessionDetailOpenId && _sessionDetailSource === 'raw') return;
       const items = allDbItems || window._allDbSubItems;
       const globalTask = window._globalTask || 'all';
       const taskFilter = window._dbRawTaskFilter || 'all';
