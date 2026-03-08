@@ -453,7 +453,7 @@
       parentRow.dataset.sessExpanded = '1';
       _expandedSessions.add(storeKey);
       const sessions = _sessionStore[storeKey] || [];
-      const sorted = [...sessions].sort((a,b) => new Date(b.first_seen_at||0) - new Date(a.first_seen_at||0));
+      const sorted = [...sessions].sort((a,b) => new Date(b.last_seen_at||0) - new Date(a.last_seen_at||0));
       let insertAfter = parentRow;
       sorted.forEach(s => {
         const sid = s._raw?.session_id || s.label || ('s-' + Math.random().toString(36).slice(2));
@@ -463,7 +463,7 @@
         tr.style.cssText = 'background:rgba(30,40,55,0.5);cursor:pointer;';
         tr.dataset.sessionDetailId = sid;
         tr.onclick = function(e) { if (e.target.closest('button')) return; _toggleSessionDetail(sid, this); };
-        const when = s.first_seen_at ? new Date(s.first_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
+        const when = s.last_seen_at ? new Date(s.last_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
         const dur = _fmtDur(s.duration_ms);
         const tokIn = _fmtK(s.tokens_in || 0);
         const tokOut = _fmtK(s.tokens_out || 0);
