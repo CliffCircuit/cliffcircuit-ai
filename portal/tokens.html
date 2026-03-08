@@ -8,8 +8,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
   <style>
-    .info-tip { cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
+    .info-tip { cursor: help; color: #6b7280; font-size: 14px; margin-left: 2px; }
     .info-tip:hover { color: #a5b4fc; }
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px 1px rgba(74,222,128,0.5); }
+      50%      { opacity: 0.55; box-shadow: 0 0 8px 3px rgba(74,222,128,0.25); }
+    }
+    .active-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-left: 7px; margin-right: 5px; vertical-align: middle; flex-shrink: 0; animation: live-pulse 2s ease-in-out infinite; }
     #tip-popup {
       position: fixed; z-index: 99999; pointer-events: none; display: none;
       background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
@@ -1704,7 +1709,7 @@ function _renderStackedCostChart(items, mode) {
       const key = s && (s.label || (s._raw && s._raw.session_key));
       return key ? _activeSessionKeys.has(key) : false;
     }
-    const _activeDotHtml = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:5px;vertical-align:middle;flex-shrink:0;" title="Active session"></span>';
+    const _activeDotHtml = '<span class="active-dot" title="Active session"></span>';
 
     // ── Stuck Sessions (from live-sessions.json) ───────────────────
     async function loadLiveSessions() {
