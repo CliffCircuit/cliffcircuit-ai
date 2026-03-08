@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-03-08T05:43:11.666Z",
-  "count": 484,
+  "generatedAt": "2026-03-08T05:58:12.852Z",
+  "count": 482,
   "previews": {
     "agent:main:cron:ca0f70f9-6972-494d-8910-4b65c58ddeae": {
       "task": "[cron:ca0f70f9-6972-494d-8910-4b65c58ddeae social-monitoring] You are Cliff. Monitor X/Twitter activity for @CliffCircuit and @timharris707.\n\nUse the twitterapi-io skill (key in keychain: twitterapi-io-key) to check:\n1. New followers for both accounts\n2. Any mentions or quote tweets\n3. Replies needing a response\n4. Any unusual engagement spikes\n\nWrite your summary by appending to this file ONLY (use the Write tool with append mode, or read-then-write):\n/Users/openclaw/.openclaw/workspace/memory/twitter-monitoring.md\n\nDO NOT use ~ in the path. DO NOT create a new file with today's date. The file name is always exactly: twitter-monitoring.md\n\nFormat to append:\n## [Date Time PT]\n- @CliffCircuit: [N] followers, [activity]\n- @TimHarris707: [N] followers, [activity]\n- Mentions/replies: [summary or 'none']\n- Action needed: [yes/no — what]\n\nIf anything needs immediate Tim attention (viral post, important mention, credential issue): flag it in your output. Otherwise just write the file and stop. Do NOT call the message tool.\nCurrent time: Sunday, March 1st, 2026 — 12:07 AM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
@@ -194,12 +194,12 @@
     },
     "agent:main:telegram:direct:8386624734": {
       "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.",
-      "response": "Done — project is documented in Obsidian under **Active/Insight-Website-Redesign**. Captured the goal, what we have, what's blocked, the full plan, and all the people involved (including the Sasha/Gloria/Rick context from the email chain).\n\nOnce you get access to the Figma or Drive, just say the word and Atlas can build it out fast. The tunnel infrastructure is already in place so deployment will be quick.",
+      "response": "Host/port go in the constructor, not `run()`. Quick fix:",
       "sessionId": "537d30bc-4690-464d-b8cd-3515cc73753f"
     },
     "537d30bc-4690-464d-b8cd-3515cc73753f": {
       "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.",
-      "response": "Done — project is documented in Obsidian under **Active/Insight-Website-Redesign**. Captured the goal, what we have, what's blocked, the full plan, and all the people involved (including the Sasha/Gloria/Rick context from the email chain).\n\nOnce you get access to the Figma or Drive, just say the word and Atlas can build it out fast. The tunnel infrastructure is already in place so deployment will be quick.",
+      "response": "Host/port go in the constructor, not `run()`. Quick fix:",
       "sessionId": "537d30bc-4690-464d-b8cd-3515cc73753f"
     },
     "agent:main:telegram:group:-5298874391": {
@@ -3002,11 +3002,6 @@
       "response": "Done. Here's the summary:\n\n**Changes pushed to origin/main** (`e82896e`)\n\n**portal/tokens.html:**\n- Added ℹ info tip tooltips to each task name in the raw table (Agent Sessions — Raw), using the same `_getTaskTooltip` function and `.info-tip` CSS class already used in the summary table.\n\n**portal/portal-common.js (3 changes):**\n1. **Race condition fix:** Stored the dynamic `CRON_UUID_MAP` fetch as a promise (`_cronMapReady`) instead of fire-and-forget.\n2. **Await before render:** Added `await Promise.all([_sessionLabelsReady, _cronMapReady])` in `initPortal()` so both session labels and cron UUID mappings are fully loaded before any page rendering begins. This eliminates the \"Atlas Cron\" fallback appearing because the map hadn't loaded yet.\n3. **Better fallback:** When a cron UUID still can't be resolved (edge case), the fallback now shows `Atlas Cron (bc4e7a7d)` with the first 8 chars of the UUID instead of the generic \"Atlas Cron\", making unresolved entries identifiable.",
       "sessionId": "f056d9f2-a93c-4d49-8230-67b4e5e242d8"
     },
-    "agent:atlas:cron:bc4e7a7d-c7e1-4459-9814-e4347a524707:run:f056d9f2-a93c-4d49-8230-67b4e5e242d8": {
-      "task": "[cron:bc4e7a7d-c7e1-4459-9814-e4347a524707 atlas-refactor] Two fixes in portal/tokens.html:\n\n## 1. Add info tip tooltips to the raw table (Agent Sessions — Raw)\nThe summary table has info tips (ℹ) next to task names but the raw table does not. Add the same info tip tooltip next to each task name in the raw table rows. Use the same _getTaskTooltip function and .info-tip CSS class already in the file. The raw table task cell is around line 739 — add the tooltip span after the task name text.\n\n## 2. Fix \"Atlas Cron\" display name\nThe function sessionKeyToFriendly in portal-common.js falls back to \"Atlas Cron\" when it cannot resolve a cron UUID. This happens because the dynamic CRON_UUID_MAP fetch has not completed when the page first renders.\n\nFix in portal-common.js: in the agentCronMatch block (around line 302-308), instead of falling back to agentLabel + \" Cron\", extract the cron UUID from the key and try to look it up. If still not found, use a more descriptive fallback like the agent name + the task type from the cron name. The key format is: agent:<agentId>:cron:<uuid>:run:<runId>\n\nBetter yet: when the dynamic fetch completes and updates CRON_UUID_MAP, trigger a re-render so that any \"Atlas Cron\" labels get replaced with proper names. Add a callback or event after the fetch in portal-common.js that pages can hook into.\n\nThe simplest approach: make the dynamic CRON_UUID_MAP fetch in portal-common.js use await (wrap in an async IIFE or make it a function that portal pages call before rendering). That way the map is populated BEFORE any rendering happens.\n\n## Files to edit\n- portal/tokens.html (add info tips to raw table)\n- portal/portal-common.js (fix the timing of dynamic UUID fetch)\n\nCommit: \"fix: add info tips to raw table, fix Atlas Cron naming race condition\" and push to origin main.\nCurrent time: Friday, March 6th, 2026 — 9:44 PM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messa\n[truncated]",
-      "response": "Done. Here's the summary:\n\n**Changes pushed to origin/main** (`e82896e`)\n\n**portal/tokens.html:**\n- Added ℹ info tip tooltips to each task name in the raw table (Agent Sessions — Raw), using the same `_getTaskTooltip` function and `.info-tip` CSS class already used in the summary table.\n\n**portal/portal-common.js (3 changes):**\n1. **Race condition fix:** Stored the dynamic `CRON_UUID_MAP` fetch as a promise (`_cronMapReady`) instead of fire-and-forget.\n2. **Await before render:** Added `await Promise.all([_sessionLabelsReady, _cronMapReady])` in `initPortal()` so both session labels and cron UUID mappings are fully loaded before any page rendering begins. This eliminates the \"Atlas Cron\" fallback appearing because the map hadn't loaded yet.\n3. **Better fallback:** When a cron UUID still can't be resolved (edge case), the fallback now shows `Atlas Cron (bc4e7a7d)` with the first 8 chars of the UUID instead of the generic \"Atlas Cron\", making unresolved entries identifiable.",
-      "sessionId": "f056d9f2-a93c-4d49-8230-67b4e5e242d8"
-    },
     "agent:atlas:cron:52ae9266-274f-487d-bb1d-9583a65ba9fe": {
       "task": "[cron:52ae9266-274f-487d-bb1d-9583a65ba9fe test-delete-check] Reply with just OK\nCurrent time: Friday, March 6th, 2026 — 9:47 PM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "OK",
@@ -3017,22 +3012,12 @@
       "response": "OK",
       "sessionId": "0dba2b87-836a-4218-bdd2-6fd2c2f7cf39"
     },
-    "agent:atlas:cron:52ae9266-274f-487d-bb1d-9583a65ba9fe:run:0dba2b87-836a-4218-bdd2-6fd2c2f7cf39": {
-      "task": "[cron:52ae9266-274f-487d-bb1d-9583a65ba9fe test-delete-check] Reply with just OK\nCurrent time: Friday, March 6th, 2026 — 9:47 PM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "OK",
-      "sessionId": "0dba2b87-836a-4218-bdd2-6fd2c2f7cf39"
-    },
     "agent:atlas:cron:30c6adee-0d05-402a-8c1c-3a84a0bc2cee": {
       "task": "[cron:30c6adee-0d05-402a-8c1c-3a84a0bc2cee test-every] Reply with just: HEARTBEAT_OK\nCurrent time: Friday, March 6th, 2026 — 9:47 PM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "HEARTBEAT_OK",
       "sessionId": "d02749a8-4d42-40c2-8c9d-fb9ab068156c"
     },
     "d02749a8-4d42-40c2-8c9d-fb9ab068156c": {
-      "task": "[cron:30c6adee-0d05-402a-8c1c-3a84a0bc2cee test-every] Reply with just: HEARTBEAT_OK\nCurrent time: Friday, March 6th, 2026 — 9:47 PM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "HEARTBEAT_OK",
-      "sessionId": "d02749a8-4d42-40c2-8c9d-fb9ab068156c"
-    },
-    "agent:atlas:cron:30c6adee-0d05-402a-8c1c-3a84a0bc2cee:run:d02749a8-4d42-40c2-8c9d-fb9ab068156c": {
       "task": "[cron:30c6adee-0d05-402a-8c1c-3a84a0bc2cee test-every] Reply with just: HEARTBEAT_OK\nCurrent time: Friday, March 6th, 2026 — 9:47 PM (America/Los_Angeles)\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "HEARTBEAT_OK",
       "sessionId": "d02749a8-4d42-40c2-8c9d-fb9ab068156c"
@@ -3766,16 +3751,6 @@
       "task": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"278\",\n  \"sender_id\": \"8386624734\",\n  \"conversation_label\": \"Chat Hub id:-5298874391\",\n  \"sender\": \"Tim H\",\n  \"timestamp\": \"Fri 2026-03-06 08:20 PST\",\n  \"group_subject\": \"Chat Hub\",\n  \"is_group_chat\": true\n}\n```\n\nSender (untrusted metadata):\n```json\n{\n  \"label\": \"Tim H (8386624734)\",\n  \"id\": \"8386624734\",\n  \"name\": \"Tim H\"\n}\n```\n\nGood morning team. just touching base to make sure this group chat is still working",
       "response": "Yes, I can see them all in the screenshot — my message, Atlas's, Samantha's, and Cliff's. Looks like everything posted fine. Interesting that Cliff's saying Samantha, Scout, and Atlas appear silent on his end though. Might be a sync/display issue on his client side, even though the messages made it through to the group.",
       "sessionId": "01097962-0389-42d3-9fae-f6f1b01e9c0e"
-    },
-    "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:1a8b7950-e9cb-4c9c-9a4e-b91a7d5ca9ad": {
-      "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 9:50 PM (America/Los_Angeles)",
-      "response": "✅ **portal-data-refresh**: Complete.\n\n**Output:**\n- Generated data.json & tweet-ids.json (48 entries)\n- Pre-pushed images + previews for 29 approved items\n- Synced goals to GitHub\n- Push successful\n\nExit code: 0. All clear.",
-      "sessionId": "1a8b7950-e9cb-4c9c-9a4e-b91a7d5ca9ad"
-    },
-    "1a8b7950-e9cb-4c9c-9a4e-b91a7d5ca9ad": {
-      "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 9:50 PM (America/Los_Angeles)",
-      "response": "✅ **portal-data-refresh**: Complete.\n\n**Output:**\n- Generated data.json & tweet-ids.json (48 entries)\n- Pre-pushed images + previews for 29 approved items\n- Synced goals to GitHub\n- Push successful\n\nExit code: 0. All clear.",
-      "sessionId": "1a8b7950-e9cb-4c9c-9a4e-b91a7d5ca9ad"
     },
     "agent:scout:cron:785dc24f-e15b-420b-a7e5-0116f5e60e93:run:04bc71cc-ecfa-4049-8a69-31bdc9d63d7c": {
       "task": "[cron:785dc24f-e15b-420b-a7e5-0116f5e60e93 portal-data-refresh] Run this command: node /Users/openclaw/workspace/cliffcircuit-ai/portal/generate-data.js\nCurrent time: Friday, March 6th, 2026 — 10:00 PM (America/Los_Angeles)",
