@@ -1610,6 +1610,48 @@
     // Poll token/session data every 30s as a realtime fallback
     setInterval(() => { loadAndRenderAgentSessions(); }, 30000);
 
+    // FIX 1: Full auto-refresh every 60s — re-fetches all Supabase data (cache-busted)
+    // and updates ALL UI elements: summary cards, agent portraits, grouped table, raw table, expanded sub-rows
+    setInterval(() => {
+      loadAndRender().then(() => restoreTab()).catch(e => console.error('auto-refresh error:', e));
+    }, 60000);
+
+    // FIX 2: Track active session task names for green dot display
+    // A session is "active" if last_seen_at is within the last 5 minutes
+    function getActiveTaskNames() {
+      const ACTIVE_MS = 5 * 60 * 1000;
+      const now = Date.now();
+      const activeNames = new Set();
+      // From Supabase session_snapshots
+      (window._sbSessionRows || []).forEach(r => {
+        if (!r.last_seen_at) return;
+        const age = now - new Date(r.last_seen_at).getTime();
+        if (age < ACTIVE_MS) {
+          const taskName = cronTaskFromKey(r.session_key);
+          if (taskName) activeNames.add(taskName);
+          const friendly = sessionKeyToFriendly(r.session_key, r.session_id);
+          if (friendly) activeNames.add(friendly);
+        }
+      });
+      // From live sessions (api.cliffcircuit.ai)
+      if (DATA && DATA.sessions) {
+        DATA.sessions.forEach(s => {
+          if (!s.lastActiveAt) return;
+          const age = now - new Date(s.lastActiveAt).getTime();
+          if (age < ACTIVE_MS && s.label) activeNames.add(s.label);
+        });
+      }
+      return activeNames;
+    }
+
+    // Render active-session green dot (8px) — placed AFTER task name, BEFORE info tip
+    function activeDotHtml(taskName, rawName) {
+      const active = getActiveTaskNames();
+      const isActive = active.has(taskName) || (rawName && active.has(rawName));
+      if (!isActive) return '';
+      return ' <span class="inline-block w-2 h-2 rounded-full bg-green-400 ml-1" style="box-shadow: 0 0 6px #4ade80;" title="Active session"></span>';
+    }
+
     function updateRealtimeDot(ok) {
       const dot   = document.getElementById('sb-realtime-dot');
       const label = document.getElementById('sb-realtime-label');
