@@ -1806,7 +1806,7 @@ function _renderStackedCostChart(items, mode) {
     }).then(ok => {
       if (!ok) return;
       // Poll every 30s as fallback
-      setInterval(() => { _grpManualRefresh = true; loadAndRenderAgentSessions(); }, 120000);
+      setInterval(() => { _grpManualRefresh = true; loadAndRenderAgentSessions(); }, 30000);
       // Realtime subscription for instant updates (debounced to avoid rapid re-renders)
       let _rtDebounce = null;
       _sb.channel('tokens-live')
