@@ -1094,6 +1094,64 @@
         return;
       }
 
+      // ── Merge atlas_jobs rows that are missing from session_snapshots ──
+      // atlas_jobs is the authoritative record for Atlas build/debug sessions.
+      // Some completed sessions may not appear in session_snapshots (e.g. snapshot
+      // expired or was never created). Fetch atlas_jobs for the same time range
+      // and inject synthetic session_snapshot-shaped rows for any that are missing.
+      try {
+        // Only fetch atlas_jobs if agent filter is 'all' or 'atlas'
+        if (agentFilter === 'all' || agentFilter === 'atlas') {
+        const ajQuery = _sb.from('atlas_jobs')
+          .select('id,session_id,session_key,tokens_input,tokens_output,tokens_total,cost_usd,duration_seconds,status,job_type,project_slug,created_at,response_summary')
+          .gte('created_at', cutoffStart)
+          .lte('created_at', cutoffEnd)
+          .order('created_at', { ascending: false });
+        const { data: ajRows, error: ajErr } = await ajQuery;
+        if (!ajErr && ajRows && ajRows.length > 0) {
+          const existingIds = new Set(allRows.map(r => r.session_id));
+          const existingKeys = new Set(allRows.map(r => r.session_key));
+          for (const aj of ajRows) {
+            // Skip if already present in session_snapshots (by session_id OR session_key)
+            if ((aj.session_id && existingIds.has(aj.session_id)) ||
+                (aj.session_key && existingKeys.has(aj.session_key))) continue;
+            // Skip rows with no session_id and no session_key (very early records)
+            if (!aj.session_id && !aj.session_key) continue;
+            // Build a synthetic session_snapshot-shaped row from atlas_jobs data
+            const durationMs = aj.duration_seconds ? aj.duration_seconds * 1000 : 0;
+            const createdAt = aj.created_at;
+            const endAt = durationMs ? new Date(new Date(createdAt).getTime() + durationMs).toISOString() : createdAt;
+            allRows.push({
+              session_id:    aj.session_id || aj.id,
+              session_key:   aj.session_key || '',
+              agent_id:      'atlas',
+              kind:          'cron',
+              model:         'anthropic/claude-opus-4',  // Atlas default
+              thinking_level: null,
+              input_tokens:  aj.tokens_input || 0,
+              output_tokens: aj.tokens_output || 0,
+              cache_read:    0,
+              cache_write:   0,
+              total_tokens:  aj.tokens_total || 0,
+              context_tokens: 0,
+              percent_used:  0,
+              cost_input_usd:  null,
+              cost_output_usd: null,
+              cost_cache_read_usd: null,
+              cost_cache_write_usd: null,
+              cost_total_usd: aj.cost_usd || 0,
+              duration_ms:   durationMs,
+              first_seen_at: createdAt,
+              last_seen_at:  endAt,
+              _from_atlas_jobs: true,  // marker for debugging
+            });
+          }
+        }
+        } // end if agentFilter
+      } catch (e) {
+        console.warn('[tokens] atlas_jobs merge failed:', e);
+      }
+
       window._sbSessionRows = allRows;
       renderAgentSessionsSection(allRows);
       renderTokenSections();
