@@ -481,6 +481,7 @@
       const sessions = _sessionStore[storeKey] || [];
       const sorted = [...sessions].sort((a,b) => new Date(b.last_seen_at||0) - new Date(a.last_seen_at||0));
       let insertAfter = parentRow;
+      const _shownActiveKeys = new Set();   // only show green dot on the most recent row per key
       sorted.forEach(s => {
         const sid = s._raw?.session_id || s.label || ('s-' + Math.random().toString(36).slice(2));
         _sessionDataMap[sid] = s;
@@ -494,9 +495,13 @@
         const tokIn = _fmtK(s.tokens_in || 0);
         const tokOut = _fmtK(s.tokens_out || 0);
         const cost = (s.estimated_cost_usd || 0) >= 0.01 ? '$' + (s.estimated_cost_usd||0).toFixed(2) : '<$0.01';
+        const sessKey = s.label || (s._raw && s._raw.session_key) || '';
         const isAtlasActive = _isAtlasActiveSession(s);
-        const sessActiveIndicator = isAtlasActive ? _activeBadgeHtml : (_isSessionActive(s) ? _activeDotHtml : '');
-        const sessTix = _getSessionTickets(s.label || (s._raw && s._raw.session_key) || '');
+        const sessIsActive = isAtlasActive || _isSessionActive(s);
+        const alreadyShown = sessKey && _shownActiveKeys.has(sessKey);
+        if (sessIsActive && sessKey) _shownActiveKeys.add(sessKey);
+        const sessActiveIndicator = sessIsActive && !alreadyShown ? (isAtlasActive ? _activeBadgeHtml : _activeDotHtml) : '';
+        const sessTix = _getSessionTickets(sessKey);
         const sessTicketBadge = sessTix ? _ticketBadgeHtml(sessTix) : '';
         tr.innerHTML = `
           <td class="px-4 py-1 text-gray-600 text-xs" style="padding-left:36px;"><span style="display:inline-flex;align-items:center;">${when}${sessActiveIndicator}${sessTicketBadge}</span></td>
@@ -1885,16 +1890,14 @@ function _renderStackedCostChart(items, mode) {
         if (!res.ok) throw new Error('live-sessions.json: ' + res.status);
         const data = await res.json();
         // Store active session keys + session IDs for green dot/badge indicators
-        // Only consider sessions active if last activity was within the last 5 minutes
-        const ACTIVE_THRESHOLD_MS = 5 * 60 * 1000;
+        // live-sessions.json already filters stale sessions (persistent: <4h, cron: <15min)
         const allSess = data.sessions || [];
-        const recentSess = allSess.filter(s => typeof s.lastActivityMs === 'number' && s.lastActivityMs < ACTIVE_THRESHOLD_MS);
-        _activeSessionKeys = new Set(recentSess.map(s => s.key));
-        _activeSessionIds = new Set(recentSess.filter(s => s._sessionId).map(s => s._sessionId));
+        _activeSessionKeys = new Set(allSess.map(s => s.key));
+        _activeSessionIds = new Set(allSess.filter(s => s._sessionId).map(s => s._sessionId));
         _activeKeyToId = {};
         allSess.forEach(s => { if (s._sessionId) _activeKeyToId[s.key] = s._sessionId; });
-        _activeAtlasSessions = recentSess.filter(s => s.agent === 'atlas' && s.isReview);
-        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys (of', allSess.length, 'total),', _activeAtlasSessions.length, 'atlas active');
+        _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas' && s.isReview);
+        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys,', _activeAtlasSessions.length, 'atlas active');
         const tbody = document.getElementById('live-sess-body');
         const updatedEl = document.getElementById('live-updated');
         if (!tbody) return;
