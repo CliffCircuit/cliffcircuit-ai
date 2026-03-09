@@ -108,6 +108,8 @@ const CRON_DISPLAY = {
   'evening-check':           'Evening Check',
   'daily-cost-report':       'Daily Cost Report',
   'live-sessions-refresh':   'Live Sessions Refresh',
+  'fernanda-heartbeat':      'Fernanda Heartbeat',
+  'fernanda-wake':           'Fernanda Wake',
 };
 
 // ── Route cron jobs to agents by name prefix ────────────────────────────
