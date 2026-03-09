@@ -1533,21 +1533,23 @@ function _renderStackedCostChart(items, mode) {
     let _activeSessionIds = new Set();    // session UUIDs from _sessionId field
     let _activeKeyToId = {};              // review key → session_id for cross-matching
     let _activeAtlasSessions = [];        // full atlas active session objects from live-sessions.json
+    // Strip :run:* suffix from cron session keys to get the base cron key
+    function _cronBaseKey(key) {
+      if (!key) return key;
+      return key.replace(/:run:[^:]+$/, '');
+    }
     function _isSessionActive(s) {
       if (!s) return false;
       const key = s.label || (s._raw && s._raw.session_key);
       if (key && _activeSessionKeys.has(key)) return true;
-      // Match by session_id (handles atlas-review keys mapped from cron keys)
+      // Match by session_id (unique per run — most reliable)
       const sid = s._raw && s._raw.session_id;
       if (sid && _activeSessionIds.has(sid)) return true;
-      // Cross-match: if the cron key contains a run ID that matches a review key
-      if (key) {
-        const runMatch = key.match(/:run:(\d+)$/);
-        if (runMatch) {
-          for (const ak of _activeSessionKeys) {
-            if (ak.includes(runMatch[1])) return true;
-          }
-        }
+      // Cron base-key match: session key "agent:X:cron:UUID:run:Y" matches
+      // active key "agent:X:cron:UUID" (live-sessions uses base key without :run:)
+      if (key && key.includes(':cron:') && key.includes(':run:')) {
+        const base = _cronBaseKey(key);
+        if (_activeSessionKeys.has(base)) return true;
       }
       return false;
     }
@@ -1575,13 +1577,26 @@ function _renderStackedCostChart(items, mode) {
     // ── Ticket System Helpers ──────────────────────────────────────
     function _getSessionTickets(sessionKey) {
       if (!window.DATA || !window.DATA.sessionTickets) return null;
-      // Try exact match first
-      if (window.DATA.sessionTickets[sessionKey]) return window.DATA.sessionTickets[sessionKey];
+      const tix = window.DATA.sessionTickets;
+      // Try exact match
+      if (tix[sessionKey]) return tix[sessionKey];
       // Try matching by session key substring (atlas-review-* keys)
-      for (const [k, v] of Object.entries(window.DATA.sessionTickets)) {
+      for (const [k, v] of Object.entries(tix)) {
         if (sessionKey && sessionKey.includes(k)) return v;
         if (k && k.includes(sessionKey)) return v;
       }
+      // Try matching by run UUID extracted from session key
+      const runMatch = sessionKey && sessionKey.match(/:run:([a-f0-9-]+)$/);
+      if (runMatch) {
+        const uuid = runMatch[1];
+        if (tix[uuid]) return tix[uuid];
+        // Also check if any key contains this UUID
+        for (const [k, v] of Object.entries(tix)) {
+          if (k.includes(uuid)) return v;
+        }
+      }
+      // Try matching by session_id (the UUID itself)
+      if (sessionKey && /^[a-f0-9-]{36}$/.test(sessionKey) && tix[sessionKey]) return tix[sessionKey];
       return null;
     }
 
