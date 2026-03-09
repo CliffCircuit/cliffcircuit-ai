@@ -1,6 +1,7 @@
 // ══════════════════════════════════════════════════════════════════
 // tokens.js — All inline JavaScript extracted from tokens.html
 // Last modified: 2026-03-09 — green-dot bug fixed
+// Persistent session test — can you see the previous task context?
 // ══════════════════════════════════════════════════════════════════
 
     // ══════════════════════════════════════════════════════════════════
@@ -255,19 +256,22 @@
       const sessionKey = s.label || raw.session_key || '—';
       const sessionId = raw.session_id || '—';
       const sdpIsActive = _isAtlasActiveSession(s) || _isSessionActive(s);
-      const sdpActiveHtml = sdpIsActive ? '<span class="active-badge" style="font-size:11px;padding:2px 10px;margin-left:0;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:live-pulse 2s ease-in-out infinite;"></span>ACTIVE</span>' : '';
+      const sdpActiveHtml = sdpIsActive ? '<span class="active-badge" style="font-size:11px;padding:2px 10px;margin-left:auto;flex-shrink:0;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:live-pulse 2s ease-in-out infinite;"></span>ACTIVE</span>' : '';
 
       td.innerHTML = `
         <div class="session-detail-panel">
+          <div class="sdp-title-bar">
+            <span class="sdp-title" style="display:flex;align-items:center;flex:1;">Session Details</span>
+            <button class="sdp-title-close" onclick="event.stopPropagation();_closeSessionDetail()" title="Close">&times;</button>
+          </div>
           <div class="sdp-header">
             <div class="sdp-meta">
-              ${sdpActiveHtml}
               <span>Sent: <strong style="color:#d1d5db">${esc(sentAt)}</strong></span>
               <span>Completed: <strong style="color:#d1d5db">${esc(completedAt)}</strong></span>
               <span>Duration: <strong id="sdp-dur-${esc(sid)}" style="color:#d1d5db">${_fmtDur(s.duration_ms)}</strong></span>
               <span>Kind: <strong style="color:#d1d5db">${esc(kind)}</strong></span>
             </div>
-            <button class="sdp-close" onclick="event.stopPropagation();_closeSessionDetail()" title="Close">&times;</button>
+            ${sdpActiveHtml}
           </div>
           ${(() => { const tix = _getSessionTickets(sessionKey); return tix ? _ticketListHtml(tix) : ''; })()}
           <div class="sdp-section">
@@ -301,8 +305,8 @@
             <div class="sdp-label">Response</div>
             <div class="sdp-text sdp-loading">Loading...</div>
           </div>
-          <div class="sdp-section" style="padding:8px 16px;">
-            <div style="font-size:10px;color:#374151;font-family:monospace;">Session: ${esc(sessionKey)}<br>ID: ${esc(sessionId)}</div>
+          <div class="sdp-section" style="padding:10px 16px;background:rgba(15,23,42,0.4);">
+            <div style="font-size:10px;color:#374151;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;line-height:1.6;">Session: ${esc(sessionKey)}<br>ID: ${esc(sessionId)}</div>
           </div>
         </div>`;
       panelRow.appendChild(td);
@@ -1573,10 +1577,11 @@ function _renderStackedCostChart(items, mode) {
       const tix = window.DATA.sessionTickets;
       // Try exact match
       if (tix[sessionKey]) return tix[sessionKey];
-      // Try matching by session key substring (atlas-review-* keys)
+      // Try matching by atlas-review-* name embedded in session key
+      // (strict: only match review names, not base cron keys)
       for (const [k, v] of Object.entries(tix)) {
-        if (sessionKey && sessionKey.includes(k)) return v;
-        if (k && k.includes(sessionKey)) return v;
+        if (k.startsWith('atlas-review-') && sessionKey && sessionKey.includes(k)) return v;
+        if (sessionKey && sessionKey.startsWith('atlas-review-') && k.includes(sessionKey)) return v;
       }
       // Try matching by run UUID extracted from session key
       const runMatch = sessionKey && sessionKey.match(/:run:([a-f0-9-]+)$/);
