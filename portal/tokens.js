@@ -1446,7 +1446,7 @@ function _renderStackedCostChart(items, mode) {
         const grpActiveIndicator = grpHasAtlasActive ? _activeBadgeHtml : (grpHasActive ? _activeDotHtml : '');
         // Collect ticket badges for grouped sessions
         return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" onclick="if(!event.target.closest('button'))_handleSummaryRowClick('${grpStoreKey}',this)">
-          <td class="px-4 py-2 text-gray-200 text-xs font-medium"><span style="display:inline-flex;align-items:center;">${esc(shortTask)}${grpActiveIndicator}</span>${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '"></span>' : ''}</td>
+          <td class="px-4 py-2 text-gray-200 text-xs font-medium"><span style="display:inline-flex;align-items:center;">${esc(shortTask)}${grpActiveIndicator}</span>${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${agentCls}">${agentLabel}</span></td>
           <td class="px-4 py-2 text-xs text-gray-400">${_renderModelCell(g, rowId)}</td>
           <td class="px-4 py-2 text-right text-white text-xs font-bold">${_renderRunsCell(g.runs, grpStoreKey, g.allSessions)}</td>
@@ -1826,7 +1826,7 @@ function _renderStackedCostChart(items, mode) {
           if (rawIsActive && rawKey) _rawShownActiveKeys.add(rawKey);
           const rawActiveIndicator = rawIsActive && !rawAlreadyShown ? (rawIsAtlasActive ? _activeBadgeHtml : _activeDotHtml) : '';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-raw-sid="${esc(rawSid)}" onclick="_toggleRawSessionDetail('${esc(rawSid)}',this)">
-          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="display:inline-flex;align-items:center;">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}${rawActiveIndicator}</span>${_getTaskTooltip(s.display_name || s.task_name) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(s.display_name || s.task_name)) + '"></span>' : ''}</td>
+          <td class="px-4 py-2 text-gray-300 text-xs" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="display:inline-flex;align-items:center;">${esc((s.display_name || s.task_name || s.label || '—').replace(/^(Samantha|Scout|Cliff): /i,'').slice(0,50))}${rawActiveIndicator}</span>${_getTaskTooltip(s.display_name || s.task_name) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(s.display_name || s.task_name)) + '">&#9432;</span>' : ''}</td>
           <td class="px-4 py-2 text-xs"><span class="${_agentCls[s.agent_type] || 'text-gray-400'}">${fmtAgent(s.agent_type)}</span></td>
           <td class="px-4 py-2 text-xs">${_modelShortT(s.model)}</td>
           <td class="px-4 py-2 text-gray-400 text-xs">${_fmtDur(s.duration_ms)}</td>
