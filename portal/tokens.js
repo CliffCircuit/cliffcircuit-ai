@@ -1599,6 +1599,28 @@ function _renderStackedCostChart(items, mode) {
         }
 
         const allSessions = data.sessions || [];
+
+        // Client-side stuck detection — compute from duration thresholds
+        // Cron/isolated sessions: stuck if > 1 hour (should finish in minutes)
+        // Persistent/DM sessions: stuck if > 8 hours (runaway scenario)
+        const STUCK_CRON_MS = 3600000;      // 1 hour
+        const STUCK_PERSISTENT_MS = 28800000; // 8 hours
+        allSessions.forEach(s => {
+          const dur = s.sessionLengthMs || 0;
+          const isCronOrIsolated = s.isCron || (!s.isPersistent && !s.isCron);
+          const thresholdMs = isCronOrIsolated ? STUCK_CRON_MS : STUCK_PERSISTENT_MS;
+          const thresholdLabel = isCronOrIsolated ? '1h' : '8h';
+          if (dur > thresholdMs) {
+            s.isStuck = true;
+            if (!s.stuckReason) {
+              s.stuckReason = 'Session running ' + (s.sessionLength || Math.round(dur / 60000) + 'm') +
+                ' (threshold: ' + thresholdLabel + ') \u2014 potential runaway, cache costs accumulating';
+            }
+          } else {
+            s.isStuck = false;
+            s.stuckReason = null;
+          }
+        });
         const sessions = allSessions.filter(s => s.isStuck);
 
         const headerEl = document.querySelector('#live-sessions-section h3');
