@@ -558,11 +558,14 @@
       const kind = raw.kind || '—';
       const sessionKey = s.label || raw.session_key || '—';
       const sessionId = raw.session_id || '—';
+      const sdpIsActive = _isAtlasActiveSession(s) || _isSessionActive(s);
+      const sdpActiveHtml = sdpIsActive ? '<span class="active-badge" style="font-size:11px;padding:2px 10px;margin-left:0;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:live-pulse 2s ease-in-out infinite;"></span>ACTIVE</span>' : '';
 
       td.innerHTML = `
         <div class="session-detail-panel">
           <div class="sdp-header">
             <div class="sdp-meta">
+              ${sdpActiveHtml}
               <span>Sent: <strong style="color:#d1d5db">${esc(sentAt)}</strong></span>
               <span>Completed: <strong style="color:#d1d5db">${esc(completedAt)}</strong></span>
               <span>Duration: <strong id="sdp-dur-${esc(sid)}" style="color:#d1d5db">${_fmtDur(s.duration_ms)}</strong></span>
