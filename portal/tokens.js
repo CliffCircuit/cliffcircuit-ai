@@ -267,6 +267,7 @@
             </div>
             <button class="sdp-close" onclick="event.stopPropagation();_closeSessionDetail()" title="Close">&times;</button>
           </div>
+          ${(() => { const tix = _getSessionTickets(sessionKey); return tix ? _ticketListHtml(tix) : ''; })()}
           <div class="sdp-section">
             <div class="sdp-label">Model</div>
             <div style="font-size:12px;color:#e5e7eb;">${esc(modelFull)}${thinking !== '—' ? ' <span style="color:#6b7280">(thinking: ' + esc(thinking) + ')</span>' : ''}</div>
@@ -290,7 +291,6 @@
               <div><span style="color:#6b7280">Total:</span> <strong style="color:#facc15">${costTotal}</strong></div>
             </div>
           </div>
-          ${(() => { const tix = _getSessionTickets(sessionKey); return tix ? _ticketListHtml(tix) : ''; })()}
           <div class="sdp-section" id="sdp-task-${esc(sid)}">
             <div class="sdp-label">Task</div>
             <div class="sdp-text sdp-loading">Loading...</div>
@@ -1389,7 +1389,9 @@ function _renderStackedCostChart(items, mode) {
         return;
       }
       const maxCost = Math.max(...sorted.map(g => g.totalCost), 1);
-      // Clear grouped detail panel state — DOM is about to be rebuilt
+      // Save open detail panel state — will restore after rebuild
+      const _savedDetailId = (_sessionDetailSource === 'grouped') ? _sessionDetailOpenId : null;
+      const _savedDetailScrollY = _savedDetailId ? window.scrollY : null;
       if (_sessionDetailSource === 'grouped') {
         _sessionDetailOpenId = null;
         _sessionDetailSource = null;
