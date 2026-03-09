@@ -783,8 +783,128 @@
 
       const PAGE_SIZE = 1000;
       let allRows = [];
-      let offset = 0;
       let fetchError = false;
+
+      // ── 1. Query session_cost_intervals for accurate delta-based costs ──
+      // Intervals record per-snapshot deltas so time-windowed views only show
+      // spend within the window, not cumulative totals from session start.
+      const intervalSessionIds = new Set();
+      try {
+        let intRows = [];
+        let intOffset = 0;
+        while (true) {
+          let intQuery = _sb.from('session_cost_intervals')
+            .select('session_id,session_key,agent_id,model,snapshot_at,interval_start,interval_end,tokens_in_delta,tokens_out_delta,cache_read_delta,cache_write_delta,cost_delta_usd,cumulative_cost_usd')
+            .gte('snapshot_at', cutoffStart)
+            .lte('snapshot_at', cutoffEnd)
+            .order('snapshot_at', { ascending: false })
+            .range(intOffset, intOffset + PAGE_SIZE - 1);
+
+          if (agentFilter !== 'all') {
+            const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
+            intQuery = intQuery.eq('agent_id', agentId);
+          }
+
+          const { data: intData, error: intErr } = await intQuery;
+          if (intErr) {
+            console.error('[tokens] session_cost_intervals query error:', intErr);
+            break;
+          }
+          const batch = intData || [];
+          intRows = intRows.concat(batch);
+          if (batch.length < PAGE_SIZE) break;
+          intOffset += PAGE_SIZE;
+        }
+
+        if (intRows.length > 0) {
+          // Aggregate deltas per session_id
+          const agg = {};
+          for (const r of intRows) {
+            const sid = r.session_id;
+            if (!agg[sid]) {
+              agg[sid] = {
+                session_id: sid,
+                session_key: r.session_key,
+                agent_id: r.agent_id,
+                model: r.model,
+                tokens_in: 0,
+                tokens_out: 0,
+                cache_read: 0,
+                cache_write: 0,
+                cost_total_usd: 0,
+                cumulative_cost_usd: 0,
+                interval_start: r.interval_start || r.snapshot_at,
+                interval_end: r.interval_end || r.snapshot_at,
+              };
+            }
+            const a = agg[sid];
+            a.tokens_in  += r.tokens_in_delta || 0;
+            a.tokens_out += r.tokens_out_delta || 0;
+            a.cache_read += r.cache_read_delta || 0;
+            a.cache_write += r.cache_write_delta || 0;
+            a.cost_total_usd += parseFloat(r.cost_delta_usd) || 0;
+            const cum = parseFloat(r.cumulative_cost_usd) || 0;
+            if (cum > a.cumulative_cost_usd) a.cumulative_cost_usd = cum;
+            const istart = r.interval_start || r.snapshot_at;
+            const iend   = r.interval_end || r.snapshot_at;
+            if (istart && istart < a.interval_start) a.interval_start = istart;
+            if (iend && iend > a.interval_end) a.interval_end = iend;
+            // Keep the model from the most recent interval row (intRows are desc by snapshot_at)
+            // First row per session_id wins since we don't overwrite model after init
+          }
+
+          // Fetch metadata from session_snapshots for these sessions
+          const aggIds = Object.keys(agg);
+          const metaMap = {};
+          for (let i = 0; i < aggIds.length; i += PAGE_SIZE) {
+            const chunk = aggIds.slice(i, i + PAGE_SIZE);
+            const { data: metaRows, error: metaErr } = await _sb.from('session_snapshots')
+              .select('session_id,session_key,agent_id,kind,model,thinking_level,duration_ms,context_tokens,percent_used,first_seen_at,last_seen_at')
+              .in('session_id', chunk);
+            if (!metaErr && metaRows) {
+              for (const m of metaRows) metaMap[m.session_id] = m;
+            }
+          }
+
+          // Build allRows entries from merged interval + metadata
+          for (const sid of aggIds) {
+            const a = agg[sid];
+            const meta = metaMap[sid] || {};
+            // Skip sessions with zero activity in the window
+            if (a.tokens_in === 0 && a.tokens_out === 0 && a.cost_total_usd === 0) continue;
+            intervalSessionIds.add(sid);
+            allRows.push({
+              session_id:    sid,
+              session_key:   a.session_key || meta.session_key || '',
+              agent_id:      meta.agent_id || a.agent_id,
+              kind:          meta.kind || null,
+              model:         meta.model || a.model,
+              thinking_level: meta.thinking_level || null,
+              input_tokens:  a.tokens_in,
+              output_tokens: a.tokens_out,
+              cache_read:    a.cache_read,
+              cache_write:   a.cache_write,
+              total_tokens:  a.tokens_in + a.tokens_out + a.cache_read + a.cache_write,
+              context_tokens: meta.context_tokens || 0,
+              percent_used:  meta.percent_used || 0,
+              cost_input_usd:  null,
+              cost_output_usd: null,
+              cost_cache_read_usd: null,
+              cost_cache_write_usd: null,
+              cost_total_usd: a.cost_total_usd,
+              duration_ms:   meta.duration_ms || 0,
+              first_seen_at: meta.first_seen_at || a.interval_start,
+              last_seen_at:  meta.last_seen_at || a.interval_end,
+              _from_intervals: true,
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[tokens] session_cost_intervals fetch failed, falling back to snapshots:', e);
+      }
+
+      // ── 2. Fallback: query session_snapshots for sessions NOT in intervals ──
+      let offset = 0;
       while (true) {
         let query = _sb.from('session_snapshots')
           .select('session_id,session_key,agent_id,kind,model,thinking_level,input_tokens,output_tokens,cache_read,cache_write,total_tokens,context_tokens,percent_used,cost_input_usd,cost_output_usd,cost_cache_read_usd,cost_cache_write_usd,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
@@ -806,7 +926,12 @@
           break;
         }
         const rows = data || [];
-        allRows = allRows.concat(rows);
+        // Skip sessions already covered by interval data
+        for (const r of rows) {
+          if (!intervalSessionIds.has(r.session_id)) {
+            allRows.push(r);
+          }
+        }
         if (rows.length < PAGE_SIZE) break;
         offset += PAGE_SIZE;
       }
