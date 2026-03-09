@@ -15,6 +15,7 @@
       50%      { opacity: 0.55; box-shadow: 0 0 8px 3px rgba(74,222,128,0.25); }
     }
     .active-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; margin-left: 2px; margin-right: 1px; vertical-align: middle; flex-shrink: 0; animation: live-pulse 2s ease-in-out infinite; }
+    .active-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #22c55e; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); padding: 1px 8px; border-radius: 9999px; margin-left: 6px; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; animation: live-pulse 2s ease-in-out infinite; }
     #tip-popup {
       position: fixed; z-index: 99999; pointer-events: none; display: none;
       background: #1f2937; color: #d1d5db; border: 1px solid #374151; border-radius: 6px;
@@ -1785,11 +1786,47 @@ function _renderStackedCostChart(items, mode) {
 
     // ── Active session keys (from live-sessions.json) ───────────────
     let _activeSessionKeys = new Set();
+    let _activeSessionIds = new Set();    // session UUIDs from _sessionId field
+    let _activeKeyToId = {};              // review key → session_id for cross-matching
+    let _activeAtlasSessions = [];        // full atlas active session objects from live-sessions.json
     function _isSessionActive(s) {
-      const key = s && (s.label || (s._raw && s._raw.session_key));
-      return key ? _activeSessionKeys.has(key) : false;
+      if (!s) return false;
+      const key = s.label || (s._raw && s._raw.session_key);
+      if (key && _activeSessionKeys.has(key)) return true;
+      // Match by session_id (handles atlas-review keys mapped from cron keys)
+      const sid = s._raw && s._raw.session_id;
+      if (sid && _activeSessionIds.has(sid)) return true;
+      // Cross-match: if the cron key contains a run ID that matches a review key
+      if (key) {
+        const runMatch = key.match(/:run:(\d+)$/);
+        if (runMatch) {
+          for (const ak of _activeSessionKeys) {
+            if (ak.includes(runMatch[1])) return true;
+          }
+        }
+      }
+      return false;
+    }
+    function _isAtlasActiveSession(s) {
+      // Returns true if this specific session is the currently active Atlas build/review session
+      if (!_activeAtlasSessions.length) return false;
+      return _activeAtlasSessions.some(as => {
+        if (as._sessionId && s._raw?.session_id === as._sessionId) return true;
+        const key = s.label || (s._raw && s._raw.session_key);
+        if (key && key === as.key) return true;
+        if (key && as.key) {
+          const runMatch = key.match(/:run:(\d+)$/);
+          if (runMatch && as.key.includes(runMatch[1])) return true;
+        }
+        return false;
+      });
+    }
+    function _hasActiveAtlasInGroup(sessions) {
+      // Returns true if any session in the group is the active Atlas session
+      return sessions.some(s => _isAtlasActiveSession(s));
     }
     const _activeDotHtml = '<span class="active-dot" title="Active session"></span>';
+    const _activeBadgeHtml = '<span class="active-badge" title="Session is currently running">ACTIVE</span>';
 
     // ── Ticket System Helpers ──────────────────────────────────────
     function _getSessionTickets(sessionKey) {
@@ -1840,9 +1877,14 @@ function _renderStackedCostChart(items, mode) {
         const res = await fetch('/portal/live-sessions.json?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error('live-sessions.json: ' + res.status);
         const data = await res.json();
-        // Store active session keys for green dot indicators
-        _activeSessionKeys = new Set((data.sessions || []).map(s => s.key));
-        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys');
+        // Store active session keys + session IDs for green dot/badge indicators
+        const allSess = data.sessions || [];
+        _activeSessionKeys = new Set(allSess.map(s => s.key));
+        _activeSessionIds = new Set(allSess.filter(s => s._sessionId).map(s => s._sessionId));
+        _activeKeyToId = {};
+        allSess.forEach(s => { if (s._sessionId) _activeKeyToId[s.key] = s._sessionId; });
+        _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas' && s.isReview);
+        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys,', _activeAtlasSessions.length, 'atlas active');
         const tbody = document.getElementById('live-sess-body');
         const updatedEl = document.getElementById('live-updated');
         if (!tbody) return;
