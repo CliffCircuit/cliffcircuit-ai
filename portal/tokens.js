@@ -1211,6 +1211,23 @@ function _renderStackedCostChart(items, mode) {
     allSegKeys.add(segKey);
   }
 
+  // Backfill empty 5-minute slots so the 1h chart always shows all 12 buckets
+  if (bucketMode === '5min') {
+    const fiveMin = 5 * 60 * 1000;
+    const nowMs = Date.now();
+    const startMs = Math.floor((nowMs - 60 * 60 * 1000) / fiveMin) * fiveMin;
+    for (let i = 0; i < 12; i++) {
+      const slotDate = new Date(startMs + i * fiveMin);
+      const slotKey = slotDate.toISOString();
+      if (!buckets[slotKey]) {
+        buckets[slotKey] = {
+          label: slotDate.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit', hour12: true }),
+          segments: {}
+        };
+      }
+    }
+  }
+
   const timePeriods = Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
 
   if (timePeriods.length === 0) {
