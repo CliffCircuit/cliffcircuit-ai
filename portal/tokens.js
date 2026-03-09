@@ -38,7 +38,7 @@
 
     // Augment CRON_DISPLAY with Fernanda cron entries (defined in portal-common.js)
     if (typeof CRON_DISPLAY === 'object') {
-      CRON_DISPLAY['fernanda-heartbeat'] = 'Fernanda Heartbeat';
+      CRON_DISPLAY['fernanda-heartbeat'] = 'Heartbeat';
     }
 
     // Use the shared modelShort from portal-common.js (loaded before this script)
@@ -554,11 +554,10 @@
       'Samantha (Subagent Run)':    'Samantha spawned a short-lived helper session for an isolated task.',
       'Scout (Subagent Run)':       'Scout spawned a short-lived helper session for an isolated task.',
       'Atlas (Subagent Run)':       'Atlas spawned a short-lived helper session for an isolated task.',
-      'Fernanda (Subagent Run)':    'Fernanda spawned a short-lived helper session for an isolated task.',
-      'Fernanda Heartbeat':         'Fernanda heartbeat — checks inbox and responds to Martin.',
-      'Fernanda Wake':              'One-shot cron that boots Fernanda\'s session for the first time after she\'s configured.',
-      'Fernanda — Martin DM':       'Fernanda iMessage conversation with Martin.',
-      'Fernanda Task':              'Fernanda agent task.',
+      'Subagent Run':               'Spawned a short-lived helper session for an isolated task.',
+      'Heartbeat':                  'Periodic check-in — reads inbox and responds to messages.',
+      'Wake':                       'One-shot cron that boots an agent\'s session for the first time after configuration.',
+      'Martin (Msgs DM)':           'iMessage conversation with Martin.',
       'Heartbeat':                  'Periodic health poll — checks the agent inbox for messages, verifies systems are running, and handles lightweight background tasks.',
       'Live Sessions Refresh':      'Checks which AI sessions are currently running and writes the results to a file the portal reads. This is how the Agents page knows who\'s online and what they\'re doing.',
       'Session Previews Refresh':   'Grabs the task description and latest response from each recent session so the portal can show what each session was working on when you click into it.',
@@ -794,8 +793,8 @@
       while (true) {
         let q = _sb.from('session_cost_intervals')
           .select('session_id,session_key,agent_id,model,snapshot_at,interval_start,interval_end,tokens_in_delta,tokens_out_delta,cache_read_delta,cache_write_delta,cost_delta_usd,cumulative_cost_usd')
-          .gte('interval_end', cutoffStart)
-          .lte('interval_start', cutoffEnd)
+          .gte('snapshot_at', cutoffStart)
+          .lte('snapshot_at', cutoffEnd)
           .order('snapshot_at', { ascending: false })
           .range(intervalOffset, intervalOffset + PAGE_SIZE - 1);
 
@@ -902,37 +901,10 @@
         }
       }
 
-      // ── Fallback: Also query session_snapshots for sessions not in intervals ──
-      // This catches sessions that haven't been migrated to cost intervals yet.
-      {
-        const intervalSessionIds = new Set(allRows.map(r => r.session_id));
-        let ssOffset = 0;
-        while (true) {
-          let query = _sb.from('session_snapshots')
-            .select('session_id,session_key,agent_id,kind,model,thinking_level,input_tokens,output_tokens,cache_read,cache_write,total_tokens,context_tokens,percent_used,cost_input_usd,cost_output_usd,cost_cache_read_usd,cost_cache_write_usd,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
-            .gte('first_seen_at', cutoffStart)
-            .lte('first_seen_at', cutoffEnd)
-            .or('input_tokens.gt.0,output_tokens.gt.0')
-            .order('first_seen_at', { ascending: false })
-            .range(ssOffset, ssOffset + PAGE_SIZE - 1);
-
-          if (agentFilter !== 'all') {
-            const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
-            query = query.eq('agent_id', agentId);
-          }
-
-          const { data, error } = await query;
-          if (error) {
-            console.error('[tokens] session_snapshots fallback query error:', error);
-            fetchError = true;
-            break;
-          }
-          const rows = (data || []).filter(r => !intervalSessionIds.has(r.session_id));
-          allRows = allRows.concat(rows);
-          if ((data || []).length < PAGE_SIZE) break;
-          ssOffset += PAGE_SIZE;
-        }
-      }
+      // NOTE: No fallback to session_snapshots (first_seen_at) — when a time window
+      // is active, only sessions with interval data within the window are shown.
+      // This prevents long-running sessions from appearing with stale cumulative
+      // costs when they had no actual activity in the selected window.
 
       // Even on partial error, render with whatever we got (may be empty on first page error)
       if (fetchError && allRows.length === 0) {
