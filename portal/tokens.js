@@ -1450,6 +1450,45 @@ function _renderStackedCostChart(items, mode) {
         });
       }
 
+      // Restore open detail panel after rebuild
+      if (_savedDetailId && _sessionDataMap[_savedDetailId]) {
+        // Find the session-detail-row or summary row that matches
+        const detailRow = body.querySelector('tr[data-session-detail-id="' + CSS.escape(_savedDetailId) + '"]');
+        if (detailRow) {
+          _sessionDetailSource = 'grouped';
+          _toggleSessionDetail(_savedDetailId, detailRow);
+          if (_savedDetailScrollY != null) {
+            requestAnimationFrame(() => window.scrollTo(0, _savedDetailScrollY));
+          }
+        } else {
+          // Single-session row — find by checking _singleSessionSidCache
+          for (const [sk, cachedSid] of Object.entries(_singleSessionSidCache)) {
+            if (cachedSid === _savedDetailId) {
+              const grpRow = body.querySelector('tr[data-task-name]');
+              // Find the correct row by iterating
+              const allRows = body.querySelectorAll('tr[data-task-name]');
+              for (const row of allRows) {
+                const rowId = row.id;
+                const storeKey = 'grp-' + rowId;
+                if (_sessionStore[storeKey] && _sessionStore[storeKey].length === 1) {
+                  const s = _sessionStore[storeKey][0];
+                  const sid = s._raw?.session_id || s.label || '';
+                  if (sid === _savedDetailId || _singleSessionSidCache[storeKey] === _savedDetailId) {
+                    _sessionDetailSource = 'grouped';
+                    _toggleSessionDetail(_savedDetailId, row);
+                    if (_savedDetailScrollY != null) {
+                      requestAnimationFrame(() => window.scrollTo(0, _savedDetailScrollY));
+                    }
+                    break;
+                  }
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+
       // Efficiency insights — cost-aware, actionable rules
       const insights = [];
       const groupedStats = Object.values(groups);
@@ -1702,6 +1741,13 @@ function _renderStackedCostChart(items, mode) {
 
       const visible = window._dbSubShowAll ? filtered : filtered.slice(0, 20);
       const dbSubBody = document.getElementById('db-subagent-body');
+      // Save open detail panel state for raw table — will restore after rebuild
+      const _rawSavedDetailId = (_sessionDetailSource === 'raw') ? _sessionDetailOpenId : null;
+      const _rawSavedScrollY = _rawSavedDetailId ? window.scrollY : null;
+      if (_sessionDetailSource === 'raw') {
+        _sessionDetailOpenId = null;
+        _sessionDetailSource = null;
+      }
       if (filtered.length === 0) {
         dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
       } else {
@@ -1731,6 +1777,18 @@ function _renderStackedCostChart(items, mode) {
       const toggleBtn = document.getElementById('db-subagent-toggle');
       if (filtered.length <= 20) toggleBtn.classList.add('hidden');
       else { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = window._dbSubShowAll ? 'Show 20' : 'Show All (' + filtered.length + ' sessions)'; }
+
+      // Restore open detail panel for raw table after rebuild
+      if (_rawSavedDetailId && _sessionDataMap[_rawSavedDetailId]) {
+        const rawRow = dbSubBody.querySelector('tr[data-raw-sid="' + CSS.escape(_rawSavedDetailId) + '"]');
+        if (rawRow) {
+          _sessionDetailSource = 'raw';
+          _toggleSessionDetail(_rawSavedDetailId, rawRow);
+          if (_rawSavedScrollY != null) {
+            requestAnimationFrame(() => window.scrollTo(0, _rawSavedScrollY));
+          }
+        }
+      }
     }
 
     window.filterRawTask = function(val) {
