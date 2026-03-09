@@ -1975,26 +1975,27 @@ function _renderStackedCostChart(items, mode) {
     });
 
   // Global tooltip for .info-tip elements — uses fixed positioning so overflow:hidden can't clip it
-  (function(){
+  // NOTE: look up #tip-popup fresh each time — dynamic renders can replace the element
+  document.addEventListener('mouseover', function(e){
+    const tip = e.target.closest('.info-tip');
     const popup = document.getElementById('tip-popup');
-    document.addEventListener('mouseover', function(e){
-      const tip = e.target.closest('.info-tip');
-      if (!tip || !tip.dataset.tip) { popup.style.display='none'; return; }
-      popup.textContent = tip.dataset.tip;
-      popup.style.display = 'block';
-      const r = tip.getBoundingClientRect();
-      let left = r.right + 10;
-      let top = r.top + r.height/2 - popup.offsetHeight/2;
-      // If it would overflow the right edge, flip to left side
-      if (left + popup.offsetWidth > window.innerWidth - 16) left = r.left - popup.offsetWidth - 10;
-      // Keep within vertical bounds
-      if (top < 8) top = 8;
-      if (top + popup.offsetHeight > window.innerHeight - 8) top = window.innerHeight - popup.offsetHeight - 8;
-      popup.style.left = left + 'px';
-      popup.style.top = top + 'px';
-    });
-    document.addEventListener('mouseout', function(e){
-      if (e.target.closest('.info-tip')) popup.style.display='none';
-    });
-  })();
+    if (!popup) return;
+    if (!tip || !tip.dataset.tip) { popup.style.display='none'; return; }
+    popup.textContent = tip.dataset.tip;
+    popup.style.display = 'block';
+    const r = tip.getBoundingClientRect();
+    let left = r.right + 10;
+    let top = r.top + r.height/2 - popup.offsetHeight/2;
+    if (left + popup.offsetWidth > window.innerWidth - 16) left = r.left - popup.offsetWidth - 10;
+    if (top < 8) top = 8;
+    if (top + popup.offsetHeight > window.innerHeight - 8) top = window.innerHeight - popup.offsetHeight - 8;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+  });
+  document.addEventListener('mouseout', function(e){
+    if (e.target.closest('.info-tip')) {
+      const popup = document.getElementById('tip-popup');
+      if (popup) popup.style.display='none';
+    }
+  });
 // Supabase ticket test
