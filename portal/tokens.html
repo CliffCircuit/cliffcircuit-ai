@@ -489,7 +489,7 @@
         tr.style.cssText = 'background:rgba(30,40,55,0.5);cursor:pointer;';
         tr.dataset.sessionDetailId = sid;
         tr.onclick = function(e) { if (e.target.closest('button')) return; _sessionDetailSource = 'grouped'; _toggleSessionDetail(sid, this); };
-        const when = s.last_seen_at ? new Date(s.last_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
+        const when = (s.first_seen_at || s.last_seen_at) ? new Date(s.first_seen_at || s.last_seen_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
         const dur = _fmtDur(s.duration_ms);
         const tokIn = _fmtK(s.tokens_in || 0);
         const tokOut = _fmtK(s.tokens_out || 0);
@@ -1885,13 +1885,16 @@ function _renderStackedCostChart(items, mode) {
         if (!res.ok) throw new Error('live-sessions.json: ' + res.status);
         const data = await res.json();
         // Store active session keys + session IDs for green dot/badge indicators
+        // Only consider sessions active if last activity was within the last 5 minutes
+        const ACTIVE_THRESHOLD_MS = 5 * 60 * 1000;
         const allSess = data.sessions || [];
-        _activeSessionKeys = new Set(allSess.map(s => s.key));
-        _activeSessionIds = new Set(allSess.filter(s => s._sessionId).map(s => s._sessionId));
+        const recentSess = allSess.filter(s => typeof s.lastActivityMs === 'number' && s.lastActivityMs < ACTIVE_THRESHOLD_MS);
+        _activeSessionKeys = new Set(recentSess.map(s => s.key));
+        _activeSessionIds = new Set(recentSess.filter(s => s._sessionId).map(s => s._sessionId));
         _activeKeyToId = {};
         allSess.forEach(s => { if (s._sessionId) _activeKeyToId[s.key] = s._sessionId; });
-        _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas' && s.isReview);
-        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys,', _activeAtlasSessions.length, 'atlas active');
+        _activeAtlasSessions = recentSess.filter(s => s.agent === 'atlas' && s.isReview);
+        console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys (of', allSess.length, 'total),', _activeAtlasSessions.length, 'atlas active');
         const tbody = document.getElementById('live-sess-body');
         const updatedEl = document.getElementById('live-updated');
         if (!tbody) return;
