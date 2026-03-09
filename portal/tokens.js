@@ -1132,7 +1132,8 @@ function _renderChartGrid(container, maxCost) {
 }
 
 function _getTimeBuckets(range) {
-  if (range === '1h' || range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
+  if (range === '1h') return '5min';
+  if (range === '24h' || range === 'today' || range === 'yesterday') return 'hourly';
   return 'daily';
 }
 
@@ -1173,7 +1174,14 @@ function _renderStackedCostChart(items, mode) {
     if (!ts || isNaN(ts)) continue;
 
     let timeKey, timeLabel;
-    if (bucketMode === 'hourly') {
+    if (bucketMode === '5min') {
+      // Floor timestamp to nearest 5-minute interval
+      const msInTZ = ts.getTime();
+      const fiveMin = 5 * 60 * 1000;
+      const floored = new Date(Math.floor(msInTZ / fiveMin) * fiveMin);
+      timeKey = floored.toISOString();
+      timeLabel = floored.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit', hour12: true });
+    } else if (bucketMode === 'hourly') {
       const hStr = ts.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true });
       const dateKey = ts.toLocaleDateString('en-CA', { timeZone: TZ });
       timeKey = dateKey + ' ' + ts.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
@@ -1945,3 +1953,4 @@ function _renderStackedCostChart(items, mode) {
       if (e.target.closest('.info-tip')) popup.style.display='none';
     });
   })();
+// Supabase ticket test
