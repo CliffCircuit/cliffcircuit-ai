@@ -236,7 +236,7 @@
       // Format timestamps
       const fmtTs = v => v ? new Date(v).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true }) : '—';
       const sentAt = fmtTs(raw.first_seen_at);
-      const completedAt = sdpIsActive ? null : fmtTs(raw.last_seen_at);
+      const completedAt = fmtTs(raw.last_seen_at);
 
       // Cost breakdown
       const costIn = raw.cost_input_usd != null ? '$' + raw.cost_input_usd.toFixed(4) : '—';
@@ -270,7 +270,7 @@
           <div class="sdp-header">
             <div class="sdp-meta">
               <span>Sent: <strong style="color:#d1d5db">${esc(sentAt)}</strong></span>
-              ${completedAt ? `<span>Completed: <strong style="color:#d1d5db">${esc(completedAt)}</strong></span>` : `<span style="color:#22c55e;font-weight:600;">Running...</span>`}
+              <span>Completed: <strong style="color:#d1d5db">${esc(completedAt)}</strong></span>
               <span>Duration: <strong id="sdp-dur-${esc(sid)}" style="color:#d1d5db">${_fmtDur(s.duration_ms)}</strong></span>
               <span>Kind: <strong style="color:#d1d5db">${esc(kind)}</strong></span>
             </div>
@@ -554,7 +554,7 @@
       'Samantha (Subagent Run)':    'Samantha spawned a short-lived helper session for an isolated task.',
       'Scout (Subagent Run)':       'Scout spawned a short-lived helper session for an isolated task.',
       'Atlas (Subagent Run)':       'Atlas spawned a short-lived helper session for an isolated task.',
-      'Subagent Run':               'Spawned a short-lived helper session for an isolated task.',
+      'Fernanda (Subagent Run)':    'Fernanda spawned a short-lived helper session for an isolated task.',
       'Heartbeat':                  'Periodic check-in — reads inbox and responds to messages.',
       'Wake':                       'One-shot cron that boots an agent\'s session for the first time after configuration.',
       'Martin (Msgs DM)':           'iMessage conversation with Martin.',
@@ -783,128 +783,33 @@
 
       const PAGE_SIZE = 1000;
       let allRows = [];
+      let offset = 0;
       let fetchError = false;
-
-      // ── Primary: Query session_cost_intervals for accurate per-window cost ──
-      // Intervals whose time range overlaps with the selected window give us
-      // accurate delta-based cost even for long-running sessions.
-      let intervalRows = [];
-      let intervalOffset = 0;
       while (true) {
-        let q = _sb.from('session_cost_intervals')
-          .select('session_id,session_key,agent_id,model,snapshot_at,interval_start,interval_end,tokens_in_delta,tokens_out_delta,cache_read_delta,cache_write_delta,cost_delta_usd,cumulative_cost_usd')
-          .gte('snapshot_at', cutoffStart)
-          .lte('snapshot_at', cutoffEnd)
-          .order('snapshot_at', { ascending: false })
-          .range(intervalOffset, intervalOffset + PAGE_SIZE - 1);
+        let query = _sb.from('session_snapshots')
+          .select('session_id,session_key,agent_id,kind,model,thinking_level,input_tokens,output_tokens,cache_read,cache_write,total_tokens,context_tokens,percent_used,cost_input_usd,cost_output_usd,cost_cache_read_usd,cost_cache_write_usd,cost_total_usd,duration_ms,first_seen_at,last_seen_at')
+          .gte('first_seen_at', cutoffStart)
+          .lte('first_seen_at', cutoffEnd)
+          .or('input_tokens.gt.0,output_tokens.gt.0')
+          .order('first_seen_at', { ascending: false })
+          .range(offset, offset + PAGE_SIZE - 1);
 
         if (agentFilter !== 'all') {
           const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
-          q = q.eq('agent_id', agentId);
+          query = query.eq('agent_id', agentId);
         }
 
-        const { data, error } = await q;
+        const { data, error } = await query;
         if (error) {
-          console.warn('[tokens] session_cost_intervals query error:', error);
+          console.error('[tokens] session_snapshots query error:', error);
+          fetchError = true;
           break;
         }
         const rows = data || [];
-        intervalRows = intervalRows.concat(rows);
+        allRows = allRows.concat(rows);
         if (rows.length < PAGE_SIZE) break;
-        intervalOffset += PAGE_SIZE;
+        offset += PAGE_SIZE;
       }
-
-      if (intervalRows.length > 0) {
-        // Aggregate intervals by session_id (sum deltas per session within window)
-        const agg = {};
-        for (const iv of intervalRows) {
-          const key = iv.session_id;
-          if (!agg[key]) {
-            agg[key] = {
-              session_id: iv.session_id,
-              session_key: iv.session_key,
-              agent_id: iv.agent_id,
-              model: iv.model,
-              input_tokens: 0,
-              output_tokens: 0,
-              cache_read: 0,
-              cache_write: 0,
-              cost_total_usd: 0,
-              cumulative_cost_usd: 0,
-              first_interval: iv.interval_start,
-              last_interval: iv.interval_end,
-            };
-          }
-          const a = agg[key];
-          a.input_tokens  += Number(iv.tokens_in_delta)  || 0;
-          a.output_tokens += Number(iv.tokens_out_delta) || 0;
-          a.cache_read    += Number(iv.cache_read_delta) || 0;
-          a.cache_write   += Number(iv.cache_write_delta)|| 0;
-          a.cost_total_usd += Number(iv.cost_delta_usd)  || 0;
-          // Track max cumulative for reference
-          const cum = Number(iv.cumulative_cost_usd) || 0;
-          if (cum > a.cumulative_cost_usd) a.cumulative_cost_usd = cum;
-          // Expand time range
-          if (iv.interval_start < a.first_interval) a.first_interval = iv.interval_start;
-          if (iv.interval_end > a.last_interval) a.last_interval = iv.interval_end;
-        }
-
-        // Now fetch session_snapshots metadata for these sessions (unfiltered by time)
-        // to get kind, thinking_level, duration_ms, context_tokens, etc.
-        const sessionIds = Object.keys(agg);
-        const metaMap = {};
-        // Fetch in batches of 50 using .in() filter
-        for (let i = 0; i < sessionIds.length; i += 50) {
-          const batch = sessionIds.slice(i, i + 50);
-          const inFilter = batch.map(id => `"${id}"`).join(',');
-          const { data: metaRows, error: metaErr } = await _sb.from('session_snapshots')
-            .select('session_id,session_key,agent_id,kind,model,thinking_level,total_tokens,context_tokens,percent_used,duration_ms,first_seen_at,last_seen_at')
-            .in('session_id', batch)
-            .limit(50);
-          if (!metaErr && metaRows) {
-            for (const m of metaRows) metaMap[m.session_id] = m;
-          }
-        }
-
-        // Build allRows by merging interval cost data with snapshot metadata
-        for (const [sid, a] of Object.entries(agg)) {
-          const meta = metaMap[sid] || {};
-          // tokens_in from intervals already includes cache_read + cache_write deltas
-          // but for backwards compat with renderTokenSections, input_tokens should be
-          // raw input (excluding cache). The interval stores tokens_in_delta as input+cache.
-          // We stored cache_read_delta separately so we can reconstruct.
-          const rawInput = a.input_tokens - a.cache_read - a.cache_write;
-          allRows.push({
-            session_id:    sid,
-            session_key:   a.session_key || meta.session_key || '',
-            agent_id:      a.agent_id || meta.agent_id || 'main',
-            kind:          meta.kind || 'direct',
-            model:         a.model || meta.model || '',
-            thinking_level: meta.thinking_level || null,
-            input_tokens:  rawInput > 0 ? rawInput : a.input_tokens,
-            output_tokens: a.output_tokens,
-            cache_read:    a.cache_read,
-            cache_write:   a.cache_write,
-            total_tokens:  a.input_tokens + a.output_tokens,
-            context_tokens: meta.context_tokens || 0,
-            percent_used:  meta.percent_used || 0,
-            cost_input_usd:  null,
-            cost_output_usd: null,
-            cost_cache_read_usd: null,
-            cost_cache_write_usd: null,
-            cost_total_usd: a.cost_total_usd,
-            duration_ms:   meta.duration_ms || 0,
-            first_seen_at: meta.first_seen_at || a.first_interval,
-            last_seen_at:  meta.last_seen_at || a.last_interval,
-            _from_intervals: true,
-          });
-        }
-      }
-
-      // NOTE: No fallback to session_snapshots (first_seen_at) — when a time window
-      // is active, only sessions with interval data within the window are shown.
-      // This prevents long-running sessions from appearing with stale cumulative
-      // costs when they had no actual activity in the selected window.
 
       // Even on partial error, render with whatever we got (may be empty on first page error)
       if (fetchError && allRows.length === 0) {
@@ -1780,7 +1685,7 @@ function _renderStackedCostChart(items, mode) {
         _activeSessionIds = new Set(allSess.filter(s => s._sessionId).map(s => s._sessionId));
         _activeKeyToId = {};
         allSess.forEach(s => { if (s._sessionId) _activeKeyToId[s.key] = s._sessionId; });
-        _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas');
+        _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas' && s.isReview);
         // Load ticket data for session detail panels
         if (data.sessionTickets) {
           if (!window.DATA) window.DATA = {};
@@ -2069,27 +1974,26 @@ function _renderStackedCostChart(items, mode) {
     });
 
   // Global tooltip for .info-tip elements — uses fixed positioning so overflow:hidden can't clip it
-  // NOTE: look up #tip-popup fresh each time — dynamic renders can replace the element
-  document.addEventListener('mouseover', function(e){
-    const tip = e.target.closest('.info-tip');
+  (function(){
     const popup = document.getElementById('tip-popup');
-    if (!popup) return;
-    if (!tip || !tip.dataset.tip) { popup.style.display='none'; return; }
-    popup.textContent = tip.dataset.tip;
-    popup.style.display = 'block';
-    const r = tip.getBoundingClientRect();
-    let left = r.right + 10;
-    let top = r.top + r.height/2 - popup.offsetHeight/2;
-    if (left + popup.offsetWidth > window.innerWidth - 16) left = r.left - popup.offsetWidth - 10;
-    if (top < 8) top = 8;
-    if (top + popup.offsetHeight > window.innerHeight - 8) top = window.innerHeight - popup.offsetHeight - 8;
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-  });
-  document.addEventListener('mouseout', function(e){
-    if (e.target.closest('.info-tip')) {
-      const popup = document.getElementById('tip-popup');
-      if (popup) popup.style.display='none';
-    }
-  });
+    document.addEventListener('mouseover', function(e){
+      const tip = e.target.closest('.info-tip');
+      if (!tip || !tip.dataset.tip) { popup.style.display='none'; return; }
+      popup.textContent = tip.dataset.tip;
+      popup.style.display = 'block';
+      const r = tip.getBoundingClientRect();
+      let left = r.right + 10;
+      let top = r.top + r.height/2 - popup.offsetHeight/2;
+      // If it would overflow the right edge, flip to left side
+      if (left + popup.offsetWidth > window.innerWidth - 16) left = r.left - popup.offsetWidth - 10;
+      // Keep within vertical bounds
+      if (top < 8) top = 8;
+      if (top + popup.offsetHeight > window.innerHeight - 8) top = window.innerHeight - popup.offsetHeight - 8;
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+    });
+    document.addEventListener('mouseout', function(e){
+      if (e.target.closest('.info-tip')) popup.style.display='none';
+    });
+  })();
 // Supabase ticket test
