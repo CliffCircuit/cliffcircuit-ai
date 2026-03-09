@@ -1365,12 +1365,7 @@ function _renderStackedCostChart(items, mode) {
         groups[key].allSessions.push(s);
       }
 
-      const sorted = Object.values(groups).sort((a,b) => {
-        // Sort by most recent activity (latest last_seen_at across all sessions in group)
-        const aLatest = Math.max(...a.allSessions.map(s => s._raw && s._raw.last_seen_at ? new Date(s._raw.last_seen_at).getTime() : s.started_at || 0));
-        const bLatest = Math.max(...b.allSessions.map(s => s._raw && s._raw.last_seen_at ? new Date(s._raw.last_seen_at).getTime() : s.started_at || 0));
-        return bLatest - aLatest;
-      });
+      const sorted = Object.values(groups).sort((a,b) => b.totalCost - a.totalCost);
       const totalRuns   = sorted.reduce((s,r) => s + r.runs, 0);
       const totalCost   = sorted.reduce((s,r) => s + r.totalCost, 0);
       const totalTokIn  = sorted.reduce((s,r) => s + r.tokensIn, 0);
