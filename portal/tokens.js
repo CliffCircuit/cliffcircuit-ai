@@ -1540,12 +1540,9 @@ function _renderStackedCostChart(items, mode) {
       // Match by session_id (unique per run — most reliable)
       const sid = s._raw && s._raw.session_id;
       if (sid && _activeSessionIds.has(sid)) return true;
-      // Cron base-key match: session key "agent:X:cron:UUID:run:Y" matches
-      // active key "agent:X:cron:UUID" (live-sessions uses base key without :run:)
-      if (key && key.includes(':cron:') && key.includes(':run:')) {
-        const base = _cronBaseKey(key);
-        if (_activeSessionKeys.has(base)) return true;
-      }
+      // NOTE: Removed cron base-key fallback — it matched ALL historical runs
+      // from the same cron, lighting up every row green. Active sessions must
+      // match by exact key or session_id only.
       return false;
     }
     function _isAtlasActiveSession(s) {
