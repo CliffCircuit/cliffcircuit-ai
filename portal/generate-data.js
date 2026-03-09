@@ -369,15 +369,16 @@ async function main() {
         const raw = run('openclaw sessions');
         const sessions = [];
         raw.split('\n').forEach(line => {
-          // Match lines like: direct agent:main:teleg...624734  just now  claude-sonnet-4-6 168k/200k (84%)
-          const m = line.match(/^(\S+)\s+(\S+)\s+(.+?)\s+([\w-]+)\s+(\d+)k\/(\d+)k\s+\((\d+)%\)/);
+          // Match lines like: main       direct agent:main:teleg...624734  2m ago    claude-sonnet-4-6 90k/200k (45%)       system id:a18ff738
+          // Columns: agent, kind, session-key, age, model, tokens, pct, [optional trailing info]
+          const m = line.match(/^(\S+)\s+(\S+)\s+(\S+)\s+(.+?)\s+([\w][\w./-]+)\s+(\d+)k\/(\d+)k\s+\((\d+)%\)/);
           if (!m) return;
-          const key = m[2];
-          const used = parseInt(m[5]) * 1000;
-          const limit = parseInt(m[6]) * 1000;
-          const pct = parseInt(m[7]);
-          const model = m[4];
-          const age = m[3].trim();
+          const key = m[3];
+          const used = parseInt(m[6]) * 1000;
+          const limit = parseInt(m[7]) * 1000;
+          const pct = parseInt(m[8]);
+          const model = m[5];
+          const age = m[4].trim();
           // Skip cron sessions
           if (key.includes('cron')) return;
           // Skip stale sessions (older than 10 minutes)

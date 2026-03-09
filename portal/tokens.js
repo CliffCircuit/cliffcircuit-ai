@@ -816,6 +816,9 @@
           intOffset += PAGE_SIZE;
         }
 
+        // Store raw interval rows for 5-min chart bucketing (before aggregation)
+        window._rawIntervalRows = intRows;
+
         if (intRows.length > 0) {
           // Aggregate deltas per session_id
           const agg = {};
@@ -901,6 +904,7 @@
         }
       } catch (e) {
         console.warn('[tokens] session_cost_intervals fetch failed, falling back to snapshots:', e);
+        window._rawIntervalRows = [];
       }
 
       // ── 2. Fallback: query session_snapshots for sessions NOT in intervals ──
@@ -1301,10 +1305,48 @@ function _renderStackedCostChart(items, mode) {
   const TZ = 'America/Los_Angeles';
 
   // 1. Bucket items into time periods, tracking per-segment costs
+  // For 5-min buckets, use raw interval rows for per-interval granularity
+  // instead of session-level aggregates that dump all cost into one bucket
+  let chartItems = items;
+  if (bucketMode === '5min' && window._rawIntervalRows && window._rawIntervalRows.length > 0) {
+    const providerFilter = window._globalProvider || 'all';
+    const modelFilter = window._globalModel || 'all';
+    const agentFilter = window._globalAgent || 'all';
+    const taskFilter = window._globalTask || 'all';
+    chartItems = window._rawIntervalRows
+      .filter(r => {
+        // Apply same filters as main items
+        if (agentFilter !== 'all') {
+          const raw = (r.agent_id || '').toLowerCase();
+          const norm = (raw === 'main') ? 'cliff' : raw;
+          if (norm !== agentFilter) return false;
+        }
+        if (providerFilter !== 'all' && _getProviderFromModel(r.model) !== providerFilter) return false;
+        if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(r.model) : r.model) !== modelFilter) return false;
+        if (taskFilter !== 'all') {
+          const displayName = sessionKeyToFriendly(r.session_key, r.session_id);
+          if (displayName !== taskFilter) return false;
+        }
+        return true;
+      })
+      .map(r => ({
+        started_at: r.interval_end || r.snapshot_at,
+        estimated_cost_usd: parseFloat(r.cost_delta_usd) || 0,
+        cost_total_usd: parseFloat(r.cost_delta_usd) || 0,
+        tokens_in: r.tokens_in_delta || 0,
+        tokens_out: r.tokens_out_delta || 0,
+        agent_type: r.agent_id,
+        model: r.model,
+        display_name: sessionKeyToFriendly(r.session_key, r.session_id),
+        task_name: r.session_key,
+        label: r.session_key,
+      }));
+  }
+
   const buckets = {};   // key -> { label, segments: { segKey -> { cost, sessions, tokIn, tokOut } } }
   const allSegKeys = new Set();
 
-  for (const s of items) {
+  for (const s of chartItems) {
     const ts = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
     if (!ts || isNaN(ts)) continue;
 
