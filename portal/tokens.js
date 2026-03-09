@@ -33,8 +33,8 @@
     const _fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
     const _fmtTs = ts => ts ? new Date(ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' }) + ' PT' : '—';
 
-    const _agentCls = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400', atlas:'text-orange-400' };
-    const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
+    const _agentCls = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400', atlas:'text-orange-400', fernanda:'text-emerald-400' };
+    const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
 
     // Use the shared modelShort from portal-common.js (loaded before this script)
     const _modelShortT = m => modelShort(m);
@@ -749,7 +749,7 @@
       if (!sel) return;
       const cur = window._globalAgent || 'all';
       // Always show ALL agents so users can switch directly between them
-      const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', 'claude-code': 'Claude Code' };
+      const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', 'claude-code': 'Claude Code' };
       sel.innerHTML = '<option value="all">All Agents</option>' +
         agentNames.map(a => `<option value="${a}"${a===cur?' selected':''}>${labels[a]||a}</option>`).join('');
     }
@@ -882,6 +882,7 @@
       samantha:      { alias: 'samantha',   name: 'Samantha',    avatar: '/portal/samantha-avatar.jpg',  accentClass: 'text-teal-400'   },
       scout:         { alias: 'scout',      name: 'Scout',       avatar: '/portal/scout-avatar.jpg',     accentClass: 'text-green-400'  },
       atlas:         { alias: 'atlas',      name: 'Atlas',       avatar: '/portal/atlas-avatar.png',     accentClass: 'text-orange-400' },
+      fernanda:      { alias: 'fernanda',  name: 'Fernanda',    avatar: '/portal/fernanda-avatar.jpg',  accentClass: 'text-emerald-400'},
       'claude-code': { alias: 'claude-code',name: 'Claude Code', avatar: '',                             accentClass: 'text-purple-400' },
     };
 
@@ -915,7 +916,7 @@
       }
 
       // Sort: known agents first (cliff, samantha, scout, atlas), then alphabetical
-      const knownOrder = ['cliff','samantha','scout','atlas'];
+      const knownOrder = ['cliff','samantha','scout','atlas','fernanda'];
       agentIds.sort((a,b) => {
         const ai = knownOrder.indexOf(a), bi = knownOrder.indexOf(b);
         if (ai !== -1 && bi !== -1) return ai - bi;
@@ -1446,6 +1447,23 @@ function _renderStackedCostChart(items, mode) {
           <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>
         </tr>`;
       }).join('');
+
+      // Total row at bottom of summary table
+      if (sorted.length > 0) {
+        const totalAvgDur = totalRuns > 0 ? Math.round(sorted.reduce((s,g) => s + g.totalDur, 0) / totalRuns) : 0;
+        const totalAvgCost = totalRuns > 0 ? totalCost / totalRuns : 0;
+        body.innerHTML += `<tr class="border-t-2 border-gray-600" style="font-weight:700;">
+          <td class="px-4 py-2 text-gray-100 text-xs">Total</td>
+          <td class="px-4 py-2 text-xs"></td>
+          <td class="px-4 py-2 text-xs"></td>
+          <td class="px-4 py-2 text-right text-white text-xs">${totalRuns}</td>
+          <td class="px-4 py-2 text-right text-gray-400 text-xs">${_fmtDur(totalAvgDur)}</td>
+          <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(totalTokIn)} / ${_fmtK(totalTokOut)}</td>
+          <td class="px-4 py-2 text-right text-gray-400 text-xs">${totalAvgCost >= 0.01 ? '$' + totalAvgCost.toFixed(3) : '<$0.01'}</td>
+          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${totalCost >= 0.01 ? '$' + totalCost.toFixed(2) : '<$0.01'}</td>
+          <td class="px-4 py-2"></td>
+        </tr>`;
+      }
 
       // Re-expand rows that were expanded before the re-render
       if (_expandedTasks.size > 0 || _expandedSessionTasks.size > 0) {
