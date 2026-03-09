@@ -581,7 +581,22 @@ async function main() {
       const gitOpts = { cwd: PORTAL_REPO, encoding: 'utf8', timeout: 60000 };
       execSync('git config user.email "cliff@cliffcircuit.ai"', gitOpts);
       execSync('git config user.name "Cliff"', gitOpts);
-      execSync('git add portal/', gitOpts);
+      // Only add specific data files — NEVER git add -A or git add portal/
+      // Atlas leaves code changes on disk for Cliff to review. Scout must not sweep them up.
+      const dataFiles = [
+        'portal/data.json',
+        'portal/live-sessions.json',
+        'portal/goals.json',
+        'portal/session-labels.json',
+        'portal/session-previews.json',
+        'portal/tweet-ids.json',
+      ];
+      // Add data files + any image/preview assets (but not .js/.html/.css code files)
+      for (const f of dataFiles) {
+        try { execSync(`git add "${f}"`, gitOpts); } catch(e) { /* file may not exist */ }
+      }
+      // Add generated images/previews only
+      try { execSync('git add portal/images/ portal/previews/', gitOpts); } catch(e) {}
       const status = execSync('git status --porcelain', gitOpts).trim();
       if (status) {
         execSync(`git commit -m "chore: update portal data [${new Date().toISOString().slice(11,16)} UTC]"`, gitOpts);
