@@ -1629,6 +1629,11 @@ function _renderStackedCostChart(items, mode) {
         _activeKeyToId = {};
         allSess.forEach(s => { if (s._sessionId) _activeKeyToId[s.key] = s._sessionId; });
         _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas' && s.isReview);
+        // Load ticket data for session detail panels
+        if (data.sessionTickets) {
+          if (!window.DATA) window.DATA = {};
+          window.DATA.sessionTickets = data.sessionTickets;
+        }
         console.log('[tokens] live-sessions loaded:', _activeSessionKeys.size, 'active keys,', _activeAtlasSessions.length, 'atlas active');
         const tbody = document.getElementById('live-sess-body');
         const updatedEl = document.getElementById('live-updated');
