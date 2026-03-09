@@ -1388,7 +1388,7 @@ function _renderStackedCostChart(items, mode) {
         body.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600">No sessions in this period</td></tr>';
         return;
       }
-      const maxCost = sorted[0] ? sorted[0].totalCost : 1;
+      const maxCost = Math.max(...sorted.map(g => g.totalCost), 1);
       // Clear grouped detail panel state — DOM is about to be rebuilt
       if (_sessionDetailSource === 'grouped') {
         _sessionDetailOpenId = null;
