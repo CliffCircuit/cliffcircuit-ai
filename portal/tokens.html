@@ -1991,11 +1991,16 @@ function _renderStackedCostChart(items, mode) {
       if (filtered.length === 0) {
         dbSubBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600">No sessions match this filter</td></tr>';
       } else {
+        const _rawShownActiveKeys = new Set();   // only show green dot on the most recent row per key
         dbSubBody.innerHTML = visible.map(s => {
           const rawSid = s._raw?.session_id || s.label || ('raw-' + Math.random().toString(36).slice(2));
           _sessionDataMap[rawSid] = s;
+          const rawKey = s.label || (s._raw && s._raw.session_key) || '';
           const rawIsAtlasActive = _isAtlasActiveSession(s);
-          const rawActiveIndicator = rawIsAtlasActive ? _activeBadgeHtml : (_isSessionActive(s) ? _activeDotHtml : '');
+          const rawIsActive = rawIsAtlasActive || _isSessionActive(s);
+          const rawAlreadyShown = rawKey && _rawShownActiveKeys.has(rawKey);
+          if (rawIsActive && rawKey) _rawShownActiveKeys.add(rawKey);
+          const rawActiveIndicator = rawIsActive && !rawAlreadyShown ? (rawIsAtlasActive ? _activeBadgeHtml : _activeDotHtml) : '';
           const rawTix = _getSessionTickets(s.label || (s._raw && s._raw.session_key) || '');
           const rawTicketBadge = rawTix ? _ticketBadgeHtml(rawTix) : '';
           return `<tr class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-raw-sid="${esc(rawSid)}" onclick="_toggleRawSessionDetail('${esc(rawSid)}',this)">
