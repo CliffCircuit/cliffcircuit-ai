@@ -66,6 +66,9 @@ let CRON_UUID_MAP = {
   'bad6da5e-eecf-4484-8059-a641d1ba7897': 'live-sessions-refresh',
   'f79a2ad0-c1eb-4fde-9a22-d860cec98e8a': 'live-sessions-refresh',
   '1285e486-058b-4c41-b461-6d2522cfdbd9': 'live-sessions-refresh',
+  // Deleted crons — kept here so historical sessions still resolve correctly
+  '505efdbf-cf39-436b-93eb-ffe983b12f31': 'fernanda-heartbeat',
+  '53a89a99-7c48-4b6b-9e78-3f1e5d2b8c4a': 'fernanda-wake',
 };
 
 // Dynamically merge live cron UUIDs so new/recreated crons resolve automatically
