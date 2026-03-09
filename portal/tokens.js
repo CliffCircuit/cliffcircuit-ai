@@ -1131,9 +1131,8 @@
           tokens_in:    (r.input_tokens||0) + (r.cache_read||0) + (r.cache_write||0),
           tokens_out:   r.output_tokens || 0,
           estimated_cost_usd: r.cost_total_usd || 0,
-          started_at:   r._from_intervals
-            ? new Date(r.last_seen_at || r.first_seen_at).getTime()
-            : (runMs || (r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0)),
+          started_at:   runMs || (r.last_seen_at ? new Date(r.last_seen_at).getTime()
+            : (r.first_seen_at ? new Date(r.first_seen_at).getTime() : 0)),
           label:        r.session_key,
           first_seen_at: r.first_seen_at,
           last_seen_at:  r.last_seen_at,
