@@ -190,9 +190,10 @@
         const sessActiveIndicator = sessIsActive && !alreadyShown ? (isAtlasActive ? _activeBadgeHtml : _activeDotHtml) : '';
         const sessTix = _getSessionTickets(sessKey);
         const sessTicketBadge = sessTix ? _ticketBadgeHtml(sessTix) : '';
+        const shortSid = sid.length >= 9 ? sid.slice(0,5) + '-' + sid.slice(5,9) : sid;
         tr.innerHTML = `
           <td class="px-4 py-1 text-gray-600 text-xs" style="padding-left:36px;"><span style="display:inline-flex;align-items:center;">${when}${sessActiveIndicator}${sessTicketBadge}</span></td>
-          <td class="px-4 py-1 text-xs"></td>
+          <td class="px-4 py-1 text-xs"><span style="font-family:monospace;font-size:10px;color:#4b5563;">${esc(shortSid)}</span></td>
           <td class="px-4 py-1 text-xs text-gray-500">${_modelShortT(s.model)}</td>
           <td class="px-4 py-1 text-right text-gray-500 text-xs">1</td>
           <td class="px-4 py-1 text-right text-gray-400 text-xs">${dur}</td>
