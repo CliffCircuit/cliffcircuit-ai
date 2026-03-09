@@ -723,8 +723,8 @@ async function initPortal(pageName, renderFn) {
   renderNav(pageName);
   if (renderFn) registerRenderer(renderFn);
 
-  // Ensure session labels + dynamic cron UUID map are loaded before any rendering
-  await Promise.all([_sessionLabelsReady, _cronMapReady]);
+  // Ensure session labels, contacts, + dynamic cron UUID map are loaded before any rendering
+  await Promise.all([_sessionLabelsReady, _contactsReady, _cronMapReady]);
 
   const d = await loadData();
   if (d) {
