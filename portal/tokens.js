@@ -36,26 +36,59 @@
     // Creates a checkbox-style multi-select dropdown inside a container element.
     // options: [{ value, label }], selected: array of selected values,
     // allLabel: text for "all" state, onChange: fn(selectedArray)
-    function _initMultiSelect(containerId, options, selected, allLabel, onChange) {
+    // opts.groups: optional [{ header, items: [{ value, label }] }] for grouped display
+    function _initMultiSelect(containerId, options, selected, allLabel, onChange, opts) {
       const container = document.getElementById(containerId);
       if (!container) return;
       const _escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      let groups = opts && opts.groups;
 
       function render() {
         const sel = selected;
+        const isNone = sel.length === 1 && sel[0] === '__none__';
+        const realSel = isNone ? [] : sel; // real selected values (excluding sentinel)
         let triggerText = allLabel;
-        if (sel.length === 1) {
+        if (isNone) {
+          triggerText = 'None';
+        } else if (sel.length === 0) {
+          triggerText = allLabel;
+        } else if (sel.length === options.length) {
+          triggerText = allLabel;
+        } else if (sel.length === 1) {
           const opt = options.find(o => o.value === sel[0]);
           triggerText = opt ? opt.label : sel[0];
-        } else if (sel.length > 1 && sel.length < options.length) {
+        } else {
           triggerText = sel.length + ' selected';
-        } else if (sel.length > 0 && sel.length === options.length) {
-          triggerText = allLabel;
-          // If all are selected, treat as "all" — clear the selection
-          sel.length = 0;
         }
 
         const isOpen = container.querySelector('.ms-panel.ms-open') !== null;
+        // sel empty = all (no filter); sel with all options = explicit all selection
+        const allShown = !isNone && (sel.length === 0 || sel.length === options.length);
+        const showSelectAll = !allShown; // show "Select All" when partially filtered or none
+
+        // Build option HTML — grouped or flat
+        let optionsHtml = '';
+        if (groups && groups.length > 0) {
+          optionsHtml = groups.map(g => {
+            const headerHtml = `<div class="ms-group-header">${_escHtml(g.header)}</div>`;
+            const itemsHtml = g.items.map(o => {
+              const isSel = !isNone && (sel.length === 0 || sel.includes(o.value));
+              return `<div class="ms-option ms-grouped-option${isSel ? ' ms-selected' : ''}" data-value="${_escHtml(o.value)}">
+                <span class="ms-option-check">${isSel ? '✓' : ''}</span>
+                <span>${_escHtml(o.label)}</span>
+              </div>`;
+            }).join('');
+            return headerHtml + itemsHtml;
+          }).join('');
+        } else {
+          optionsHtml = options.map(o => {
+            const isSel = !isNone && (sel.length === 0 || sel.includes(o.value));
+            return `<div class="ms-option${isSel ? ' ms-selected' : ''}" data-value="${_escHtml(o.value)}">
+              <span class="ms-option-check">${isSel ? '✓' : ''}</span>
+              <span>${_escHtml(o.label)}</span>
+            </div>`;
+          }).join('');
+        }
 
         container.innerHTML = `
           <div class="ms-trigger${isOpen ? ' ms-open' : ''}" data-ms-id="${containerId}">
@@ -63,13 +96,9 @@
             <span class="ms-trigger-arrow">▾</span>
           </div>
           <div class="ms-panel${isOpen ? ' ms-open' : ''}" data-ms-panel="${containerId}">
-            ${options.map(o => {
-              const isSel = sel.includes(o.value);
-              return `<div class="ms-option${isSel ? ' ms-selected' : ''}" data-value="${_escHtml(o.value)}">
-                <span class="ms-option-check">${isSel ? '✓' : ''}</span>
-                <span>${_escHtml(o.label)}</span>
-              </div>`;
-            }).join('')}
+            <div class="ms-option ms-toggle-all" data-value="__toggle_all__"><span style="color:#818cf8;font-weight:500;font-size:11px;">${showSelectAll ? 'Select All' : 'Unselect All'}</span></div>
+            <div class="ms-option-sep"></div>
+            ${optionsHtml}
             ${sel.length > 0 ? '<div class="ms-option-sep"></div><div class="ms-option ms-clear-option" data-value="__clear__"><span style="color:#6b7280;">✕ Clear filters</span></div>' : ''}
           </div>`;
 
@@ -95,12 +124,33 @@
           opt.addEventListener('click', (e) => {
             e.stopPropagation();
             const val = opt.dataset.value;
-            if (val === '__clear__') {
+            if (val === '__toggle_all__') {
+              const isAllShown = sel.length === 0 || sel.length === options.length;
+              if (isAllShown) {
+                // "Unselect All" — use sentinel so _inFilter matches nothing
+                sel.length = 0;
+                sel.push('__none__');
+              } else {
+                // "Select All" — clear filters to show everything
+                sel.length = 0;
+              }
+            } else if (val === '__clear__') {
               sel.length = 0;
             } else {
-              const idx = sel.indexOf(val);
-              if (idx >= 0) sel.splice(idx, 1);
-              else sel.push(val);
+              // Toggle individual item
+              const curNone = sel.length === 1 && sel[0] === '__none__';
+              if (curNone) {
+                // Nothing selected — clicking an item selects just that item
+                sel.length = 0;
+                sel.push(val);
+              } else if (sel.length === 0) {
+                // Currently "all" — user unchecked one item → select all EXCEPT this one
+                options.forEach(o => { if (o.value !== val) sel.push(o.value); });
+              } else {
+                const idx = sel.indexOf(val);
+                if (idx >= 0) sel.splice(idx, 1);
+                else sel.push(val);
+              }
             }
             render();
             onChange(sel);
@@ -109,7 +159,7 @@
       }
 
       render();
-      return { render, setOptions(newOpts) { options = newOpts; render(); } };
+      return { render, setOptions(newOpts) { options = newOpts; render(); }, setGroups(newG) { groups = newG; render(); } };
     }
 
     // Close dropdowns when clicking outside
@@ -809,7 +859,39 @@
       // Remove stale selections (in-place)
       const tArr = window._globalTask;
       for (let i = tArr.length - 1; i >= 0; i--) { if (!filtered.includes(tArr[i])) tArr.splice(i, 1); }
-      _initMultiSelect('global-task', opts, tArr, 'All Tasks', setGlobalTask);
+
+      // Build grouped structure: tasks organized by owning agent
+      const agentLabels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', 'claude-code': 'Claude Code' };
+      const atMap = window._agentTaskMap || {};
+      const groupMap = {}; // agentKey → [taskName]
+      filtered.forEach(t => {
+        const agents = window._taskAgentMap[t] || [];
+        if (agents.length > 0) {
+          agents.forEach(a => {
+            if (!_isAll(agentF) && !agentF.includes(a)) return;
+            if (!groupMap[a]) groupMap[a] = [];
+            if (!groupMap[a].includes(t)) groupMap[a].push(t);
+          });
+        } else {
+          // Ungrouped task — put under "Other"
+          if (!groupMap['__other__']) groupMap['__other__'] = [];
+          groupMap['__other__'].push(t);
+        }
+      });
+
+      // Sort agents alphabetically, tasks within each group alphabetically
+      const sortedAgents = Object.keys(groupMap).filter(a => a !== '__other__').sort();
+      const groups = sortedAgents.map(a => ({
+        header: agentLabels[a] || a.charAt(0).toUpperCase() + a.slice(1),
+        items: groupMap[a].sort().map(t => ({ value: t, label: t }))
+      }));
+      if (groupMap['__other__']) {
+        groups.push({ header: 'Other', items: groupMap['__other__'].sort().map(t => ({ value: t, label: t })) });
+      }
+
+      // Only use groups if there are multiple agents; flat list for single agent
+      const useGroups = groups.length > 1;
+      _initMultiSelect('global-task', opts, tArr, 'All Tasks', setGlobalTask, useGroups ? { groups } : undefined);
     }
 
     function _populateAgentDropdown(agentNames) {
