@@ -191,7 +191,7 @@
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${d.count > 0 ? _fmtDur(Math.round(d.dur / d.count)) : '\u2014'}</td>
           <td class="px-4 py-2 text-right text-white text-xs">${_fmtK(d.tokIn)} / ${_fmtK(d.tokOut)}</td>
           <td class="px-4 py-2 text-right text-gray-400 text-xs">${d.count > 0 && (d.cost/d.count) >= 0.01 ? '$' + (d.cost/d.count).toFixed(3) : '<$0.01'}</td>
-          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${d.cost >= 0.01 ? '$' + d.cost.toFixed(2) : '<$0.01'}</td>
+          <td class="px-4 py-2 text-right text-yellow-400 text-xs font-semibold">${d.cost >= 0.01 ? '$' + d.cost.toFixed(2) : '<$0.01'}${d._hasSnapshotCost ? ' <span class="info-tip" data-tip="Lifetime session cost — may include spending under prior models" style="color:#eab308;">⚠</span>' : ''}</td>
           <td class="px-4 py-2" style="min-width:80px;"><div class="bg-gray-800 rounded-full h-1.5"><div class="${barCls} h-1.5 rounded-full" style="width:${barPct}%"></div></div></td>`;
         insertAfter.after(tr);
         insertAfter = tr;
@@ -878,16 +878,22 @@
         window._rawIntervalRows = intRows;
 
         if (intRows.length > 0) {
-          // Aggregate deltas per session_id
+          // Aggregate deltas per (session_id, model) — so model switches within a session
+          // produce separate line items with correct per-model cost attribution (BUG 11 fix)
           const agg = {};
+          const sessionModels = {}; // session_id → Set of models seen
           for (const r of intRows) {
             const sid = r.session_id;
-            if (!agg[sid]) {
-              agg[sid] = {
+            const model = r.model || 'unknown';
+            const aggKey = sid + '::' + model;
+            if (!sessionModels[sid]) sessionModels[sid] = new Set();
+            sessionModels[sid].add(model);
+            if (!agg[aggKey]) {
+              agg[aggKey] = {
                 session_id: sid,
                 session_key: r.session_key,
                 agent_id: r.agent_id,
-                model: r.model,
+                model: model,
                 tokens_in: 0,
                 tokens_out: 0,
                 cache_read: 0,
@@ -896,9 +902,10 @@
                 cumulative_cost_usd: 0,
                 interval_start: r.interval_start || r.snapshot_at,
                 interval_end: r.interval_end || r.snapshot_at,
+                _multiModel: false, // set true below if session used multiple models
               };
             }
-            const a = agg[sid];
+            const a = agg[aggKey];
             a.tokens_in  += r.tokens_in_delta || 0;
             a.tokens_out += r.tokens_out_delta || 0;
             a.cache_read += r.cache_read_delta || 0;
@@ -910,12 +917,16 @@
             const iend   = r.interval_end || r.snapshot_at;
             if (istart && istart < a.interval_start) a.interval_start = istart;
             if (iend && iend > a.interval_end) a.interval_end = iend;
-            // Keep the model from the most recent interval row (intRows are desc by snapshot_at)
-            // First row per session_id wins since we don't overwrite model after init
+          }
+          // Mark entries from sessions that used multiple models
+          for (const [aggKey, entry] of Object.entries(agg)) {
+            if ((sessionModels[entry.session_id] || new Set()).size > 1) {
+              entry._multiModel = true;
+            }
           }
 
           // Fetch metadata from session_snapshots for these sessions
-          const aggIds = Object.keys(agg);
+          const aggIds = [...new Set(Object.values(agg).map(a => a.session_id))];
           const metaMap = {};
           for (let i = 0; i < aggIds.length; i += PAGE_SIZE) {
             const chunk = aggIds.slice(i, i + PAGE_SIZE);
@@ -928,10 +939,11 @@
           }
 
           // Build allRows entries from merged interval + metadata
-          for (const sid of aggIds) {
-            const a = agg[sid];
+          // Now iterating per (session_id, model) pair for accurate per-model cost attribution
+          for (const [aggKey, a] of Object.entries(agg)) {
+            const sid = a.session_id;
             const meta = metaMap[sid] || {};
-            // Skip sessions with zero activity in the window
+            // Skip entries with zero activity in the window
             if (a.tokens_in === 0 && a.tokens_out === 0 && a.cost_total_usd === 0) continue;
             intervalSessionIds.add(sid);
             allRows.push({
@@ -939,7 +951,7 @@
               session_key:   a.session_key || meta.session_key || '',
               agent_id:      meta.agent_id || a.agent_id,
               kind:          meta.kind || null,
-              model:         meta.model || a.model,
+              model:         a.model, // use the per-interval model, not meta (which is latest only)
               thinking_level: meta.thinking_level || null,
               input_tokens:  a.tokens_in,
               output_tokens: a.tokens_out,
@@ -953,10 +965,11 @@
               cost_cache_read_usd: null,
               cost_cache_write_usd: null,
               cost_total_usd: a.cost_total_usd,
-              duration_ms:   meta.duration_ms || 0,
+              duration_ms:   a._multiModel ? 0 : (meta.duration_ms || 0), // duration not meaningful when split by model
               first_seen_at: meta.first_seen_at || a.interval_start,
               last_seen_at:  meta.last_seen_at || a.interval_end,
               _from_intervals: true,
+              _multiModel:   a._multiModel, // flag for tooltip: session used multiple models
             });
           }
         }
@@ -1206,6 +1219,8 @@
           first_seen_at: r.first_seen_at,
           last_seen_at:  r.last_seen_at,
           _raw:          r,
+          _from_intervals: !!r._from_intervals,
+          _multiModel:   !!r._multiModel, // session used multiple models (cost split by model in intervals)
         };
       });
       window._allDbSubItems = allDbItems;
@@ -1653,9 +1668,11 @@ function _renderStackedCostChart(items, mode) {
         groups[key].totalCost += s.estimated_cost_usd || 0;
         // Track per-model breakdown
         const mLabel = _modelShortT(s.model);
-        if (!groups[key].modelBreakdown[mLabel]) groups[key].modelBreakdown[mLabel] = { count: 0, cost: 0, dur: 0, tokIn: 0, tokOut: 0, sessions: [] };
+        if (!groups[key].modelBreakdown[mLabel]) groups[key].modelBreakdown[mLabel] = { count: 0, cost: 0, dur: 0, tokIn: 0, tokOut: 0, sessions: [], _hasSnapshotCost: false };
         groups[key].modelBreakdown[mLabel].count++;
         groups[key].modelBreakdown[mLabel].cost += s.estimated_cost_usd || 0;
+        // Flag if any session's cost came from snapshot (lifetime cost, not model-specific)
+        if (!s._from_intervals) groups[key].modelBreakdown[mLabel]._hasSnapshotCost = true;
         groups[key].modelBreakdown[mLabel].dur += s.duration_ms || 0;
         groups[key].modelBreakdown[mLabel].tokIn += s.tokens_in || 0;
         groups[key].modelBreakdown[mLabel].tokOut += s.tokens_out || 0;
