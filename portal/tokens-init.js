@@ -23,17 +23,14 @@
       const t0 = Date.now();
       _lastRefreshAt = t0; // track when we STARTED so the safety valve can detect hangs
       try {
-        // 1. Re-fetch data.json with cache-busting + no-store (bypass CDN/browser cache)
+        // 1. Re-fetch data from Supabase (replaces data.json static file)
         try {
-          const djRes = await fetch('/portal/data.json?t=' + Date.now(), { cache: 'no-store' });
-          if (djRes.ok) {
-            const dj = await djRes.json();
-            if (dj) {
-              if (dj.crons && dj.crons.length) window._cronList = dj.crons;
-              window._latestDataJson = dj; // store full payload for render functions
-            }
+          const dj = await fetchPortalData('data');
+          if (dj) {
+            if (dj.crons && dj.crons.length) window._cronList = dj.crons;
+            window._latestDataJson = dj;
           }
-        } catch (e) { console.warn('[tokens] data.json refresh failed:', e); }
+        } catch (e) { console.warn('[tokens] data refresh failed:', e); }
         // 2. Fetch fresh live-sessions.json (for green-dot active indicators + active session keys)
         try { await loadLiveSessions(); } catch (e) { console.warn('[tokens] live-sessions refresh failed:', e); }
         // 3. Fetch fresh Supabase session data and re-render everything

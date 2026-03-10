@@ -176,9 +176,8 @@
       const now = Date.now();
       if (_sessionPreviewCache && now - _sessionPreviewCacheTs < _SESSION_PREVIEW_TTL) return _sessionPreviewCache;
       try {
-        const res = await fetch('/portal/session-previews.json?t=' + now);
-        if (res.ok) {
-          const data = await res.json();
+        const data = await fetchPortalData('session-previews');
+        if (data) {
           _sessionPreviewCache = data.previews || data;
           _sessionPreviewCacheTs = now;
           return _sessionPreviewCache;

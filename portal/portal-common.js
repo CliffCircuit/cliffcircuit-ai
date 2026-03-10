@@ -2,13 +2,23 @@
 // portal-common.js — Shared code for all CliffCircuit Portal pages
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ── Supabase portal_data helper ──
+async function fetchPortalData(key) {
+  try {
+    const url = `https://glmwayzpcpbscunvycqk.supabase.co/rest/v1/portal_data?key=eq.${encodeURIComponent(key)}&select=data`;
+    const res = await fetch(url, { headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsbXdheXpwY3Bic2N1bnZ5Y3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MjMyNzMsImV4cCI6MjA4ODA5OTI3M30.AWfTKi6szXzwc6821mYkiXUxpQ5kv2sS_hWTReBoVCY' } });
+    const rows = await res.json();
+    return rows?.[0]?.data || null;
+  } catch (e) { console.error(`fetchPortalData(${key}) failed:`, e); return null; }
+}
+
 // ── Session Labels (keyed by session_key → friendly name) ──
 let SESSION_LABELS = {};
-const _sessionLabelsReady = fetch('/portal/session-labels.json?t=' + Date.now()).then(r => r.json()).then(d => { SESSION_LABELS = d || {}; }).catch(() => {});
+const _sessionLabelsReady = fetchPortalData('session-labels').then(d => { SESSION_LABELS = d || {}; }).catch(() => {});
 
 // ── Contacts (phone → name for iMessage resolution) ──
 let CONTACTS_MAP = {};
-const _contactsReady = fetch('/portal/contacts.json?t=' + Date.now()).then(r => r.json()).then(d => { CONTACTS_MAP = d || {}; }).catch(() => {});
+const _contactsReady = fetchPortalData('contacts').then(d => { CONTACTS_MAP = d || {}; }).catch(() => {});
 
 // ── Constants ────────────────────────────────────────────────────────────
 const DEFAULT_HASH = '1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7';
@@ -528,8 +538,7 @@ async function loadData() {
 
     const liveSessionsPromise = fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now())
       .then(r => r.json()).catch(() => null);
-    const dataJsonPromise = fetch('/portal/data.json?t=' + Date.now())
-      .then(r => r.json()).catch(() => null);
+    const dataJsonPromise = fetchPortalData('data');
 
     DATA = {
       queue: [...articleItems, ...tweetItems],

@@ -410,9 +410,8 @@
     // ── Stuck Sessions (from live-sessions.json) ───────────────────
     async function loadLiveSessions() {
       try {
-        const res = await fetch('/portal/live-sessions.json?t=' + Date.now(), { cache: 'no-store' });
-        if (!res.ok) throw new Error('live-sessions.json: ' + res.status);
-        const data = await res.json();
+        const data = await fetchPortalData('live-sessions');
+        if (!data) throw new Error('live-sessions: no data from Supabase');
         // Store active session keys + session IDs for green dot/badge indicators
         // live-sessions.json already filters stale sessions (persistent: <4h, cron: <15min)
         const allSess = data.sessions || [];
