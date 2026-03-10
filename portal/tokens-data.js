@@ -288,14 +288,22 @@
     }
     function _isSessionActive(s) {
       if (!s) return false;
-      const key = s.label || (s._raw && s._raw.session_key);
-      if (key && _activeSessionKeys.has(key)) return true;
-      // Match by session_id (unique per run — most reliable)
       const sid = s._raw && s._raw.session_id;
+      // Best match: session_id (unique per gateway run)
       if (sid && _activeSessionIds.has(sid)) return true;
-      // NOTE: Removed cron base-key fallback — it matched ALL historical runs
-      // from the same cron, lighting up every row green. Active sessions must
-      // match by exact key or session_id only.
+      // Key match: only if this Supabase row's session_id matches the live
+      // session's _sessionId (prevents historical rows for persistent keys
+      // like agent:main:main from lighting up as active after gateway restart)
+      const key = s.label || (s._raw && s._raw.session_key);
+      if (key && _activeSessionKeys.has(key)) {
+        const liveEntry = _activeSessionData[key];
+        // If the live session has a _sessionId and the Supabase row has a session_id,
+        // they must match. If either is missing, allow the key match (backward compat).
+        if (liveEntry && liveEntry._sessionId && sid) {
+          return liveEntry._sessionId === sid;
+        }
+        return true; // no session_id to compare — trust the key match
+      }
       return false;
     }
     function _isAtlasActiveSession(s) {
