@@ -225,23 +225,23 @@
 
       // Challenge-response auth
       if (msg.type === 'event' && msg.event === 'connect.challenge') {
-        const nonce = msg.payload?.nonce;
         ws.send(JSON.stringify({
-          id: msgIdCounter++,
+          type: 'req',
+          id: String(msgIdCounter++),
           method: 'connect',
           params: {
             minProtocol: 3,
             maxProtocol: 3,
-            client: { id: 'portal-chat', version: '1.0.0' },
-            auth: { token: GW_TOKEN },
-            nonce: nonce
+            client: { id: 'webchat', version: '1.0.0', platform: 'web', mode: 'webchat' },
+            role: 'operator',
+            auth: { token: GW_TOKEN }
           }
         }));
         return;
       }
 
       // Connect success
-      if (msg.type === 'response' && msg.result?.connected) {
+      if (msg.type === 'res' && msg.ok !== false && (msg.payload?.connected || msg.id)) {
         wsReady = true;
         reconnectDelay = 1000;
         setConnStatus('connected');
@@ -250,12 +250,12 @@
       }
 
       // RPC responses
-      if (msg.type === 'response' && msg.id && pendingRPC[msg.id]) {
+      if (msg.type === 'res' && msg.id && pendingRPC[msg.id]) {
         const p = pendingRPC[msg.id];
         clearTimeout(p.timeout);
         delete pendingRPC[msg.id];
-        if (msg.error) p.reject(msg.error);
-        else p.resolve(msg.result);
+        if (msg.ok === false) p.reject(msg.error);
+        else p.resolve(msg.payload ?? msg.result);
         return;
       }
 
@@ -291,7 +291,7 @@
         reject(new Error('RPC timeout'));
       }, 30000);
       pendingRPC[id] = { resolve, reject, timeout };
-      ws.send(JSON.stringify({ id, method, params }));
+      ws.send(JSON.stringify({ type: 'req', id: String(id), method, params }));
     });
   }
 
