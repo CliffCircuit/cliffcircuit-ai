@@ -27,10 +27,10 @@
 
   // ── Supabase helpers ────────────────────────────────────────────────
   function sbFetch(path, opts) {
-    return fetch(window._sbUrl + '/rest/v1/' + path, Object.assign({
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, Object.assign({
       headers: {
-        apikey: window._sbKey,
-        Authorization: 'Bearer ' + window._sbKey,
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
         'Content-Type': 'application/json',
         Prefer: 'return=representation',
       },
