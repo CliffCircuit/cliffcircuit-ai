@@ -988,6 +988,13 @@
         // Skip sessions already covered by interval data
         for (const r of rows) {
           if (!intervalSessionIds.has(r.session_id)) {
+            // If session started before the current time window, its cost_total_usd
+            // is cumulative (all-time) and would inflate this window's total.
+            // In-window cost for such sessions should come from interval data;
+            // if they have no intervals in this window, their contribution is ~0.
+            // This prevents "Today" from showing higher cost than "Last 7 Days"
+            // when old sessions fall back to snapshots with cumulative costs.
+            if (r.first_seen_at && new Date(r.first_seen_at) < new Date(cutoffStart)) continue;
             allRows.push(r);
           }
         }
@@ -1397,14 +1404,25 @@ function _renderStackedCostChart(items, mode) {
         task_name: r.session_key,
         label: r.session_key,
       }));
+
+    // Include non-interval items (snapshot fallback + atlas_jobs sessions)
+    // so the chart total matches the table total
+    if (items && items.length > 0) {
+      const coveredSessionIds = new Set(window._rawIntervalRows.map(r => r.session_id));
+      const nonIntervalItems = items.filter(s => {
+        const sid = s._raw?.session_id || s.label;
+        return sid && !coveredSessionIds.has(sid);
+      });
+      chartItems = chartItems.concat(nonIntervalItems);
+    }
   }
 
   const buckets = {};   // key -> { label, segments: { segKey -> { cost, sessions, tokIn, tokOut } } }
   const allSegKeys = new Set();
 
   for (const s of chartItems) {
-    const ts = s.started_at ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
-    if (!ts || isNaN(ts)) continue;
+    const ts = (s.started_at != null && s.started_at !== '') ? new Date(typeof s.started_at === 'number' ? s.started_at : s.started_at) : null;
+    if (!ts || isNaN(ts.getTime())) continue;
 
     let timeKey, timeLabel;
     if (bucketMode === '5min') {
