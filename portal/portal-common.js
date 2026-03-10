@@ -453,6 +453,7 @@ function renderNav(activePage) {
     { id: 'dashboard', label: 'Dashboard', href: '/portal/' },
     { id: 'marketing', label: 'Marketing', href: '/portal/marketing.html' },
     { id: 'agents', label: 'Agents', href: '/portal/agents.html' },
+    { id: 'chat', label: 'Chat', href: '/portal/chat.html' },
     { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
     { id: 'tickets', label: 'Tickets', href: '#', onclick: 'openTicketsModal()' },

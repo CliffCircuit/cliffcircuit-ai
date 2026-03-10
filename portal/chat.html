@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    /* Layout: full-height chat below nav */
+    #chat-app { display: flex; height: calc(100vh - 64px); overflow: hidden; }
+
+    /* Sidebar */
+    #sidebar { width: 260px; min-width: 260px; border-right: 1px solid #1f2937; display: flex; flex-direction: column; background: #0a0f1a; }
+    #sidebar-header { padding: 16px; border-bottom: 1px solid #1f2937; }
+    #agent-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .agent-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s, border-color 0.15s; border: 1px solid transparent; }
+    .agent-item:hover { background: #111827; }
+    .agent-item.active { background: #1e1b4b; border-color: #4f46e5; }
+    .agent-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; }
+    .agent-model { font-size: 11px; color: #6b7280; }
+    .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
+    .dot-online { background: #34d399; box-shadow: 0 0 6px #34d39966; }
+    .dot-offline { background: #4b5563; }
+
+    /* Session list under agent */
+    .session-list { padding: 0 0 0 48px; }
+    .session-item { padding: 6px 10px; font-size: 12px; color: #9ca3af; border-radius: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-item:hover { background: #1f2937; color: #e5e7eb; }
+    .session-item.active { background: #312e81; color: #a5b4fc; }
+
+    /* Main chat area */
+    #chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    #chat-header { padding: 14px 20px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 12px; background: #0a0f1a; }
+    #chat-header .agent-avatar { width: 32px; height: 32px; font-size: 16px; }
+    #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 2px; scroll-behavior: smooth; }
+
+    /* Messages */
+    .msg-group { display: flex; gap: 10px; max-width: 80%; }
+    .msg-group.user { align-self: flex-end; flex-direction: row-reverse; }
+    .msg-group.assistant { align-self: flex-start; }
+    .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+    .msg-content { display: flex; flex-direction: column; gap: 2px; }
+    .msg-meta { font-size: 11px; color: #6b7280; display: flex; gap: 8px; align-items: center; padding: 0 4px; }
+    .msg-group.user .msg-meta { justify-content: flex-end; }
+    .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.55; word-break: break-word; }
+    .msg-group.assistant .msg-bubble { background: #111827; color: #e5e7eb; border: 1px solid #1f2937; border-top-left-radius: 4px; }
+    .msg-group.user .msg-bubble { background: #312e81; color: #e0e7ff; border-top-right-radius: 4px; }
+
+    /* Markdown in messages */
+    .msg-bubble p { margin: 0 0 8px 0; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble code { background: #1f2937; padding: 1px 5px; border-radius: 4px; font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .msg-bubble pre { background: #0d1117; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; margin: 8px 0; overflow-x: auto; }
+    .msg-bubble pre code { background: none; padding: 0; font-size: 13px; }
+    .msg-bubble strong { font-weight: 600; color: #f3f4f6; }
+    .msg-bubble em { font-style: italic; color: #d1d5db; }
+    .msg-bubble a { color: #818cf8; text-decoration: underline; }
+    .msg-bubble ul, .msg-bubble ol { margin: 4px 0 8px 20px; }
+    .msg-bubble li { margin-bottom: 2px; }
+    .msg-bubble img { max-width: 100%; border-radius: 8px; margin: 6px 0; cursor: pointer; }
+    .msg-bubble blockquote { border-left: 3px solid #4f46e5; padding-left: 12px; margin: 6px 0; color: #9ca3af; }
+
+    /* Typing indicator */
+    .typing-indicator { display: flex; align-items: center; gap: 10px; padding: 8px 20px; }
+    .typing-dots { display: flex; gap: 4px; align-items: center; }
+    .typing-dots span { width: 7px; height: 7px; border-radius: 50%; background: #6366f1; animation: typingBounce 1.4s infinite ease-in-out; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-6px); opacity: 1; }
+    }
+    .typing-label { font-size: 12px; color: #6b7280; }
+
+    /* Input area */
+    #input-area { padding: 12px 20px 16px; border-top: 1px solid #1f2937; background: #0a0f1a; }
+    #input-wrap { display: flex; align-items: flex-end; gap: 10px; background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 8px 12px; transition: border-color 0.2s; }
+    #input-wrap:focus-within { border-color: #4f46e5; }
+    #msg-input { flex: 1; background: transparent; border: none; outline: none; color: #e5e7eb; font-size: 14px; resize: none; max-height: 120px; line-height: 1.5; font-family: 'Inter', sans-serif; }
+    #msg-input::placeholder { color: #4b5563; }
+    #send-btn { background: #4f46e5; color: white; border: none; border-radius: 10px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s, opacity 0.15s; flex-shrink: 0; }
+    #send-btn:hover { background: #6366f1; }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #send-btn svg { width: 18px; height: 18px; }
+
+    /* Image paste preview */
+    .paste-preview { display: flex; gap: 8px; padding: 8px 0; flex-wrap: wrap; }
+    .paste-thumb { position: relative; }
+    .paste-thumb img { height: 60px; border-radius: 8px; border: 1px solid #374151; }
+    .paste-thumb button { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* Image lightbox */
+    #lightbox { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; cursor: pointer; }
+    #lightbox.show { display: flex; }
+    #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+
+    /* Connection status */
+    #conn-status { font-size: 11px; padding: 4px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 5px; }
+    .conn-connected { background: #064e3b; color: #34d399; }
+    .conn-connecting { background: #3b2800; color: #fbbf24; }
+    .conn-disconnected { background: #450a0a; color: #f87171; }
+
+    /* Empty state */
+    #empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4b5563; gap: 12px; }
+    #empty-state .empty-icon { font-size: 48px; opacity: 0.3; }
+
+    /* Scrollbar for messages */
+    #messages::-webkit-scrollbar { width: 5px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #sidebar { width: 200px; min-width: 200px; }
+      .msg-group { max-width: 90%; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="portal" class="min-h-screen flex flex-col">
+    <div id="portal-nav"></div>
+
+    <div id="chat-app">
+      <!-- Sidebar -->
+      <div id="sidebar">
+        <div id="sidebar-header">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-white">Agents</span>
+            <span id="conn-status" class="conn-disconnected">Offline</span>
+          </div>
+        </div>
+        <div id="agent-list">
+          <div class="flex items-center justify-center h-32 text-gray-600 text-sm">Connecting...</div>
+        </div>
+      </div>
+
+      <!-- Main chat -->
+      <div id="chat-main">
+        <div id="chat-header" style="display:none;">
+          <div class="agent-avatar" id="header-avatar"></div>
+          <div>
+            <div class="text-white font-medium text-sm" id="header-name"></div>
+            <div class="text-gray-500 text-xs" id="header-model"></div>
+          </div>
+        </div>
+
+        <div id="messages">
+          <div id="empty-state">
+            <div class="empty-icon">&#x1F5E8;</div>
+            <div class="text-sm">Select an agent to start chatting</div>
+          </div>
+        </div>
+
+        <!-- Typing indicator (hidden by default) -->
+        <div id="typing-row" style="display:none;">
+          <div class="typing-indicator">
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+            <span class="typing-label" id="typing-label">is thinking...</span>
+          </div>
+        </div>
+
+        <!-- Paste preview -->
+        <div id="paste-preview" class="paste-preview" style="display:none; padding: 0 20px;"></div>
+
+        <!-- Input -->
+        <div id="input-area">
+          <div id="input-wrap">
+            <textarea id="msg-input" rows="1" placeholder="Type a message..." disabled></textarea>
+            <button id="send-btn" disabled onclick="sendMessage()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox for images -->
+  <div id="lightbox" onclick="this.classList.remove('show')"><img id="lightbox-img" src=""></div>
+
+  <script src="/portal/auth.js?v=20260310a"></script>
+  <script src="/portal/portal-common.js?v=20260310c"></script>
+  <script>
+  // ═══════════════════════════════════════════════════════════════
+  //  CliffCircuit Portal — Chat
+  // ═══════════════════════════════════════════════════════════════
+
+  const GW_URL = 'wss://gateway.cliffcircuit.ai';
+  const GW_TOKEN = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
+
+  // State
+  let ws = null;
+  let wsReady = false;
+  let msgIdCounter = 1;
+  let pendingRPC = {};          // id → {resolve, reject, timeout}
+  let agents = [];              // [{id, name, emoji, model, sessions:[]}]
+  let activeAgent = null;       // agent id
+  let activeSession = null;     // session key
+  let isStreaming = false;
+  let streamingBubble = null;   // DOM element being streamed into
+  let streamBuffer = '';
+  let pastedImages = [];        // [{dataUrl, file}]
+  let reconnectDelay = 1000;
+
+  // Agent colors for multi-agent distinction
+  const AGENT_COLORS = ['#818cf8','#34d399','#f472b6','#fbbf24','#60a5fa','#a78bfa','#fb923c'];
+
+  function agentColor(agentId) {
+    const idx = agents.findIndex(a => a.id === agentId);
+    return AGENT_COLORS[idx % AGENT_COLORS.length];
+  }
+
+  // ─── WebSocket Connection ────────────────────────────────────
+  function connect() {
+    setConnStatus('connecting');
+    ws = new WebSocket(GW_URL);
+
+    ws.onopen = () => { /* wait for challenge */ };
+
+    ws.onmessage = (evt) => {
+      let msg;
+      try { msg = JSON.parse(evt.data); } catch { return; }
+
+      // Challenge-response auth
+      if (msg.type === 'event' && msg.event === 'connect.challenge') {
+        const nonce = msg.payload?.nonce;
+        ws.send(JSON.stringify({
+          id: msgIdCounter++,
+          method: 'connect',
+          params: {
+            minProtocol: 3,
+            maxProtocol: 3,
+            client: { id: 'portal-chat', version: '1.0.0' },
+            auth: { token: GW_TOKEN },
+            nonce: nonce
+          }
+        }));
+        return;
+      }
+
+      // Connect success
+      if (msg.type === 'response' && msg.result?.connected) {
+        wsReady = true;
+        reconnectDelay = 1000;
+        setConnStatus('connected');
+        loadAgents();
+        return;
+      }
+
+      // RPC responses
+      if (msg.type === 'response' && msg.id && pendingRPC[msg.id]) {
+        const p = pendingRPC[msg.id];
+        clearTimeout(p.timeout);
+        delete pendingRPC[msg.id];
+        if (msg.error) p.reject(msg.error);
+        else p.resolve(msg.result);
+        return;
+      }
+
+      // Streaming chat events
+      if (msg.type === 'event' && msg.event === 'chat') {
+        handleChatEvent(msg.payload);
+        return;
+      }
+
+      // Session events (for typing indicator)
+      if (msg.type === 'event' && msg.event === 'session.updated') {
+        // Could use for presence
+        return;
+      }
+    };
+
+    ws.onclose = () => {
+      wsReady = false;
+      setConnStatus('disconnected');
+      setTimeout(connect, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+    };
+
+    ws.onerror = () => { ws.close(); };
+  }
+
+  function rpc(method, params = {}) {
+    return new Promise((resolve, reject) => {
+      if (!wsReady) return reject(new Error('Not connected'));
+      const id = msgIdCounter++;
+      const timeout = setTimeout(() => {
+        delete pendingRPC[id];
+        reject(new Error('RPC timeout'));
+      }, 30000);
+      pendingRPC[id] = { resolve, reject, timeout };
+      ws.send(JSON.stringify({ id, method, params }));
+    });
+  }
+
+  // ─── Connection Status Badge ─────────────────────────────────
+  function setConnStatus(state) {
+    const el = document.getElementById('conn-status');
+    el.className = 'conn-' + state;
+    el.textContent = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting...' : 'Offline';
+  }
+
+  // ─── Load Agents from Sessions ───────────────────────────────
+  async function loadAgents() {
+    try {
+      const result = await rpc('sessions.list');
+      const sessionList = result?.sessions || result || [];
+
+      // Extract unique agents
+      const agentMap = {};
+      for (const s of sessionList) {
+        const aId = s.agentId || s.agent || 'unknown';
+        if (!agentMap[aId]) {
+          agentMap[aId] = {
+            id: aId,
+            name: s.identityName || s.agentId || aId,
+            emoji: s.identityEmoji || '',
+            model: s.model || '',
+            sessions: []
+          };
+        }
+        agentMap[aId].sessions.push({
+          key: s.sessionKey || s.key,
+          label: s.label || s.sessionKey || s.key,
+          updatedAt: s.updatedAt || s.lastActivity,
+          kind: s.kind || ''
+        });
+      }
+
+      agents = Object.values(agentMap);
+      // Sort: most recently active first
+      agents.sort((a, b) => {
+        const aTime = Math.max(...a.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
+        const bTime = Math.max(...b.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
+        return bTime - aTime;
+      });
+
+      renderAgentList();
+    } catch (e) {
+      console.error('Failed to load agents:', e);
+      document.getElementById('agent-list').innerHTML = '<div class="text-red-400 text-xs p-4">Failed to load agents</div>';
+    }
+  }
+
+  // ─── Render Sidebar ──────────────────────────────────────────
+  function renderAgentList() {
+    const container = document.getElementById('agent-list');
+    if (!agents.length) {
+      container.innerHTML = '<div class="text-gray-600 text-sm p-4 text-center">No agents found</div>';
+      return;
+    }
+
+    let html = '';
+    for (const agent of agents) {
+      const isActive = activeAgent === agent.id;
+      const color = agentColor(agent.id);
+      html += `
+        <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectAgent('${agent.id}')">
+          <div class="agent-avatar" style="background:${color}22; color:${color};">${agent.emoji || agent.name.charAt(0)}</div>
+          <div style="min-width:0;">
+            <div class="agent-name">${agent.name}</div>
+            <div class="agent-model">${shortModel(agent.model)}</div>
+          </div>
+          <div class="agent-status-dot dot-online"></div>
+        </div>
+      `;
+      if (isActive && agent.sessions.length > 0) {
+        html += '<div class="session-list">';
+        // Sort sessions: most recent first
+        const sorted = [...agent.sessions].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+        for (const s of sorted.slice(0, 8)) {
+          const sActive = activeSession === s.key;
+          const label = s.label || s.key?.split(':').pop()?.slice(0, 12) || 'session';
+          html += `<div class="session-item ${sActive ? 'active' : ''}" onclick="event.stopPropagation(); selectSession('${agent.id}', '${s.key}')" title="${s.key}">${label}</div>`;
+        }
+        html += '</div>';
+      }
+    }
+    container.innerHTML = html;
+  }
+
+  function shortModel(model) {
+    if (!model) return '';
+    return model.replace('anthropic/', '').replace('claude-', '').replace(/-\d{4}.*/, '');
+  }
+
+  // ─── Select Agent / Session ──────────────────────────────────
+  function selectAgent(agentId) {
+    activeAgent = agentId;
+    const agent = agents.find(a => a.id === agentId);
+    if (!agent) return;
+
+    // Auto-select most recent session
+    const sorted = [...agent.sessions].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    if (sorted.length > 0) {
+      selectSession(agentId, sorted[0].key);
+    }
+    renderAgentList();
+  }
+
+  function selectSession(agentId, sessionKey) {
+    activeAgent = agentId;
+    activeSession = sessionKey;
+    const agent = agents.find(a => a.id === agentId);
+
+    // Update header
+    const header = document.getElementById('chat-header');
+    header.style.display = 'flex';
+    document.getElementById('header-avatar').textContent = agent?.emoji || agentId.charAt(0);
+    document.getElementById('header-avatar').style.background = agentColor(agentId) + '22';
+    document.getElementById('header-avatar').style.color = agentColor(agentId);
+    document.getElementById('header-name').textContent = agent?.name || agentId;
+    document.getElementById('header-model').textContent = shortModel(agent?.model);
+
+    // Enable input
+    document.getElementById('msg-input').disabled = false;
+    document.getElementById('send-btn').disabled = false;
+    document.getElementById('msg-input').focus();
+
+    renderAgentList();
+    loadHistory(sessionKey);
+  }
+
+  // ─── Load Chat History ───────────────────────────────────────
+  async function loadHistory(sessionKey) {
+    const messagesEl = document.getElementById('messages');
+    messagesEl.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-600 text-sm">Loading messages...</div>';
+
+    try {
+      const result = await rpc('chat.history', { sessionKey, limit: 50 });
+      const messages = result?.messages || result || [];
+      messagesEl.innerHTML = '';
+
+      if (messages.length === 0) {
+        messagesEl.innerHTML = '<div id="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.2;">&#x1F5E8;</div><div class="text-sm text-gray-600">No messages yet. Say hello!</div></div>';
+        return;
+      }
+
+      for (const msg of messages) {
+        appendMessage(msg);
+      }
+      scrollToBottom();
+    } catch (e) {
+      console.error('Failed to load history:', e);
+      messagesEl.innerHTML = '<div class="text-red-400 text-sm p-4 text-center">Failed to load history</div>';
+    }
+  }
+
+  // ─── Append Message to DOM ───────────────────────────────────
+  function appendMessage(msg, streaming = false) {
+    const messagesEl = document.getElementById('messages');
+    // Remove empty state if present
+    const empty = document.getElementById('empty-state');
+    if (empty) empty.remove();
+
+    const role = msg.role || (msg.sender === 'user' ? 'user' : 'assistant');
+    const isUser = role === 'user';
+    const agent = agents.find(a => a.id === (msg.agentId || activeAgent));
+
+    const group = document.createElement('div');
+    group.className = `msg-group ${isUser ? 'user' : 'assistant'}`;
+
+    // Avatar
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    if (isUser) {
+      avatar.textContent = '👤';
+      avatar.style.background = '#1f293722';
+    } else {
+      avatar.textContent = agent?.emoji || '🤖';
+      const c = agentColor(agent?.id || 'x');
+      avatar.style.background = c + '22';
+      avatar.style.color = c;
+    }
+
+    // Content wrapper
+    const content = document.createElement('div');
+    content.className = 'msg-content';
+
+    // Meta (name + time)
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = isUser ? 'You' : (agent?.name || 'Agent');
+    meta.appendChild(nameSpan);
+    if (msg.createdAt || msg.timestamp) {
+      const timeSpan = document.createElement('span');
+      timeSpan.textContent = formatTime(msg.createdAt || msg.timestamp);
+      meta.appendChild(timeSpan);
+    }
+
+    // Bubble
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    const text = msg.content || msg.text || msg.message || '';
+    bubble.innerHTML = renderMarkdown(text);
+
+    // Handle images in message
+    if (msg.attachments?.length) {
+      for (const att of msg.attachments) {
+        if (att.type?.startsWith('image') || att.url?.match(/\.(png|jpg|jpeg|gif|webp)/i)) {
+          const img = document.createElement('img');
+          img.src = att.url || att.dataUrl;
+          img.onclick = () => openLightbox(img.src);
+          bubble.appendChild(img);
+        }
+      }
+    }
+
+    content.appendChild(meta);
+    content.appendChild(bubble);
+    group.appendChild(avatar);
+    group.appendChild(content);
+    messagesEl.appendChild(group);
+
+    if (streaming) {
+      streamingBubble = bubble;
+    }
+
+    return bubble;
+  }
+
+  // ─── Streaming Chat Events ───────────────────────────────────
+  function handleChatEvent(payload) {
+    if (!payload) return;
+    const sk = payload.sessionKey;
+
+    // Only handle events for the active session
+    if (sk && sk !== activeSession) return;
+
+    if (payload.chunk) {
+      showTyping(false);
+      if (!streamingBubble) {
+        // Start new assistant message
+        isStreaming = true;
+        streamBuffer = '';
+        appendMessage({ role: 'assistant', content: '' }, true);
+      }
+      streamBuffer += payload.chunk;
+      streamingBubble.innerHTML = renderMarkdown(streamBuffer);
+      scrollToBottom();
+    }
+
+    if (payload.done) {
+      isStreaming = false;
+      streamingBubble = null;
+      streamBuffer = '';
+      showTyping(false);
+    }
+
+    // Thinking / processing state
+    if (payload.thinking || payload.status === 'thinking') {
+      showTyping(true, 'is thinking...');
+    }
+  }
+
+  // ─── Send Message ────────────────────────────────────────────
+  async function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text && pastedImages.length === 0) return;
+    if (!activeSession) return;
+
+    // Build message content
+    let content = text;
+
+    // Append image data if pasted
+    const attachments = [];
+    if (pastedImages.length > 0) {
+      for (const img of pastedImages) {
+        attachments.push({ type: 'image', dataUrl: img.dataUrl });
+      }
+    }
+
+    // Show user message immediately
+    appendMessage({
+      role: 'user',
+      content: text,
+      attachments: attachments.length ? attachments : undefined,
+      createdAt: new Date().toISOString()
+    });
+    scrollToBottom();
+
+    // Clear input
+    input.value = '';
+    input.style.height = 'auto';
+    clearPastedImages();
+
+    // Show typing
+    showTyping(true);
+
+    // Send via WS
+    try {
+      const params = {
+        sessionKey: activeSession,
+        message: content,
+        idempotencyKey: crypto.randomUUID()
+      };
+      // Note: image attachments would need base64 encoding in the message
+      // For now, images are shown locally; gateway may need additional handling
+      await rpc('chat.send', params);
+    } catch (e) {
+      console.error('Send failed:', e);
+      showTyping(false);
+      appendMessage({
+        role: 'assistant',
+        content: 'Failed to send message. Please try again.',
+        createdAt: new Date().toISOString()
+      });
+    }
+  }
+
+  // ─── Typing Indicator ───────────────────────────────────────
+  function showTyping(show, label) {
+    const row = document.getElementById('typing-row');
+    const labelEl = document.getElementById('typing-label');
+    if (show) {
+      if (label) labelEl.textContent = label;
+      row.style.display = 'block';
+      scrollToBottom();
+    } else {
+      row.style.display = 'none';
+    }
+  }
+
+  // ─── Markdown Rendering (lightweight) ────────────────────────
+  function renderMarkdown(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+
+    // Code blocks (``` ... ```)
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      return `<pre><code>${code.trim()}</code></pre>`;
+    });
+
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Bold
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Italic
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+    // Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Blockquotes
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Unordered lists
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // Line breaks → paragraphs
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br>');
+    html = '<p>' + html + '</p>';
+    html = html.replace(/<p><\/p>/g, '');
+
+    return html;
+  }
+
+  function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+  }
+
+  // ─── Image Paste Support ─────────────────────────────────────
+  document.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          pastedImages.push({ dataUrl: ev.target.result, file });
+          renderPastePreview();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  });
+
+  function renderPastePreview() {
+    const container = document.getElementById('paste-preview');
+    if (pastedImages.length === 0) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+    container.style.display = 'flex';
+    container.innerHTML = pastedImages.map((img, i) => `
+      <div class="paste-thumb">
+        <img src="${img.dataUrl}">
+        <button onclick="removePastedImage(${i})">x</button>
+      </div>
+    `).join('');
+  }
+
+  function removePastedImage(idx) {
+    pastedImages.splice(idx, 1);
+    renderPastePreview();
+  }
+
+  function clearPastedImages() {
+    pastedImages = [];
+    renderPastePreview();
+  }
+
+  // ─── Lightbox ────────────────────────────────────────────────
+  function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('show');
+  }
+
+  // ─── Utilities ───────────────────────────────────────────────
+  function formatTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return isToday ? time : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + time;
+  }
+
+  function scrollToBottom() {
+    const el = document.getElementById('messages');
+    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+  }
+
+  // ─── Input Handling ──────────────────────────────────────────
+  const msgInput = document.getElementById('msg-input');
+  msgInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Auto-resize textarea
+  msgInput.addEventListener('input', () => {
+    msgInput.style.height = 'auto';
+    msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+  });
+
+  // ─── Init ────────────────────────────────────────────────────
+  requireAuth();
+  initPortal('chat');
+  connect();
+  </script>
+</body>
+</html>
