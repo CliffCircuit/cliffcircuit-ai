@@ -125,7 +125,7 @@
         // Check if email is in the approved portal_users table
         const { data, error } = await _sb
           .from('portal_users')
-          .select('email, role')
+          .select('email')
           .ilike('email', email)
           .limit(1);
 
