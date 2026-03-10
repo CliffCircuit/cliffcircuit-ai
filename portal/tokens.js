@@ -1497,6 +1497,101 @@ function _renderStackedCostChart(items, mode) {
     }
   }
 
+  // Backfill empty hourly slots so Today/Yesterday/24h charts show continuous timeline
+  if (bucketMode === 'hourly') {
+    const nowPT = new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
+    if (range === 'today') {
+      // Every hour from midnight PT to current hour PT
+      const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+      const currentHour = nowPT.getHours();
+      for (let h = 0; h <= currentHour; h++) {
+        const slotDate = new Date(`${todayStr}T${String(h).padStart(2, '0')}:00:00`);
+        const hourKey = todayStr + ' ' + String(h).padStart(2, '0');
+        if (!buckets[hourKey]) {
+          buckets[hourKey] = {
+            label: slotDate.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true }),
+            segments: {}
+          };
+        }
+      }
+    } else if (range === 'yesterday') {
+      // Every hour 0-23 PT for yesterday
+      const yesterday = new Date(nowPT);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yStr = yesterday.toLocaleDateString('en-CA', { timeZone: TZ });
+      for (let h = 0; h < 24; h++) {
+        const slotDate = new Date(`${yStr}T${String(h).padStart(2, '0')}:00:00`);
+        const hourKey = yStr + ' ' + String(h).padStart(2, '0');
+        if (!buckets[hourKey]) {
+          buckets[hourKey] = {
+            label: slotDate.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true }),
+            segments: {}
+          };
+        }
+      }
+    } else if (range === '24h') {
+      // Every hour in the last 24 hours
+      const nowMs = Date.now();
+      const oneHour = 60 * 60 * 1000;
+      // Floor current time to the hour
+      const currentHourMs = Math.floor(nowMs / oneHour) * oneHour;
+      const startHourMs = currentHourMs - 23 * oneHour;
+      for (let i = 0; i < 24; i++) {
+        const slotDate = new Date(startHourMs + i * oneHour);
+        const dateKey = slotDate.toLocaleDateString('en-CA', { timeZone: TZ });
+        const hourKey = dateKey + ' ' + slotDate.toLocaleString('en-US', { timeZone: TZ, hour: '2-digit', hour12: false });
+        if (!buckets[hourKey]) {
+          buckets[hourKey] = {
+            label: slotDate.toLocaleString('en-US', { timeZone: TZ, hour: 'numeric', hour12: true }),
+            segments: {}
+          };
+        }
+      }
+    }
+  }
+
+  // Backfill empty daily slots so 7d/week/30d/month charts show continuous timeline
+  if (bucketMode === 'daily') {
+    const nowPT = new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+    const today = new Date(todayStr + 'T00:00:00');
+
+    let startDate, endDate;
+    if (range === '7d') {
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 6);
+      endDate = today;
+    } else if (range === 'week') {
+      // Monday through today (ISO week start)
+      const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ...
+      const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - daysFromMon);
+      endDate = today;
+    } else if (range === '30d') {
+      startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 29);
+      endDate = today;
+    } else if (range === 'month') {
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      endDate = today;
+    }
+
+    if (startDate && endDate) {
+      const cursor = new Date(startDate);
+      while (cursor <= endDate) {
+        const dayKey = cursor.toLocaleDateString('en-CA', { timeZone: TZ });
+        if (!buckets[dayKey]) {
+          buckets[dayKey] = {
+            label: cursor.toLocaleDateString('en-US', { timeZone: TZ, month: 'short', day: 'numeric' }),
+            segments: {}
+          };
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+  }
+
   const timePeriods = Object.entries(buckets).sort((a, b) => a[0].localeCompare(b[0]));
 
   if (timePeriods.length === 0) {
@@ -1560,8 +1655,14 @@ function _renderStackedCostChart(items, mode) {
 
     const totalCost = segs.reduce((s, seg) => s + seg.cost, 0);
 
-    // Skip zero-cost buckets — no bar, no value label, no time label
-    if (totalCost <= 0) return '';
+    // Zero-cost buckets: show time label + thin placeholder bar (2px)
+    if (totalCost <= 0) {
+      return `<div class="cost-bar-col">
+        <div class="cost-bar-value" style="visibility:hidden;">$0</div>
+        <div class="cost-stacked-bar" style="height:2px;min-height:2px;background:rgba(255,255,255,0.08);border-radius:2px;"></div>
+        <div class="cost-bar-label">${esc(bucket.label)}</div>
+      </div>`;
+    }
 
     const barHeightPct = Math.max((totalCost / visibleMaxCost) * 100, 2);
     const delay = (colIdx * 0.06).toFixed(2);
