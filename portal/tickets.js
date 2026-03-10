@@ -1,6 +1,10 @@
 /* ── tickets.js — Ticket Board Modal ───────────────────────────────────
    Full-screen modal overlay showing all atlas_tickets from Supabase.
-   Tim can update tim_status via dropdown + reject_reason inline.
+   Tim can update tim_status via dropdown + reject_reason with image attachments.
+
+   Status pipeline: Queued → Coding → Deployed → Verified → Reviewed → Rejected
+   State history rendered as a timestamp trail under each ticket.
+   Reject textarea with drag-and-drop / paste image support.
    ──────────────────────────────────────────────────────────────────── */
 
 (function () {
@@ -18,12 +22,47 @@
     return `${mon} ${day}, ${h}`;
   }
 
+  function fmtTime(iso) {
+    if (!iso) return '?';
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Los_Angeles' });
+  }
+
+  // ── Status Pipeline ─────────────────────────────────────────────────
+  const PIPELINE_STATUSES = ['Queued', 'Coding', 'Deployed', 'Verified', 'Reviewed', 'Rejected'];
+
   const STATUS_COLORS = {
+    'Queued':    { bg: '#374151', text: '#9ca3af' },
+    'Coding':    { bg: '#1e3a5f', text: '#60a5fa' },
+    'Deployed':  { bg: '#1a2e05', text: '#84cc16' },
+    'Verified':  { bg: '#14532d', text: '#4ade80' },
+    'Reviewed':  { bg: '#422006', text: '#fbbf24' },
+    'Rejected':  { bg: '#450a0a', text: '#f87171' },
+    // Legacy fallbacks
     'todo':        { bg: '#374151', text: '#9ca3af' },
     'in-progress': { bg: '#1e3a5f', text: '#60a5fa' },
     'review':      { bg: '#422006', text: '#fbbf24' },
     'done':        { bg: '#14532d', text: '#4ade80' },
   };
+
+  // ── Reject data helpers ─────────────────────────────────────────────
+  // reject_reason stores either plain text (legacy) or JSON: {text, images}
+  function parseRejectData(raw) {
+    if (!raw) return { text: '', images: [] };
+    if (typeof raw === 'object') return { text: raw.text || '', images: raw.images || [] };
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return { text: parsed.text || '', images: parsed.images || [] };
+      }
+    } catch (_) { /* not JSON */ }
+    return { text: raw, images: [] };
+  }
+
+  function serializeRejectData(text, images) {
+    if (!images || !images.length) return text || '';
+    return JSON.stringify({ text: text || '', images: images });
+  }
 
   // ── Supabase helpers ────────────────────────────────────────────────
   function sbFetch(path, opts) {
@@ -53,18 +92,28 @@
   }
 
   // ── Render ──────────────────────────────────────────────────────────
-  function renderHistory(hist) {
-    if (!hist || !hist.length) return '<span style="color:#4b5563;font-size:11px;">No history</span>';
-    return hist.map(h => {
-      const label = h.field === 'status' ? 'Status' :
-                    h.field === 'cliff_status' ? 'Cliff' :
-                    h.field === 'tim_status' ? 'Tim' : h.field;
-      return `<span style="color:#6b7280;">${label} → ${h.value} (${fmtDate(h.at)})</span>`;
-    }).join(' <span style="color:#374151;">·</span> ');
+  function renderStateHistory(hist) {
+    if (!hist || !hist.length) return '<span style="color:#4b5563;font-size:11px;font-style:italic;">No transitions yet</span>';
+    // Filter to status transitions only for the pipeline trail
+    const statusEntries = hist.filter(h => h.field === 'status' || h.status);
+    if (!statusEntries.length) {
+      // Fallback: show all entries
+      return hist.map(h => {
+        const label = h.status || h.value || h.field || '?';
+        const time = fmtTime(h.at || h.timestamp);
+        return `<span style="color:#9ca3af;font-size:11px;">${label} <span style="color:#4b5563;">${time}</span></span>`;
+      }).join(' <span style="color:#334155;font-size:11px;">→</span> ');
+    }
+    return statusEntries.map(h => {
+      const label = h.status || h.value || '?';
+      const time = fmtTime(h.at || h.timestamp);
+      const c = STATUS_COLORS[label] || STATUS_COLORS['Queued'];
+      return `<span style="color:${c.text};font-size:11px;">${label} <span style="color:#4b5563;">${time}</span></span>`;
+    }).join(' <span style="color:#334155;font-size:11px;">→</span> ');
   }
 
   function renderStatusPill(status) {
-    const c = STATUS_COLORS[status] || STATUS_COLORS['todo'];
+    const c = STATUS_COLORS[status] || STATUS_COLORS['Queued'];
     return `<span style="display:inline-block;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600;background:${c.bg};color:${c.text};white-space:nowrap;">${status}</span>`;
   }
 
@@ -77,26 +126,54 @@
     return `<select data-ticket-id="${ticket.id}" class="tkt-tim-select" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:2px 6px;font-size:12px;cursor:pointer;">${sel}</select>`;
   }
 
+  function renderRejectArea(ticket) {
+    if (ticket.tim_status !== 'Rejected') return '';
+    const data = parseRejectData(ticket.reject_reason);
+
+    // Thumbnails HTML
+    let thumbsHtml = '';
+    if (data.images && data.images.length) {
+      thumbsHtml = '<div class="tkt-reject-thumbs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">' +
+        data.images.map((img, i) =>
+          `<div style="position:relative;display:inline-block;" data-ticket-id="${ticket.id}" data-img-idx="${i}">
+            <img src="${img.data_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #334155;cursor:pointer;" title="${img.filename || 'image'}" onclick="window._tktPreviewImage(this.src)">
+            <button class="tkt-remove-img" data-ticket-id="${ticket.id}" data-img-idx="${i}" style="position:absolute;top:-4px;right:-4px;background:#7f1d1d;color:#fca5a5;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;line-height:16px;text-align:center;cursor:pointer;padding:0;" title="Remove">✕</button>
+          </div>`
+        ).join('') +
+        '</div>';
+    }
+
+    return `
+      <div class="tkt-reject-area" data-ticket-id="${ticket.id}" style="margin-top:8px;width:100%;">
+        <textarea data-ticket-id="${ticket.id}" class="tkt-reject-input" rows="4" placeholder="Rejection reason… (paste or drag images here)"
+          style="background:#1e293b;color:#fca5a5;border:1px solid #7f1d1d;border-radius:6px;padding:8px 10px;font-size:12px;width:100%;min-width:300px;resize:vertical;font-family:inherit;line-height:1.4;box-sizing:border-box;">${data.text.replace(/</g, '&lt;')}</textarea>
+        <div class="tkt-drop-zone" data-ticket-id="${ticket.id}" style="border:1px dashed #334155;border-radius:6px;padding:8px;margin-top:4px;text-align:center;color:#4b5563;font-size:11px;cursor:pointer;transition:all 0.15s;">
+          📎 Drag &amp; drop or paste (⌘V) screenshots
+        </div>
+        ${thumbsHtml}
+      </div>`;
+  }
+
   function renderTicketRows(tickets) {
     if (!tickets.length) {
       return '<tr><td colspan="6" style="text-align:center;color:#4b5563;padding:32px;">No tickets found.</td></tr>';
     }
     return tickets.map(t => {
       const cliffStatus = t.cliff_status || '—';
-      const rejectHtml = (t.tim_status === 'Rejected')
-        ? `<input type="text" data-ticket-id="${t.id}" class="tkt-reject-input" placeholder="Reason…" value="${(t.reject_reason || '').replace(/"/g, '&quot;')}" style="background:#1e293b;color:#fca5a5;border:1px solid #7f1d1d;border-radius:4px;padding:2px 8px;font-size:11px;width:180px;margin-left:6px;">`
-        : '';
       return `
         <tr style="border-bottom:1px solid #1e293b;">
           <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#a5b4fc;white-space:nowrap;">${fmtId(t.id)}</td>
-          <td style="padding:10px 12px;font-size:13px;color:#e2e8f0;max-width:400px;">${t.title || '—'}</td>
+          <td style="padding:10px 12px;font-size:13px;color:#e2e8f0;max-width:400px;">
+            ${t.title || '—'}
+            ${renderRejectArea(t)}
+          </td>
           <td style="padding:10px 12px;">${renderStatusPill(t.status)}</td>
           <td style="padding:10px 12px;font-size:11px;color:#6b7280;white-space:nowrap;">${fmtDate(t.updated_at)}</td>
           <td style="padding:10px 12px;font-size:12px;color:#9ca3af;white-space:nowrap;">Cliff: <span style="color:#e2e8f0;font-weight:500;">${cliffStatus}</span></td>
-          <td style="padding:10px 12px;white-space:nowrap;">Tim: ${renderTimDropdown(t)}${rejectHtml}</td>
+          <td style="padding:10px 12px;white-space:nowrap;">Tim: ${renderTimDropdown(t)}</td>
         </tr>
         <tr style="border-bottom:1px solid #0f172a;">
-          <td colspan="6" style="padding:2px 12px 8px;font-size:11px;">${renderHistory(t.state_history)}</td>
+          <td colspan="6" style="padding:2px 12px 8px;font-size:11px;">${renderStateHistory(t.state_history)}</td>
         </tr>`;
     }).join('');
   }
@@ -104,6 +181,8 @@
   // ── Modal ───────────────────────────────────────────────────────────
   let _modalEl = null;
   let _tickets = [];
+  // Per-ticket image staging (before save)
+  let _rejectImages = {}; // ticketId -> [{data_url, filename, timestamp}]
 
   function buildModal() {
     if (_modalEl) return _modalEl;
@@ -145,6 +224,10 @@
           </div>
         </div>
       </div>
+      <!-- Image preview overlay -->
+      <div id="tkt-img-preview" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.85);cursor:zoom-out;display:none;align-items:center;justify-content:center;" onclick="this.style.display='none'">
+        <img id="tkt-img-preview-src" style="max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+      </div>
     `;
     document.body.appendChild(div);
     _modalEl = div;
@@ -154,17 +237,101 @@
     div.querySelector('#tkt-backdrop').addEventListener('click', closeTicketsModal);
     div.querySelector('#tkt-refresh').addEventListener('click', refreshTickets);
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && _modalEl && _modalEl.style.display !== 'none') closeTicketsModal();
+      if (e.key === 'Escape') {
+        const preview = document.getElementById('tkt-img-preview');
+        if (preview && preview.style.display === 'flex') { preview.style.display = 'none'; return; }
+        if (_modalEl && _modalEl.style.display !== 'none') closeTicketsModal();
+      }
     });
 
-    // Delegate tim_status dropdown + reject input
+    // Delegate: tim_status dropdown
     div.addEventListener('change', handleTimChange);
+
+    // Delegate: reject textarea blur (auto-save)
+    div.addEventListener('focusout', handleRejectBlur);
+
+    // Delegate: reject textarea Ctrl+Enter save
     div.addEventListener('keydown', handleRejectKey);
-    div.addEventListener('blur', handleRejectBlur, true);
+
+    // Delegate: remove image button
+    div.addEventListener('click', handleRemoveImage);
+
+    // Delegate: drop zone drag & drop
+    div.addEventListener('dragover', handleDragOver);
+    div.addEventListener('dragleave', handleDragLeave);
+    div.addEventListener('drop', handleDrop);
+
+    // Global paste handler for images
+    document.addEventListener('paste', handlePaste);
 
     return div;
   }
 
+  // ── Image preview ───────────────────────────────────────────────────
+  window._tktPreviewImage = function (src) {
+    const el = document.getElementById('tkt-img-preview');
+    if (!el) return;
+    el.querySelector('#tkt-img-preview-src').src = src;
+    el.style.display = 'flex';
+  };
+
+  // ── Image handling ──────────────────────────────────────────────────
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function addImagesToTicket(ticketId, files) {
+    const ticket = _tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+
+    const data = parseRejectData(ticket.reject_reason);
+    const images = data.images || [];
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      const dataUrl = await fileToDataUrl(file);
+      images.push({
+        data_url: dataUrl,
+        filename: file.name || 'screenshot.png',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const serialized = serializeRejectData(data.text, images);
+    try {
+      await patchTicket(ticketId, { reject_reason: serialized });
+      ticket.reject_reason = serialized;
+      renderBody();
+    } catch (err) {
+      console.error('Failed to save images:', err);
+      alert('Failed to save images. Check console.');
+    }
+  }
+
+  async function removeImageFromTicket(ticketId, imgIdx) {
+    const ticket = _tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+
+    const data = parseRejectData(ticket.reject_reason);
+    if (!data.images || !data.images.length) return;
+
+    data.images.splice(imgIdx, 1);
+    const serialized = serializeRejectData(data.text, data.images);
+    try {
+      await patchTicket(ticketId, { reject_reason: serialized });
+      ticket.reject_reason = serialized;
+      renderBody();
+    } catch (err) {
+      console.error('Failed to remove image:', err);
+    }
+  }
+
+  // ── Event handlers ──────────────────────────────────────────────────
   async function handleTimChange(e) {
     if (!e.target.classList.contains('tkt-tim-select')) return;
     const id = Number(e.target.dataset.ticketId);
@@ -193,24 +360,97 @@
 
   function handleRejectKey(e) {
     if (!e.target.classList.contains('tkt-reject-input')) return;
-    if (e.key === 'Enter') { e.target.blur(); }
+    // Ctrl+Enter or Cmd+Enter to save
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      e.target.blur();
+    }
   }
 
   async function handleRejectBlur(e) {
     if (!e.target.classList.contains('tkt-reject-input')) return;
     const id = Number(e.target.dataset.ticketId);
-    const reason = e.target.value.trim();
-    if (!reason) { e.target.focus(); e.target.style.borderColor = '#dc2626'; return; }
+    const text = e.target.value.trim();
+    const ticket = _tickets.find(t => t.id === id);
+    if (!ticket) return;
+
+    const oldData = parseRejectData(ticket.reject_reason);
+    if (text === oldData.text) return; // no change
+
+    const serialized = serializeRejectData(text, oldData.images);
     try {
-      await patchTicket(id, { reject_reason: reason });
-      const ticket = _tickets.find(t => t.id === id);
-      if (ticket) ticket.reject_reason = reason;
+      await patchTicket(id, { reject_reason: serialized });
+      ticket.reject_reason = serialized;
       e.target.style.borderColor = '#334155';
+      // Brief flash to confirm save
+      e.target.style.borderColor = '#22c55e';
+      setTimeout(() => { if (e.target) e.target.style.borderColor = '#7f1d1d'; }, 600);
     } catch (err) {
       console.error('Failed to save reject reason:', err);
+      e.target.style.borderColor = '#dc2626';
     }
   }
 
+  function handleRemoveImage(e) {
+    const btn = e.target.closest('.tkt-remove-img');
+    if (!btn) return;
+    const ticketId = Number(btn.dataset.ticketId);
+    const imgIdx = Number(btn.dataset.imgIdx);
+    removeImageFromTicket(ticketId, imgIdx);
+  }
+
+  function handleDragOver(e) {
+    const zone = e.target.closest('.tkt-drop-zone');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    zone.style.borderColor = '#60a5fa';
+    zone.style.background = 'rgba(96,165,250,0.05)';
+    zone.textContent = '📎 Drop image here';
+  }
+
+  function handleDragLeave(e) {
+    const zone = e.target.closest('.tkt-drop-zone');
+    if (!zone) return;
+    zone.style.borderColor = '#334155';
+    zone.style.background = 'transparent';
+    zone.innerHTML = '📎 Drag &amp; drop or paste (⌘V) screenshots';
+  }
+
+  function handleDrop(e) {
+    const zone = e.target.closest('.tkt-drop-zone');
+    if (!zone) return;
+    e.preventDefault();
+    e.stopPropagation();
+    zone.style.borderColor = '#334155';
+    zone.style.background = 'transparent';
+    zone.innerHTML = '📎 Drag &amp; drop or paste (⌘V) screenshots';
+
+    const ticketId = Number(zone.dataset.ticketId);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length) addImagesToTicket(ticketId, files);
+  }
+
+  function handlePaste(e) {
+    // Only handle if a reject textarea or drop zone is focused/active
+    if (!_modalEl || _modalEl.style.display === 'none') return;
+    const active = document.activeElement;
+    const isRejectArea = active && (active.classList.contains('tkt-reject-input') || active.closest('.tkt-reject-area'));
+    if (!isRejectArea) return;
+
+    const items = Array.from(e.clipboardData.items);
+    const imageItems = items.filter(item => item.type.startsWith('image/'));
+    if (!imageItems.length) return;
+
+    e.preventDefault();
+    const ticketId = Number(active.dataset.ticketId || active.closest('[data-ticket-id]')?.dataset.ticketId);
+    if (!ticketId) return;
+
+    const files = imageItems.map(item => item.getAsFile()).filter(Boolean);
+    if (files.length) addImagesToTicket(ticketId, files);
+  }
+
+  // ── Render body ─────────────────────────────────────────────────────
   function renderBody() {
     const tbody = _modalEl.querySelector('#tkt-body');
     tbody.innerHTML = renderTicketRows(_tickets);
