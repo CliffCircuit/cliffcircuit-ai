@@ -104,6 +104,24 @@
     .tkt-in-progress { background: #422006; color: #fbbf24; }
     .tkt-review { background: #1e3a5f; color: #60a5fa; }
     .tkt-done { background: #064e3b; color: #34d399; }
+    /* Multi-select dropdown */
+    .ms-dropdown { position: relative; display: inline-block; }
+    .ms-trigger { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid #374151; background: #111827; color: #d1d5db; cursor: pointer; user-select: none; white-space: nowrap; transition: border-color 0.15s ease; min-width: 100px; max-width: 220px; }
+    .ms-trigger:hover { border-color: #6b7280; }
+    .ms-trigger.ms-open { border-color: #6366f1; }
+    .ms-trigger-text { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .ms-trigger-arrow { font-size: 10px; color: #6b7280; flex-shrink: 0; transition: transform 0.15s ease; }
+    .ms-trigger.ms-open .ms-trigger-arrow { transform: rotate(180deg); }
+    .ms-panel { display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 180px; max-height: 260px; overflow-y: auto; background: #111827; border: 1px solid #374151; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 100; padding: 4px 0; }
+    .ms-panel.ms-open { display: block; }
+    .ms-option { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 12px; color: #d1d5db; cursor: pointer; transition: background 0.1s ease; user-select: none; }
+    .ms-option:hover { background: #1f2937; }
+    .ms-option-check { width: 14px; height: 14px; border: 1px solid #4b5563; border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; color: transparent; transition: all 0.1s ease; }
+    .ms-option.ms-selected .ms-option-check { background: #6366f1; border-color: #6366f1; color: #fff; }
+    .ms-option-sep { border-top: 1px solid #1f2937; margin: 2px 0; }
+    .ms-panel::-webkit-scrollbar { width: 4px; }
+    .ms-panel::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }
+    .ms-panel::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -136,35 +154,22 @@
           <div class="w-px h-4 bg-gray-700"></div>
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Agent</span>
-            <select id="global-agent" onchange="setGlobalAgent(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all" selected>All Agents</option>
-              <option value="atlas">Atlas</option>
-              <option value="claude-code">Claude Code</option>
-              <option value="cliff">Cliff</option>
-              <option value="samantha">Samantha</option>
-              <option value="scout">Scout</option>
-            </select>
+            <div id="global-agent" class="ms-dropdown"></div>
           </div>
           <div class="w-px h-4 bg-gray-700"></div>
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Task</span>
-            <select id="global-task" onchange="setGlobalTask(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all" selected>All Tasks</option>
-            </select>
+            <div id="global-task" class="ms-dropdown"></div>
           </div>
           <div class="w-px h-4 bg-gray-700"></div>
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Provider</span>
-            <select id="global-provider" onchange="setGlobalProvider(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all" selected>All Providers</option>
-            </select>
+            <div id="global-provider" class="ms-dropdown"></div>
           </div>
           <div class="w-px h-4 bg-gray-700"></div>
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-500 uppercase tracking-wide whitespace-nowrap">Model</span>
-            <select id="global-model" onchange="setGlobalModel(this.value)" class="text-xs px-3 py-1.5 rounded border border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-500 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer">
-              <option value="all" selected>All Models</option>
-            </select>
+            <div id="global-model" class="ms-dropdown"></div>
           </div>
 
         </div>
@@ -180,7 +185,7 @@
         <div class="card p-5">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost</div>
           <div id="tok-cost" class="text-3xl font-bold text-yellow-400">&mdash;</div>
-          <div class="text-xs text-gray-600 mt-1">all sessions combined</div>
+          <div id="tok-cost-sub" class="text-xs text-gray-600 mt-1">all sessions combined</div>
         </div>
         <div class="card p-5">
           <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Sessions</div>

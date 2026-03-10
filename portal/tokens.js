@@ -11,10 +11,14 @@
 
     // ── State ─────────────────────────────────────────────────────────
     window._globalRange  = 'today';
-    window._globalAgent    = 'all';
-    window._globalTask     = 'all';
-    window._globalProvider = 'all';
-    window._globalModel    = 'all';
+    // Multi-select filters: empty array = "all" (no filter)
+    window._globalAgent    = [];
+    window._globalTask     = [];
+    window._globalProvider = [];
+    window._globalModel    = [];
+    // Helpers for multi-select filter checks
+    const _isAll = arr => !arr || !Array.isArray(arr) ? (arr === 'all' || !arr) : arr.length === 0;
+    const _inFilter = (val, arr) => _isAll(arr) || arr.includes(val);
     window._tokenRange     = 'today';
     window._dbSubShowAll = false;
     window._dbRawTaskFilter = 'all';
@@ -27,6 +31,94 @@
     window._costChartView = 'agent';  // default: stacked by agent over time
     window._costChartItems = [];     // cached items for re-render on view switch
     window._costChartHidden = { agent: new Set(), model: new Set(), task: new Set() }; // legend toggle state per view
+
+    // ── Multi-select dropdown widget ─────────────────────────────────
+    // Creates a checkbox-style multi-select dropdown inside a container element.
+    // options: [{ value, label }], selected: array of selected values,
+    // allLabel: text for "all" state, onChange: fn(selectedArray)
+    function _initMultiSelect(containerId, options, selected, allLabel, onChange) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const _escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+      function render() {
+        const sel = selected;
+        let triggerText = allLabel;
+        if (sel.length === 1) {
+          const opt = options.find(o => o.value === sel[0]);
+          triggerText = opt ? opt.label : sel[0];
+        } else if (sel.length > 1 && sel.length < options.length) {
+          triggerText = sel.length + ' selected';
+        } else if (sel.length > 0 && sel.length === options.length) {
+          triggerText = allLabel;
+          // If all are selected, treat as "all" — clear the selection
+          sel.length = 0;
+        }
+
+        const isOpen = container.querySelector('.ms-panel.ms-open') !== null;
+
+        container.innerHTML = `
+          <div class="ms-trigger${isOpen ? ' ms-open' : ''}" data-ms-id="${containerId}">
+            <span class="ms-trigger-text">${_escHtml(triggerText)}</span>
+            <span class="ms-trigger-arrow">▾</span>
+          </div>
+          <div class="ms-panel${isOpen ? ' ms-open' : ''}" data-ms-panel="${containerId}">
+            ${options.map(o => {
+              const isSel = sel.includes(o.value);
+              return `<div class="ms-option${isSel ? ' ms-selected' : ''}" data-value="${_escHtml(o.value)}">
+                <span class="ms-option-check">${isSel ? '✓' : ''}</span>
+                <span>${_escHtml(o.label)}</span>
+              </div>`;
+            }).join('')}
+            ${sel.length > 0 ? '<div class="ms-option-sep"></div><div class="ms-option ms-clear-option" data-value="__clear__"><span style="color:#6b7280;">✕ Clear filters</span></div>' : ''}
+          </div>`;
+
+        // Trigger click
+        const trigger = container.querySelector('.ms-trigger');
+        trigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const panel = container.querySelector('.ms-panel');
+          const wasOpen = panel.classList.contains('ms-open');
+          // Close all other dropdowns
+          document.querySelectorAll('.ms-panel.ms-open').forEach(p => {
+            p.classList.remove('ms-open');
+            p.previousElementSibling?.classList.remove('ms-open');
+          });
+          if (!wasOpen) {
+            panel.classList.add('ms-open');
+            trigger.classList.add('ms-open');
+          }
+        });
+
+        // Option clicks
+        container.querySelectorAll('.ms-option').forEach(opt => {
+          opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const val = opt.dataset.value;
+            if (val === '__clear__') {
+              sel.length = 0;
+            } else {
+              const idx = sel.indexOf(val);
+              if (idx >= 0) sel.splice(idx, 1);
+              else sel.push(val);
+            }
+            render();
+            onChange(sel);
+          });
+        });
+      }
+
+      render();
+      return { render, setOptions(newOpts) { options = newOpts; render(); } };
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.ms-panel.ms-open').forEach(p => {
+        p.classList.remove('ms-open');
+        p.previousElementSibling?.classList.remove('ms-open');
+      });
+    });
 
     // ── Local helpers (match old page exactly) ────────────────────────
     const _fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0);
@@ -634,28 +726,13 @@
       if (sel) sel.value = r;
       applyGlobalFilters();
     }
-    function setGlobalAgent(a) {
-      window._globalAgent = a;
-      if (a !== 'all' && window._globalTask !== 'all') {
-        const validTasks = window._agentTaskMap[a] || [];
-        if (!validTasks.includes(window._globalTask)) {
-          window._globalTask = 'all';
-          const tSel = document.getElementById('global-task');
-          if (tSel) tSel.value = 'all';
-        }
-      }
+    function setGlobalAgent(arr) {
+      // arr is the same reference as window._globalAgent (mutated in place by multi-select widget)
+      if (arr !== window._globalAgent) window._globalAgent = Array.isArray(arr) ? arr : [];
       applyGlobalFilters();
     }
-    function setGlobalTask(t) {
-      window._globalTask = t;
-      if (t !== 'all' && window._globalAgent !== 'all') {
-        const validAgents = window._taskAgentMap[t] || [];
-        if (!validAgents.includes(window._globalAgent)) {
-          window._globalAgent = 'all';
-          const aSel = document.getElementById('global-agent');
-          if (aSel) aSel.value = 'all';
-        }
-      }
+    function setGlobalTask(arr) {
+      if (arr !== window._globalTask) window._globalTask = Array.isArray(arr) ? arr : [];
       applyGlobalFilters();
     }
 
@@ -670,21 +747,12 @@
       return 'Other';
     }
 
-    function setGlobalProvider(p) {
-      window._globalProvider = p;
-      // Reset model filter if it doesn't match the new provider
-      if (p !== 'all' && window._globalModel !== 'all') {
-        const modelProvider = _getProviderFromFriendlyModel(window._globalModel);
-        if (modelProvider !== p) {
-          window._globalModel = 'all';
-          const mSel = document.getElementById('global-model');
-          if (mSel) mSel.value = 'all';
-        }
-      }
+    function setGlobalProvider(arr) {
+      if (arr !== window._globalProvider) window._globalProvider = Array.isArray(arr) ? arr : [];
       applyGlobalFilters();
     }
-    function setGlobalModel(m) {
-      window._globalModel = m;
+    function setGlobalModel(arr) {
+      if (arr !== window._globalModel) window._globalModel = Array.isArray(arr) ? arr : [];
       applyGlobalFilters();
     }
 
@@ -699,38 +767,28 @@
     }
 
     function _populateProviderDropdown(items) {
-      const sel = document.getElementById('global-provider');
-      if (!sel) return;
-      const cur = window._globalProvider || 'all';
       const providers = [...new Set(items.map(s => _getProviderFromModel(s.model)).filter(p => p !== 'Unknown'))].sort();
-      sel.innerHTML = '<option value="all">All Providers</option>' +
-        providers.map(p => `<option value="${esc(p)}"${p===cur?' selected':''}>${esc(p)}</option>`).join('');
-      // Reset stale selection if current provider no longer exists in options
-      if (cur !== 'all' && !providers.includes(cur)) {
-        window._globalProvider = 'all';
-        sel.value = 'all';
-      }
+      const opts = providers.map(p => ({ value: p, label: p }));
+      // Remove stale selections (in-place to preserve array reference)
+      const pArr = window._globalProvider;
+      for (let i = pArr.length - 1; i >= 0; i--) { if (!providers.includes(pArr[i])) pArr.splice(i, 1); }
+      _initMultiSelect('global-provider', opts, pArr, 'All Providers', setGlobalProvider);
     }
 
     function _populateModelDropdown(items) {
-      const sel = document.getElementById('global-model');
-      if (!sel) return;
-      const cur = window._globalModel || 'all';
-      const provFilter = window._globalProvider || 'all';
-      const filtered = provFilter === 'all' ? items : items.filter(s => _getProviderFromModel(s.model) === provFilter);
+      const provFilter = window._globalProvider || [];
+      const filtered = _isAll(provFilter) ? items : items.filter(s => _inFilter(_getProviderFromModel(s.model), provFilter));
       const modelLabels = {};
       filtered.forEach(s => {
         const label = typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model;
         if (label && label !== 'Unknown') modelLabels[label] = true;
       });
       const sorted = Object.keys(modelLabels).sort();
-      sel.innerHTML = '<option value="all">All Models</option>' +
-        sorted.map(m => `<option value="${esc(m)}"${m===cur?' selected':''}>${esc(m)}</option>`).join('');
-      // Reset stale selection if current model no longer exists in options
-      if (cur !== 'all' && !sorted.includes(cur)) {
-        window._globalModel = 'all';
-        sel.value = 'all';
-      }
+      const opts = sorted.map(m => ({ value: m, label: m }));
+      // Remove stale selections (in-place)
+      const mArr = window._globalModel;
+      for (let i = mArr.length - 1; i >= 0; i--) { if (!sorted.includes(mArr[i])) mArr.splice(i, 1); }
+      _initMultiSelect('global-model', opts, mArr, 'All Models', setGlobalModel);
     }
 
     function applyGlobalFilters() {
@@ -739,34 +797,31 @@
     }
 
     function _populateTaskDropdown(taskNames) {
-      const sel = document.getElementById('global-task');
-      if (!sel) return;
-      const cur = window._globalTask || 'all';
-      const agent = window._globalAgent || 'all';
-      const filtered = agent === 'all' ? taskNames : taskNames.filter(t => (window._agentTaskMap[agent]||[]).includes(t));
-      sel.innerHTML = '<option value="all">All Tasks</option>' +
-        filtered.map(t => `<option value="${esc(t)}"${t===cur?' selected':''}>${esc(t)}</option>`).join('');
-      // Reset stale selection if current task no longer exists in options
-      if (cur !== 'all' && !filtered.includes(cur)) {
-        window._globalTask = 'all';
-        sel.value = 'all';
-      }
+      const agentF = window._globalAgent || [];
+      const filtered = _isAll(agentF) ? taskNames : taskNames.filter(t => {
+        const agents = window._taskAgentMap[t] || [];
+        return agents.some(a => agentF.includes(a));
+      });
+      const opts = filtered.map(t => ({ value: t, label: t }));
+      // Remove stale selections (in-place)
+      const tArr = window._globalTask;
+      for (let i = tArr.length - 1; i >= 0; i--) { if (!filtered.includes(tArr[i])) tArr.splice(i, 1); }
+      _initMultiSelect('global-task', opts, tArr, 'All Tasks', setGlobalTask);
     }
 
     function _populateAgentDropdown(agentNames) {
-      const sel = document.getElementById('global-agent');
-      if (!sel) return;
-      const cur = window._globalAgent || 'all';
-      // Always show ALL agents so users can switch directly between them
       const labels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', 'claude-code': 'Claude Code' };
-      sel.innerHTML = '<option value="all">All Agents</option>' +
-        agentNames.map(a => `<option value="${a}"${a===cur?' selected':''}>${labels[a]||a}</option>`).join('');
+      const opts = agentNames.map(a => ({ value: a, label: labels[a] || a }));
+      // Remove stale selections (in-place)
+      const aArr = window._globalAgent;
+      for (let i = aArr.length - 1; i >= 0; i--) { if (!agentNames.includes(aArr[i])) aArr.splice(i, 1); }
+      _initMultiSelect('global-agent', opts, aArr, 'All Agents', setGlobalAgent);
     }
 
     // ── Supabase query (server-side time filter, matches old page) ────
     async function loadAndRenderAgentSessions() {
       const range = window._globalRange || 'today';
-      const agentFilter = window._globalAgent || 'all';
+      const agentFilter = window._globalAgent || [];
       const now = new Date();
       const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       let cutoffStart, cutoffEnd = now.toISOString();
@@ -800,9 +855,9 @@
             .order('snapshot_at', { ascending: false })
             .range(intOffset, intOffset + PAGE_SIZE - 1);
 
-          if (agentFilter !== 'all') {
-            const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
-            intQuery = intQuery.eq('agent_id', agentId);
+          if (!_isAll(agentFilter)) {
+            const agentIds = agentFilter.map(a => a === 'cliff' ? 'main' : a);
+            intQuery = intQuery.in('agent_id', agentIds);
           }
 
           const { data: intData, error: intErr } = await intQuery;
@@ -918,9 +973,9 @@
           .order('first_seen_at', { ascending: false })
           .range(offset, offset + PAGE_SIZE - 1);
 
-        if (agentFilter !== 'all') {
-          const agentId = agentFilter === 'cliff' ? 'main' : agentFilter;
-          query = query.eq('agent_id', agentId);
+        if (!_isAll(agentFilter)) {
+          const agentIds = agentFilter.map(a => a === 'cliff' ? 'main' : a);
+          query = query.in('agent_id', agentIds);
         }
 
         const { data, error } = await query;
@@ -957,7 +1012,7 @@
       // and inject synthetic session_snapshot-shaped rows for any that are missing.
       try {
         // Only fetch atlas_jobs if agent filter is 'all' or 'atlas'
-        if (agentFilter === 'all' || agentFilter === 'atlas') {
+        if (_isAll(agentFilter) || _inFilter('atlas', agentFilter)) {
         const ajQuery = _sb.from('atlas_jobs')
           .select('id,session_id,session_key,tokens_input,tokens_output,tokens_total,cost_usd,duration_seconds,status,job_type,project_slug,created_at,response_summary')
           .gte('created_at', cutoffStart)
@@ -1028,7 +1083,7 @@
       const container = document.getElementById('summary-agent-portraits');
       if (!container) return;
 
-      const agentFilter = window._globalAgent || 'all';
+      const agentFilter = window._globalAgent || [];
 
       // Aggregate per agent — merge "main" and "cliff" into "cliff"
       // Accepts processed items (agent_type, tokens_in, tokens_out, estimated_cost_usd)
@@ -1042,10 +1097,10 @@
         agentData[id].cost += r.estimated_cost_usd || r.cost_total_usd || 0;
       }
 
-      // Filter: if specific agent selected, only show that one
+      // Filter: if specific agents selected, only show those
       let agentIds = Object.keys(agentData);
-      if (agentFilter !== 'all') {
-        agentIds = agentIds.filter(id => id === agentFilter);
+      if (!_isAll(agentFilter)) {
+        agentIds = agentIds.filter(id => _inFilter(id, agentFilter));
       }
 
       if (agentIds.length === 0) {
@@ -1094,8 +1149,8 @@
     // ── Main render (Grouped + Raw) ───────────────────────────────────
     function renderTokenSections() {
       const range = window._tokenRange || 'today';
-      const agentFilter = window._globalAgent || 'all';
-      const taskFilter  = window._globalTask  || 'all';
+      const agentFilter = window._globalAgent || [];
+      const taskFilter  = window._globalTask  || [];
       const now = Date.now();
       const n = new Date();
       const cutoff = (() => {
@@ -1146,11 +1201,11 @@
       window._allDbSubItems = allDbItems;
 
       // Apply provider and model filters
-      const providerFilter = window._globalProvider || 'all';
-      const modelFilter = window._globalModel || 'all';
+      const providerFilter = window._globalProvider || [];
+      const modelFilter = window._globalModel || [];
       const filteredDbItems = allDbItems.filter(s => {
-        if (providerFilter !== 'all' && _getProviderFromModel(s.model) !== providerFilter) return false;
-        if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model) !== modelFilter) return false;
+        if (!_isAll(providerFilter) && !_inFilter(_getProviderFromModel(s.model), providerFilter)) return false;
+        if (!_isAll(modelFilter) && !_inFilter(typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model, modelFilter)) return false;
         return true;
       });
 
@@ -1170,11 +1225,9 @@
 
       const subTaskNames = [...new Set(filteredDbItems.map(s => s.display_name || s.task_name).filter(Boolean))];
       const allTaskNames = [...new Set(subTaskNames)].sort();
-      // Agent dropdown: always show ALL known agents (not just filtered ones)
-      // so users can switch directly between agents without going through "All Agents" first
-      const knownAgents = ['cliff', 'samantha', 'scout', 'atlas', 'claude-code'];
+      // Agent dropdown: only show agents that have data in the current time range
       const dataAgents = [...new Set(Object.keys(atMap))];
-      const allAgentNames = [...new Set([...knownAgents, ...dataAgents])].sort();
+      const allAgentNames = dataAgents.sort();
       _populateTaskDropdown(allTaskNames);
       _populateAgentDropdown(allAgentNames);
       // Provider dropdown: populated from ALL items (not filtered by provider/model)
@@ -1185,8 +1238,11 @@
 
       window._cronTotals = { tokensIn: 0, tokensOut: 0, cost: 0, sessions: 0 };
 
-      // ── Agent portrait cards (reflect all global filters) ─────────
-      renderSummaryPortraits(filteredDbItems);
+      // ── Agent portrait cards (reflect all global filters incl. task) ─
+      const portraitItems = !_isAll(taskFilter)
+        ? filteredDbItems.filter(s => _inFilter(s.display_name || s.task_name || '', taskFilter))
+        : filteredDbItems;
+      renderSummaryPortraits(portraitItems);
 
       // ── Grouped Agent Sessions Summary ────────────────────────────
       renderGrouped(filteredDbItems, cutoffStart, cutoffEnd);
@@ -1205,7 +1261,7 @@ const _agentColors = {
   atlas:        '#f97316',
   'claude-code':'#a855f7',
 };
-const _agentNames = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', 'claude-code':'Claude Code' };
+const _agentNames = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
 // Color palette for models (assigned dynamically, consistent per render)
 const _modelColorPalette = ['#6366f1','#14b8a6','#22c55e','#f97316','#a855f7','#ec4899','#eab308','#06b6d4','#f43f5e','#84cc16','#8b5cf6','#0ea5e9','#d946ef','#f59e0b','#10b981','#ef4444','#3b82f6','#78716c','#fb923c','#a3e635'];
 const _defaultSegmentColor = '#6b7280';
@@ -1309,23 +1365,23 @@ function _renderStackedCostChart(items, mode) {
   // instead of session-level aggregates that dump all cost into one bucket
   let chartItems = items;
   if (bucketMode === '5min' && window._rawIntervalRows && window._rawIntervalRows.length > 0) {
-    const providerFilter = window._globalProvider || 'all';
-    const modelFilter = window._globalModel || 'all';
-    const agentFilter = window._globalAgent || 'all';
-    const taskFilter = window._globalTask || 'all';
+    const providerFilter = window._globalProvider || [];
+    const modelFilter = window._globalModel || [];
+    const agentFilter = window._globalAgent || [];
+    const taskFilter = window._globalTask || [];
     chartItems = window._rawIntervalRows
       .filter(r => {
         // Apply same filters as main items
-        if (agentFilter !== 'all') {
+        if (!_isAll(agentFilter)) {
           const raw = (r.agent_id || '').toLowerCase();
           const norm = (raw === 'main') ? 'cliff' : raw;
-          if (norm !== agentFilter) return false;
+          if (!_inFilter(norm, agentFilter)) return false;
         }
-        if (providerFilter !== 'all' && _getProviderFromModel(r.model) !== providerFilter) return false;
-        if (modelFilter !== 'all' && (typeof friendlyModel === 'function' ? friendlyModel(r.model) : r.model) !== modelFilter) return false;
-        if (taskFilter !== 'all') {
+        if (!_isAll(providerFilter) && !_inFilter(_getProviderFromModel(r.model), providerFilter)) return false;
+        if (!_isAll(modelFilter) && !_inFilter(typeof friendlyModel === 'function' ? friendlyModel(r.model) : r.model, modelFilter)) return false;
+        if (!_isAll(taskFilter)) {
           const displayName = sessionKeyToFriendly(r.session_key, r.session_id);
-          if (displayName !== taskFilter) return false;
+          if (!_inFilter(displayName, taskFilter)) return false;
         }
         return true;
       })
@@ -1446,7 +1502,19 @@ function _renderStackedCostChart(items, mode) {
   const visibleMaxCost = Math.max(...visiblePeriodTotals) || 1;
   _renderChartGrid(container, visibleMaxCost);
 
-  // 6. Render stacked bars — per-bar sort: largest cost at bottom
+  // 6. Check if any bucket has visible cost data; if not, show empty message
+  const hasAnyCost = visiblePeriodTotals.some(t => t > 0);
+  if (!hasAnyCost) {
+    wrap.style.display = '';
+    chart.innerHTML = '<div class="cost-chart-empty">No cost data for the current filters</div>';
+    const oldGrid = container.querySelector('.cost-chart-grid');
+    if (oldGrid) oldGrid.remove();
+    if (legendEl) legendEl.innerHTML = '';
+    return;
+  }
+
+  // 7. Render stacked bars — per-bar sort: largest cost at bottom
+  // Skip zero-cost buckets entirely (no bar, no label)
   chart.innerHTML = timePeriods.map(([key, bucket], colIdx) => {
     // Filter out hidden segments, then sort per-bar by cost descending (largest first = bottom)
     const segs = Object.entries(bucket.segments)
@@ -1455,6 +1523,10 @@ function _renderStackedCostChart(items, mode) {
       .sort((a, b) => b.cost - a.cost);
 
     const totalCost = segs.reduce((s, seg) => s + seg.cost, 0);
+
+    // Skip zero-cost buckets — no bar, no value label, no time label
+    if (totalCost <= 0) return '';
+
     const barHeightPct = Math.max((totalCost / visibleMaxCost) * 100, 2);
     const delay = (colIdx * 0.06).toFixed(2);
 
@@ -1537,15 +1609,14 @@ function _renderStackedCostChart(items, mode) {
     let _grpManualRefresh = false; // set true when user changes filters
     function renderGrouped(allDbItems, cutoffStart, cutoffEnd) {
       _grpManualRefresh = false;
-      const agent = window._globalAgent || 'all';
-      const taskF = window._globalTask || 'all';
+      const agentF = window._globalAgent || [];
+      const taskF = window._globalTask || [];
       const items = (allDbItems || window._allDbSubItems).filter(s => {
-        if (taskF !== 'all' && (s.display_name || s.task_name || '') !== taskF) return false;
-        if (agent !== 'all') {
+        if (!_isAll(taskF) && !_inFilter(s.display_name || s.task_name || '', taskF)) return false;
+        if (!_isAll(agentF)) {
           const sa = (s.agent_type || '').toLowerCase();
-          const agentMap = { cliff: ['cliff','main'], samantha: ['samantha'], scout: ['scout'], 'claude-code': ['claude-code'] };
-          const allowed = agentMap[agent] || [agent];
-          if (!allowed.some(a => sa.includes(a))) return false;
+          const norm = (sa === 'main') ? 'cliff' : sa;
+          if (!_inFilter(norm, agentF)) return false;
         }
         return true;
       });
@@ -1943,10 +2014,10 @@ function _renderStackedCostChart(items, mode) {
     // ── Raw table ─────────────────────────────────────────────────────
     function renderRawTable(allDbItems) {
       const items = allDbItems || window._allDbSubItems;
-      const globalTask = window._globalTask || 'all';
+      const globalTask = window._globalTask || [];
       const taskFilter = window._dbRawTaskFilter || 'all';
-      const globalTaskFiltered = globalTask === 'all' ? items
-        : items.filter(s => (s.display_name || s.task_name || 'Unknown') === globalTask);
+      const globalTaskFiltered = _isAll(globalTask) ? items
+        : items.filter(s => _inFilter(s.display_name || s.task_name || 'Unknown', globalTask));
       const filtered = taskFilter === 'all' ? globalTaskFiltered
         : globalTaskFiltered.filter(s => (s.display_name || s.task_name || 'Unknown') === taskFilter);
 
@@ -2040,6 +2111,22 @@ function _renderStackedCostChart(items, mode) {
       if (el('tok-cost'))  el('tok-cost').textContent   = '$' + combCost.toFixed(2);
       if (el('tok-runs'))  el('tok-runs').textContent   = combSessions;
       if (el('tok-avg'))   el('tok-avg').innerHTML      = _fmtK(avgIn) + ' / ' + _fmtK(avgOut);
+
+      // Update subtitles to reflect active filters
+      const agentF = window._globalAgent || [];
+      const taskF  = window._globalTask  || [];
+      const provF  = window._globalProvider || [];
+      const modelF = window._globalModel || [];
+      const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
+      const parts = [];
+      if (!_isAll(agentF)) parts.push(agentF.map(a => labels[a] || a).join(', '));
+      if (!_isAll(taskF))  parts.push(taskF.length === 1 ? taskF[0] : taskF.length + ' tasks');
+      if (!_isAll(provF))  parts.push(provF.join(', '));
+      if (!_isAll(modelF)) parts.push(modelF.length === 1 ? modelF[0] : modelF.length + ' models');
+      const filterDesc = parts.length > 0 ? parts.join(' · ') : null;
+
+      if (el('tok-cost-sub')) el('tok-cost-sub').textContent = filterDesc ? filterDesc : 'all sessions combined';
+      if (el('tok-runs-sub')) el('tok-runs-sub').textContent = filterDesc ? filterDesc : 'all agents';
     }
 
     // ── Convenience re-render ─────────────────────────────────────────
