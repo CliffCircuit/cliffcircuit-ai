@@ -286,7 +286,7 @@
         const sessIsActive = isAtlasActive || _isSessionActive(s);
         const alreadyShown = sessKey && _shownActiveKeys.has(sessKey);
         if (sessIsActive && sessKey) _shownActiveKeys.add(sessKey);
-        const sessActiveIndicator = sessIsActive && !alreadyShown ? (isAtlasActive ? _activeBadgeHtml : _activeDotHtml) : '';
+        const sessActiveIndicator = sessIsActive && !alreadyShown ? _sessionActivityIndicator(s, isAtlasActive) : '';
         const sessTix = _getSessionTickets(sessKey);
         tr.innerHTML = `
           <td class="px-4 py-1 text-gray-600 text-xs" style="padding-left:36px;"><span style="display:inline-flex;align-items:center;">${when}${sessActiveIndicator}</span></td>
@@ -351,7 +351,10 @@
       const sessionKey = s.label || raw.session_key || '—';
       const sessionId = raw.session_id || '—';
       const sdpIsActive = _isAtlasActiveSession(s) || _isSessionActive(s);
-      const sdpActiveHtml = sdpIsActive ? '<span class="active-badge" style="font-size:11px;padding:2px 10px;margin-left:auto;flex-shrink:0;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:live-pulse 2s ease-in-out infinite;"></span>ACTIVE</span>' : '';
+      const sdpIsStale = sdpIsActive && _isSessionStale(s);
+      const sdpActiveHtml = !sdpIsActive ? '' : sdpIsStale
+        ? '<span class="active-badge" style="font-size:11px;padding:2px 10px;margin-left:auto;flex-shrink:0;background:rgba(234,179,8,0.15);border-color:rgba(234,179,8,0.3);"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#eab308;"></span>STALE</span>'
+        : '<span class="active-badge" style="font-size:11px;padding:2px 10px;margin-left:auto;flex-shrink:0;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:live-pulse 2s ease-in-out infinite;"></span>ACTIVE</span>';
 
       td.innerHTML = `
         <div class="session-detail-panel">
@@ -1699,7 +1702,12 @@ function _renderStackedCostChart(items, mode) {
         const grpStoreKey = 'grp-' + rowId;
         const grpHasActive = g.allSessions.some(s => _isSessionActive(s));
         const grpHasAtlasActive = _hasActiveAtlasInGroup(g.allSessions);
-        const grpActiveIndicator = grpHasAtlasActive ? _activeBadgeHtml : (grpHasActive ? _activeDotHtml : '');
+        // Check if ALL active sessions in the group are stale
+        const grpActiveSessions = g.allSessions.filter(s => _isSessionActive(s));
+        const grpAllStale = grpActiveSessions.length > 0 && grpActiveSessions.every(s => _isSessionStale(s));
+        const grpActiveIndicator = !grpHasActive && !grpHasAtlasActive ? '' :
+          grpAllStale ? (grpHasAtlasActive ? _staleBadgeHtml : _staleDotHtml) :
+          grpHasAtlasActive ? _activeBadgeHtml : _activeDotHtml;
         // Collect ticket badges for grouped sessions
         return `<tr id="${rowId}" class="border-b border-gray-900 hover:bg-gray-800 transition-colors" style="cursor:pointer;" data-task-name="${esc(g.task)}" data-agent-cls="${agentCls}" data-agent-label="${esc(agentLabel)}" onclick="if(!event.target.closest('button'))_handleSummaryRowClick('${grpStoreKey}',this)">
           <td class="px-4 py-2 text-gray-200 text-xs font-medium"><span style="display:inline-flex;align-items:center;">${esc(shortTask)}${grpActiveIndicator}</span>${_getTaskTooltip(g.task) ? ' <span class="info-tip" data-tip="' + esc(_getTaskTooltip(g.task)) + '">&#9432;</span>' : ''}</td>
@@ -1834,6 +1842,8 @@ function _renderStackedCostChart(items, mode) {
     let _activeSessionIds = new Set();    // session UUIDs from _sessionId field
     let _activeKeyToId = {};              // review key → session_id for cross-matching
     let _activeAtlasSessions = [];        // full atlas active session objects from live-sessions.json
+    let _activeSessionData = {};          // key/sessionId → live session object (for staleness checks)
+    const STALE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes — sessions inactive longer than this show STALE badge
     // Strip :run:* suffix from cron session keys to get the base cron key
     function _cronBaseKey(key) {
       if (!key) return key;
@@ -1871,6 +1881,29 @@ function _renderStackedCostChart(items, mode) {
     }
     const _activeDotHtml = '<span class="active-dot" title="Active session"></span>';
     const _activeBadgeHtml = '<span class="active-badge" title="Session is currently running"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:live-pulse 2s ease-in-out infinite;"></span>ACTIVE</span>';
+    const _staleDotHtml = '<span class="active-dot" title="Session stale (no activity for 30+ min)" style="background:#eab308;box-shadow:0 0 6px #eab308;animation:none;"></span>';
+    const _staleBadgeHtml = '<span class="active-badge" title="Session stale (no activity for 30+ min)" style="background:rgba(234,179,8,0.15);border-color:rgba(234,179,8,0.3);"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#eab308;"></span>STALE</span>';
+    function _getSessionLiveData(s) {
+      // Look up the live-sessions.json entry for this session
+      const key = s.label || (s._raw && s._raw.session_key);
+      const sid = s._raw && s._raw.session_id;
+      return _activeSessionData[key] || _activeSessionData[sid] || null;
+    }
+    function _isSessionStale(s) {
+      // Returns true if the session is in the active set but hasn't had activity in 30+ min
+      const live = _getSessionLiveData(s);
+      if (!live) return false;
+      return (live.lastActivityMs || 0) > STALE_THRESHOLD_MS;
+    }
+    function _sessionActivityIndicator(s, isAtlasActive) {
+      // Returns the appropriate badge/dot HTML based on active vs stale status
+      const isActive = isAtlasActive || _isSessionActive(s);
+      if (!isActive) return '';
+      if (_isSessionStale(s)) {
+        return isAtlasActive ? _staleBadgeHtml : _staleDotHtml;
+      }
+      return isAtlasActive ? _activeBadgeHtml : _activeDotHtml;
+    }
 
     // ── Ticket System Helpers ──────────────────────────────────────
     function _getSessionTickets(sessionKey) {
@@ -1941,7 +1974,13 @@ function _renderStackedCostChart(items, mode) {
         _activeSessionKeys = new Set(allSess.map(s => s.key));
         _activeSessionIds = new Set(allSess.filter(s => s._sessionId).map(s => s._sessionId));
         _activeKeyToId = {};
-        allSess.forEach(s => { if (s._sessionId) _activeKeyToId[s.key] = s._sessionId; });
+        _activeSessionData = {};
+        allSess.forEach(s => {
+          if (s._sessionId) _activeKeyToId[s.key] = s._sessionId;
+          // Index by both key and sessionId for staleness lookups
+          if (s.key) _activeSessionData[s.key] = s;
+          if (s._sessionId) _activeSessionData[s._sessionId] = s;
+        });
         _activeAtlasSessions = allSess.filter(s => s.agent === 'atlas' && s.isReview);
         // Load ticket data for session detail panels
         if (data.sessionTickets) {
