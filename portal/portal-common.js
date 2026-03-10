@@ -454,6 +454,7 @@ function renderNav(activePage) {
     { id: 'agents', label: 'Agents', href: '/portal/agents.html' },
     { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
+    { id: 'tickets', label: 'Tickets', href: '#', onclick: 'openTicketsModal()' },
     { id: 'settings', label: 'Settings', href: '/portal/settings.html' },
   ];
 
@@ -488,7 +489,7 @@ function renderNav(activePage) {
     <div class="border-b border-gray-800 px-6 bg-gray-950">
       <div class="flex items-center justify-between max-w-7xl mx-auto w-full">
         <div class="flex gap-6">
-          ${pages.map(p => `<a href="${p.href}" class="nav-link${p.id === activePage ? ' active' : ''}">${p.label}</a>`).join('')}
+          ${pages.map(p => `<a href="${p.href}"${p.onclick ? ` onclick="${p.onclick};return false;"` : ''} class="nav-link${p.id === activePage ? ' active' : ''}">${p.label}</a>`).join('')}
         </div>
       </div>
     </div>
