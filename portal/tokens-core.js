@@ -23,6 +23,7 @@
     window._agentTaskMap = {};
     window._taskAgentMap = {};
     window._costChartView = 'agent';  // default: stacked by agent over time
+    window._msWidgets = {};  // multi-select widget instances keyed by container id
     window._costChartItems = [];     // cached items for re-render on view switch
     window._costChartHidden = { agent: new Set(), model: new Set(), task: new Set() }; // legend toggle state per view
 
@@ -37,6 +38,7 @@
       if (!container) return;
       const _escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       let groups = opts && opts.groups;
+      let disabledValues = (opts && opts.disabledValues) || new Set();
 
       function render() {
         const sel = selected;
@@ -67,8 +69,9 @@
           optionsHtml = groups.map(g => {
             const headerHtml = `<div class="ms-group-header">${_escHtml(g.header)}</div>`;
             const itemsHtml = g.items.map(o => {
-              const isSel = !isNone && (sel.length === 0 || sel.includes(o.value));
-              return `<div class="ms-option ms-grouped-option${isSel ? ' ms-selected' : ''}" data-value="${_escHtml(o.value)}">
+              const isDis = disabledValues.has(o.value);
+              const isSel = !isDis && !isNone && (sel.length === 0 || sel.includes(o.value));
+              return `<div class="ms-option ms-grouped-option${isSel ? ' ms-selected' : ''}${isDis ? ' ms-disabled' : ''}" data-value="${_escHtml(o.value)}">
                 <span class="ms-option-check">${isSel ? '✓' : ''}</span>
                 <span>${_escHtml(o.label)}</span>
               </div>`;
@@ -77,8 +80,9 @@
           }).join('');
         } else {
           optionsHtml = options.map(o => {
-            const isSel = !isNone && (sel.length === 0 || sel.includes(o.value));
-            return `<div class="ms-option${isSel ? ' ms-selected' : ''}" data-value="${_escHtml(o.value)}">
+            const isDis = disabledValues.has(o.value);
+            const isSel = !isDis && !isNone && (sel.length === 0 || sel.includes(o.value));
+            return `<div class="ms-option${isSel ? ' ms-selected' : ''}${isDis ? ' ms-disabled' : ''}" data-value="${_escHtml(o.value)}">
               <span class="ms-option-check">${isSel ? '✓' : ''}</span>
               <span>${_escHtml(o.label)}</span>
             </div>`;
@@ -118,6 +122,8 @@
         container.querySelectorAll('.ms-option').forEach(opt => {
           opt.addEventListener('click', (e) => {
             e.stopPropagation();
+            // Skip disabled options (belt-and-suspenders with CSS pointer-events:none)
+            if (opt.classList.contains('ms-disabled')) return;
             const val = opt.dataset.value;
             if (val === '__toggle_all__') {
               const isAllShown = sel.length === 0 || sel.length === options.length;
@@ -154,7 +160,7 @@
       }
 
       render();
-      return { render, setOptions(newOpts) { options = newOpts; render(); }, setGroups(newG) { groups = newG; render(); } };
+      return { render, setOptions(newOpts) { options = newOpts; render(); }, setGroups(newG) { groups = newG; render(); }, setDisabled(dv) { disabledValues = dv; render(); } };
     }
 
     // Close dropdowns when clicking outside
@@ -410,7 +416,7 @@
       // Remove stale selections (in-place to preserve array reference)
       const pArr = window._globalProvider;
       for (let i = pArr.length - 1; i >= 0; i--) { if (!providers.includes(pArr[i])) pArr.splice(i, 1); }
-      _initMultiSelect('global-provider', opts, pArr, 'All Providers', setGlobalProvider);
+      window._msWidgets['global-provider'] = _initMultiSelect('global-provider', opts, pArr, 'All Providers', setGlobalProvider);
     }
 
     function _populateModelDropdown(items) {
@@ -426,7 +432,7 @@
       // Remove stale selections (in-place)
       const mArr = window._globalModel;
       for (let i = mArr.length - 1; i >= 0; i--) { if (!sorted.includes(mArr[i])) mArr.splice(i, 1); }
-      _initMultiSelect('global-model', opts, mArr, 'All Models', setGlobalModel);
+      window._msWidgets['global-model'] = _initMultiSelect('global-model', opts, mArr, 'All Models', setGlobalModel);
     }
 
     function applyGlobalFilters() {
@@ -434,7 +440,88 @@
       loadAndRenderAgentSessions();
     }
 
-    function _populateTaskDropdown(taskNames) {
+    // ── Cascading filter constraints ─────────────────────────────────
+    // Given all items and the current filter selections, compute which
+    // values in each dropdown have zero matching rows when filtered by
+    // the OTHER three filters. Returns { agent, task, provider, model }
+    // where each is a Set of values that should be grayed out (disabled).
+    function _computeCascadingConstraints(allDbItems) {
+      const agentF    = window._globalAgent    || [];
+      const taskF     = window._globalTask     || [];
+      const providerF = window._globalProvider || [];
+      const modelF    = window._globalModel    || [];
+
+      const agentNorm = a => { if (!a) return 'cliff'; if (a === 'main' || a === 'cliff') return 'cliff'; return a.toLowerCase(); };
+
+      // For each item, extract all 4 dimension values once
+      const items = allDbItems.map(s => ({
+        agent:    agentNorm(s.agent_type),
+        task:     s.display_name || s.task_name || '',
+        provider: _getProviderFromModel(s.model),
+        model:    typeof friendlyModel === 'function' ? friendlyModel(s.model) : s.model,
+      }));
+
+      // Collect all known values per dimension
+      const allAgents    = new Set(items.map(i => i.agent));
+      const allTasks     = new Set(items.map(i => i.task).filter(Boolean));
+      const allProviders = new Set(items.map(i => i.provider).filter(p => p !== 'Unknown'));
+      const allModels    = new Set(items.map(i => i.model).filter(m => m && m !== 'Unknown'));
+
+      // For each dimension, find which values have at least one row
+      // matching the OTHER filters' selections
+      function matches(item, skipDim) {
+        if (skipDim !== 'agent'    && !_isAll(agentF)    && !_inFilter(item.agent, agentF)) return false;
+        if (skipDim !== 'task'     && !_isAll(taskF)     && !_inFilter(item.task, taskF)) return false;
+        if (skipDim !== 'provider' && !_isAll(providerF) && !_inFilter(item.provider, providerF)) return false;
+        if (skipDim !== 'model'    && !_isAll(modelF)    && !_inFilter(item.model, modelF)) return false;
+        return true;
+      }
+
+      const availAgents    = new Set();
+      const availTasks     = new Set();
+      const availProviders = new Set();
+      const availModels    = new Set();
+
+      for (const item of items) {
+        if (matches(item, 'agent'))    availAgents.add(item.agent);
+        if (matches(item, 'task'))     availTasks.add(item.task);
+        if (matches(item, 'provider')) availProviders.add(item.provider);
+        if (matches(item, 'model'))    availModels.add(item.model);
+      }
+
+      // Disabled = known values minus available values
+      const disabledAgents    = new Set([...allAgents].filter(v => !availAgents.has(v)));
+      const disabledTasks     = new Set([...allTasks].filter(v => !availTasks.has(v)));
+      const disabledProviders = new Set([...allProviders].filter(v => !availProviders.has(v)));
+      const disabledModels    = new Set([...allModels].filter(v => !availModels.has(v)));
+
+      return {
+        agent:    disabledAgents,
+        task:     disabledTasks,
+        provider: disabledProviders,
+        model:    disabledModels,
+      };
+    }
+
+    // Apply cascading constraints to all filter dropdowns.
+    // Call after any filter change to gray out values with zero matching rows.
+    function updateFilterDisabledStates() {
+      const rows = window._sbSessionRows || [];
+      if (rows.length === 0) return;
+      const constraints = _computeCascadingConstraints(rows);
+      const widgetMap = {
+        'global-agent':    constraints.agent,
+        'global-task':     constraints.task,
+        'global-provider': constraints.provider,
+        'global-model':    constraints.model,
+      };
+      for (const [id, disabledSet] of Object.entries(widgetMap)) {
+        const w = window._msWidgets[id];
+        if (w && w.setDisabled) w.setDisabled(disabledSet);
+      }
+    }
+
+    function _populateTaskDropdown(taskNames, disabledValues) {
       const agentF = window._globalAgent || [];
       const filtered = _isAll(agentF) ? taskNames : taskNames.filter(t => {
         const agents = window._taskAgentMap[t] || [];
@@ -476,7 +563,7 @@
 
       // Only use groups if there are multiple agents; flat list for single agent
       const useGroups = groups.length > 1;
-      _initMultiSelect('global-task', opts, tArr, 'All Tasks', setGlobalTask, useGroups ? { groups } : undefined);
+      window._msWidgets['global-task'] = _initMultiSelect('global-task', opts, tArr, 'All Tasks', setGlobalTask, useGroups ? { groups } : undefined);
     }
 
     function _populateAgentDropdown(agentNames) {
@@ -485,6 +572,6 @@
       // Remove stale selections (in-place)
       const aArr = window._globalAgent;
       for (let i = aArr.length - 1; i >= 0; i--) { if (!agentNames.includes(aArr[i])) aArr.splice(i, 1); }
-      _initMultiSelect('global-agent', opts, aArr, 'All Agents', setGlobalAgent);
+      window._msWidgets['global-agent'] = _initMultiSelect('global-agent', opts, aArr, 'All Agents', setGlobalAgent);
     }
 

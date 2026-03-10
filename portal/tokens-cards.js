@@ -173,6 +173,9 @@
       // Model dropdown: filtered by selected provider only (not by model itself)
       _populateModelDropdown(allDbItems);
 
+      // Apply cascading constraints — gray out filter values with zero matches
+      updateFilterDisabledStates();
+
       window._cronTotals = { tokensIn: 0, tokensOut: 0, cost: 0, sessions: 0 };
 
       // ── Agent portrait cards (reflect all global filters incl. task) ─
