@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signing In — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid #374151; border-top-color: #6366f1;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+  <div class="card p-8 w-full max-w-sm text-center">
+    <h1 class="text-lg font-bold text-white mb-4">CliffCircuit Portal</h1>
+
+    <div id="cb-loading" class="flex flex-col items-center gap-3">
+      <div class="spinner"></div>
+      <p class="text-gray-400 text-sm">Verifying your account...</p>
+    </div>
+
+    <div id="cb-error" class="hidden">
+      <p id="cb-error-msg" class="text-red-400 text-sm mb-4"></p>
+      <a href="/portal/login.html" class="text-indigo-400 hover:text-indigo-300 text-sm">Back to sign in</a>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsbXdheXpwY3Bic2N1bnZ5Y3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MjMyNzMsImV4cCI6MjA4ODA5OTI3M30.AWfTKi6szXzwc6821mYkiXUxpQ5kv2sS_hWTReBoVCY';
+    const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function decodeJwtPayload(token) {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    }
+
+    function showError(msg) {
+      document.getElementById('cb-loading').classList.add('hidden');
+      document.getElementById('cb-error').classList.remove('hidden');
+      document.getElementById('cb-error-msg').textContent = msg;
+    }
+
+    async function processCallback() {
+      try {
+        // Parse the fragment for id_token (implicit flow) or credential
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        let idToken = params.get('id_token') || params.get('credential');
+
+        // Also check query params (some flows put code there)
+        if (!idToken) {
+          const query = new URLSearchParams(window.location.search);
+          idToken = query.get('credential');
+        }
+
+        if (!idToken) {
+          showError('No authentication token received. Please try signing in again.');
+          return;
+        }
+
+        const payload = decodeJwtPayload(idToken);
+        const email = (payload.email || '').toLowerCase();
+        const name = payload.name || '';
+        const picture = payload.picture || '';
+
+        if (!email) {
+          showError('Could not retrieve email from Google account.');
+          return;
+        }
+
+        // Verify against approved users in Supabase
+        const { data, error } = await _sb
+          .from('portal_users')
+          .select('email, role')
+          .ilike('email', email)
+          .limit(1);
+
+        if (error) {
+          console.error('Supabase error:', error);
+          showError('Authorization check failed. Please try again.');
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          showError('Access denied. This Google account (' + email + ') is not authorized.');
+          return;
+        }
+
+        // Store session — 7-day expiry
+        const userData = {
+          email: email,
+          name: name,
+          picture: picture,
+          role: data[0].role || 'viewer',
+          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+          authenticatedAt: new Date().toISOString()
+        };
+        localStorage.setItem('cc_google_auth', JSON.stringify(userData));
+        localStorage.setItem('cc_auth', '1');
+
+        // Redirect to saved destination or portal home
+        const redirect = sessionStorage.getItem('cc_auth_redirect') || '/portal/';
+        sessionStorage.removeItem('cc_auth_redirect');
+        window.location.href = redirect;
+
+      } catch (err) {
+        console.error('Callback error:', err);
+        showError('Authentication failed: ' + err.message);
+      }
+    }
+
+    processCallback();
+  </script>
+</body>
+</html>

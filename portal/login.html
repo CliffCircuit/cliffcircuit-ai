@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 24px;
+      background: #fff;
+      color: #1f2937;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .google-btn:hover {
+      background: #f9fafb;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .google-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .google-btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #e5e7eb; border-top-color: #6366f1;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+  <div class="card p-8 w-full max-w-sm">
+    <div class="text-center mb-8">
+      <h1 class="text-xl font-bold text-white">CliffCircuit Portal</h1>
+      <p class="text-gray-500 text-sm mt-2">Sign in with your authorized Google account</p>
+    </div>
+
+    <div id="login-error" class="hidden mb-4 text-red-400 text-sm text-center bg-red-950 rounded-lg p-3"></div>
+    <div id="login-loading" class="hidden mb-4 flex items-center justify-center gap-2 text-gray-400 text-sm">
+      <div class="spinner"></div>
+      <span>Verifying...</span>
+    </div>
+
+    <div id="g_id_onload"
+      data-client_id="947274046017-0j6m4dgcgjdtgeqh6bnl3anb1al9ggag.apps.googleusercontent.com"
+      data-context="signin"
+      data-ux_mode="popup"
+      data-callback="handleGoogleResponse"
+      data-auto_prompt="false">
+    </div>
+
+    <div id="google-btn-container" class="flex justify-center">
+      <div class="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="outline"
+        data-text="signin_with"
+        data-size="large"
+        data-logo_alignment="left"
+        data-width="320">
+      </div>
+    </div>
+
+    <div class="mt-6 text-center">
+      <p class="text-gray-600 text-xs">Access restricted to authorized accounts only</p>
+    </div>
+  </div>
+
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script>
+    const SUPABASE_URL = 'https://glmwayzpcpbscunvycqk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsbXdheXpwY3Bic2N1bnZ5Y3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MjMyNzMsImV4cCI6MjA4ODA5OTI3M30.AWfTKi6szXzwc6821mYkiXUxpQ5kv2sS_hWTReBoVCY';
+    const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /**
+     * Decode a JWT payload without verification (client-side).
+     * The ID token is signed by Google — we trust it because it came from GSI.
+     */
+    function decodeJwtPayload(token) {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('login-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      document.getElementById('login-loading').classList.add('hidden');
+    }
+
+    async function handleGoogleResponse(response) {
+      const errorEl = document.getElementById('login-error');
+      const loadingEl = document.getElementById('login-loading');
+      errorEl.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+
+      try {
+        const payload = decodeJwtPayload(response.credential);
+        const email = (payload.email || '').toLowerCase();
+        const name = payload.name || '';
+        const picture = payload.picture || '';
+
+        if (!email) {
+          showError('Could not retrieve email from Google account.');
+          return;
+        }
+
+        // Check if email is in the approved portal_users table
+        const { data, error } = await _sb
+          .from('portal_users')
+          .select('email, role')
+          .ilike('email', email)
+          .limit(1);
+
+        if (error) {
+          console.error('Supabase error:', error);
+          showError('Authorization check failed. Please try again.');
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          showError('Access denied. This Google account is not authorized.');
+          return;
+        }
+
+        // Store session — 7-day expiry
+        const userData = {
+          email: email,
+          name: name,
+          picture: picture,
+          role: data[0].role || 'viewer',
+          expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
+          authenticatedAt: new Date().toISOString()
+        };
+        localStorage.setItem('cc_google_auth', JSON.stringify(userData));
+
+        // Also set legacy auth flag for backward compat
+        localStorage.setItem('cc_auth', '1');
+
+        // Redirect to saved destination or portal home
+        const redirect = sessionStorage.getItem('cc_auth_redirect') || '/portal/';
+        sessionStorage.removeItem('cc_auth_redirect');
+        window.location.href = redirect;
+
+      } catch (err) {
+        console.error('Auth error:', err);
+        showError('Authentication failed: ' + err.message);
+      }
+    }
+
+    // If already authenticated, redirect to portal
+    (function() {
+      try {
+        const raw = localStorage.getItem('cc_google_auth');
+        if (raw) {
+          const user = JSON.parse(raw);
+          if (user.expiresAt && Date.now() < user.expiresAt) {
+            window.location.href = '/portal/';
+            return;
+          }
+        }
+      } catch {}
+    })();
+  </script>
+</body>
+</html>

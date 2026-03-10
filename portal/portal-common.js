@@ -443,7 +443,8 @@ function checkAuth() {
 
 function logout() {
   localStorage.removeItem('cc_auth');
-  window.location.href = '/portal/';
+  localStorage.removeItem('cc_google_auth');
+  window.location.href = '/portal/login.html';
 }
 
 // ── Nav Bar ──────────────────────────────────────────────────────────────
@@ -483,6 +484,7 @@ function renderNav(activePage) {
           </div>
         </div>
         <button onclick="window.location.href='/portal/settings.html'" title="Settings" class="text-gray-500 hover:text-white text-sm px-2 py-1 rounded hover:bg-gray-800 transition-colors" aria-label="Settings">⚙️</button>
+        ${(function(){ try { const u = JSON.parse(localStorage.getItem('cc_google_auth') || '{}'); return u.email ? '<span class="text-gray-500 text-xs">' + (u.name || u.email) + '</span>' : ''; } catch { return ''; } })()}
         <button onclick="logout()" class="text-gray-500 hover:text-red-400 text-xs">Sign out</button>
       </div>
     </nav>
