@@ -167,7 +167,7 @@
             ${t.title || '—'}
             ${renderRejectArea(t)}
           </td>
-          <td style="padding:10px 12px;">${renderStatusPill(t.status)}</td>
+          <td style="padding:10px 12px;">${renderStatusPill(t.cliff_status || t.status || '—')}</td>
           <td style="padding:10px 12px;font-size:11px;color:#6b7280;white-space:nowrap;">${fmtDate(t.updated_at)}</td>
           <td style="padding:10px 12px;font-size:12px;color:#9ca3af;white-space:nowrap;">Cliff: <span style="color:#e2e8f0;font-weight:500;">${cliffStatus}</span></td>
           <td style="padding:10px 12px;white-space:nowrap;">Tim: ${renderTimDropdown(t)}</td>
