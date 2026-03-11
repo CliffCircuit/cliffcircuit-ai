@@ -212,6 +212,39 @@
     return AGENT_COLORS[idx % AGENT_COLORS.length];
   }
 
+  // ─── Device Identity (Ed25519 WebCrypto) ──────────────────────
+  const DEVICE_STORAGE_KEY = 'cc_device_identity';
+
+  async function getOrCreateDeviceIdentity() {
+    const stored = localStorage.getItem(DEVICE_STORAGE_KEY);
+    if (stored) {
+      try {
+        const d = JSON.parse(stored);
+        // Re-import keys from JWK
+        const privKey = await crypto.subtle.importKey('jwk', d.privateJwk, { name: 'Ed25519' }, false, ['sign']);
+        const pubKey = await crypto.subtle.importKey('jwk', d.publicJwk, { name: 'Ed25519' }, true, ['verify']);
+        return { deviceId: d.deviceId, publicKey: d.publicKeyHex, keyPair: { privateKey: privKey, publicKey: pubKey } };
+      } catch (e) { console.warn('Device identity corrupted, regenerating', e); localStorage.removeItem(DEVICE_STORAGE_KEY); }
+    }
+    // Generate new Ed25519 keypair
+    const keyPair = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify']);
+    const pubRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+    const publicKeyHex = Array.from(new Uint8Array(pubRaw)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // Device ID = first 16 chars of public key hex
+    const deviceId = 'portal_' + publicKeyHex.slice(0, 12);
+    // Store as JWK for persistence
+    const privateJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+    const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
+    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify({ deviceId, publicKeyHex: publicKeyHex, privateJwk, publicJwk }));
+    return { deviceId, publicKey: publicKeyHex, keyPair };
+  }
+
+  async function signChallenge(keyPair, nonce, ts) {
+    const payload = new TextEncoder().encode(nonce + ':' + ts);
+    const sig = await crypto.subtle.sign('Ed25519', keyPair.privateKey, payload);
+    return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   // ─── WebSocket Connection ────────────────────────────────────
   function connect() {
     setConnStatus('connecting');
@@ -225,19 +258,49 @@
 
       // Challenge-response auth
       if (msg.type === 'event' && msg.event === 'connect.challenge') {
-        ws.send(JSON.stringify({
-          type: 'req',
-          id: String(msgIdCounter++),
-          method: 'connect',
-          params: {
-            minProtocol: 3,
-            maxProtocol: 3,
-            client: { id: 'webchat', version: '1.0.0', platform: 'web', mode: 'webchat' },
-            role: 'operator',
-            scopes: ['operator.admin', 'operator.read'],
-            auth: { token: GW_TOKEN }
+        (async () => {
+          try {
+            const nonce = msg.payload?.nonce;
+            const ts = msg.payload?.ts || Date.now();
+            const identity = await getOrCreateDeviceIdentity();
+            const signature = await signChallenge(identity.keyPair, nonce, ts);
+            ws.send(JSON.stringify({
+              type: 'req',
+              id: String(msgIdCounter++),
+              method: 'connect',
+              params: {
+                minProtocol: 3,
+                maxProtocol: 3,
+                client: { id: 'openclaw-control-ui', version: '1.0.0', platform: 'web', mode: 'operator' },
+                role: 'operator',
+                scopes: ['operator.admin', 'operator.read', 'operator.write'],
+                auth: { token: GW_TOKEN },
+                device: {
+                  id: identity.deviceId,
+                  publicKey: identity.publicKey,
+                  signature: signature,
+                  signedAt: ts,
+                  nonce: nonce
+                }
+              }
+            }));
+          } catch (e) {
+            console.error('Device identity/signing failed:', e);
+            // Fallback without device identity
+            ws.send(JSON.stringify({
+              type: 'req',
+              id: String(msgIdCounter++),
+              method: 'connect',
+              params: {
+                minProtocol: 3, maxProtocol: 3,
+                client: { id: 'webchat', version: '1.0.0', platform: 'web', mode: 'webchat' },
+                role: 'operator',
+                scopes: ['operator.read'],
+                auth: { token: GW_TOKEN }
+              }
+            }));
           }
-        }));
+        })();
         return;
       }
 
