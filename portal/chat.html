@@ -98,6 +98,20 @@
     /* Header model tag */
     .model-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #1f2937; color: #9ca3af; margin-left: 6px; }
 
+    /* Model selector dropdown */
+    .model-selector { position: relative; cursor: pointer; }
+    .model-selector-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #9ca3af; font-family: 'SF Mono', 'Fira Code', monospace; padding: 2px 8px; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; background: transparent; cursor: pointer; }
+    .model-selector-btn:hover { color: #e5e7eb; background: #1f2937; border-color: #374151; }
+    .model-selector-btn svg { opacity: 0.5; transition: opacity 0.15s; }
+    .model-selector-btn:hover svg { opacity: 1; }
+    .model-dropdown { position: absolute; top: calc(100% + 4px); left: 0; background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 4px; min-width: 200px; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.5); display: none; }
+    .model-dropdown.show { display: block; animation: dropIn 0.15s ease-out; }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .model-option { padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #d1d5db; cursor: pointer; transition: all 0.1s; display: flex; justify-content: space-between; align-items: center; }
+    .model-option:hover { background: #1f2937; color: #fff; }
+    .model-option.active { background: #312e81; color: #a5b4fc; }
+    .model-option .model-detail { font-size: 10px; color: #6b7280; }
+
     /* Markdown in messages */
     .msg-bubble p { margin: 0 0 8px 0; }
     .msg-bubble p:last-child { margin-bottom: 0; }
@@ -369,7 +383,13 @@
             <div style="display:flex;align-items:center;gap:6px;">
               <span class="text-white font-medium text-sm" id="header-name"></span>
             </div>
-            <div class="text-gray-500 text-xs" id="header-model" style="font-family:'SF Mono','Fira Code',monospace;"></div>
+            <div class="model-selector" id="model-selector">
+              <button class="model-selector-btn" onclick="toggleModelDropdown(event)">
+                <span id="header-model"></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="model-dropdown" id="model-dropdown"></div>
+            </div>
             <div style="display:flex;align-items:center;gap:4px;margin-top:1px;">
               <span id="conv-title" onclick="editConvTitle()"></span>
               <input id="conv-title-input" onblur="saveConvTitle()" onkeydown="if(event.key==='Enter')saveConvTitle();if(event.key==='Escape'){this.style.display='none';document.getElementById('conv-title').style.display='';}" />
@@ -730,6 +750,52 @@
     if (!model) return '';
     return model.replace('anthropic/', '').replace('claude-', '').replace(/-\d{4}.*/, '');
   }
+
+  // ─── Model Selection ────────────────────────────────────────
+  const AVAILABLE_MODELS = [
+    { id: 'anthropic/claude-opus-4-6', label: 'Opus 4.6', detail: 'Most capable' },
+    { id: 'anthropic/claude-sonnet-4-6', label: 'Sonnet 4.6', detail: 'Fast + smart' },
+    { id: 'anthropic/claude-haiku-4-5', label: 'Haiku 4.5', detail: 'Fastest, cheapest' },
+  ];
+
+  function toggleModelDropdown(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('model-dropdown');
+    const isOpen = dd.classList.contains('show');
+    dd.classList.toggle('show');
+    if (!isOpen) {
+      const agent = agents.find(a => a.id === activeAgent);
+      const currentModel = agent?.model || '';
+      dd.innerHTML = AVAILABLE_MODELS.map(m => `
+        <div class="model-option ${m.id === currentModel ? 'active' : ''}" onclick="selectModel('${m.id}')">
+          <span>${m.label}</span>
+          <span class="model-detail">${m.detail}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  async function selectModel(modelId) {
+    document.getElementById('model-dropdown').classList.remove('show');
+    const agent = agents.find(a => a.id === activeAgent);
+    if (!agent || agent.model === modelId) return;
+
+    agent.model = modelId;
+    document.getElementById('header-model').textContent = shortModel(modelId);
+    renderAgentList();
+
+    // Tell the gateway to switch model for this session
+    try {
+      await rpc('session.setModel', { sessionKey: activeSession, model: modelId });
+    } catch (e) {
+      console.warn('Model switch failed:', e);
+    }
+  }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', () => {
+    document.getElementById('model-dropdown')?.classList.remove('show');
+  });
 
   // ─── Select Agent / Session ──────────────────────────────────
   function selectAgent(agentId) {
