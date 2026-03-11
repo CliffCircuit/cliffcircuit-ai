@@ -63,6 +63,19 @@
     .msg-expand-btn { font-size: 12px; color: #818cf8; cursor: pointer; padding: 4px 0; display: inline-block; }
     .msg-expand-btn:hover { color: #a5b4fc; text-decoration: underline; }
 
+    /* Message appear animation */
+    @keyframes msgAppear {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg-group.new-msg { animation: msgAppear 0.2s ease-out; }
+
+    /* Streaming bubble pulse */
+    .msg-bubble.streaming { border-color: #4f46e5; }
+
+    /* Header model tag */
+    .model-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #1f2937; color: #9ca3af; margin-left: 6px; }
+
     /* Markdown in messages */
     .msg-bubble p { margin: 0 0 8px 0; }
     .msg-bubble p:last-child { margin-bottom: 0; }
@@ -601,10 +614,17 @@
 
     group.appendChild(avatar);
     group.appendChild(content);
+
+    // Animate new real-time messages (not history loads)
+    if (streaming || (lastMsgDate && !messagesEl.querySelector('.loading-history'))) {
+      group.classList.add('new-msg');
+    }
+
     messagesEl.appendChild(group);
 
     if (streaming) {
       streamingBubble = bubble;
+      bubble.classList.add('streaming');
     }
 
     return bubble;
@@ -615,8 +635,8 @@
     if (!text) return '';
 
     // Remove context percentage markers like [~34%] or (~34%)
-    text = text.replace(/^\[~?\d+%\]\s*/m, '');
-    text = text.replace(/^\(~?\d+%\)\s*/m, '');
+    text = text.replace(/\[~?\d+%\]\s*/g, '');
+    text = text.replace(/\(~?\d+%\)\s*/g, '');
 
     // Remove NO_REPLY responses
     if (text.trim() === 'NO_REPLY') return '';
@@ -674,6 +694,7 @@
         appendMessage({ role: 'assistant', content: text });
         scrollToBottom();
       }
+      if (streamingBubble) streamingBubble.classList.remove('streaming');
       isStreaming = false;
       streamingBubble = null;
       streamBuffer = '';
