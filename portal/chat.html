@@ -844,6 +844,26 @@
     const sorted = [...agents].sort((a, b) => (agentLastSeen[b.id] || 0) - (agentLastSeen[a.id] || 0));
 
     let html = '';
+
+    // Render group chats first
+    for (const group of groupChats) {
+      const isActive = activeGroupChat?.id === group.id;
+      html += `
+        <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectGroupChat('${group.id}')" style="position:relative;">
+          <div class="agent-avatar" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+            ${renderGroupAvatars(group.agentIds, 28, 16)}
+          </div>
+          <div class="agent-info">
+            <div class="agent-top-row">
+              <span class="agent-name" style="font-size:13px;">${group.name}</span>
+            </div>
+            <div class="agent-bottom-row">
+              <div class="agent-preview"><span style="color:#818cf8;">Group Chat</span></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
     for (const agent of sorted) {
       const isActive = activeAgent === agent.id;
       const color = agentColor(agent.id);
@@ -1509,7 +1529,12 @@
           renderAgentList();
         }
       }
-      return;
+      // If in group chat and this agent is a member, render the message instead of returning
+      if (activeGroupChat && activeGroupChat.agentIds.includes(parts[1])) {
+        // Fall through to render the message
+      } else {
+        return;
+      }
     }
 
     // Extract text from gateway message format: message.content is array of {type,text}
@@ -1521,16 +1546,21 @@
       text = msgContent;
     }
 
+    // Determine which agent sent this (for group chats)
+    const eventAgentId = sk ? sk.split(':')[1] : activeAgent;
+
     if (payload.state === 'delta' && text) {
       // Skip NO_REPLY and HEARTBEAT_OK from streaming
       if (text.trim() === 'NO_REPLY' || text.trim() === 'HEARTBEAT_OK') return;
+      // Group chats don't stream (multiple agents would conflict) — wait for final
+      if (activeGroupChat) return;
       showTyping(false);
       document.getElementById('stop-btn').classList.add('show');
       if (!streamingBubble) {
         isStreaming = true;
         streamBuffer = '';
-        appendMessage({ role: 'assistant', content: '' }, true);
-        setAgentStreaming(activeAgent, true);
+        appendMessage({ role: 'assistant', content: '', agentId: eventAgentId }, true);
+        setAgentStreaming(activeAgent || eventAgentId, true);
       }
       // Gateway sends cumulative text, not incremental chunks
       streamBuffer = text;
@@ -1540,7 +1570,7 @@
 
     if (payload.state === 'final') {
       if (text && !streamingBubble) {
-        appendMessage({ role: 'assistant', content: text, createdAt: Date.now() });
+        appendMessage({ role: 'assistant', content: text, createdAt: Date.now(), agentId: eventAgentId });
         scrollToBottom();
       }
       // Update last-seen for active agent
@@ -1596,7 +1626,7 @@
     const input = document.getElementById('msg-input');
     const text = input.value.trim();
     if (!text && pastedImages.length === 0) return;
-    if (!activeSession) return;
+    if (!activeSession && !activeGroupChat) return;
     if (activeAgent) userEngaged[activeAgent] = true;
 
     // Include reply context if replying
@@ -1631,16 +1661,25 @@
     // Show typing
     showTyping(true);
 
-    // Send via WS
+    // Send via WS — group chat fans out to all agents
     try {
-      const params = {
-        sessionKey: activeSession,
-        message: content,
-        idempotencyKey: crypto.randomUUID()
-      };
-      // Note: image attachments would need base64 encoding in the message
-      // For now, images are shown locally; gateway may need additional handling
-      await rpc('chat.send', params);
+      if (activeGroupChat) {
+        const promises = activeGroupChat.agentIds.map(agentId => {
+          const sk = `agent:${agentId}:main`;
+          return rpc('chat.send', {
+            sessionKey: sk,
+            message: content,
+            idempotencyKey: crypto.randomUUID()
+          });
+        });
+        await Promise.all(promises);
+      } else {
+        await rpc('chat.send', {
+          sessionKey: activeSession,
+          message: content,
+          idempotencyKey: crypto.randomUUID()
+        });
+      }
       playSendSound();
     } catch (e) {
       console.error('Send failed:', e);
@@ -2749,27 +2788,19 @@
   }
 
   // ─── Mobile Sidebar Toggle ───────────────────────────────────
-  // ─── New Chat Dropdown ─────────────────────────────────────
+  // ─── New Chat / Group Chat Dropdown ─────────────────────────
+  const composeSelected = new Set();
+  const groupChats = []; // { id, agentIds, name }
+
   function toggleNewChatDropdown() {
     const dd = document.getElementById('new-chat-dropdown');
     if (dd.style.display === 'none') {
-      let html = '';
-      const sorted = [...agents].sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
-      for (const agent of sorted) {
-        html += `<div onclick="startNewChat('${agent.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid #1f2937;" onmouseenter="this.style.background='#1f2937'" onmouseleave="this.style.background=''">
-          ${avatarImg(agent.id, 32)}
-          <div>
-            <div style="color:#e5e7eb;font-size:13px;font-weight:500;">${agent.name || agent.id}</div>
-            <div style="color:#6b7280;font-size:11px;">${shortModel(agent.model) || ''}</div>
-          </div>
-        </div>`;
-      }
-      dd.innerHTML = html;
+      composeSelected.clear();
+      renderComposeDropdown();
       dd.style.display = 'block';
-      // Close on outside click
       setTimeout(() => {
         const closer = (e) => {
-          if (!dd.contains(e.target) && e.target.id !== 'new-chat-btn') {
+          if (!dd.contains(e.target) && !e.target.closest('#new-chat-btn')) {
             dd.style.display = 'none';
             document.removeEventListener('click', closer);
           }
@@ -2781,9 +2812,96 @@
     }
   }
 
+  function renderComposeDropdown() {
+    const dd = document.getElementById('new-chat-dropdown');
+    const sorted = [...agents].sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+    let html = '<div style="padding:8px 12px 4px;display:flex;align-items:center;justify-content:space-between;"><span style="color:#9ca3af;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Select agents</span>';
+    if (composeSelected.size > 0) html += `<span style="color:#818cf8;font-size:11px;">${composeSelected.size} selected</span>`;
+    html += '</div>';
+    for (const agent of sorted) {
+      const checked = composeSelected.has(agent.id);
+      html += `<div onclick="toggleComposeAgent('${agent.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid #1f2937;${checked ? 'background:#1e1b4b;' : ''}" onmouseenter="this.style.background='${checked ? '#1e1b4b' : '#1f2937'}'" onmouseleave="this.style.background='${checked ? '#1e1b4b' : ''}'">
+        <div style="width:20px;height:20px;border-radius:4px;border:2px solid ${checked ? '#818cf8' : '#4b5563'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;${checked ? 'background:#4f46e5;' : ''}">
+          ${checked ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+        </div>
+        ${avatarImg(agent.id, 32)}
+        <div>
+          <div style="color:#e5e7eb;font-size:13px;font-weight:500;">${agent.name || agent.id}</div>
+          <div style="color:#6b7280;font-size:11px;">${shortModel(agent.model) || ''}</div>
+        </div>
+      </div>`;
+    }
+    // Action buttons
+    html += '<div style="padding:10px 12px;display:flex;gap:8px;">';
+    if (composeSelected.size === 1) {
+      const agentId = [...composeSelected][0];
+      html += `<button onclick="startNewChat('${agentId}')" style="flex:1;padding:8px;border-radius:8px;border:none;background:#4f46e5;color:white;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.15s;">Open Chat</button>`;
+    } else if (composeSelected.size > 1) {
+      html += `<button onclick="startGroupChat()" style="flex:1;padding:8px;border-radius:8px;border:none;background:#4f46e5;color:white;font-size:13px;font-weight:500;cursor:pointer;transition:background 0.15s;">Start Group Chat (${composeSelected.size})</button>`;
+    }
+    html += '</div>';
+    dd.innerHTML = html;
+  }
+
+  function toggleComposeAgent(agentId) {
+    if (composeSelected.has(agentId)) composeSelected.delete(agentId);
+    else composeSelected.add(agentId);
+    renderComposeDropdown();
+  }
+
   function startNewChat(agentId) {
     document.getElementById('new-chat-dropdown').style.display = 'none';
     selectAgent(agentId);
+  }
+
+  function startGroupChat() {
+    const agentIds = [...composeSelected];
+    document.getElementById('new-chat-dropdown').style.display = 'none';
+    const names = agentIds.map(id => agents.find(a => a.id === id)?.name || id);
+    const groupId = 'group-' + agentIds.sort().join('-');
+    // Check if group already exists
+    if (!groupChats.find(g => g.id === groupId)) {
+      groupChats.push({ id: groupId, agentIds, name: names.join(', ') });
+    }
+    selectGroupChat(groupId);
+    renderAgentList();
+  }
+
+  let activeGroupChat = null;
+
+  function selectGroupChat(groupId) {
+    const group = groupChats.find(g => g.id === groupId);
+    if (!group) return;
+    activeGroupChat = group;
+    activeAgent = null;
+    activeSession = null;
+    // Update header
+    document.getElementById('header-name').textContent = group.name;
+    document.getElementById('header-model').textContent = 'Group Chat';
+    document.getElementById('header-context').textContent = '';
+    document.getElementById('conv-stats').textContent = '';
+    // Update avatar to stacked group
+    const avatarEl = document.getElementById('header-avatar');
+    if (avatarEl) avatarEl.innerHTML = renderGroupAvatars(group.agentIds, 36, 22);
+    // Enable input
+    const inp = document.getElementById('chat-input');
+    inp.disabled = false;
+    inp.placeholder = 'Message group...';
+    document.getElementById('send-btn').disabled = false;
+    // Clear messages and show empty state
+    const messagesEl = document.getElementById('messages');
+    messagesEl.innerHTML = '<div id="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#6b7280;"><div style="font-size:48px;margin-bottom:16px;">👥</div><div style="font-size:16px;">Group chat with ' + group.name + '</div><div style="font-size:12px;margin-top:4px;color:#4b5563;">Messages will be sent to all agents</div></div>';
+    renderAgentList();
+  }
+
+  function renderGroupAvatars(agentIds, size, overlap) {
+    const totalWidth = size + (agentIds.length - 1) * (size - overlap);
+    let html = `<div style="display:flex;position:relative;width:${totalWidth}px;height:${size}px;">`;
+    agentIds.forEach((id, i) => {
+      html += `<div style="position:absolute;left:${i * (size - overlap)}px;z-index:${agentIds.length - i};border-radius:50%;border:2px solid #0a0f1a;overflow:hidden;width:${size}px;height:${size}px;">${avatarImg(id, size)}</div>`;
+    });
+    html += '</div>';
+    return html;
   }
 
   function toggleSidebar() {
