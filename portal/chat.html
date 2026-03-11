@@ -180,6 +180,53 @@
     /* Error messages */
     .msg-group.error .msg-bubble { background: #1c0a0a; border-color: #7f1d1d; color: #fca5a5; }
 
+    /* Stop generation button */
+    #stop-btn { display: none; align-items: center; gap: 6px; padding: 6px 16px; background: #1c1917; border: 1px solid #44403c; border-radius: 9999px; color: #d6d3d1; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    #stop-btn.show { display: flex; }
+    #stop-btn:hover { background: #292524; border-color: #78716c; }
+    #stop-btn svg { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Regenerate button */
+    .regen-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: transparent; border: 1px solid #1f2937; border-radius: 6px; color: #6b7280; cursor: pointer; font-size: 11px; transition: all 0.15s; margin-top: 4px; }
+    .regen-btn:hover { background: #111827; color: #a5b4fc; border-color: #4f46e5; }
+
+    /* Attach button */
+    #attach-btn { background: none; border: none; color: #4b5563; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.15s; }
+    #attach-btn:hover { color: #9ca3af; background: #1f2937; }
+    #file-input { display: none; }
+
+    /* Tool activity indicator */
+    .tool-activity { display: flex; align-items: center; gap: 8px; padding: 6px 14px; font-size: 12px; color: #818cf8; }
+    .tool-activity-icon { animation: pulse 1.5s ease-in-out infinite; }
+    .tool-activity-text { font-style: italic; }
+
+    /* Search bar */
+    #search-bar { display: none; padding: 8px 16px; border-bottom: 1px solid #1f2937; background: #0f1419; }
+    #search-bar.show { display: flex; gap: 8px; align-items: center; }
+    #search-input { flex: 1; background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 6px 10px; color: #e5e7eb; font-size: 13px; outline: none; }
+    #search-input:focus { border-color: #4f46e5; }
+    #search-nav { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #6b7280; }
+    .search-nav-btn { background: none; border: 1px solid #1f2937; border-radius: 4px; color: #9ca3af; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
+    .search-nav-btn:hover { background: #1f2937; }
+    #search-close { background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px; transition: color 0.1s; }
+    #search-close:hover { color: #e5e7eb; }
+    .search-highlight { background: #854d0e; color: #fef3c7; border-radius: 2px; padding: 0 2px; }
+    .search-highlight.current { background: #a16207; box-shadow: 0 0 0 2px #ca8a04; }
+
+    /* Export menu */
+    #export-btn { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; position: relative; }
+    #export-btn:hover { color: #9ca3af; background: #111827; }
+    .export-menu { display: none; position: absolute; top: 100%; right: 0; background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 4px; min-width: 140px; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .export-menu.show { display: block; }
+    .export-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: #d1d5db; font-size: 12px; transition: all 0.1s; white-space: nowrap; }
+    .export-item:hover { background: #1f2937; }
+
+    /* Notification sound toggle */
+    #notif-toggle, #search-toggle { background: none; border: none; color: #4b5563; cursor: pointer; padding: 6px; border-radius: 6px; transition: all 0.15s; display: flex; align-items: center; }
+    #notif-toggle:hover, #search-toggle:hover { color: #9ca3af; background: #111827; }
+    #notif-toggle.active { color: #818cf8; }
+
     /* Code block language tag */
     .code-block-wrap { position: relative; margin: 8px 0; }
     .code-lang-tag { position: absolute; top: 8px; right: 10px; font-size: 10px; color: #6b7280; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; }
@@ -264,14 +311,56 @@
             </div>
             <div class="text-gray-500 text-xs" id="header-model" style="font-family:'SF Mono','Fira Code',monospace;"></div>
           </div>
-          <div id="clear-wrap" style="display:flex;align-items:center;gap:6px;">
-            <button id="clear-btn" title="Clear history" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.color='#9ca3af'" onmouseout="this.style.color='#6b7280'">Clear</button>
-            <div class="clear-confirm" id="clear-confirm">
-              <span style="font-size:11px;color:#9ca3af;">Sure?</span>
-              <button class="confirm-btn confirm-yes" onclick="confirmClear()">Yes</button>
-              <button class="confirm-btn confirm-no" onclick="cancelClear()">No</button>
+          <div style="display:flex;align-items:center;gap:2px;">
+            <button id="notif-toggle" onclick="toggleNotifSound()" title="Notification sounds">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+            <button id="search-toggle" onclick="toggleSearch()" title="Search messages (Cmd+F)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <div id="export-btn" onclick="toggleExportMenu()" title="Export conversation">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <div class="export-menu" id="export-menu">
+                <div class="export-item" onclick="exportChat('markdown')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Markdown (.md)
+                </div>
+                <div class="export-item" onclick="exportChat('text')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+                  Plain text (.txt)
+                </div>
+                <div class="export-item" onclick="exportChat('json')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  JSON (.json)
+                </div>
+              </div>
+            </div>
+            <div id="clear-wrap" style="display:flex;align-items:center;gap:4px;">
+              <button id="clear-btn" title="Clear display" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.color='#9ca3af'" onmouseout="this.style.color='#6b7280'">Clear</button>
+              <div class="clear-confirm" id="clear-confirm">
+                <span style="font-size:11px;color:#9ca3af;">Sure?</span>
+                <button class="confirm-btn confirm-yes" onclick="confirmClear()">Yes</button>
+                <button class="confirm-btn confirm-no" onclick="cancelClear()">No</button>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- Search bar -->
+        <div id="search-bar">
+          <input id="search-input" type="text" placeholder="Search messages..." onkeydown="if(event.key==='Enter')searchMessages()" oninput="searchMessages()">
+          <div id="search-nav">
+            <span id="search-count">0 results</span>
+            <button class="search-nav-btn" onclick="navigateSearch(-1)" title="Previous">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <button class="search-nav-btn" onclick="navigateSearch(1)" title="Next">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <button id="search-close" onclick="toggleSearch()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
 
         <div id="messages">
@@ -280,6 +369,12 @@
             <div class="text-sm">Select an agent to start chatting</div>
           </div>
         </div>
+
+        <!-- Stop generation button -->
+        <button id="stop-btn" onclick="stopGeneration()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop generating
+        </button>
 
         <!-- Scroll to bottom button -->
         <button id="scroll-btn" onclick="scrollToBottom(true)" title="Scroll to bottom">
@@ -303,6 +398,10 @@
         <!-- Input -->
         <div id="input-area">
           <div id="input-wrap">
+            <button id="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <input type="file" id="file-input" multiple accept="image/*,.pdf,.txt,.md,.json,.csv,.py,.js,.ts,.html,.css" onchange="handleFileAttach(event)">
             <textarea id="msg-input" rows="1" placeholder="Message... (Enter to send, Shift+Enter for newline)" disabled></textarea>
             <button id="send-btn" disabled onclick="sendMessage()" title="Send (Enter)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -821,6 +920,7 @@
 
     if (payload.state === 'delta' && text) {
       showTyping(false);
+      document.getElementById('stop-btn').classList.add('show');
       if (!streamingBubble) {
         isStreaming = true;
         streamBuffer = '';
@@ -834,7 +934,6 @@
 
     if (payload.state === 'final') {
       if (text && !streamingBubble) {
-        // Got final without any deltas — show the complete message
         appendMessage({ role: 'assistant', content: text });
         scrollToBottom();
       }
@@ -843,6 +942,10 @@
       streamingBubble = null;
       streamBuffer = '';
       showTyping(false);
+      document.getElementById('stop-btn').classList.remove('show');
+      playNotifSound();
+      // Add regenerate button after the last assistant message
+      addRegenButton();
     }
 
     // Thinking / processing state (before first delta)
@@ -1138,12 +1241,46 @@
     if (hint) hint.style.display = msgInput.value.length > 0 ? 'block' : 'none';
   });
 
+  // Add regenerate button below last assistant message
+  function addRegenButton() {
+    // Remove any existing regen buttons
+    document.querySelectorAll('.regen-wrap').forEach(el => el.remove());
+    const messagesEl = document.getElementById('messages');
+    const lastGroup = messagesEl.querySelector('.msg-group.assistant:last-of-type');
+    if (!lastGroup) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'regen-wrap';
+    wrap.style.cssText = 'display:flex;justify-content:flex-start;padding-left:38px;';
+    const btn = document.createElement('button');
+    btn.className = 'regen-btn';
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Regenerate`;
+    btn.onclick = regenerateResponse;
+    wrap.appendChild(btn);
+    // Insert after the last assistant message group
+    lastGroup.after(wrap);
+  }
+
   // Global keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    // Cmd/Ctrl+K to focus input (if not in another input)
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k' && document.activeElement === document.body) {
+    // Cmd/Ctrl+K to focus input
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
       msgInput.focus();
+    }
+    // Cmd/Ctrl+F to open message search (instead of browser search)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+      e.preventDefault();
+      if (!document.getElementById('search-bar').classList.contains('show')) toggleSearch();
+      else document.getElementById('search-input').focus();
+    }
+    // Escape to close search or stop generation
+    if (e.key === 'Escape') {
+      if (document.getElementById('search-bar').classList.contains('show')) {
+        toggleSearch();
+      } else if (isStreaming) {
+        stopGeneration();
+      }
     }
   });
 
@@ -1178,6 +1315,253 @@
         item.style.display = text.includes(query) ? '' : 'none';
       });
     });
+  }
+
+  // ─── Stop Generation ──────────────────────────────────────────
+  function stopGeneration() {
+    if (!isStreaming) return;
+    // Mark streaming complete
+    if (streamingBubble) streamingBubble.classList.remove('streaming');
+    isStreaming = false;
+    streamingBubble = null;
+    streamBuffer = '';
+    showTyping(false);
+    document.getElementById('stop-btn').classList.remove('show');
+    // TODO: Send cancel RPC to gateway when supported
+  }
+
+  // ─── Regenerate Response ─────────────────────────────────────
+  async function regenerateResponse() {
+    if (isStreaming || !activeSession) return;
+    // Find the last user message
+    const msgs = document.querySelectorAll('.msg-group.user .msg-bubble');
+    if (!msgs.length) return;
+    const lastUserMsg = msgs[msgs.length - 1].textContent;
+    if (!lastUserMsg) return;
+
+    // Remove the last assistant message(s) after last user message
+    const allGroups = document.querySelectorAll('.msg-group');
+    for (let i = allGroups.length - 1; i >= 0; i--) {
+      if (allGroups[i].classList.contains('user')) break;
+      allGroups[i].remove();
+    }
+    // Also remove regen buttons
+    document.querySelectorAll('.regen-wrap').forEach(el => el.remove());
+
+    showTyping(true);
+    try {
+      await rpc('chat.send', {
+        sessionKey: activeSession,
+        message: lastUserMsg,
+        idempotencyKey: crypto.randomUUID()
+      });
+    } catch (e) {
+      console.error('Regenerate failed:', e);
+      showTyping(false);
+    }
+  }
+
+  // ─── File Attach ─────────────────────────────────────────────
+  function handleFileAttach(event) {
+    const files = event.target.files;
+    if (!files.length) return;
+    for (const file of files) {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          pastedImages.push({ dataUrl: ev.target.result, file });
+          renderPastePreview();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Read text files as text
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const text = ev.target.result;
+          const input = document.getElementById('msg-input');
+          const prefix = input.value ? input.value + '\n\n' : '';
+          input.value = prefix + `[File: ${file.name}]\n\`\`\`\n${text.slice(0, 10000)}\n\`\`\``;
+          input.style.height = 'auto';
+          input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+        };
+        reader.readAsText(file);
+      }
+    }
+    event.target.value = ''; // Reset so same file can be re-selected
+  }
+
+  // ─── Search Messages ─────────────────────────────────────────
+  let searchResults = [];
+  let searchIdx = -1;
+
+  function toggleSearch() {
+    const bar = document.getElementById('search-bar');
+    const isVisible = bar.classList.toggle('show');
+    if (isVisible) {
+      document.getElementById('search-input').focus();
+    } else {
+      clearSearchHighlights();
+      document.getElementById('search-input').value = '';
+      searchResults = [];
+      searchIdx = -1;
+    }
+  }
+
+  function searchMessages() {
+    const query = document.getElementById('search-input').value.toLowerCase().trim();
+    clearSearchHighlights();
+    searchResults = [];
+    searchIdx = -1;
+
+    if (!query) {
+      document.getElementById('search-count').textContent = '0 results';
+      return;
+    }
+
+    // Search through all message bubbles
+    const bubbles = document.querySelectorAll('.msg-bubble');
+    bubbles.forEach((bubble) => {
+      const text = bubble.textContent.toLowerCase();
+      if (text.includes(query)) {
+        searchResults.push(bubble);
+        // Highlight matches in the bubble
+        highlightInElement(bubble, query);
+      }
+    });
+
+    document.getElementById('search-count').textContent = searchResults.length + ' result' + (searchResults.length !== 1 ? 's' : '');
+    if (searchResults.length > 0) navigateSearch(0);
+  }
+
+  function highlightInElement(el, query) {
+    // Walk text nodes and wrap matches
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    for (const node of textNodes) {
+      const idx = node.textContent.toLowerCase().indexOf(query);
+      if (idx === -1) continue;
+      const span = document.createElement('span');
+      span.className = 'search-highlight';
+      const range = document.createRange();
+      range.setStart(node, idx);
+      range.setEnd(node, idx + query.length);
+      range.surroundContents(span);
+    }
+  }
+
+  function clearSearchHighlights() {
+    document.querySelectorAll('.search-highlight').forEach(el => {
+      const parent = el.parentNode;
+      parent.replaceChild(document.createTextNode(el.textContent), el);
+      parent.normalize();
+    });
+  }
+
+  function navigateSearch(dir) {
+    if (!searchResults.length) return;
+    // Remove current highlight
+    document.querySelectorAll('.search-highlight.current').forEach(el => el.classList.remove('current'));
+
+    if (dir === 0) searchIdx = 0;
+    else searchIdx = (searchIdx + dir + searchResults.length) % searchResults.length;
+
+    const bubble = searchResults[searchIdx];
+    bubble.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const hl = bubble.querySelector('.search-highlight');
+    if (hl) hl.classList.add('current');
+    document.getElementById('search-count').textContent = `${searchIdx + 1} / ${searchResults.length}`;
+  }
+
+  // ─── Export Conversation ─────────────────────────────────────
+  function toggleExportMenu() {
+    const menu = document.getElementById('export-menu');
+    menu.classList.toggle('show');
+    // Close on next click outside
+    if (menu.classList.contains('show')) {
+      setTimeout(() => {
+        document.addEventListener('click', closeExportMenu, { once: true });
+      }, 0);
+    }
+  }
+
+  function closeExportMenu() {
+    document.getElementById('export-menu').classList.remove('show');
+  }
+
+  function exportChat(format) {
+    closeExportMenu();
+    const messages = document.querySelectorAll('.msg-group');
+    const agent = agents.find(a => a.id === activeAgent);
+    const agentName = agent?.name || 'Agent';
+    let output = '';
+
+    if (format === 'markdown') {
+      output = `# Chat with ${agentName}\n*Exported ${new Date().toLocaleString()}*\n\n---\n\n`;
+      messages.forEach(msg => {
+        const isUser = msg.classList.contains('user');
+        const name = isUser ? 'You' : agentName;
+        const bubble = msg.querySelector('.msg-bubble');
+        const time = msg.querySelector('.msg-time')?.title || '';
+        if (bubble) output += `**${name}** *(${time})*\n${bubble.textContent.trim()}\n\n`;
+      });
+    } else if (format === 'text') {
+      messages.forEach(msg => {
+        const isUser = msg.classList.contains('user');
+        const name = isUser ? 'You' : agentName;
+        const bubble = msg.querySelector('.msg-bubble');
+        const time = msg.querySelector('.msg-time')?.textContent || '';
+        if (bubble) output += `[${time}] ${name}: ${bubble.textContent.trim()}\n\n`;
+      });
+    } else if (format === 'json') {
+      const data = [];
+      messages.forEach(msg => {
+        const isUser = msg.classList.contains('user');
+        const bubble = msg.querySelector('.msg-bubble');
+        const time = msg.querySelector('.msg-time')?.title || '';
+        if (bubble) data.push({ role: isUser ? 'user' : 'assistant', content: bubble.textContent.trim(), timestamp: time });
+      });
+      output = JSON.stringify({ agent: agentName, messages: data, exportedAt: new Date().toISOString() }, null, 2);
+    }
+
+    const ext = format === 'json' ? 'json' : format === 'markdown' ? 'md' : 'txt';
+    const blob = new Blob([output], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chat-${agentName.toLowerCase()}-${new Date().toISOString().slice(0,10)}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ─── Notification Sound ──────────────────────────────────────
+  let notifSoundEnabled = localStorage.getItem('chat_notif_sound') !== 'off';
+  const notifAudio = new Audio('data:audio/wav;base64,UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAACAgICAgICAgICAgICA' +
+    'gIB/gH+AfoCAgYKDhIWGh4eIiIeHhoWEg4KBgH+AfoCAgICAf3+AgICAgICAgH9/f39/f3+AgIGBgoOE' +
+    'hYWGhoeHh4eGhYSEg4KBgH9/fn5+fn5+fn9/gICBgYKCg4ODg4OCgoGBgH9/fn5+fn9/f4CAgYGCgoOD' +
+    'g4OCgoGBgIB/f35+fn5+f3+AgIGBgoKDg4ODg4KCgYGAf39+fn5+fn9/f4CAgYGBgoKCg4OCgoKBgYCA' +
+    'f39/fn5+fn9/gICBgYKCgoODg4KCgoGBgIB/f35+fn5+f3+AgIGBgoKCg4OCgoKBgYCAf39+fn5+fn9/' +
+    'gICBgYKCgoKCg4KCgoGBgIB/f35+fn5+f3+AgIGBgoKCgoODgoKBgYGAf39+fn5+fn9/gICBgYKCgoKC' +
+    'goKCgYGBgH9/fn5+fn5/f4CAgIGBgoKCgoKCgoKBgYCAf39+fn5+f3+AgICBgYKCgoKCgoKCgYGAgH9/' +
+    'fn5+fn9/gICAgYGCgoKCgoKCgoGBgIB/f35+fn5/f4CAgIGBgoKCgoKCgoGBgYB/f35+fn5/f4CAgIGB' +
+    'gYKCgoKCgoKBgYCAf39+fn5+f3+AgICBgYGCgoKCgoKBgYGAf39+fn5+f3+AgICBgYGCgoKCgoKBgYGA' +
+    'f39+fn5+f3+AgICBgYGCgoKCgoKBgYGAf39+fn9/f3+AgICBgYGCgoKCgoGBgYGAf39+fn5/f3+AgICB' +
+    'gYGCgoKCgoGBgYGAf39+fn5/f4CAgICBgYGCgoKCgYGBgYCAf39+fn9/f4CAgICBgYKCgoKCgYGBgYCA' +
+    'f35+fn9/gICAgIGBgYKCgoKBgYGBgIB/fn5+f3+AgICAgYGBgoKCgoGBgYGAgH9+fn5/f4CAgICBgYGC');
+
+  function toggleNotifSound() {
+    notifSoundEnabled = !notifSoundEnabled;
+    localStorage.setItem('chat_notif_sound', notifSoundEnabled ? 'on' : 'off');
+    document.getElementById('notif-toggle').classList.toggle('active', notifSoundEnabled);
+  }
+
+  // Init notif state
+  document.getElementById('notif-toggle')?.classList.toggle('active', notifSoundEnabled);
+
+  function playNotifSound() {
+    if (notifSoundEnabled) {
+      try { notifAudio.play(); } catch {}
+    }
   }
 
   // ─── Reconnect Button ────────────────────────────────────────
