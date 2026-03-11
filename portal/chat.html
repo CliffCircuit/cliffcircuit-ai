@@ -849,7 +849,7 @@
         : (lastMsg ? escapeHtml(lastMsg).slice(0, 120) : `<span style="color:#4b5563">No messages yet</span>`);
       const unread = unreadCounts[agent.id] || 0;
       html += `
-        <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectAgent('${agent.id}')" style="position:relative;">
+        <div class="agent-item ${isActive ? 'active' : ''}" data-agent-id="${agent.id}" onclick="selectAgent('${agent.id}')" style="position:relative;">
           <div class="agent-avatar">${avatarImg(agent.id, 40)}</div>
           <div class="agent-info">
             <div class="agent-top-row">
@@ -1495,6 +1495,7 @@
           // Always update preview text for sidebar (even without badge)
           if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY') {
             agentLastMessage[agentId] = previewText;
+            delete agentHistoryCache[agentId]; // invalidate search cache
           }
           agentLastSeen[agentId] = Date.now();
           agentTyping[agentId] = false;
@@ -2281,15 +2282,58 @@
   }
 
   // Agent search filter
+  // ─── Sidebar Search (cross-agent message content) ───────────
+  const agentHistoryCache = {}; // { agentId: "all message text lowercased" }
+  let searchDebounce = null;
+
+  async function prefetchAgentHistories() {
+    // Fetch history for all agents and cache the text content
+    for (const agent of agents) {
+      if (agentHistoryCache[agent.id]) continue;
+      try {
+        const sk = `agent:${agent.id}:main`;
+        const result = await rpc('chat.history', { sessionKey: sk, limit: 100 });
+        const messages = result?.messages || result || [];
+        const allText = messages.map(m => {
+          const c = m.content;
+          if (Array.isArray(c)) return c.filter(b => b.type === 'text').map(b => b.text).join(' ');
+          return typeof c === 'string' ? c : '';
+        }).join(' ').toLowerCase();
+        agentHistoryCache[agent.id] = allText;
+      } catch (e) {
+        agentHistoryCache[agent.id] = '';
+      }
+    }
+  }
+
   const agentSearch = document.getElementById('agent-search');
   if (agentSearch) {
+    // Prefetch histories on first focus
+    let prefetched = false;
+    agentSearch.addEventListener('focus', () => {
+      if (!prefetched) { prefetched = true; prefetchAgentHistories(); }
+    });
+
     agentSearch.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
+      clearTimeout(searchDebounce);
+      const query = e.target.value.toLowerCase().trim();
       const items = document.querySelectorAll('.agent-item');
-      items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(query) ? '' : 'none';
-      });
+
+      if (!query) {
+        items.forEach(item => item.style.display = '');
+        return;
+      }
+
+      searchDebounce = setTimeout(async () => {
+        // Ensure histories are loaded
+        await prefetchAgentHistories();
+        items.forEach(item => {
+          const agentId = item.dataset.agentId;
+          const nameMatch = item.textContent.toLowerCase().includes(query);
+          const contentMatch = (agentHistoryCache[agentId] || '').includes(query);
+          item.style.display = (nameMatch || contentMatch) ? '' : 'none';
+        });
+      }, 200);
     });
   }
 
