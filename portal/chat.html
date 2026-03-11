@@ -17,7 +17,7 @@
     .agent-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.15s, border-color 0.15s; border: 1px solid transparent; }
     .agent-item:hover { background: #111827; }
     .agent-item.active { background: #1e1b4b; border-color: #4f46e5; }
-    .agent-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .agent-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; overflow: hidden; }
     .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; }
     .agent-model { font-size: 11px; color: #6b7280; }
     .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
@@ -206,6 +206,25 @@
   // Agent colors for multi-agent distinction
   const AGENT_COLORS = ['#818cf8','#34d399','#f472b6','#fbbf24','#60a5fa','#a78bfa','#fb923c'];
 
+  // Agent avatar images
+  const AGENT_AVATARS = {
+    main: '/portal/cliff-avatar.jpg',
+    cliff: '/portal/cliff-avatar.jpg',
+    samantha: '/portal/samantha-avatar.jpg',
+    scout: '/portal/scout-avatar.jpg',
+    atlas: '/portal/atlas-avatar.png',
+    fernanda: '/portal/fernanda-avatar.jpg'
+  };
+  const USER_AVATAR = '/portal/tim-avatar.jpg';
+
+  function avatarImg(agentId, size = 36) {
+    const src = AGENT_AVATARS[agentId];
+    if (src) return `<img src="${src}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;">`;
+    const color = agentColor(agentId);
+    const name = agents.find(a => a.id === agentId)?.name || agentId;
+    return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color}22;color:${color};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.5)}px;">${name.charAt(0).toUpperCase()}</div>`;
+  }
+
   function agentColor(agentId) {
     const idx = agents.findIndex(a => a.id === agentId);
     return AGENT_COLORS[idx % AGENT_COLORS.length];
@@ -348,7 +367,7 @@
       const color = agentColor(agent.id);
       html += `
         <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectAgent('${agent.id}')">
-          <div class="agent-avatar" style="background:${color}22; color:${color};">${agent.emoji || agent.name.charAt(0)}</div>
+          <div class="agent-avatar">${avatarImg(agent.id, 36)}</div>
           <div style="min-width:0;">
             <div class="agent-name">${agent.name}</div>
             <div class="agent-model">${shortModel(agent.model)}</div>
@@ -398,9 +417,7 @@
     // Update header
     const header = document.getElementById('chat-header');
     header.style.display = 'flex';
-    document.getElementById('header-avatar').textContent = agent?.emoji || agentId.charAt(0);
-    document.getElementById('header-avatar').style.background = agentColor(agentId) + '22';
-    document.getElementById('header-avatar').style.color = agentColor(agentId);
+    document.getElementById('header-avatar').innerHTML = avatarImg(agentId, 32);
     document.getElementById('header-name').textContent = agent?.name || agentId;
     document.getElementById('header-model').textContent = shortModel(agent?.model);
 
@@ -457,13 +474,9 @@
     const avatar = document.createElement('div');
     avatar.className = 'msg-avatar';
     if (isUser) {
-      avatar.textContent = '👤';
-      avatar.style.background = '#1f293722';
+      avatar.innerHTML = `<img src="${USER_AVATAR}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">`;
     } else {
-      avatar.textContent = agent?.emoji || '🤖';
-      const c = agentColor(agent?.id || 'x');
-      avatar.style.background = c + '22';
-      avatar.style.color = c;
+      avatar.innerHTML = avatarImg(agent?.id || activeAgent, 28);
     }
 
     // Content wrapper
