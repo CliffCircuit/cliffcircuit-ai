@@ -1661,15 +1661,17 @@
     // Send via WS — group chat fans out to all agents
     try {
       if (activeGroupChat) {
-        const promises = activeGroupChat.agentIds.map(agentId => {
+        const results = await Promise.allSettled(activeGroupChat.agentIds.map(agentId => {
           const sk = `agent:${agentId}:main`;
+          console.log('[GROUP SEND]', sk);
           return rpc('chat.send', {
             sessionKey: sk,
             message: content,
             idempotencyKey: crypto.randomUUID()
-          });
-        });
-        await Promise.all(promises);
+          }).then(r => { console.log('[GROUP SEND OK]', sk, r); return r; })
+            .catch(e => { console.error('[GROUP SEND FAIL]', sk, e); throw e; });
+        }));
+        console.log('[GROUP RESULTS]', results);
       } else {
         await rpc('chat.send', {
           sessionKey: activeSession,
