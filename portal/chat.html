@@ -1336,30 +1336,19 @@
       content.appendChild(bubble);
     }
 
-    // Handle images in message — images above text, with download button
+    // Handle attachments — rich media rendering
     if (msg.attachments?.length) {
       for (const att of msg.attachments) {
-        if (att.type?.startsWith('image') || att.url?.match(/\.(png|jpg|jpeg|gif|webp)/i)) {
-          const imgWrap = document.createElement('div');
-          imgWrap.style.cssText = 'position:relative;display:inline-block;margin:4px 0;';
-          const img = document.createElement('img');
-          img.src = att.url || att.dataUrl;
-          img.onclick = () => openLightbox(img.src);
-          const dlBtn = document.createElement('a');
-          dlBtn.href = att.url || att.dataUrl;
-          dlBtn.download = att.name || 'image';
-          dlBtn.title = 'Download';
-          dlBtn.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);border-radius:6px;padding:4px 6px;color:#e5e7eb;opacity:0;transition:opacity 0.15s;cursor:pointer;';
-          dlBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-          imgWrap.onmouseenter = () => dlBtn.style.opacity = '1';
-          imgWrap.onmouseleave = () => dlBtn.style.opacity = '0';
-          imgWrap.appendChild(img);
-          imgWrap.appendChild(dlBtn);
-          // Insert images before text content
-          bubble.insertBefore(imgWrap, bubble.firstChild);
-        }
+        const url = att.url || att.dataUrl;
+        const name = att.name || 'file';
+        const type = att.type || '';
+        const el = renderMediaAttachment(url, name, type);
+        if (el) bubble.appendChild(el);
       }
     }
+
+    // Auto-detect media URLs in message text and render inline
+    autoRenderMediaUrls(bubble);
 
     if (msg.isError) {
       group.classList.add('error');
@@ -1831,6 +1820,158 @@
   function clearPastedImages() {
     pastedImages = [];
     renderPastePreview();
+  }
+
+  // ─── Rich Media Rendering ─────────────────────────────────────
+  const MEDIA_EXT = {
+    image: /\.(png|jpg|jpeg|gif|webp|svg|bmp|ico|avif)(\?.*)?$/i,
+    audio: /\.(mp3|wav|ogg|m4a|aac|flac|wma)(\?.*)?$/i,
+    video: /\.(mp4|webm|mov|avi|mkv)(\?.*)?$/i,
+    pdf:   /\.pdf(\?.*)?$/i,
+  };
+  const DL_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+  function makeDownloadBtn(url, name) {
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.title = 'Download';
+    a.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);border-radius:6px;padding:4px 6px;color:#e5e7eb;opacity:0;transition:opacity 0.15s;cursor:pointer;text-decoration:none;';
+    a.innerHTML = DL_ICON;
+    return a;
+  }
+
+  function renderMediaAttachment(url, name, type) {
+    if (!url) return null;
+    const isImage = type.startsWith('image') || MEDIA_EXT.image.test(url);
+    const isAudio = type.startsWith('audio') || MEDIA_EXT.audio.test(url);
+    const isVideo = type.startsWith('video') || MEDIA_EXT.video.test(url);
+    const isPdf   = type === 'application/pdf' || MEDIA_EXT.pdf.test(url);
+
+    if (isImage) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;display:inline-block;margin:6px 0;max-width:100%;';
+      const img = document.createElement('img');
+      img.src = url; img.alt = name;
+      img.style.cssText = 'max-width:100%;border-radius:8px;cursor:pointer;display:block;';
+      img.onclick = () => openLightbox(url);
+      const dl = makeDownloadBtn(url, name);
+      wrap.onmouseenter = () => dl.style.opacity = '1';
+      wrap.onmouseleave = () => dl.style.opacity = '0';
+      wrap.appendChild(img);
+      wrap.appendChild(dl);
+      return wrap;
+    }
+
+    if (isAudio) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'margin:6px 0;position:relative;';
+      const audio = document.createElement('audio');
+      audio.controls = true; audio.preload = 'metadata'; audio.src = url;
+      audio.style.cssText = 'width:100%;max-width:400px;border-radius:8px;';
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:11px;color:#9ca3af;margin-top:2px;display:flex;align-items:center;gap:6px;';
+      label.innerHTML = `<span>${escapeHtml(name)}</span>`;
+      const dl = document.createElement('a');
+      dl.href = url; dl.download = name; dl.title = 'Download';
+      dl.style.cssText = 'color:#9ca3af;cursor:pointer;';
+      dl.innerHTML = DL_ICON;
+      label.appendChild(dl);
+      wrap.appendChild(audio);
+      wrap.appendChild(label);
+      return wrap;
+    }
+
+    if (isVideo) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;margin:6px 0;max-width:100%;';
+      const video = document.createElement('video');
+      video.controls = true; video.preload = 'metadata'; video.src = url;
+      video.style.cssText = 'max-width:100%;border-radius:8px;display:block;';
+      const dl = makeDownloadBtn(url, name);
+      wrap.onmouseenter = () => dl.style.opacity = '1';
+      wrap.onmouseleave = () => dl.style.opacity = '0';
+      wrap.appendChild(video);
+      wrap.appendChild(dl);
+      return wrap;
+    }
+
+    if (isPdf) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'margin:6px 0;border:1px solid #374151;border-radius:8px;overflow:hidden;';
+      const iframe = document.createElement('iframe');
+      iframe.src = url; iframe.style.cssText = 'width:100%;height:400px;border:none;';
+      const bar = document.createElement('div');
+      bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#1f2937;font-size:12px;color:#d1d5db;';
+      bar.innerHTML = `<span>${escapeHtml(name)}</span>`;
+      const dl = document.createElement('a');
+      dl.href = url; dl.download = name; dl.title = 'Download';
+      dl.style.cssText = 'color:#9ca3af;cursor:pointer;';
+      dl.innerHTML = DL_ICON;
+      bar.appendChild(dl);
+      wrap.appendChild(bar);
+      wrap.appendChild(iframe);
+      return wrap;
+    }
+
+    // Generic file — icon + name + download
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;margin:6px 0;background:#1f2937;border-radius:8px;border:1px solid #374151;';
+    const icon = document.createElement('span');
+    icon.style.cssText = 'font-size:20px;';
+    icon.textContent = '\uD83D\uDCC4'; // 📄
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;';
+    info.innerHTML = `<div style="font-size:13px;color:#e5e7eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(name)}</div><div style="font-size:11px;color:#6b7280;">${type || 'File'}</div>`;
+    const dl = document.createElement('a');
+    dl.href = url; dl.download = name; dl.title = 'Download';
+    dl.style.cssText = 'color:#9ca3af;cursor:pointer;flex-shrink:0;';
+    dl.innerHTML = DL_ICON;
+    wrap.appendChild(icon);
+    wrap.appendChild(info);
+    wrap.appendChild(dl);
+    return wrap;
+  }
+
+  function autoRenderMediaUrls(bubble) {
+    // Find bare URLs in text that point to media files and render them inline
+    const links = bubble.querySelectorAll('a[href]');
+    links.forEach(link => {
+      const href = link.href;
+      if (!href) return;
+      // Check if this URL points to a media file
+      const isMedia = MEDIA_EXT.image.test(href) || MEDIA_EXT.audio.test(href) ||
+                      MEDIA_EXT.video.test(href) || MEDIA_EXT.pdf.test(href);
+      if (!isMedia) return;
+      // Don't replace if the link text is different from the URL (markdown link with custom text)
+      const linkText = link.textContent.trim();
+      if (linkText && linkText !== href && !linkText.startsWith('http')) return;
+      // Determine filename from URL
+      const fname = href.split('/').pop().split('?')[0] || 'file';
+      const el = renderMediaAttachment(href, fname, '');
+      if (el) link.replaceWith(el);
+    });
+
+    // Also detect bare URLs in text nodes (not yet linked by renderMarkdown)
+    const walker = document.createTreeWalker(bubble, NodeFilter.SHOW_TEXT, null);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    const urlRe = /https?:\/\/[^\s<>"']+\.(png|jpg|jpeg|gif|webp|svg|mp3|wav|ogg|m4a|mp4|webm|mov|pdf)(\?[^\s<>"']*)?/gi;
+    for (const node of textNodes) {
+      const matches = [...node.textContent.matchAll(urlRe)];
+      if (!matches.length) continue;
+      const frag = document.createDocumentFragment();
+      let lastIdx = 0;
+      for (const m of matches) {
+        if (m.index > lastIdx) frag.appendChild(document.createTextNode(node.textContent.slice(lastIdx, m.index)));
+        const url = m[0];
+        const fname = url.split('/').pop().split('?')[0] || 'file';
+        const el = renderMediaAttachment(url, fname, '');
+        if (el) frag.appendChild(el);
+        else frag.appendChild(document.createTextNode(url));
+        lastIdx = m.index + url.length;
+      }
+      if (lastIdx < node.textContent.length) frag.appendChild(document.createTextNode(node.textContent.slice(lastIdx)));
+      node.parentNode.replaceChild(frag, node);
+    }
   }
 
   // ─── Lightbox ────────────────────────────────────────────────
