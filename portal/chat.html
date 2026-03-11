@@ -802,7 +802,7 @@
             <div class="agent-model">${shortModel(agent.model)}</div>
             ${agentLastSeen[agent.id] ? `<div class="agent-lastseen">${relTime(new Date(agentLastSeen[agent.id]))}</div>` : ''}
           </div>
-          ${(unreadCounts[agent.id] || 0) > 0 ? `<div class="agent-unread-badge">${unreadCounts[agent.id] > 9 ? '9+' : unreadCounts[agent.id]}</div>` : `<div class="agent-status-dot dot-online"></div>`}
+          ${(unreadCounts[agent.id] || 0) > 0 ? `<div class="agent-unread-badge">${unreadCounts[agent.id] > 9 ? '9+' : unreadCounts[agent.id]}</div>` : `<div class="agent-status-dot ${wsReady ? 'dot-online' : 'dot-offline'}"></div>`}
         </div>
       `;
       // Only show session sub-list when agent has multiple sessions
@@ -1129,7 +1129,7 @@
       updateConvStats();
     } catch (e) {
       console.error('Failed to load history:', e);
-      messagesEl.innerHTML = '<div class="text-red-400 text-sm p-4 text-center">Failed to load history</div>';
+      messagesEl.innerHTML = `<div class="text-center p-4"><div class="text-red-400 text-sm mb-2">Failed to load history</div><button onclick="loadHistory('${activeSession}')" style="font-size:12px;padding:4px 12px;background:#1e1b4b;color:#818cf8;border:1px solid #4f46e5;border-radius:6px;cursor:pointer;">Retry</button></div>`;
     }
   }
 
