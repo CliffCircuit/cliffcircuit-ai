@@ -497,7 +497,13 @@
     // Bubble
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
-    const text = msg.content || msg.text || msg.message || '';
+    // content can be a string OR an array of {type, text} blocks (gateway format)
+    let text = '';
+    if (Array.isArray(msg.content)) {
+      text = msg.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+    } else {
+      text = msg.content || msg.text || msg.message || '';
+    }
     bubble.innerHTML = renderMarkdown(text);
 
     // Handle images in message
