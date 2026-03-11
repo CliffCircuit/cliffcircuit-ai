@@ -54,7 +54,7 @@
     /* Main chat area */
     #chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     #chat-header { padding: 14px 20px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 12px; background: linear-gradient(to bottom, #0f1419, #0a0f1a); }
-    #chat-header .agent-avatar { width: 32px; height: 32px; font-size: 16px; }
+    #chat-header .agent-avatar { width: 48px; height: 48px; font-size: 24px; }
     #messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; animation: fadeIn 0.3s ease-in; min-height: 0; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -435,21 +435,23 @@
             <div id="header-status-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 5px #34d39966;border:2px solid #0a0f1a;"></div>
           </div>
           <div style="flex:1;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="text-white font-medium text-sm" id="header-name"></span>
+            <div>
+              <span style="color:#fff;font-weight:600;font-size:18px;" id="header-name"></span>
             </div>
-            <div class="model-selector" id="model-selector">
-              <button class="model-selector-btn" onclick="toggleModelDropdown(event)">
-                <span id="header-model"></span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="model-dropdown" id="model-dropdown"></div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:1px;">
-              <span id="conv-title" onclick="editConvTitle()"></span>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+              <div class="model-selector" id="model-selector">
+                <button class="model-selector-btn" onclick="toggleModelDropdown(event)">
+                  <span id="header-model"></span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="model-dropdown" id="model-dropdown"></div>
+              </div>
+              <span id="header-context" style="font-size:11px;color:#9ca3af;font-family:'SF Mono','Fira Code',monospace;"></span>
               <span id="conv-stats" style="font-size:10px;color:#4b5563;font-family:'SF Mono','Fira Code',monospace;"></span>
-              <input id="conv-title-input" onblur="saveConvTitle()" onkeydown="if(event.key==='Enter')saveConvTitle();if(event.key==='Escape'){this.style.display='none';document.getElementById('conv-title').style.display='';}" />
             </div>
+            <!-- hidden elements kept for JS compatibility -->
+            <span id="conv-title" style="display:none;"></span>
+            <input id="conv-title-input" style="display:none;" />
           </div>
           <div style="display:flex;align-items:center;gap:2px;">
             <button id="pins-toggle" onclick="togglePinsPanel()" title="Pinned messages" style="background:none;border:none;color:#4b5563;cursor:pointer;padding:6px;border-radius:6px;transition:all 0.15s;display:flex;align-items:center;position:relative;">
@@ -813,7 +815,7 @@
           let text = '';
           if (Array.isArray(mc)) text = mc.filter(b => b.type === 'text').map(b => b.text).join('');
           else if (typeof mc === 'string') text = mc;
-          if (text) agentLastMessage[agent.id] = text.slice(0, 120);
+          if (text && text.trim() !== 'NO_REPLY') agentLastMessage[agent.id] = text.slice(0, 120);
           // Use message timestamp for last seen
           const ts = last.createdAt || last.timestamp;
           if (ts) agentLastSeen[agent.id] = typeof ts === 'string' ? parseInt(ts) || new Date(ts).getTime() : ts;
@@ -1122,7 +1124,7 @@
     // Update header
     const header = document.getElementById('chat-header');
     header.style.display = 'flex';
-    document.getElementById('header-avatar').innerHTML = avatarImg(agentId, 32);
+    document.getElementById('header-avatar').innerHTML = avatarImg(agentId, 48);
     document.getElementById('header-name').textContent = agent?.name || agentId;
     document.getElementById('header-model').textContent = shortModel(agent?.model);
 
@@ -1184,7 +1186,7 @@
         const lastAssist = [...messages].reverse().find(m => m.role === 'assistant');
         if (lastAssist) {
           const t = Array.isArray(lastAssist.content) ? lastAssist.content.filter(b=>b.type==='text').map(b=>b.text).join('') : (lastAssist.content || '');
-          agentLastMessage[activeAgent] = t.slice(0, 80);
+          if (t.trim() && t.trim() !== 'NO_REPLY') agentLastMessage[activeAgent] = t.slice(0, 80);
           agentLastSeen[activeAgent] = lastAssist.createdAt || lastAssist.timestamp || agentLastSeen[activeAgent];
           renderAgentList();
         }
@@ -1441,6 +1443,16 @@
   function cleanMessageText(text) {
     if (!text) return '';
 
+    // Capture and display context percentage before stripping
+    const ctxMatch = text.match(/[\[(]~?(\d+)%[\])]/);
+    if (ctxMatch) {
+      const pct = parseInt(ctxMatch[1]);
+      const el = document.getElementById('header-context');
+      if (el) {
+        el.textContent = `${pct}% context`;
+        el.style.color = pct >= 60 ? '#f59e0b' : pct >= 80 ? '#ef4444' : '#9ca3af';
+      }
+    }
     // Remove context percentage markers like [~34%] or (~34%)
     text = text.replace(/\[~?\d+%\]\s*/g, '');
     text = text.replace(/\(~?\d+%\)\s*/g, '');
@@ -1482,7 +1494,7 @@
           if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
           else if (typeof mc === 'string') previewText = mc.slice(0, 80);
           // Only count as unread if there's actual message content
-          if (previewText && previewText.trim()) {
+          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY') {
             unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
             agentLastMessage[agentId] = previewText;
             playNotifSound();
@@ -1527,7 +1539,7 @@
       // Update last-seen for active agent
       if (activeAgent) {
         agentLastSeen[activeAgent] = Date.now();
-        if (text) agentLastMessage[activeAgent] = text.slice(0, 80);
+        if (text && text.trim() !== 'NO_REPLY') agentLastMessage[activeAgent] = text.slice(0, 80);
         agentTyping[activeAgent] = false;
         renderAgentList();
       }
