@@ -407,6 +407,7 @@
       if (m.includes('gemini') || m.includes('google')) return 'Google';
       if (m.includes('grok') || m.includes('xai')) return 'xAI';
       if (m.includes('gpt') || m.includes('openai') || m.includes('o1')) return 'OpenAI';
+      if (m.includes('lmstudio') || m.includes('qwen')) return 'LMStudio';
       return 'Other';
     }
 
