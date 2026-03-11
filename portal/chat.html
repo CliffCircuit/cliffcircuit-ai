@@ -315,47 +315,8 @@
 
   async function loadAgents() {
     try {
-      // Try sessions.list first for live session data
-      let sessionList = [];
-      try {
-        const result = await rpc('sessions.list');
-        sessionList = result?.sessions || result || [];
-      } catch (e) {
-        // Fall back to known agents without live sessions
-        console.warn('sessions.list unavailable, using known agents');
-      }
-
-      if (sessionList.length > 0) {
-        const agentMap = {};
-        for (const s of sessionList) {
-          const key = s.key || s.sessionKey || '';
-          const keyParts = key.split(':');
-          const aId = s.agentId || (keyParts[0] === 'agent' ? keyParts[1] : null) || 'unknown';
-          if (!agentMap[aId]) {
-            const known = KNOWN_AGENTS.find(k => k.id === aId);
-            agentMap[aId] = {
-              id: aId,
-              name: known?.name || s.identityName || aId,
-              emoji: known?.emoji || s.identityEmoji || '',
-              model: known?.model || s.model || '',
-              sessions: []
-            };
-          }
-          agentMap[aId].sessions.push({
-            key: s.sessionKey || s.key,
-            label: s.label || s.displayName || s.sessionKey || s.key,
-            updatedAt: s.updatedAt || s.lastActivity,
-            kind: s.kind || ''
-          });
-        }
-        agents = Object.values(agentMap);
-        agents.sort((a, b) => {
-          const aTime = Math.max(...a.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
-          const bTime = Math.max(...b.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
-          return bTime - aTime;
-        });
-      } else {
-        // Use known agents with default session keys
+      {
+        // Use known agents directly (sessions.list requires operator.read scope)
         agents = KNOWN_AGENTS.map(a => ({
           ...a,
           sessions: [{ key: `agent:${a.id}:main`, label: 'Main', updatedAt: Date.now(), kind: 'direct' }]
