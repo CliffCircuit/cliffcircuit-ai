@@ -304,41 +304,63 @@
   }
 
   // ─── Load Agents from Sessions ───────────────────────────────
+  // Known agents — avoids needing sessions.list (operator.read scope)
+  const KNOWN_AGENTS = [
+    { id: 'main', name: 'Cliff', emoji: '', model: 'claude-opus-4-6' },
+    { id: 'samantha', name: 'Samantha', emoji: '', model: 'claude-haiku-4-5' },
+    { id: 'scout', name: 'Scout', emoji: '', model: 'claude-haiku-4-5' },
+    { id: 'atlas', name: 'Atlas', emoji: '', model: 'claude-opus-4-6' },
+    { id: 'fernanda', name: 'Fernanda', emoji: '', model: 'claude-sonnet-4-6' }
+  ];
+
   async function loadAgents() {
     try {
-      const result = await rpc('sessions.list');
-      const sessionList = result?.sessions || result || [];
-
-      // Extract unique agents from session keys (format: agent:<agentId>:...)
-      const agentMap = {};
-      for (const s of sessionList) {
-        const key = s.key || s.sessionKey || '';
-        const keyParts = key.split(':');
-        const aId = s.agentId || (keyParts[0] === 'agent' ? keyParts[1] : null) || 'unknown';
-        if (!agentMap[aId]) {
-          agentMap[aId] = {
-            id: aId,
-            name: s.identityName || s.agentId || aId,
-            emoji: s.identityEmoji || '',
-            model: s.model || '',
-            sessions: []
-          };
-        }
-        agentMap[aId].sessions.push({
-          key: s.sessionKey || s.key,
-          label: s.label || s.sessionKey || s.key,
-          updatedAt: s.updatedAt || s.lastActivity,
-          kind: s.kind || ''
-        });
+      // Try sessions.list first for live session data
+      let sessionList = [];
+      try {
+        const result = await rpc('sessions.list');
+        sessionList = result?.sessions || result || [];
+      } catch (e) {
+        // Fall back to known agents without live sessions
+        console.warn('sessions.list unavailable, using known agents');
       }
 
-      agents = Object.values(agentMap);
-      // Sort: most recently active first
-      agents.sort((a, b) => {
-        const aTime = Math.max(...a.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
-        const bTime = Math.max(...b.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
-        return bTime - aTime;
-      });
+      if (sessionList.length > 0) {
+        const agentMap = {};
+        for (const s of sessionList) {
+          const key = s.key || s.sessionKey || '';
+          const keyParts = key.split(':');
+          const aId = s.agentId || (keyParts[0] === 'agent' ? keyParts[1] : null) || 'unknown';
+          if (!agentMap[aId]) {
+            const known = KNOWN_AGENTS.find(k => k.id === aId);
+            agentMap[aId] = {
+              id: aId,
+              name: known?.name || s.identityName || aId,
+              emoji: known?.emoji || s.identityEmoji || '',
+              model: known?.model || s.model || '',
+              sessions: []
+            };
+          }
+          agentMap[aId].sessions.push({
+            key: s.sessionKey || s.key,
+            label: s.label || s.displayName || s.sessionKey || s.key,
+            updatedAt: s.updatedAt || s.lastActivity,
+            kind: s.kind || ''
+          });
+        }
+        agents = Object.values(agentMap);
+        agents.sort((a, b) => {
+          const aTime = Math.max(...a.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
+          const bTime = Math.max(...b.sessions.map(s => new Date(s.updatedAt || 0).getTime()));
+          return bTime - aTime;
+        });
+      } else {
+        // Use known agents with default session keys
+        agents = KNOWN_AGENTS.map(a => ({
+          ...a,
+          sessions: [{ key: `agent:${a.id}:main`, label: 'Main', updatedAt: Date.now(), kind: 'direct' }]
+        }));
+      }
 
       renderAgentList();
     } catch (e) {
