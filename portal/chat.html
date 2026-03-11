@@ -68,15 +68,15 @@
 
     /* Collapsible long messages */
     .msg-bubble.collapsed { max-height: 200px; overflow: hidden; position: relative; }
-    .msg-bubble.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, #111827); pointer-events: none; }
+    .msg-bubble.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, #0f172a); pointer-events: none; }
     .msg-group.user .msg-bubble.collapsed::after { background: linear-gradient(transparent, #312e81); }
     .msg-expand-btn { font-size: 12px; color: #818cf8; cursor: pointer; padding: 6px 10px; display: inline-block; border: 1px solid #4f46e566; border-radius: 6px; background: #312e8166; margin-top: 4px; transition: all 0.15s; font-weight: 500; }
     .msg-expand-btn:hover { color: #a5b4fc; background: #312e81cc; border-color: #6366f1; box-shadow: 0 0 6px rgba(79,70,229,0.2); }
 
     /* Message hover actions */
-    .msg-actions { position: absolute; right: -100px; top: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 10; }
+    .msg-actions { position: absolute; right: -36px; top: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 10; }
     .msg-group:hover .msg-actions { pointer-events: auto; }
-    .msg-group.user .msg-actions { right: auto; left: -100px; }
+    .msg-group.user .msg-actions { right: auto; left: -36px; }
     .msg-action-btn { width: 28px; height: 28px; border-radius: 6px; background: #1f2937; border: 1px solid #374151; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 12px; }
     .msg-action-btn:hover { background: #374151; color: #e5e7eb; border-color: #4b5563; }
     .msg-action-btn.copied { background: #064e3b; color: #34d399; border-color: #059669; }
@@ -171,10 +171,44 @@
     #messages::-webkit-scrollbar-track { background: transparent; }
     #messages::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
 
+    /* Code block language tag */
+    .code-block-wrap { position: relative; margin: 8px 0; }
+    .code-lang-tag { position: absolute; top: 8px; right: 10px; font-size: 10px; color: #6b7280; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; }
+    .code-copy-btn { position: absolute; top: 6px; right: 42px; font-size: 10px; padding: 2px 6px; background: #1f2937; border: 1px solid #374151; border-radius: 4px; color: #9ca3af; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+    .code-block-wrap:hover .code-copy-btn { opacity: 1; }
+    .code-copy-btn.copied { color: #34d399; border-color: #059669; }
+
+    /* Timestamp tooltip */
+    .msg-time { cursor: default; }
+    .msg-time[title]:hover { color: #e5e7eb; }
+
+    /* Inline confirm for clear */
+    .clear-confirm { display: none; align-items: center; gap: 6px; }
+    .clear-confirm.show { display: flex; }
+    .confirm-btn { font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; border: 1px solid; transition: all 0.15s; }
+    .confirm-yes { background: #450a0a; color: #f87171; border-color: #7f1d1d; }
+    .confirm-yes:hover { background: #7f1d1d; }
+    .confirm-no { background: #1f2937; color: #9ca3af; border-color: #374151; }
+    .confirm-no:hover { background: #374151; color: #e5e7eb; }
+
+    /* Reconnect button */
+    #reconnect-btn { font-size: 11px; padding: 3px 10px; background: #1e1b4b; color: #818cf8; border: 1px solid #4f46e5; border-radius: 6px; cursor: pointer; display: none; transition: all 0.15s; }
+    #reconnect-btn:hover { background: #312e81; }
+    #reconnect-btn.show { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Mobile sidebar toggle */
+    #sidebar-toggle { display: none; background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px; }
+    #sidebar-toggle:hover { color: #e5e7eb; }
+
     /* Responsive */
     @media (max-width: 768px) {
-      #sidebar { width: 200px; min-width: 200px; }
+      #sidebar { width: 260px; min-width: 260px; position: absolute; left: -260px; top: 0; bottom: 0; z-index: 100; transition: left 0.25s; box-shadow: none; }
+      #sidebar.mobile-open { left: 0; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+      #sidebar-toggle { display: block; }
+      #sidebar-backdrop { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.5); }
+      #sidebar-backdrop.show { display: block; }
       .msg-group { max-width: 90%; }
+      #chat-app { position: relative; overflow: hidden; }
     }
   </style>
 </head>
@@ -183,12 +217,21 @@
     <div id="portal-nav"></div>
 
     <div id="chat-app">
+      <!-- Mobile backdrop -->
+      <div id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
       <!-- Sidebar -->
       <div id="sidebar">
         <div id="sidebar-header">
           <div class="flex items-center justify-between">
             <span class="text-sm font-semibold text-white">Agents</span>
-            <span id="conn-status" class="conn-disconnected">Offline</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span id="conn-status" class="conn-disconnected">Offline</span>
+              <button id="reconnect-btn" onclick="reconnectNow()" title="Reconnect">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Retry
+              </button>
+            </div>
           </div>
           <input id="agent-search" type="text" placeholder="Search..." style="width:100%;margin-top:8px;padding:6px 8px;border-radius:6px;border:1px solid #1f2937;background:#111827;color:#e5e7eb;font-size:12px;" />
         </div>
@@ -200,12 +243,22 @@
       <!-- Main chat -->
       <div id="chat-main">
         <div id="chat-header" style="display:none;">
+          <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <div class="agent-avatar" id="header-avatar"></div>
           <div style="flex:1;">
             <div class="text-white font-medium text-sm" id="header-name"></div>
             <div class="text-gray-500 text-xs" id="header-model"></div>
           </div>
-          <button id="clear-btn" title="Clear history" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='#1f2937';this.style.color='#e5e7eb'" onmouseout="this.style.background='none';this.style.color='#9ca3af'">Clear</button>
+          <div id="clear-wrap" style="display:flex;align-items:center;gap:6px;">
+            <button id="clear-btn" title="Clear history" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.color='#9ca3af'" onmouseout="this.style.color='#6b7280'">Clear</button>
+            <div class="clear-confirm" id="clear-confirm">
+              <span style="font-size:11px;color:#9ca3af;">Sure?</span>
+              <button class="confirm-btn confirm-yes" onclick="confirmClear()">Yes</button>
+              <button class="confirm-btn confirm-no" onclick="cancelClear()">No</button>
+            </div>
+          </div>
         </div>
 
         <div id="messages">
@@ -229,11 +282,12 @@
         <!-- Input -->
         <div id="input-area">
           <div id="input-wrap">
-            <textarea id="msg-input" rows="1" placeholder="Type a message... (Cmd+Enter to send)" disabled></textarea>
-            <button id="send-btn" disabled onclick="sendMessage()">
+            <textarea id="msg-input" rows="1" placeholder="Message... (Enter to send, Shift+Enter for newline)" disabled></textarea>
+            <button id="send-btn" disabled onclick="sendMessage()" title="Send (Enter)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
+          <div id="input-hint" style="font-size:10px;color:#374151;text-align:right;padding:2px 4px 0;display:none;">Shift+Enter for newline</div>
         </div>
       </div>
     </div>
@@ -386,6 +440,8 @@
     const el = document.getElementById('conn-status');
     el.className = 'conn-' + state;
     el.textContent = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting...' : 'Offline';
+    const reconnectBtn = document.getElementById('reconnect-btn');
+    if (reconnectBtn) reconnectBtn.classList.toggle('show', state === 'disconnected');
   }
 
   // ─── Load Agents from Sessions ───────────────────────────────
@@ -495,7 +551,13 @@
   // ─── Load Chat History ───────────────────────────────────────
   async function loadHistory(sessionKey) {
     const messagesEl = document.getElementById('messages');
-    messagesEl.innerHTML = '<div class="flex items-center justify-center h-32 text-gray-600 text-sm">Loading messages...</div>';
+    messagesEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px;padding:8px 0;animation:pulse 1.5s ease-in-out infinite;">
+        <div style="display:flex;gap:10px;max-width:65%;"><div style="width:28px;height:28px;border-radius:50%;background:#1f2937;flex-shrink:0;"></div><div style="flex:1;"><div style="height:10px;background:#1f2937;border-radius:4px;width:60px;margin-bottom:8px;"></div><div style="height:36px;background:#0f172a;border-radius:12px;border:1px solid #1e2a3a;"></div></div></div>
+        <div style="display:flex;gap:10px;max-width:50%;align-self:flex-end;flex-direction:row-reverse;"><div style="width:28px;height:28px;border-radius:50%;background:#1f2937;flex-shrink:0;"></div><div style="flex:1;"><div style="height:36px;background:#1e1b4b;border-radius:12px;"></div></div></div>
+        <div style="display:flex;gap:10px;max-width:75%;"><div style="width:28px;height:28px;border-radius:50%;background:#1f2937;flex-shrink:0;"></div><div style="flex:1;"><div style="height:56px;background:#0f172a;border-radius:12px;border:1px solid #1e2a3a;"></div></div></div>
+      </div>
+    `;
 
     try {
       const result = await rpc('chat.history', { sessionKey, limit: 50 });
@@ -505,7 +567,8 @@
       lastMsgDate = null;
 
       if (messages.length === 0) {
-        messagesEl.innerHTML = '<div id="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.15;color:#6b7280;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><div class="text-sm text-gray-600">No messages yet. Say hello!</div></div>';
+        const agent = agents.find(a => a.id === activeAgent);
+        messagesEl.innerHTML = `<div id="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.12;color:#6b7280;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><div class="text-sm" style="color:#4b5563;font-weight:500;">No messages yet</div><div class="text-xs" style="color:#374151;">Start a conversation with ${agent?.name || 'this agent'}</div></div>`;
         return;
       }
 
@@ -601,7 +664,10 @@
     meta.appendChild(nameSpan);
     if (msgDate) {
       const timeSpan = document.createElement('span');
+      timeSpan.className = 'msg-time';
       timeSpan.textContent = formatTime(msgDate);
+      const fullDate = new Date(msgDate).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
+      timeSpan.title = fullDate;
       meta.appendChild(timeSpan);
     }
 
@@ -836,9 +902,12 @@
 
     // Extract code blocks first to protect them from other transforms
     const codeBlocks = [];
-    let processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const idx = codeBlocks.length;
-      codeBlocks.push(`<pre><code>${escapeHtml(code.trim())}</code></pre>`);
+      const langTag = lang ? `<span class="code-lang-tag">${escapeHtml(lang)}</span>` : '';
+      const copyId = `cb_${Date.now()}_${idx}`;
+      const copyBtn = `<button class="code-copy-btn" id="${copyId}" onclick="copyCode(this,'${copyId}')">Copy</button>`;
+      codeBlocks.push(`<div class="code-block-wrap">${copyBtn}${langTag}<pre><code>${escapeHtml(code.trim())}</code></pre></div>`);
       return `%%CODEBLOCK_${idx}%%`;
     });
 
@@ -966,24 +1035,29 @@
   // ─── Input Handling ──────────────────────────────────────────
   const msgInput = document.getElementById('msg-input');
   msgInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Enter (without Shift) = send. Shift+Enter = newline.
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
       sendMessage();
     }
+    // Cmd/Ctrl+Enter also sends (power-user shortcut)
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       sendMessage();
     }
     if (e.key === 'Escape') {
       msgInput.value = '';
+      msgInput.style.height = 'auto';
       e.preventDefault();
     }
   });
 
-  // Auto-resize textarea
+  // Auto-resize textarea + show/hide hint
   msgInput.addEventListener('input', () => {
     msgInput.style.height = 'auto';
     msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+    const hint = document.getElementById('input-hint');
+    if (hint) hint.style.display = msgInput.value.length > 0 ? 'block' : 'none';
   });
 
   // Global keyboard shortcuts
@@ -995,18 +1069,24 @@
     }
   });
 
-  // Clear history button
+  // Clear history button with inline confirm
   const clearBtn = document.getElementById('clear-btn');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      if (confirm('Clear all messages in this session? This cannot be undone.')) {
-        const messagesEl = document.getElementById('messages');
-        messagesEl.innerHTML = '';
-        lastMsgDate = null;
-        lastMsgRole = null;
-        scrollToBottom();
-      }
+      document.getElementById('clear-confirm').classList.add('show');
+      clearBtn.style.display = 'none';
     });
+  }
+  function confirmClear() {
+    const messagesEl = document.getElementById('messages');
+    messagesEl.innerHTML = '';
+    lastMsgDate = null;
+    lastMsgRole = null;
+    cancelClear();
+  }
+  function cancelClear() {
+    document.getElementById('clear-confirm').classList.remove('show');
+    document.getElementById('clear-btn').style.display = '';
   }
 
   // Agent search filter
@@ -1020,6 +1100,35 @@
         item.style.display = text.includes(query) ? '' : 'none';
       });
     });
+  }
+
+  // ─── Reconnect Button ────────────────────────────────────────
+  function reconnectNow() {
+    if (ws) { try { ws.close(); } catch {} }
+    reconnectDelay = 1000;
+    connect();
+  }
+
+  // ─── Mobile Sidebar Toggle ───────────────────────────────────
+  function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const bd = document.getElementById('sidebar-backdrop');
+    const isOpen = sb.classList.toggle('mobile-open');
+    bd.classList.toggle('show', isOpen);
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebar-backdrop').classList.remove('show');
+  }
+
+  // ─── Code Block Copy ─────────────────────────────────────────
+  async function copyCode(btn, id) {
+    const wrap = btn.closest('.code-block-wrap');
+    const code = wrap.querySelector('code')?.textContent || '';
+    await navigator.clipboard.writeText(code);
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   }
 
   // ─── Init ────────────────────────────────────────────────────
