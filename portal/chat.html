@@ -1480,6 +1480,7 @@
   // ─── Streaming Chat Events ───────────────────────────────────
   function handleChatEvent(payload) {
     if (!payload) return;
+    console.log('[WS EVENT]', { sk: payload.sessionKey, state: payload.state, type: payload.type, activeSession });
     const sk = payload.sessionKey;
 
     // Track unread + last-seen for non-active agents
