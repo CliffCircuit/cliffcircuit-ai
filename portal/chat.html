@@ -334,7 +334,7 @@
       }
 
       // Connect success
-      if (msg.type === 'res' && msg.ok !== false && (msg.payload?.connected || msg.id)) {
+      if (msg.type === 'res' && msg.ok && msg.payload?.connected) {
         wsReady = true;
         reconnectDelay = 1000;
         setConnStatus('connected');
