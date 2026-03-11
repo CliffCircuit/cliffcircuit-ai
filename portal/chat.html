@@ -1522,6 +1522,8 @@
     }
 
     if (payload.state === 'delta' && text) {
+      // Skip NO_REPLY and HEARTBEAT_OK from streaming
+      if (text.trim() === 'NO_REPLY' || text.trim() === 'HEARTBEAT_OK') return;
       showTyping(false);
       document.getElementById('stop-btn').classList.add('show');
       if (!streamingBubble) {
