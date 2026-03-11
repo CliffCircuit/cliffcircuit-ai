@@ -187,8 +187,8 @@
   //  CliffCircuit Portal — Chat
   // ═══════════════════════════════════════════════════════════════
 
-  const GW_URL = 'wss://gateway.cliffcircuit.ai';
-  const GW_TOKEN = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
+  // TODO: Update PROXY_URL to wss://chat-proxy.cliffcircuit.ai before production deploy
+  const PROXY_URL = 'ws://127.0.0.1:3200';
 
   // State
   let ws = null;
@@ -212,133 +212,49 @@
     return AGENT_COLORS[idx % AGENT_COLORS.length];
   }
 
-  // ─── Device Identity (Ed25519 WebCrypto) ──────────────────────
-  const DEVICE_STORAGE_KEY = 'cc_device_identity';
-
-  async function getOrCreateDeviceIdentity() {
-    const stored = localStorage.getItem(DEVICE_STORAGE_KEY);
-    if (stored) {
-      try {
-        const d = JSON.parse(stored);
-        // Re-import keys from JWK
-        const privKey = await crypto.subtle.importKey('jwk', d.privateJwk, { name: 'Ed25519' }, false, ['sign']);
-        const pubKey = await crypto.subtle.importKey('jwk', d.publicJwk, { name: 'Ed25519' }, true, ['verify']);
-        return { deviceId: d.deviceId, publicKey: d.publicKeyB64u, keyPair: { privateKey: privKey, publicKey: pubKey } };
-      } catch (e) { console.warn('Device identity corrupted, regenerating', e); localStorage.removeItem(DEVICE_STORAGE_KEY); }
+  // ─── WebSocket Connection (via chat proxy) ────────────────────
+  function getSupabaseToken() {
+    // Supabase stores the session under a key like sb-<ref>-auth-token
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        try {
+          const val = JSON.parse(localStorage.getItem(key));
+          return val?.access_token || null;
+        } catch { return null; }
+      }
     }
-    // Generate new Ed25519 keypair
-    const keyPair = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify']);
-    const pubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey));
-    // Device ID = SHA-256 hex of raw public key bytes (matches server fingerprintPublicKey)
-    const hashBuf = await crypto.subtle.digest('SHA-256', pubRaw);
-    const deviceId = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
-    // publicKey field = base64url of raw public key bytes
-    const b64u = (buf) => btoa(String.fromCharCode(...buf)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const publicKeyB64u = b64u(pubRaw);
-    // Store as JWK for persistence
-    const privateJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-    const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify({ deviceId, publicKeyB64u, privateJwk, publicJwk }));
-    return { deviceId, publicKey: publicKeyB64u, keyPair };
+    return null;
   }
 
-  // Build V3 device auth payload (matches gateway buildDeviceAuthPayloadV3)
-  function buildDevicePayloadV3(deviceId, clientId, clientMode, role, scopes, signedAtMs, token, nonce, platform = '', deviceFamily = '') {
-    const scopesStr = scopes.join(',');
-    const tokenStr = token ?? '';
-    return [
-      'v3',
-      deviceId,
-      clientId,
-      clientMode,
-      role,
-      scopesStr,
-      String(signedAtMs),
-      tokenStr,
-      nonce,
-      platform,
-      deviceFamily
-    ].join('|');
-  }
-
-  async function signChallenge(keyPair, payload) {
-    const payloadBytes = new TextEncoder().encode(payload);
-    const sig = await crypto.subtle.sign('Ed25519', keyPair.privateKey, payloadBytes);
-    // Convert to base64url (not hex)
-    const b64 = btoa(String.fromCharCode(...new Uint8Array(sig)));
-    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  // ─── WebSocket Connection ────────────────────────────────────
   function connect() {
     setConnStatus('connecting');
-    ws = new WebSocket(GW_URL);
 
-    ws.onopen = () => { /* wait for challenge */ };
+    const token = getSupabaseToken();
+    if (!token) {
+      setConnStatus('disconnected');
+      console.warn('[chat] No Supabase session token found — not authenticated?');
+      return;
+    }
+
+    const proxyUrl = PROXY_URL + '?token=' + encodeURIComponent(token);
+    ws = new WebSocket(proxyUrl);
+
+    ws.onopen = () => {
+      // Proxy handles gateway auth — we're ready immediately on open
+      wsReady = true;
+      reconnectDelay = 1000;
+      setConnStatus('connected');
+      loadAgents();
+    };
 
     ws.onmessage = (evt) => {
       let msg;
       try { msg = JSON.parse(evt.data); } catch { return; }
 
-      // Challenge-response auth
-      if (msg.type === 'event' && msg.event === 'connect.challenge') {
-        (async () => {
-          try {
-            const nonce = msg.payload?.nonce;
-            const ts = msg.payload?.ts || Date.now();
-            const identity = await getOrCreateDeviceIdentity();
-            const clientId = 'openclaw-control-ui';
-            const clientMode = 'ui';
-            const role = 'operator';
-            const scopes = ['operator.admin', 'operator.read', 'operator.write'];
-            const payload = buildDevicePayloadV3(identity.deviceId, clientId, clientMode, role, scopes, ts, GW_TOKEN, nonce, 'web');
-            const signature = await signChallenge(identity.keyPair, payload);
-            ws.send(JSON.stringify({
-              type: 'req',
-              id: String(msgIdCounter++),
-              method: 'connect',
-              params: {
-                minProtocol: 3,
-                maxProtocol: 3,
-                client: { id: clientId, version: '1.0.0', platform: 'web', mode: clientMode },
-                role: role,
-                scopes: scopes,
-                auth: { token: GW_TOKEN },
-                device: {
-                  id: identity.deviceId,
-                  publicKey: identity.publicKey,
-                  signature: signature,
-                  signedAt: ts,
-                  nonce: nonce
-                }
-              }
-            }));
-          } catch (e) {
-            console.error('Device identity/signing failed:', e);
-            // Fallback without device identity
-            ws.send(JSON.stringify({
-              type: 'req',
-              id: String(msgIdCounter++),
-              method: 'connect',
-              params: {
-                minProtocol: 3, maxProtocol: 3,
-                client: { id: 'webchat', version: '1.0.0', platform: 'web', mode: 'webchat' },
-                role: 'operator',
-                scopes: ['operator.read'],
-                auth: { token: GW_TOKEN }
-              }
-            }));
-          }
-        })();
-        return;
-      }
-
-      // Connect success
-      if (msg.type === 'res' && msg.ok && msg.payload?.connected) {
-        wsReady = true;
-        reconnectDelay = 1000;
-        setConnStatus('connected');
-        loadAgents();
+      // Proxy error events
+      if (msg.type === 'event' && msg.event === 'proxy.error') {
+        console.error('[chat] Proxy error:', msg.payload);
         return;
       }
 
@@ -360,7 +276,6 @@
 
       // Session events (for typing indicator)
       if (msg.type === 'event' && msg.event === 'session.updated') {
-        // Could use for presence
         return;
       }
     };
