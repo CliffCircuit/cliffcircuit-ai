@@ -404,17 +404,12 @@
       <!-- Sidebar -->
       <div id="sidebar">
         <div id="sidebar-header">
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-semibold text-white">Agents</span>
-
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span id="conn-status" class="conn-disconnected">Offline</span>
-              <button id="reconnect-btn" onclick="reconnectNow()" title="Reconnect">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                Retry
-              </button>
-            </div>
+          <div style="text-align:center;">
+            <span class="text-sm font-semibold text-white">Agent Chat</span>
           </div>
+          <!-- Hidden connection status (kept for JS compatibility) -->
+          <span id="conn-status" style="display:none;">Offline</span>
+          <button id="reconnect-btn" style="display:none;"></button>
           <input id="agent-search" type="text" placeholder="Search..." style="width:100%;margin-top:8px;padding:6px 8px;border-radius:6px;border:1px solid #1f2937;background:#111827;color:#e5e7eb;font-size:12px;" />
         </div>
         <div id="agent-list">
@@ -832,6 +827,8 @@
 
   // ─── Render Sidebar ──────────────────────────────────────────
   function renderAgentList() {
+    // Don't overwrite search results
+    if (searchResultsVisible) return;
     const container = document.getElementById('agent-list');
     if (!agents.length) {
       container.innerHTML = '<div class="text-gray-600 text-sm p-4 text-center">No agents found</div>';
