@@ -242,9 +242,28 @@
     return { deviceId, publicKey: publicKeyB64u, keyPair };
   }
 
-  async function signChallenge(keyPair, nonce, ts) {
-    const payload = new TextEncoder().encode(nonce + ':' + ts);
-    const sig = await crypto.subtle.sign('Ed25519', keyPair.privateKey, payload);
+  // Build V3 device auth payload (matches gateway buildDeviceAuthPayloadV3)
+  function buildDevicePayloadV3(deviceId, clientId, clientMode, role, scopes, signedAtMs, token, nonce, platform = '', deviceFamily = '') {
+    const scopesStr = scopes.join(',');
+    const tokenStr = token ?? '';
+    return [
+      'v3',
+      deviceId,
+      clientId,
+      clientMode,
+      role,
+      scopesStr,
+      String(signedAtMs),
+      tokenStr,
+      nonce,
+      platform,
+      deviceFamily
+    ].join('|');
+  }
+
+  async function signChallenge(keyPair, payload) {
+    const payloadBytes = new TextEncoder().encode(payload);
+    const sig = await crypto.subtle.sign('Ed25519', keyPair.privateKey, payloadBytes);
     return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
@@ -266,7 +285,12 @@
             const nonce = msg.payload?.nonce;
             const ts = msg.payload?.ts || Date.now();
             const identity = await getOrCreateDeviceIdentity();
-            const signature = await signChallenge(identity.keyPair, nonce, ts);
+            const clientId = 'openclaw-control-ui';
+            const clientMode = 'ui';
+            const role = 'operator';
+            const scopes = ['operator.admin', 'operator.read', 'operator.write'];
+            const payload = buildDevicePayloadV3(identity.deviceId, clientId, clientMode, role, scopes, ts, GW_TOKEN, nonce, 'web');
+            const signature = await signChallenge(identity.keyPair, payload);
             ws.send(JSON.stringify({
               type: 'req',
               id: String(msgIdCounter++),
@@ -274,9 +298,9 @@
               params: {
                 minProtocol: 3,
                 maxProtocol: 3,
-                client: { id: 'openclaw-control-ui', version: '1.0.0', platform: 'web', mode: 'ui' },
-                role: 'operator',
-                scopes: ['operator.admin', 'operator.read', 'operator.write'],
+                client: { id: clientId, version: '1.0.0', platform: 'web', mode: clientMode },
+                role: role,
+                scopes: scopes,
                 auth: { token: GW_TOKEN },
                 device: {
                   id: identity.deviceId,
