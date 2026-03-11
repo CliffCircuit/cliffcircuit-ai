@@ -1480,7 +1480,6 @@
   // ─── Streaming Chat Events ───────────────────────────────────
   function handleChatEvent(payload) {
     if (!payload) return;
-    console.log('[WS EVENT]', { sk: payload.sessionKey, state: payload.state, type: payload.type, activeSession });
     const sk = payload.sessionKey;
 
     // Track unread + last-seen for non-active agents
@@ -1490,7 +1489,6 @@
         const agentId = parts[1] || null;
         if (agentId && agents.some(a => a.id === agentId)) {
           // Extract preview text for sidebar
-          console.log('[BADGE DEBUG]', { sk, agentId, state: payload.state, hasMessage: !!payload.message, messageKeys: payload.message ? Object.keys(payload.message) : [], contentType: typeof payload.message?.content, activeSession });
           const mc = payload.message?.content;
           let previewText = '';
           if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
@@ -2663,9 +2661,18 @@
   let notifSoundEnabled = localStorage.getItem('chat_notif_sound') !== 'off';
 
   // Synthesize pleasant notification tones using Web Audio API
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  let audioCtx = null;
+  function ensureAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  // Warm up audio on first user interaction so notifications can play
+  document.addEventListener('click', () => ensureAudioCtx(), { once: true });
+  document.addEventListener('keydown', () => ensureAudioCtx(), { once: true });
 
   function playTone(frequencies, durations, volume = 0.15) {
+    const audioCtx = ensureAudioCtx();
     if (!notifSoundEnabled) return;
     try {
       const now = audioCtx.currentTime;
@@ -2706,7 +2713,7 @@
   document.getElementById('notif-toggle')?.classList.toggle('active', notifSoundEnabled);
 
   // Resume audio context on first user interaction (browser autoplay policy)
-  document.addEventListener('click', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+  // audioCtx resume handled by ensureAudioCtx()
 
   // ─── Drag and Drop ────────────────────────────────────────────
   let dragCounter = 0;
