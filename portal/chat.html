@@ -93,6 +93,20 @@
     .msg-action-btn.copied { background: #064e3b; color: #34d399; border-color: #059669; }
     .msg-action-btn.pinned { background: #713f12; color: #fbbf24; border-color: #a16207; }
 
+    /* Reply quote bar above input */
+    #reply-bar { display: none; padding: 8px 16px; background: #0f172a; border-top: 1px solid #1f2937; align-items: center; gap: 10px; }
+    #reply-bar.show { display: flex; animation: slideUp 0.15s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    #reply-bar .reply-preview { flex: 1; font-size: 12px; color: #9ca3af; border-left: 2px solid #4f46e5; padding-left: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #reply-bar .reply-name { color: #818cf8; font-weight: 500; font-size: 11px; }
+    #reply-bar .reply-close { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
+    #reply-bar .reply-close:hover { color: #e5e7eb; background: #1f2937; }
+
+    /* Quoted message in bubble */
+    .msg-quote { font-size: 12px; color: #9ca3af; border-left: 2px solid #4f46e5; padding: 4px 8px; margin-bottom: 6px; background: #0c1322; border-radius: 0 4px 4px 0; cursor: pointer; }
+    .msg-quote:hover { background: #111d33; }
+    .msg-quote .quote-name { color: #818cf8; font-weight: 500; font-size: 11px; }
+
     /* Pins panel */
     #pins-panel { position: absolute; top: 100%; right: 16px; width: 340px; max-height: 400px; background: #111827; border: 1px solid #1f2937; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; display: none; }
     #pins-panel.show { display: flex; flex-direction: column; animation: dropIn 0.15s ease-out; }
@@ -515,6 +529,15 @@
 
         <!-- Paste preview -->
         <div id="paste-preview" class="paste-preview" style="display:none; padding: 0 20px;"></div>
+
+        <!-- Reply bar -->
+        <div id="reply-bar">
+          <div>
+            <div class="reply-name" id="reply-name"></div>
+            <div class="reply-preview" id="reply-preview"></div>
+          </div>
+          <button class="reply-close" onclick="cancelReply()">&times;</button>
+        </div>
 
         <!-- Input -->
         <div id="input-area">
@@ -947,6 +970,27 @@
     Object.assign(pinnedMessages, saved);
   } catch {}
 
+  // ─── Reply / Quote ───────────────────────────────────────────
+  let replyingTo = null; // { name, text, role }
+
+  function startReply(msg, text, isUser) {
+    const agent = agents.find(a => a.id === activeAgent);
+    replyingTo = {
+      name: isUser ? 'You' : (agent?.name || 'Agent'),
+      text: text.slice(0, 200),
+      role: msg.role || (isUser ? 'user' : 'assistant')
+    };
+    document.getElementById('reply-name').textContent = 'Replying to ' + replyingTo.name;
+    document.getElementById('reply-preview').textContent = replyingTo.text;
+    document.getElementById('reply-bar').classList.add('show');
+    document.getElementById('msg-input').focus();
+  }
+
+  function cancelReply() {
+    replyingTo = null;
+    document.getElementById('reply-bar').classList.remove('show');
+  }
+
   // ─── System Messages ──────────────────────────────────────────
   function showSystemMsg(text) {
     const el = document.createElement('div');
@@ -1263,12 +1307,19 @@
       toggleReactPicker(group, reactionsEl);
     };
 
+    const replyBtn = document.createElement('button');
+    replyBtn.className = 'msg-action-btn';
+    replyBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`;
+    replyBtn.title = 'Reply';
+    replyBtn.onclick = (e) => { e.stopPropagation(); startReply(msg, text, isUser); };
+
     const pinBtn = document.createElement('button');
     pinBtn.className = 'msg-action-btn';
     pinBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>`;
     pinBtn.title = 'Pin message';
     pinBtn.onclick = (e) => { e.stopPropagation(); togglePin(group, text, msg); };
 
+    actions.appendChild(replyBtn);
     actions.appendChild(copyBtn);
     actions.appendChild(reactBtn);
     actions.appendChild(pinBtn);
@@ -1408,8 +1459,12 @@
     if (!text && pastedImages.length === 0) return;
     if (!activeSession) return;
 
-    // Build message content
+    // Include reply context if replying
     let content = text;
+    if (replyingTo) {
+      content = `> **${replyingTo.name}:** ${replyingTo.text.slice(0, 100)}\n\n${text}`;
+      cancelReply();
+    }
 
     // Append image data if pasted
     const attachments = [];
