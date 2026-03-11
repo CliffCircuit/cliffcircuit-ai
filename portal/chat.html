@@ -27,6 +27,7 @@
     .agent-item.active .agent-avatar { border-color: #4f46e5; }
     .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; }
     .agent-model { font-size: 10px; color: #9ca3af; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; }
+    .agent-lastseen { font-size: 10px; color: #4b5563; margin-top: 1px; }
     .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
     .dot-online { background: #34d399; box-shadow: 0 0 6px #34d39966; }
     .dot-offline { background: #4b5563; }
@@ -574,6 +575,7 @@
   let agents = [];              // [{id, name, emoji, model, sessions:[]}]
   let activeAgent = null;       // agent id
   const unreadCounts = {};      // { agentId: number }
+  const agentLastSeen = {};     // { agentId: timestamp }
   let activeSession = null;     // session key
   let isStreaming = false;
   let streamingBubble = null;   // DOM element being streamed into
@@ -768,6 +770,7 @@
           <div style="min-width:0;">
             <div class="agent-name">${agent.name}</div>
             <div class="agent-model">${shortModel(agent.model)}</div>
+            ${agentLastSeen[agent.id] ? `<div class="agent-lastseen">${relTime(new Date(agentLastSeen[agent.id]))}</div>` : ''}
           </div>
           ${(unreadCounts[agent.id] || 0) > 0 ? `<div class="agent-unread-badge">${unreadCounts[agent.id] > 9 ? '9+' : unreadCounts[agent.id]}</div>` : `<div class="agent-status-dot dot-online"></div>`}
         </div>
@@ -934,6 +937,9 @@
     d.textContent = s;
     return d.innerHTML;
   }
+
+  // Refresh sidebar timestamps every 30s
+  setInterval(() => { if (Object.keys(agentLastSeen).length) renderAgentList(); }, 30000);
 
   // Load pins from localStorage
   try {
@@ -1316,13 +1322,14 @@
     if (!payload) return;
     const sk = payload.sessionKey;
 
-    // Track unread for non-active agents
+    // Track unread + last-seen for non-active agents
     if (sk && sk !== activeSession) {
       if (payload.state === 'final') {
         const parts = sk.split(':');
         const agentId = parts[1] || null;
         if (agentId && agents.some(a => a.id === agentId)) {
           unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
+          agentLastSeen[agentId] = Date.now();
           renderAgentList();
           playNotifSound();
         }
@@ -1358,6 +1365,10 @@
       if (text && !streamingBubble) {
         appendMessage({ role: 'assistant', content: text });
         scrollToBottom();
+      }
+      // Update last-seen for active agent
+      if (activeAgent) {
+        agentLastSeen[activeAgent] = Date.now();
       }
       if (streamingBubble) {
         streamingBubble.classList.remove('streaming');
