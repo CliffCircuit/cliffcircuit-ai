@@ -18,17 +18,25 @@
     #agent-list::-webkit-scrollbar-track { background: transparent; }
     #agent-list::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
     #agent-list::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-    .agent-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+    .agent-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
     .agent-item:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
     .agent-item:hover { background: #111827; border-color: #1f2937; }
     .agent-item.active { background: #1e1b4b; border-color: #4f46e5; box-shadow: 0 0 8px rgba(79,70,229,0.15); }
-    .agent-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; overflow: hidden; border: 2px solid transparent; transition: border-color 0.15s; }
+    .agent-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; overflow: hidden; border: 2px solid transparent; transition: border-color 0.15s; }
     .agent-item:hover .agent-avatar { border-color: #1f2937; }
     .agent-item.active .agent-avatar { border-color: #4f46e5; }
-    .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; }
-    .agent-model { font-size: 10px; color: #a1a1aa; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; }
-    .agent-lastseen { font-size: 10px; color: #4b5563; margin-top: 1px; }
-    .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
+    .agent-info { flex: 1; min-width: 0; }
+    .agent-top-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .agent-time { font-size: 11px; color: #6b7280; white-space: nowrap; flex-shrink: 0; }
+    .agent-model { font-size: 9px; color: #6b7280; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; position: absolute; top: 8px; right: 10px; }
+    .agent-preview { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+    .agent-preview .typing-dots-inline { display: inline-flex; gap: 3px; vertical-align: middle; }
+    .agent-preview .typing-dots-inline span { width: 4px; height: 4px; border-radius: 50%; background: #818cf8; animation: typingBounce 1.4s infinite; }
+    .agent-preview .typing-dots-inline span:nth-child(2) { animation-delay: 0.2s; }
+    .agent-preview .typing-dots-inline span:nth-child(3) { animation-delay: 0.4s; }
+    .agent-bottom-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .dot-online { background: #34d399; box-shadow: 0 0 6px #34d39966; }
     .dot-offline { background: #4b5563; }
 
@@ -57,12 +65,13 @@
     .msg-group.assistant { align-self: flex-start; }
     .msg-group.continuation { margin-top: -2px; }
     .msg-group.continuation .msg-avatar { visibility: hidden; }
-    .msg-group.continuation .msg-meta { display: none; }
+    .msg-group.continuation .msg-meta .msg-sender { display: none; }
+    .msg-group.continuation .msg-meta .msg-tokens { display: none; }
     .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
     .msg-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
     .msg-meta { font-size: 12px; color: #9ca3af; display: flex; gap: 8px; align-items: center; padding: 2px 4px; font-weight: 400; }
     .msg-group.user .msg-meta { justify-content: flex-end; }
-    .msg-tokens { font-size: 10px; color: #4b5563; font-family: 'SF Mono','Fira Code',monospace; cursor: default; transition: color 0.15s; }
+    .msg-tokens { font-size: 10px; color: transparent; font-family: 'SF Mono','Fira Code',monospace; cursor: default; transition: color 0.15s; }
     .msg-group:hover .msg-tokens { color: #6b7280; }
     .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-break: break-word; overflow-wrap: break-word; overflow: hidden; }
     .msg-group.assistant .msg-bubble { background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
@@ -607,6 +616,8 @@
   let activeAgent = null;       // agent id
   const unreadCounts = {};      // { agentId: number }
   const agentLastSeen = {};     // { agentId: timestamp }
+  const agentLastMessage = {};  // { agentId: string (preview text) }
+  const agentTyping = {};       // { agentId: bool }
   let activeSession = null;     // session key
   let isStreaming = false;
   let streamingBubble = null;   // DOM element being streamed into
@@ -799,15 +810,26 @@
     for (const agent of agents) {
       const isActive = activeAgent === agent.id;
       const color = agentColor(agent.id);
+      const lastMsg = agentLastMessage[agent.id];
+      const lastTime = agentLastSeen[agent.id] ? formatTime(agentLastSeen[agent.id]) : '';
+      const isTyping = agentTyping[agent.id];
+      const preview = isTyping
+        ? `<span class="typing-dots-inline"><span></span><span></span><span></span></span> typing...`
+        : (lastMsg ? escapeHtml(lastMsg).slice(0, 60) : `<span style="color:#4b5563">${shortModel(agent.model)}</span>`);
+      const unread = unreadCounts[agent.id] || 0;
       html += `
-        <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectAgent('${agent.id}')">
-          <div class="agent-avatar">${avatarImg(agent.id, 36)}</div>
-          <div style="min-width:0;">
-            <div class="agent-name">${agent.name}</div>
-            <div class="agent-model">${shortModel(agent.model)}</div>
-            ${agentLastSeen[agent.id] ? `<div class="agent-lastseen">${relTime(new Date(agentLastSeen[agent.id]))}</div>` : ''}
+        <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectAgent('${agent.id}')" style="position:relative;">
+          <div class="agent-avatar">${avatarImg(agent.id, 40)}</div>
+          <div class="agent-info">
+            <div class="agent-top-row">
+              <span class="agent-name">${agent.name}</span>
+              <span class="agent-time">${lastTime}</span>
+            </div>
+            <div class="agent-bottom-row">
+              <div class="agent-preview">${preview}</div>
+              ${unread > 0 ? `<div class="agent-unread-badge">${unread > 9 ? '9+' : unread}</div>` : `<div class="agent-status-dot ${wsReady ? 'dot-online' : 'dot-offline'}"></div>`}
+            </div>
           </div>
-          ${(unreadCounts[agent.id] || 0) > 0 ? `<div class="agent-unread-badge">${unreadCounts[agent.id] > 9 ? '9+' : unreadCounts[agent.id]}</div>` : `<div class="agent-status-dot ${wsReady ? 'dot-online' : 'dot-offline'}"></div>`}
         </div>
       `;
       // Only show session sub-list when agent has multiple sessions
@@ -1132,6 +1154,16 @@
       }
       scrollToBottom();
       updateConvStats();
+      // Populate sidebar preview from last assistant message
+      if (activeAgent) {
+        const lastAssist = [...messages].reverse().find(m => m.role === 'assistant');
+        if (lastAssist) {
+          const t = Array.isArray(lastAssist.content) ? lastAssist.content.filter(b=>b.type==='text').map(b=>b.text).join('') : (lastAssist.content || '');
+          agentLastMessage[activeAgent] = t.slice(0, 80);
+          agentLastSeen[activeAgent] = lastAssist.createdAt || lastAssist.timestamp || agentLastSeen[activeAgent];
+          renderAgentList();
+        }
+      }
     } catch (e) {
       console.error('Failed to load history:', e);
       messagesEl.innerHTML = `<div class="text-center p-4"><div class="text-red-400 text-sm mb-2">Failed to load history</div><button onclick="loadHistory('${activeSession}')" style="font-size:12px;padding:4px 12px;background:#1e1b4b;color:#818cf8;border:1px solid #4f46e5;border-radius:6px;cursor:pointer;">Retry</button></div>`;
@@ -1218,6 +1250,7 @@
     const meta = document.createElement('div');
     meta.className = 'msg-meta';
     const nameSpan = document.createElement('span');
+    nameSpan.className = 'msg-sender';
     nameSpan.textContent = isUser ? 'You' : (agent?.name || 'Agent');
     meta.appendChild(nameSpan);
     if (msgDate) {
@@ -1403,6 +1436,11 @@
         if (agentId && agents.some(a => a.id === agentId)) {
           unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
           agentLastSeen[agentId] = Date.now();
+          // Extract preview text for sidebar
+          const mc = payload.message?.content;
+          if (Array.isArray(mc)) agentLastMessage[agentId] = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
+          else if (typeof mc === 'string') agentLastMessage[agentId] = mc.slice(0, 80);
+          agentTyping[agentId] = false;
           renderAgentList();
           playNotifSound();
         }
@@ -1442,6 +1480,9 @@
       // Update last-seen for active agent
       if (activeAgent) {
         agentLastSeen[activeAgent] = Date.now();
+        if (text) agentLastMessage[activeAgent] = text.slice(0, 80);
+        agentTyping[activeAgent] = false;
+        renderAgentList();
       }
       if (streamingBubble) {
         streamingBubble.classList.remove('streaming');
@@ -1543,10 +1584,12 @@
       const avatarEl = document.getElementById('typing-avatar');
       if (avatarEl) avatarEl.innerHTML = avatarImg(activeAgent, 24);
       row.style.display = 'block';
+      if (activeAgent) { agentTyping[activeAgent] = true; renderAgentList(); }
       scrollToBottom();
     } else {
       row.style.display = 'none';
       if (actRow) actRow.style.display = 'none';
+      if (activeAgent) { agentTyping[activeAgent] = false; renderAgentList(); }
     }
   }
 
@@ -1739,15 +1782,6 @@
     const d = typeof iso === 'number' ? new Date(iso) : new Date(iso);
     if (isNaN(d.getTime())) return '';
     const now = new Date();
-    const diffMs = now - d;
-    const diffMin = Math.floor(diffMs / 60000);
-    const diffHrs = Math.floor(diffMs / 3600000);
-
-    // Very recent: relative time
-    if (diffMin < 1) return 'just now';
-    if (diffMin < 60) return `${diffMin}m ago`;
-
-    // Today: show time
     const isToday = d.toDateString() === now.toDateString();
     const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return isToday ? time : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + time;
