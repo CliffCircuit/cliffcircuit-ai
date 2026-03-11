@@ -255,10 +255,14 @@
           <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
-          <div class="agent-avatar" id="header-avatar"></div>
+          <div class="agent-avatar" id="header-avatar" style="position:relative;">
+            <div id="header-status-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 5px #34d39966;border:2px solid #0a0f1a;"></div>
+          </div>
           <div style="flex:1;">
-            <div class="text-white font-medium text-sm" id="header-name"></div>
-            <div class="text-gray-500 text-xs" id="header-model"></div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="text-white font-medium text-sm" id="header-name"></span>
+            </div>
+            <div class="text-gray-500 text-xs" id="header-model" style="font-family:'SF Mono','Fira Code',monospace;"></div>
           </div>
           <div id="clear-wrap" style="display:flex;align-items:center;gap:6px;">
             <button id="clear-btn" title="Clear history" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.color='#9ca3af'" onmouseout="this.style.color='#6b7280'">Clear</button>
@@ -304,7 +308,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
-          <div id="input-hint" style="font-size:10px;color:#374151;text-align:right;padding:2px 4px 0;display:none;">Shift+Enter for newline</div>
+          <div id="input-hint" style="font-size:10px;color:#4b5563;text-align:right;padding:2px 4px 0;display:none;">Shift+Enter for newline</div>
         </div>
       </div>
     </div>
@@ -510,9 +514,9 @@
           <div class="agent-status-dot dot-online"></div>
         </div>
       `;
-      if (isActive && agent.sessions.length > 0) {
+      // Only show session sub-list when agent has multiple sessions
+      if (isActive && agent.sessions.length > 1) {
         html += '<div class="session-list">';
-        // Sort sessions: most recent first
         const sorted = [...agent.sessions].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
         for (const s of sorted.slice(0, 8)) {
           const sActive = activeSession === s.key;
@@ -547,6 +551,7 @@
   function selectSession(agentId, sessionKey) {
     activeAgent = agentId;
     activeSession = sessionKey;
+    closeSidebar(); // Auto-close on mobile
     const agent = agents.find(a => a.id === agentId);
 
     // Update header
@@ -931,7 +936,10 @@
       return `%%CODEBLOCK_${idx}%%`;
     });
 
-    let html = escapeHtml(processed);
+    // Escape HTML but protect codeblock placeholders
+    // Split on placeholders, escape each non-placeholder part, then rejoin
+    const parts = processed.split(/(%%CODEBLOCK_\d+%%)/);
+    let html = parts.map((p, i) => i % 2 === 1 ? p : escapeHtml(p)).join('');
 
     // Restore code blocks
     html = html.replace(/%%CODEBLOCK_(\d+)%%/g, (_, idx) => codeBlocks[parseInt(idx)]);
@@ -971,11 +979,24 @@
       return '<ul style="margin:4px 0 8px 20px;">' + match + '</ul>';
     });
 
-    // Line breaks → paragraphs
-    html = html.replace(/\n\n/g, '</p><p>');
-    html = html.replace(/\n/g, '<br>');
-    html = '<p>' + html + '</p>';
+    // Line breaks → paragraphs (don't break up block elements)
+    // Split on block-level elements to avoid wrapping them in <p>
+    const blockTags = /<\/?(?:div|pre|ul|ol|li|blockquote|hr|strong|h\d)[^>]*>/;
+    const lines = html.split('\n');
+    const paragraphs = [];
+    let current = [];
+    for (const line of lines) {
+      if (line === '') {
+        if (current.length) { paragraphs.push('<p>' + current.join('<br>') + '</p>'); current = []; }
+      } else {
+        current.push(line);
+      }
+    }
+    if (current.length) paragraphs.push('<p>' + current.join('<br>') + '</p>');
+    html = paragraphs.join('\n');
     html = html.replace(/<p><\/p>/g, '');
+    // Fix: don't double-wrap block elements
+    html = html.replace(/<p>(<(?:div|pre|ul|ol|blockquote|hr)[^>]*>[\s\S]*?<\/(?:div|pre|ul|ol|blockquote)>)<\/p>/g, '$1');
 
     return html;
   }
