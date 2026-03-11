@@ -31,6 +31,10 @@
     .dot-online { background: #34d399; box-shadow: 0 0 6px #34d39966; }
     .dot-offline { background: #4b5563; }
 
+    /* Unread badge on sidebar agents */
+    .agent-unread-badge { min-width: 18px; height: 18px; border-radius: 9999px; background: #ef4444; color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 5px; margin-left: auto; flex-shrink: 0; animation: badgePop 0.25s ease-out; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+    @keyframes badgePop { from { transform: scale(0); } 60% { transform: scale(1.2); } to { transform: scale(1); } }
+
     /* Session list under agent */
     .session-list { padding: 0 0 0 48px; }
     .session-item { padding: 8px 10px; font-size: 12px; color: #9ca3af; border-radius: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; }
@@ -512,6 +516,7 @@
   let pendingRPC = {};          // id → {resolve, reject, timeout}
   let agents = [];              // [{id, name, emoji, model, sessions:[]}]
   let activeAgent = null;       // agent id
+  const unreadCounts = {};      // { agentId: number }
   let activeSession = null;     // session key
   let isStreaming = false;
   let streamingBubble = null;   // DOM element being streamed into
@@ -703,7 +708,7 @@
             <div class="agent-name">${agent.name}</div>
             <div class="agent-model">${shortModel(agent.model)}</div>
           </div>
-          <div class="agent-status-dot dot-online"></div>
+          ${(unreadCounts[agent.id] || 0) > 0 ? `<div class="agent-unread-badge">${unreadCounts[agent.id] > 9 ? '9+' : unreadCounts[agent.id]}</div>` : `<div class="agent-status-dot dot-online"></div>`}
         </div>
       `;
       // Only show session sub-list when agent has multiple sessions
@@ -729,6 +734,7 @@
   // ─── Select Agent / Session ──────────────────────────────────
   function selectAgent(agentId) {
     activeAgent = agentId;
+    unreadCounts[agentId] = 0;  // Clear unread badge
     const agent = agents.find(a => a.id === agentId);
     if (!agent) return;
 
@@ -1043,8 +1049,19 @@
     if (!payload) return;
     const sk = payload.sessionKey;
 
-    // Only handle events for the active session
-    if (sk && sk !== activeSession) return;
+    // Track unread for non-active agents
+    if (sk && sk !== activeSession) {
+      if (payload.state === 'final') {
+        const parts = sk.split(':');
+        const agentId = parts[1] || null;
+        if (agentId && agents.some(a => a.id === agentId)) {
+          unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
+          renderAgentList();
+          playNotifSound();
+        }
+      }
+      return;
+    }
 
     // Extract text from gateway message format: message.content is array of {type,text}
     const msgContent = payload.message?.content;
