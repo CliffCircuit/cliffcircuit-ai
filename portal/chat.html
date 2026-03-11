@@ -1538,7 +1538,7 @@
 
     if (payload.state === 'final') {
       if (text && !streamingBubble) {
-        appendMessage({ role: 'assistant', content: text });
+        appendMessage({ role: 'assistant', content: text, createdAt: Date.now() });
         scrollToBottom();
       }
       // Update last-seen for active agent
@@ -1550,9 +1550,19 @@
       }
       if (streamingBubble) {
         streamingBubble.classList.remove('streaming');
-        // Add token count to finalized message
+        // Add timestamp + token count to finalized message
         const group = streamingBubble.closest('.msg-group');
         const metaEl = group?.querySelector('.msg-meta');
+        if (metaEl && !metaEl.querySelector('.msg-time')) {
+          const now = Date.now();
+          const timeSpan = document.createElement('span');
+          timeSpan.className = 'msg-time';
+          timeSpan.setAttribute('data-ts', now);
+          timeSpan.textContent = formatTime(now);
+          const dateObj = new Date(now);
+          timeSpan.title = dateObj.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
+          metaEl.querySelector('.msg-sender')?.after(timeSpan);
+        }
         if (metaEl && streamBuffer) {
           const tokenEst = Math.ceil(streamBuffer.length / 4);
           const tokSpan = document.createElement('span');
