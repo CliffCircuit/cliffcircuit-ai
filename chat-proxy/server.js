@@ -46,8 +46,8 @@ try {
 async function validateToken(token) {
   if (!token) return null;
   try {
-    // Token could be a Google ID token (JWT) — verify via Google tokeninfo
-    if (token.includes('.')) {
+    // Token could be a Google ID token (JWT) — JWTs have 3 dot-separated parts
+    if (token.split('.').length === 3) {
       const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`);
       if (!resp.ok) return null;
       const info = await resp.json();
@@ -204,7 +204,8 @@ wss.on('connection', async (browserWs, req) => {
     return;
   }
 
-  // Validate Supabase session
+  // Validate auth token
+  console.log(`[proxy] Browser connect from ${ip}, token: ${token ? token.slice(0, 30) + '...' : 'null'}`);
   const user = await validateToken(token);
   if (!user) {
     console.log(`[proxy] Rejected unauthenticated connection from ${ip}`);
