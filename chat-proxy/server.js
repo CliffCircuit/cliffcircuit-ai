@@ -219,9 +219,12 @@ wss.on('connection', async (browserWs, req) => {
   browsers.add(browserWs);
 
   browserWs.on('message', (data) => {
+    const str = data.toString('utf8').slice(0, 100);
+    console.log(`[proxy] Browser message from ${user.email}: ${str}...`);
     if (gwReady && gwWs?.readyState === WebSocket.OPEN) {
       gwWs.send(data);
     } else {
+      console.log(`[proxy] Gateway not ready, queueing message (gwReady=${gwReady}, state=${gwWs?.readyState})`);
       browserWs._pendingMessages.push(data);
     }
   });
