@@ -223,20 +223,23 @@
         // Re-import keys from JWK
         const privKey = await crypto.subtle.importKey('jwk', d.privateJwk, { name: 'Ed25519' }, false, ['sign']);
         const pubKey = await crypto.subtle.importKey('jwk', d.publicJwk, { name: 'Ed25519' }, true, ['verify']);
-        return { deviceId: d.deviceId, publicKey: d.publicKeyHex, keyPair: { privateKey: privKey, publicKey: pubKey } };
+        return { deviceId: d.deviceId, publicKey: d.publicKeyB64u, keyPair: { privateKey: privKey, publicKey: pubKey } };
       } catch (e) { console.warn('Device identity corrupted, regenerating', e); localStorage.removeItem(DEVICE_STORAGE_KEY); }
     }
     // Generate new Ed25519 keypair
     const keyPair = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify']);
-    const pubRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
-    const publicKeyHex = Array.from(new Uint8Array(pubRaw)).map(b => b.toString(16).padStart(2, '0')).join('');
-    // Device ID = first 16 chars of public key hex
-    const deviceId = 'portal_' + publicKeyHex.slice(0, 12);
+    const pubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey));
+    // Device ID = SHA-256 hex of raw public key bytes (matches server fingerprintPublicKey)
+    const hashBuf = await crypto.subtle.digest('SHA-256', pubRaw);
+    const deviceId = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // publicKey field = base64url of raw public key bytes
+    const b64u = (buf) => btoa(String.fromCharCode(...buf)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const publicKeyB64u = b64u(pubRaw);
     // Store as JWK for persistence
     const privateJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
     const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify({ deviceId, publicKeyHex: publicKeyHex, privateJwk, publicJwk }));
-    return { deviceId, publicKey: publicKeyHex, keyPair };
+    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify({ deviceId, publicKeyB64u, privateJwk, publicJwk }));
+    return { deviceId, publicKey: publicKeyB64u, keyPair };
   }
 
   async function signChallenge(keyPair, nonce, ts) {
