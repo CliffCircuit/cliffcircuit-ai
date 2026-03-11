@@ -67,6 +67,10 @@
     .msg-group.assistant .msg-bubble { background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     .msg-group.user .msg-bubble { background: #312e81; color: #e0e7ff; border-top-right-radius: 4px; box-shadow: 0 2px 4px rgba(79,70,229,0.15); }
 
+    /* System messages */
+    .sys-msg { text-align: center; padding: 6px 0; }
+    .sys-msg span { font-size: 11px; color: #4b5563; background: #111827; padding: 3px 12px; border-radius: 9999px; border: 1px solid #1f2937; }
+
     /* Date separators */
     .date-separator { display: flex; align-items: center; gap: 16px; padding: 16px 0 8px; }
     .date-separator::before, .date-separator::after { content: ''; flex: 1; height: 1px; background: #1f2937; }
@@ -632,9 +636,13 @@
 
     ws.onopen = () => {
       // Proxy handles gateway auth — we're ready immediately on open
+      const wasConnected = wsReady;
       wsReady = true;
       reconnectDelay = 1000;
       setConnStatus('connected');
+      if (wasConnected === false && document.getElementById('messages')?.children.length > 0) {
+        showSystemMsg('Reconnected');
+      }
       loadAgents();
     };
 
@@ -813,15 +821,18 @@
     const agent = agents.find(a => a.id === activeAgent);
     if (!agent || agent.model === modelId) return;
 
+    const oldModel = shortModel(agent.model);
     agent.model = modelId;
     document.getElementById('header-model').textContent = shortModel(modelId);
     renderAgentList();
+    showSystemMsg(`Model switched to ${shortModel(modelId)}`);
 
     // Tell the gateway to switch model for this session
     try {
       await rpc('session.setModel', { sessionKey: activeSession, model: modelId });
     } catch (e) {
       console.warn('Model switch failed:', e);
+      showSystemMsg(`Failed to switch model — using ${oldModel}`);
     }
   }
 
@@ -929,6 +940,16 @@
     const saved = JSON.parse(localStorage.getItem('chat-pins') || '{}');
     Object.assign(pinnedMessages, saved);
   } catch {}
+
+  // ─── System Messages ──────────────────────────────────────────
+  function showSystemMsg(text) {
+    const el = document.createElement('div');
+    el.className = 'sys-msg';
+    el.innerHTML = `<span>${escapeHtml(text)}</span>`;
+    el.style.animation = 'msgAppear 0.2s ease-out';
+    document.getElementById('messages').appendChild(el);
+    scrollToBottom();
+  }
 
   // ─── New Conversation ────────────────────────────────────────
   function newConversation() {
