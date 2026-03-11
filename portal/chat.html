@@ -1315,7 +1315,7 @@
     bubble.innerHTML = renderMarkdown(text);
 
     // Collapse long messages
-    const MSG_COLLAPSE_THRESHOLD = 400; // chars
+    const MSG_COLLAPSE_THRESHOLD = 5000; // chars — only collapse truly massive messages
     if (text.length > MSG_COLLAPSE_THRESHOLD && !streaming) {
       bubble.classList.add('collapsed');
       const expandBtn = document.createElement('span');
