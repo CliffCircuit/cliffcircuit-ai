@@ -212,27 +212,25 @@
   }
 
   // ─── WebSocket Connection (via chat proxy) ────────────────────
-  function getSupabaseToken() {
-    // Supabase stores the session under a key like sb-<ref>-auth-token
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
-        try {
-          const val = JSON.parse(localStorage.getItem(key));
-          return val?.access_token || null;
-        } catch { return null; }
-      }
-    }
-    return null;
+  function getAuthToken() {
+    // Portal uses Google OAuth — token stored in cc_google_auth
+    try {
+      const raw = localStorage.getItem('cc_google_auth');
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      // Check expiry
+      if (data.expiresAt && Date.now() > data.expiresAt) return null;
+      return data.credential || data.email || null;
+    } catch { return null; }
   }
 
   function connect() {
     setConnStatus('connecting');
 
-    const token = getSupabaseToken();
+    const token = getAuthToken();
     if (!token) {
       setConnStatus('disconnected');
-      console.warn('[chat] No Supabase session token found — not authenticated?');
+      console.warn('[chat] No auth session found — not authenticated?');
       return;
     }
 

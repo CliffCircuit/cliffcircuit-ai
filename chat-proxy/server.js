@@ -5,12 +5,12 @@
  *
  * Architecture:
  *   - Single persistent connection to OpenClaw gateway (Ed25519 device identity)
- *   - Per-browser session validated via Supabase JWT on connect
+ *   - Per-browser session validated via Google OAuth token on connect
  *   - All browser WS traffic forwarded through the single gateway connection
  *   - Gateway broadcasts go to all connected browsers
  *
  * Flow:
- *   Browser (Supabase JWT) → this proxy (port 3200) → OpenClaw gateway (single conn)
+ *   Browser (Google OAuth token) → this proxy (port 3200) → OpenClaw gateway (single conn)
  */
 
 'use strict';
@@ -21,7 +21,6 @@ const path      = require('node:path');
 const http      = require('node:http');
 const { URL }   = require('node:url');
 const { WebSocketServer, WebSocket } = require('ws');
-const { createClient } = require('@supabase/supabase-js');
 
 // ─── Config ────────────────────────────────────────────────────────────────
 const PORT          = 3200;
@@ -29,8 +28,8 @@ const GW_URL        = 'wss://gateway.cliffcircuit.ai';
 const GW_TOKEN      = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
 const IDENTITY_PATH = path.join(process.env.HOME, '.openclaw/workspace/chat-proxy-device.json');
 
-const SUPABASE_URL      = 'https://glmwayzpcpbscunvycqk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsbXdheXpwY3Bic2N1bnZ5Y3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1MjMyNzMsImV4cCI6MjA4ODA5OTI3M30.AWfTKi6szXzwc6821mYkiXUxpQ5kv2sS_hWTReBoVCY';
+const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
+const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com'];
 
 // ─── Load device identity ───────────────────────────────────────────────────
 let identity;
@@ -43,17 +42,24 @@ try {
   process.exit(1);
 }
 
-// ─── Supabase client ────────────────────────────────────────────────────────
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: false }
-});
-
+// ─── Token validation ───────────────────────────────────────────────────────
 async function validateToken(token) {
   if (!token) return null;
   try {
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data?.user) return null;
-    return data.user;
+    // Token could be a Google ID token (JWT) — verify via Google tokeninfo
+    if (token.includes('.')) {
+      const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`);
+      if (!resp.ok) return null;
+      const info = await resp.json();
+      if (info.aud !== GOOGLE_CLIENT_ID) return null;
+      if (!ALLOWED_EMAILS.includes(info.email)) return null;
+      return { email: info.email, name: info.name || info.email };
+    }
+    // Fallback: token is just an email (from stored auth)
+    if (ALLOWED_EMAILS.includes(token)) {
+      return { email: token, name: token };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -234,7 +240,7 @@ wss.on('connection', async (browserWs, req) => {
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`[proxy] Chat proxy listening on ws://127.0.0.1:${PORT}`);
   console.log(`[proxy] Gateway: ${GW_URL}`);
-  console.log(`[proxy] Supabase: ${SUPABASE_URL}`);
+  console.log(`[proxy] Auth: Google OAuth (allowed: ${ALLOWED_EMAILS.join(', ')})`);
   connectGateway(); // Connect to gateway immediately on startup
 });
 
