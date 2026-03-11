@@ -162,6 +162,12 @@ function connectGateway() {
     }
 
     // Forward everything else to all connected browsers
+    if (msg.type === 'res' || msg.type === 'event') {
+      let desc = `${msg.type}`;
+      if (msg.id) desc += ` id=${msg.id}`;
+      if (msg.event) desc += ` event=${msg.event}`;
+      console.log(`[proxy] Forwarding to ${browsers.size} browsers: ${desc}`);
+    }
     for (const bws of browsers) {
       if (bws.readyState === WebSocket.OPEN) {
         bws.send(data);
@@ -189,7 +195,15 @@ const server = http.createServer((req, res) => {
   res.end('chat-proxy running\n');
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ noServer: true });
+
+// Explicit upgrade handler for WS requests
+server.on('upgrade', (req, socket, head) => {
+  console.log(`[proxy] WS upgrade request: ${req.url}`);
+  wss.handleUpgrade(req, socket, head, (browserWs) => {
+    wss.emit('connection', browserWs, req);
+  });
+});
 
 wss.on('connection', async (browserWs, req) => {
   const ip = req.socket.remoteAddress;
