@@ -1489,6 +1489,7 @@
         const agentId = parts[1] || null;
         if (agentId && agents.some(a => a.id === agentId)) {
           // Extract preview text for sidebar
+          console.log('[BADGE DEBUG]', { sk, agentId, state: payload.state, hasMessage: !!payload.message, messageKeys: payload.message ? Object.keys(payload.message) : [], contentType: typeof payload.message?.content, activeSession });
           const mc = payload.message?.content;
           let previewText = '';
           if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
