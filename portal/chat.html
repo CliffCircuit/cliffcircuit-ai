@@ -1493,9 +1493,9 @@
           let previewText = '';
           if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
           else if (typeof mc === 'string') previewText = mc.slice(0, 80);
-          // Only badge+sound for real chat sessions (agent:X:main), not cron/heartbeat
-          const isChatSession = sk === `agent:${agentId}:main`;
-          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY' && isChatSession) {
+          // Badge+sound for all sessions EXCEPT cron/heartbeat
+          const isCron = sk.includes(':cron:');
+          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY' && !isCron) {
             unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
             playNotifSound();
           }
