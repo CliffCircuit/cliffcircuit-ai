@@ -625,6 +625,7 @@
   const agentLastSeen = {};     // { agentId: timestamp }
   const agentLastMessage = {};  // { agentId: string (preview text) }
   const agentTyping = {};       // { agentId: bool }
+  const userEngaged = {};       // { agentId: bool } — true once user sends a message to this agent
   let activeSession = null;     // session key
   let isStreaming = false;
   let streamingBubble = null;   // DOM element being streamed into
@@ -1176,8 +1177,9 @@
       for (const msg of messages) {
         appendMessage(msg);
       }
-      // Set conversation title from first user message
+      // Mark agent as engaged if user has sent messages in this conversation
       const firstUser = messages.find(m => m.role === 'user' || m.sender === 'user');
+      if (firstUser && activeAgent) userEngaged[activeAgent] = true;
       if (firstUser) {
         const t = Array.isArray(firstUser.content) ? firstUser.content.filter(b=>b.type==='text').map(b=>b.text).join('') : (firstUser.content || '');
         updateConvTitle(t);
@@ -1485,11 +1487,14 @@
           let previewText = '';
           if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
           else if (typeof mc === 'string') previewText = mc.slice(0, 80);
-          // Only count as unread if there's actual message content
-          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY') {
+          // Only count as unread if user has engaged with this agent AND there's real content
+          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY' && userEngaged[agentId]) {
             unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
-            agentLastMessage[agentId] = previewText;
             playNotifSound();
+          }
+          // Always update preview text for sidebar (even without badge)
+          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY') {
+            agentLastMessage[agentId] = previewText;
           }
           agentLastSeen[agentId] = Date.now();
           agentTyping[agentId] = false;
@@ -1572,6 +1577,7 @@
     const text = input.value.trim();
     if (!text && pastedImages.length === 0) return;
     if (!activeSession) return;
+    if (activeAgent) userEngaged[activeAgent] = true;
 
     // Include reply context if replying
     let content = text;
