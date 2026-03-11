@@ -40,6 +40,9 @@
     .msg-group { display: flex; gap: 10px; max-width: 80%; }
     .msg-group.user { align-self: flex-end; flex-direction: row-reverse; }
     .msg-group.assistant { align-self: flex-start; }
+    .msg-group.continuation { margin-top: -2px; }
+    .msg-group.continuation .msg-avatar { visibility: hidden; }
+    .msg-group.continuation .msg-meta { display: none; }
     .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
     .msg-content { display: flex; flex-direction: column; gap: 2px; }
     .msg-meta { font-size: 11px; color: #6b7280; display: flex; gap: 8px; align-items: center; padding: 0 4px; }
@@ -47,6 +50,18 @@
     .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.55; word-break: break-word; }
     .msg-group.assistant .msg-bubble { background: #111827; color: #e5e7eb; border: 1px solid #1f2937; border-top-left-radius: 4px; }
     .msg-group.user .msg-bubble { background: #312e81; color: #e0e7ff; border-top-right-radius: 4px; }
+
+    /* Date separators */
+    .date-separator { display: flex; align-items: center; gap: 16px; padding: 16px 0 8px; }
+    .date-separator::before, .date-separator::after { content: ''; flex: 1; height: 1px; background: #1f2937; }
+    .date-separator span { font-size: 11px; color: #6b7280; white-space: nowrap; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Collapsible long messages */
+    .msg-bubble.collapsed { max-height: 200px; overflow: hidden; position: relative; }
+    .msg-bubble.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(transparent, #111827); pointer-events: none; }
+    .msg-group.user .msg-bubble.collapsed::after { background: linear-gradient(transparent, #312e81); }
+    .msg-expand-btn { font-size: 12px; color: #818cf8; cursor: pointer; padding: 4px 0; display: inline-block; }
+    .msg-expand-btn:hover { color: #a5b4fc; text-decoration: underline; }
 
     /* Markdown in messages */
     .msg-bubble p { margin: 0 0 8px 0; }
@@ -439,6 +454,8 @@
       const result = await rpc('chat.history', { sessionKey, limit: 50 });
       const messages = result?.messages || result || [];
       messagesEl.innerHTML = '';
+      lastMsgRole = null;
+      lastMsgDate = null;
 
       if (messages.length === 0) {
         messagesEl.innerHTML = '<div id="empty-state"><div class="empty-icon" style="font-size:32px;opacity:0.2;">&#x1F5E8;</div><div class="text-sm text-gray-600">No messages yet. Say hello!</div></div>';
@@ -455,6 +472,10 @@
     }
   }
 
+  // Track last message for grouping
+  let lastMsgRole = null;
+  let lastMsgDate = null;
+
   // ─── Append Message to DOM ───────────────────────────────────
   function appendMessage(msg, streaming = false) {
     const messagesEl = document.getElementById('messages');
@@ -466,8 +487,51 @@
     const isUser = role === 'user';
     const agent = agents.find(a => a.id === (msg.agentId || activeAgent));
 
+    // Extract text content
+    let text = '';
+    if (Array.isArray(msg.content)) {
+      text = msg.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n');
+    } else {
+      text = msg.content || msg.text || msg.message || '';
+    }
+
+    // Skip empty messages (tool_use only, thinking only, etc.)
+    if (!text.trim() && !msg.attachments?.length && !streaming) return;
+
+    // Clean up internal metadata from displayed text
+    text = cleanMessageText(text);
+
+    // Skip if cleaned text is empty
+    if (!text.trim() && !msg.attachments?.length && !streaming) return;
+
+    // Date separator
+    const msgDate = msg.createdAt || msg.timestamp;
+    if (msgDate) {
+      const dateStr = new Date(msgDate).toDateString();
+      if (dateStr !== lastMsgDate) {
+        lastMsgDate = dateStr;
+        const sep = document.createElement('div');
+        sep.className = 'date-separator';
+        const d = new Date(msgDate);
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        let label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        if (dateStr === today) label = 'Today';
+        else if (dateStr === yesterday) label = 'Yesterday';
+        sep.innerHTML = `<span>${label}</span>`;
+        messagesEl.appendChild(sep);
+      }
+    }
+
+    // Check if this is a continuation (same sender, close in time)
+    const isContinuation = (role === lastMsgRole) && !streaming;
+    lastMsgRole = role;
+
     const group = document.createElement('div');
-    group.className = `msg-group ${isUser ? 'user' : 'assistant'}`;
+    group.className = `msg-group ${isUser ? 'user' : 'assistant'}${isContinuation ? ' continuation' : ''}`;
 
     // Avatar
     const avatar = document.createElement('div');
@@ -488,23 +552,40 @@
     const nameSpan = document.createElement('span');
     nameSpan.textContent = isUser ? 'You' : (agent?.name || 'Agent');
     meta.appendChild(nameSpan);
-    if (msg.createdAt || msg.timestamp) {
+    if (msgDate) {
       const timeSpan = document.createElement('span');
-      timeSpan.textContent = formatTime(msg.createdAt || msg.timestamp);
+      timeSpan.textContent = formatTime(msgDate);
       meta.appendChild(timeSpan);
     }
 
     // Bubble
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
-    // content can be a string OR an array of {type, text} blocks (gateway format)
-    let text = '';
-    if (Array.isArray(msg.content)) {
-      text = msg.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
-    } else {
-      text = msg.content || msg.text || msg.message || '';
-    }
     bubble.innerHTML = renderMarkdown(text);
+
+    // Collapse long messages
+    const MSG_COLLAPSE_THRESHOLD = 600; // chars
+    if (text.length > MSG_COLLAPSE_THRESHOLD && !streaming) {
+      bubble.classList.add('collapsed');
+      const expandBtn = document.createElement('span');
+      expandBtn.className = 'msg-expand-btn';
+      expandBtn.textContent = 'Show more';
+      expandBtn.onclick = () => {
+        if (bubble.classList.contains('collapsed')) {
+          bubble.classList.remove('collapsed');
+          expandBtn.textContent = 'Show less';
+        } else {
+          bubble.classList.add('collapsed');
+          expandBtn.textContent = 'Show more';
+        }
+      };
+      content.appendChild(meta);
+      content.appendChild(bubble);
+      content.appendChild(expandBtn);
+    } else {
+      content.appendChild(meta);
+      content.appendChild(bubble);
+    }
 
     // Handle images in message
     if (msg.attachments?.length) {
@@ -518,8 +599,6 @@
       }
     }
 
-    content.appendChild(meta);
-    content.appendChild(bubble);
     group.appendChild(avatar);
     group.appendChild(content);
     messagesEl.appendChild(group);
@@ -529,6 +608,26 @@
     }
 
     return bubble;
+  }
+
+  // ─── Clean Message Text ─────────────────────────────────────
+  function cleanMessageText(text) {
+    if (!text) return '';
+
+    // Remove context percentage markers like [~34%] or (~34%)
+    text = text.replace(/^\[~?\d+%\]\s*/m, '');
+    text = text.replace(/^\(~?\d+%\)\s*/m, '');
+
+    // Remove NO_REPLY responses
+    if (text.trim() === 'NO_REPLY') return '';
+
+    // Remove HEARTBEAT_OK responses
+    if (text.trim() === 'HEARTBEAT_OK') return '';
+
+    // Remove [[reply_to_current]] tags
+    text = text.replace(/\[\[\s*reply_to[^\]]*\]\]\s*/g, '');
+
+    return text.trim();
   }
 
   // ─── Streaming Chat Events ───────────────────────────────────
@@ -651,12 +750,27 @@
   // ─── Markdown Rendering (lightweight) ────────────────────────
   function renderMarkdown(text) {
     if (!text) return '';
-    let html = escapeHtml(text);
 
-    // Code blocks (``` ... ```)
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-      return `<pre><code>${code.trim()}</code></pre>`;
+    // Extract code blocks first to protect them from other transforms
+    const codeBlocks = [];
+    let processed = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      const idx = codeBlocks.length;
+      codeBlocks.push(`<pre><code>${escapeHtml(code.trim())}</code></pre>`);
+      return `%%CODEBLOCK_${idx}%%`;
     });
+
+    let html = escapeHtml(processed);
+
+    // Restore code blocks
+    html = html.replace(/%%CODEBLOCK_(\d+)%%/g, (_, idx) => codeBlocks[parseInt(idx)]);
+
+    // Headers
+    html = html.replace(/^#{3} (.+)$/gm, '<strong style="font-size:14px;color:#f3f4f6;">$1</strong>');
+    html = html.replace(/^#{2} (.+)$/gm, '<strong style="font-size:15px;color:#f3f4f6;">$1</strong>');
+    html = html.replace(/^#{1} (.+)$/gm, '<strong style="font-size:16px;color:#f3f4f6;">$1</strong>');
+
+    // Horizontal rules
+    html = html.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #374151;margin:8px 0;">');
 
     // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -673,9 +787,17 @@
     // Blockquotes
     html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
 
+    // Ordered lists
+    html = html.replace(/^(\d+)\. (.+)$/gm, '<li style="list-style:decimal;">$2</li>');
+
     // Unordered lists
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // Wrap consecutive <li> in <ul>/<ol>
+    html = html.replace(/((?:<li[^>]*>.*<\/li>\s*)+)/g, (match) => {
+      if (match.includes('list-style:decimal')) return '<ol style="margin:4px 0 8px 20px;">' + match + '</ol>';
+      return '<ul style="margin:4px 0 8px 20px;">' + match + '</ul>';
+    });
 
     // Line breaks → paragraphs
     html = html.replace(/\n\n/g, '</p><p>');
