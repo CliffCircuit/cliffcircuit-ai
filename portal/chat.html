@@ -95,9 +95,11 @@
     .msg-expand-btn:hover { color: #a5b4fc; background: #312e81cc; border-color: #6366f1; box-shadow: 0 0 6px rgba(79,70,229,0.2); }
 
     /* Message hover actions */
-    .msg-actions { position: absolute; right: -36px; top: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 10; }
+    .msg-actions { position: absolute; right: -40px; top: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 10; padding: 4px; }
     .msg-group:hover .msg-actions { pointer-events: auto; }
-    .msg-group.user .msg-actions { right: auto; left: -36px; }
+    .msg-group.user .msg-actions { right: auto; left: -40px; }
+    .msg-group { padding-right: 44px; }
+    .msg-group.user { padding-right: 0; padding-left: 44px; }
     .msg-action-btn { width: 28px; height: 28px; border-radius: 6px; background: #111827; border: 1px solid #1f2937; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 11px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
     .msg-action-btn:hover { background: #1f2937; color: #e5e7eb; border-color: #374151; }
     .msg-action-btn.copied { background: #064e3b; color: #34d399; border-color: #059669; }
@@ -193,7 +195,7 @@
 
     /* Input area */
     #input-area { padding: 12px 20px 16px; border-top: 1px solid #1f2937; background: #0a0f1a; flex-shrink: 0; }
-    #input-wrap { display: flex; align-items: flex-end; gap: 10px; background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 8px 12px; transition: all 0.2s; }
+    #input-wrap { display: flex; align-items: center; gap: 10px; background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 8px 12px; transition: all 0.2s; }
     #input-wrap:hover { border-color: #374151; }
     #input-wrap:focus-within { border-color: #4f46e5; box-shadow: 0 0 0 1px #4f46e533; }
     #msg-input { flex: 1; background: transparent; border: none; outline: none; color: #e5e7eb; font-size: 14px; resize: none; max-height: 120px; line-height: 1.5; font-family: 'Inter', sans-serif; }
@@ -387,8 +389,8 @@
     }
   </style>
 </head>
-<body class="min-h-screen">
-  <div id="portal" class="min-h-screen flex flex-col">
+<body class="h-screen overflow-hidden">
+  <div id="portal" class="h-screen flex flex-col overflow-hidden">
     <div id="portal-nav"></div>
 
     <div id="chat-app">
@@ -400,10 +402,7 @@
         <div id="sidebar-header">
           <div class="flex items-center justify-between">
             <span class="text-sm font-semibold text-white">Agents</span>
-              <button onclick="newConversation()" title="New conversation" style="background:none;border:1px solid #374151;color:#9ca3af;cursor:pointer;padding:3px 8px;border-radius:6px;font-size:11px;display:flex;align-items:center;gap:4px;transition:all 0.15s;" onmouseover="this.style.color='#e5e7eb';this.style.borderColor='#4f46e5';this.style.background='#1e1b4b'" onmouseout="this.style.color='#9ca3af';this.style.borderColor='#374151';this.style.background='none'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New
-              </button>
+
             <div style="display:flex;align-items:center;gap:6px;">
               <span id="conn-status" class="conn-disconnected">Offline</span>
               <button id="reconnect-btn" onclick="reconnectNow()" title="Reconnect">
@@ -1306,14 +1305,27 @@
       content.appendChild(bubble);
     }
 
-    // Handle images in message
+    // Handle images in message — images above text, with download button
     if (msg.attachments?.length) {
       for (const att of msg.attachments) {
         if (att.type?.startsWith('image') || att.url?.match(/\.(png|jpg|jpeg|gif|webp)/i)) {
+          const imgWrap = document.createElement('div');
+          imgWrap.style.cssText = 'position:relative;display:inline-block;margin:4px 0;';
           const img = document.createElement('img');
           img.src = att.url || att.dataUrl;
           img.onclick = () => openLightbox(img.src);
-          bubble.appendChild(img);
+          const dlBtn = document.createElement('a');
+          dlBtn.href = att.url || att.dataUrl;
+          dlBtn.download = att.name || 'image';
+          dlBtn.title = 'Download';
+          dlBtn.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);border-radius:6px;padding:4px 6px;color:#e5e7eb;opacity:0;transition:opacity 0.15s;cursor:pointer;';
+          dlBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+          imgWrap.onmouseenter = () => dlBtn.style.opacity = '1';
+          imgWrap.onmouseleave = () => dlBtn.style.opacity = '0';
+          imgWrap.appendChild(img);
+          imgWrap.appendChild(dlBtn);
+          // Insert images before text content
+          bubble.insertBefore(imgWrap, bubble.firstChild);
         }
       }
     }
@@ -1438,15 +1450,20 @@
         const parts = sk.split(':');
         const agentId = parts[1] || null;
         if (agentId && agents.some(a => a.id === agentId)) {
-          unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
-          agentLastSeen[agentId] = Date.now();
           // Extract preview text for sidebar
           const mc = payload.message?.content;
-          if (Array.isArray(mc)) agentLastMessage[agentId] = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
-          else if (typeof mc === 'string') agentLastMessage[agentId] = mc.slice(0, 80);
+          let previewText = '';
+          if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
+          else if (typeof mc === 'string') previewText = mc.slice(0, 80);
+          // Only count as unread if there's actual message content
+          if (previewText && previewText.trim()) {
+            unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
+            agentLastMessage[agentId] = previewText;
+            playNotifSound();
+          }
+          agentLastSeen[agentId] = Date.now();
           agentTyping[agentId] = false;
           renderAgentList();
-          playNotifSound();
         }
       }
       return;
