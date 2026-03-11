@@ -1611,6 +1611,7 @@
       // Note: image attachments would need base64 encoding in the message
       // For now, images are shown locally; gateway may need additional handling
       await rpc('chat.send', params);
+      playSendSound();
     } catch (e) {
       console.error('Send failed:', e);
       showTyping(false);
@@ -2223,18 +2224,40 @@
 
   // ─── Notification Sound ──────────────────────────────────────
   let notifSoundEnabled = localStorage.getItem('chat_notif_sound') !== 'off';
-  const notifAudio = new Audio('data:audio/wav;base64,UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAACAgICAgICAgICAgICA' +
-    'gIB/gH+AfoCAgYKDhIWGh4eIiIeHhoWEg4KBgH+AfoCAgICAf3+AgICAgICAgH9/f39/f3+AgIGBgoOE' +
-    'hYWGhoeHh4eGhYSEg4KBgH9/fn5+fn5+fn9/gICBgYKCg4ODg4OCgoGBgH9/fn5+fn9/f4CAgYGCgoOD' +
-    'g4OCgoGBgIB/f35+fn5+f3+AgIGBgoKDg4ODg4KCgYGAf39+fn5+fn9/f4CAgYGBgoKCg4OCgoKBgYCA' +
-    'f39/fn5+fn9/gICBgYKCgoODg4KCgoGBgIB/f35+fn5+f3+AgIGBgoKCg4OCgoKBgYCAf39+fn5+fn9/' +
-    'gICBgYKCgoKCg4KCgoGBgIB/f35+fn5+f3+AgIGBgoKCgoODgoKBgYGAf39+fn5+fn9/gICBgYKCgoKC' +
-    'goKCgYGBgH9/fn5+fn5/f4CAgIGBgoKCgoKCgoKBgYCAf39+fn5+f3+AgICBgYKCgoKCgoKCgYGAgH9/' +
-    'fn5+fn9/gICAgYGCgoKCgoKCgoGBgIB/f35+fn5/f4CAgIGBgoKCgoKCgoGBgYB/f35+fn5/f4CAgIGB' +
-    'gYKCgoKCgoKBgYCAf39+fn5+f3+AgICBgYGCgoKCgoKBgYGAf39+fn5+f3+AgICBgYGCgoKCgoKBgYGA' +
-    'f39+fn5+f3+AgICBgYGCgoKCgoKBgYGAf39+fn9/f3+AgICBgYGCgoKCgoGBgYGAf39+fn5/f3+AgICB' +
-    'gYGCgoKCgoGBgYGAf39+fn5/f4CAgICBgYGCgoKCgYGBgYCAf39+fn9/f4CAgICBgYKCgoKCgYGBgYCA' +
-    'f35+fn9/gICAgIGBgYKCgoKBgYGBgIB/fn5+f3+AgICAgYGBgoKCgoGBgYGAgH9+fn5/f4CAgICBgYGC');
+
+  // Synthesize pleasant notification tones using Web Audio API
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTone(frequencies, durations, volume = 0.15) {
+    if (!notifSoundEnabled) return;
+    try {
+      const now = audioCtx.currentTime;
+      let offset = 0;
+      for (let i = 0; i < frequencies.length; i++) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = frequencies[i];
+        gain.gain.setValueAtTime(volume, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + durations[i]);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + durations[i]);
+        offset += durations[i] * 0.6;
+      }
+    } catch {}
+  }
+
+  function playNotifSound() {
+    // Incoming: gentle two-note chime (like iMessage receive)
+    playTone([880, 1175], [0.12, 0.18], 0.12);
+  }
+
+  function playSendSound() {
+    // Outgoing: quick subtle whoosh-pop (like iMessage send)
+    playTone([600, 900], [0.08, 0.1], 0.08);
+  }
 
   function toggleNotifSound() {
     notifSoundEnabled = !notifSoundEnabled;
@@ -2245,11 +2268,8 @@
   // Init notif state
   document.getElementById('notif-toggle')?.classList.toggle('active', notifSoundEnabled);
 
-  function playNotifSound() {
-    if (notifSoundEnabled) {
-      try { notifAudio.play(); } catch {}
-    }
-  }
+  // Resume audio context on first user interaction (browser autoplay policy)
+  document.addEventListener('click', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
 
   // ─── Drag and Drop ────────────────────────────────────────────
   let dragCounter = 0;
