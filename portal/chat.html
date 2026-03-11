@@ -559,6 +559,9 @@
           <button class="reply-close" onclick="cancelReply()">&times;</button>
         </div>
 
+        <!-- Slash command autocomplete -->
+        <div id="slash-autocomplete" style="display:none;position:absolute;bottom:0;left:0;right:0;background:#1e1b4b;border:1px solid #374151;border-bottom:none;border-radius:8px 8px 0 0;max-height:260px;overflow-y:auto;z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,0.4);"></div>
+
         <!-- Input -->
         <div id="input-area">
           <div id="input-wrap">
@@ -1904,7 +1907,9 @@
   const msgInput = document.getElementById('msg-input');
   msgInput.addEventListener('keydown', (e) => {
     // Enter (without Shift) = send. Shift+Enter = newline.
+    // Skip if slash autocomplete is handling the Enter
     if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      if (document.getElementById('slash-autocomplete').style.display !== 'none' && slashSelectedIdx >= 0) return; // handled by autocomplete
       e.preventDefault();
       sendMessage();
     }
@@ -1927,6 +1932,130 @@
     const hint = document.getElementById('input-hint');
     if (hint) hint.style.display = msgInput.value.length > 0 ? 'block' : 'none';
   });
+
+  // ─── Slash Command Autocomplete ─────────────────────────────
+  const SLASH_COMMANDS = [
+    { cmd: '/help', desc: 'Show available commands' },
+    { cmd: '/commands', desc: 'List all commands' },
+    { cmd: '/status', desc: 'Show current status + provider usage' },
+    { cmd: '/model', desc: 'Change or list models' },
+    { cmd: '/model list', desc: 'Show numbered model picker' },
+    { cmd: '/model status', desc: 'Detailed model/provider view' },
+    { cmd: '/reset', desc: 'Reset session (optional model hint)' },
+    { cmd: '/new', desc: 'New session (alias for /reset)' },
+    { cmd: '/stop', desc: 'Stop current generation' },
+    { cmd: '/think', desc: 'Set thinking level (off/low/medium/high)' },
+    { cmd: '/verbose', desc: 'Toggle verbose output (on/full/off)' },
+    { cmd: '/reasoning', desc: 'Show reasoning (on/off/stream)' },
+    { cmd: '/elevated', desc: 'Toggle elevated permissions (on/off/ask/full)' },
+    { cmd: '/exec', desc: 'Configure exec settings (host/security/ask)' },
+    { cmd: '/queue', desc: 'Configure message queue mode' },
+    { cmd: '/usage', desc: 'Toggle usage footer (off/tokens/full/cost)' },
+    { cmd: '/tts', desc: 'Text-to-speech settings' },
+    { cmd: '/compact', desc: 'Compact context with optional instructions' },
+    { cmd: '/whoami', desc: 'Show your sender ID' },
+    { cmd: '/skill', desc: 'Run a skill by name' },
+    { cmd: '/context', desc: 'Show context breakdown (list/detail/json)' },
+    { cmd: '/export-session', desc: 'Export session to HTML' },
+    { cmd: '/subagents', desc: 'Inspect/control sub-agents' },
+    { cmd: '/acp', desc: 'ACP runtime controls' },
+    { cmd: '/kill', desc: 'Abort sub-agent runs' },
+    { cmd: '/steer', desc: 'Steer a running sub-agent' },
+    { cmd: '/tell', desc: 'Send message to sub-agent (alias /steer)' },
+    { cmd: '/allowlist', desc: 'Manage allowlist entries' },
+    { cmd: '/restart', desc: 'Restart the agent session' },
+    { cmd: '/send', desc: 'Toggle send mode (on/off/inherit)' },
+    { cmd: '/activation', desc: 'Set group activation (mention/always)' },
+  ];
+  let slashSelectedIdx = -1;
+
+  function showSlashAutocomplete(query) {
+    const ac = document.getElementById('slash-autocomplete');
+    const q = query.toLowerCase();
+    const matches = SLASH_COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(q));
+    if (!matches.length || !q.startsWith('/')) { ac.style.display = 'none'; slashSelectedIdx = -1; return; }
+    slashSelectedIdx = 0;
+    ac.innerHTML = matches.map((m, i) =>
+      `<div class="slash-item${i === 0 ? ' selected' : ''}" data-idx="${i}" data-cmd="${m.cmd}" style="padding:8px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f2937;transition:background 0.1s;" onmouseenter="highlightSlash(${i})" onclick="selectSlash(${i})">
+        <span style="color:#a78bfa;font-family:monospace;font-size:13px;font-weight:600;">${m.cmd}</span>
+        <span style="color:#6b7280;font-size:11px;margin-left:12px;">${m.desc}</span>
+      </div>`
+    ).join('');
+    ac.style.display = 'block';
+    // Position above input area
+    const inputArea = document.getElementById('input-area');
+    ac.style.bottom = inputArea.offsetHeight + 'px';
+  }
+
+  function highlightSlash(idx) {
+    const items = document.querySelectorAll('.slash-item');
+    items.forEach((el, i) => {
+      el.style.background = i === idx ? '#312e81' : 'transparent';
+      el.classList.toggle('selected', i === idx);
+    });
+    slashSelectedIdx = idx;
+  }
+
+  function selectSlash(idx) {
+    const items = document.querySelectorAll('.slash-item');
+    if (items[idx]) {
+      const cmd = items[idx].dataset.cmd;
+      msgInput.value = cmd + ' ';
+      msgInput.focus();
+      document.getElementById('slash-autocomplete').style.display = 'none';
+      slashSelectedIdx = -1;
+      // Trigger resize
+      msgInput.dispatchEvent(new Event('input'));
+    }
+  }
+
+  function hideSlashAutocomplete() {
+    document.getElementById('slash-autocomplete').style.display = 'none';
+    slashSelectedIdx = -1;
+  }
+
+  // Hook into input events for slash detection
+  msgInput.addEventListener('input', () => {
+    const val = msgInput.value;
+    // Only show autocomplete when input starts with / and cursor is at end of first word
+    if (val.startsWith('/') && !val.includes('\n')) {
+      const firstSpace = val.indexOf(' ');
+      const query = firstSpace === -1 ? val : val.substring(0, firstSpace);
+      // Show for partial commands, hide if they've already typed a full command + started args
+      if (firstSpace === -1 || SLASH_COMMANDS.some(c => c.cmd === val.trimEnd())) {
+        showSlashAutocomplete(firstSpace === -1 ? query : val.trimEnd());
+      } else {
+        hideSlashAutocomplete();
+      }
+    } else {
+      hideSlashAutocomplete();
+    }
+  });
+
+  // Arrow key navigation + Tab/Enter selection for autocomplete
+  msgInput.addEventListener('keydown', (e) => {
+    const ac = document.getElementById('slash-autocomplete');
+    if (ac.style.display === 'none') return;
+    const items = document.querySelectorAll('.slash-item');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      slashSelectedIdx = Math.max(0, slashSelectedIdx - 1);
+      highlightSlash(slashSelectedIdx);
+      items[slashSelectedIdx]?.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      slashSelectedIdx = Math.min(items.length - 1, slashSelectedIdx + 1);
+      highlightSlash(slashSelectedIdx);
+      items[slashSelectedIdx]?.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Tab' || (e.key === 'Enter' && slashSelectedIdx >= 0)) {
+      e.preventDefault();
+      selectSlash(slashSelectedIdx);
+    } else if (e.key === 'Escape') {
+      hideSlashAutocomplete();
+    }
+  }, true); // capture phase so it fires before the send handler
 
   // Add regenerate button below last assistant message
   function addRegenButton() {
