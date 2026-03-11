@@ -61,6 +61,8 @@
     .msg-content { display: flex; flex-direction: column; gap: 2px; }
     .msg-meta { font-size: 12px; color: #9ca3af; display: flex; gap: 8px; align-items: center; padding: 2px 4px; font-weight: 400; }
     .msg-group.user .msg-meta { justify-content: flex-end; }
+    .msg-tokens { font-size: 10px; color: #4b5563; font-family: 'SF Mono','Fira Code',monospace; cursor: default; transition: color 0.15s; }
+    .msg-group:hover .msg-tokens { color: #6b7280; }
     .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-break: break-word; }
     .msg-group.assistant .msg-bubble { background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     .msg-group.user .msg-bubble { background: #312e81; color: #e0e7ff; border-top-right-radius: 4px; box-shadow: 0 2px 4px rgba(79,70,229,0.15); }
@@ -1135,6 +1137,16 @@
       meta.appendChild(timeSpan);
     }
 
+    // Token estimate
+    if (text && !streaming) {
+      const tokenEst = Math.ceil(text.length / 4);
+      const tokSpan = document.createElement('span');
+      tokSpan.className = 'msg-tokens';
+      tokSpan.textContent = tokenEst > 999 ? (tokenEst/1000).toFixed(1) + 'k tok' : tokenEst + ' tok';
+      tokSpan.title = `~${tokenEst.toLocaleString()} tokens (estimated)`;
+      meta.appendChild(tokSpan);
+    }
+
     // Bubble
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
@@ -1326,7 +1338,20 @@
         appendMessage({ role: 'assistant', content: text });
         scrollToBottom();
       }
-      if (streamingBubble) streamingBubble.classList.remove('streaming');
+      if (streamingBubble) {
+        streamingBubble.classList.remove('streaming');
+        // Add token count to finalized message
+        const group = streamingBubble.closest('.msg-group');
+        const metaEl = group?.querySelector('.msg-meta');
+        if (metaEl && streamBuffer) {
+          const tokenEst = Math.ceil(streamBuffer.length / 4);
+          const tokSpan = document.createElement('span');
+          tokSpan.className = 'msg-tokens';
+          tokSpan.textContent = tokenEst > 999 ? (tokenEst/1000).toFixed(1) + 'k tok' : tokenEst + ' tok';
+          tokSpan.title = `~${tokenEst.toLocaleString()} tokens (estimated)`;
+          metaEl.appendChild(tokSpan);
+        }
+      }
       isStreaming = false;
       streamingBubble = null;
       streamBuffer = '';
