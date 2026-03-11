@@ -176,6 +176,7 @@
             <span class="text-sm font-semibold text-white">Agents</span>
             <span id="conn-status" class="conn-disconnected">Offline</span>
           </div>
+          <input id="agent-search" type="text" placeholder="Search..." style="width:100%;margin-top:8px;padding:6px 8px;border-radius:6px;border:1px solid #1f2937;background:#111827;color:#e5e7eb;font-size:12px;" />
         </div>
         <div id="agent-list">
           <div class="flex items-center justify-center h-32 text-gray-600 text-sm">Connecting...</div>
@@ -186,10 +187,11 @@
       <div id="chat-main">
         <div id="chat-header" style="display:none;">
           <div class="agent-avatar" id="header-avatar"></div>
-          <div>
+          <div style="flex:1;">
             <div class="text-white font-medium text-sm" id="header-name"></div>
             <div class="text-gray-500 text-xs" id="header-model"></div>
           </div>
+          <button id="clear-btn" title="Clear history" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='#1f2937';this.style.color='#e5e7eb'" onmouseout="this.style.background='none';this.style.color='#9ca3af'">Clear</button>
         </div>
 
         <div id="messages">
@@ -978,6 +980,33 @@
       msgInput.focus();
     }
   });
+
+  // Clear history button
+  const clearBtn = document.getElementById('clear-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Clear all messages in this session? This cannot be undone.')) {
+        const messagesEl = document.getElementById('messages');
+        messagesEl.innerHTML = '';
+        lastMsgDate = null;
+        lastMsgRole = null;
+        scrollToBottom();
+      }
+    });
+  }
+
+  // Agent search filter
+  const agentSearch = document.getElementById('agent-search');
+  if (agentSearch) {
+    agentSearch.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const items = document.querySelectorAll('.agent-item');
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+  }
 
   // ─── Init ────────────────────────────────────────────────────
   requireAuth();
