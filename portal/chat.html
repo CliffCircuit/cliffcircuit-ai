@@ -28,7 +28,7 @@
     .agent-info { flex: 1; min-width: 0; }
     .agent-top-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
     .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .agent-time { font-size: 11px; color: #6b7280; white-space: nowrap; flex-shrink: 0; }
+    .agent-model-badge { font-size: 10px; color: #9ca3af; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; text-transform: lowercase; }
     .agent-model { font-size: 9px; color: #6b7280; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; position: absolute; top: 8px; right: 10px; }
     .agent-preview { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
     .agent-preview .typing-dots-inline { display: inline-flex; gap: 3px; vertical-align: middle; }
@@ -823,11 +823,11 @@
           <div class="agent-info">
             <div class="agent-top-row">
               <span class="agent-name">${agent.name}</span>
-              <span class="agent-time">${lastTime}</span>
+              <span class="agent-model-badge">${shortModel(agent.model)}</span>
             </div>
             <div class="agent-bottom-row">
               <div class="agent-preview">${preview}</div>
-              ${unread > 0 ? `<div class="agent-unread-badge">${unread > 9 ? '9+' : unread}</div>` : `<div class="agent-status-dot ${wsReady ? 'dot-online' : 'dot-offline'}"></div>`}
+              ${unread > 0 ? `<div class="agent-unread-badge">${unread > 9 ? '9+' : unread}</div>` : ''}
             </div>
           </div>
         </div>
@@ -1258,7 +1258,11 @@
       timeSpan.className = 'msg-time';
       timeSpan.setAttribute('data-ts', msgDate);
       timeSpan.textContent = formatTime(msgDate);
-      const fullDate = (typeof msgDate === 'number' ? new Date(msgDate) : new Date(msgDate)).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
+      let dateObj;
+      if (typeof msgDate === 'number') dateObj = new Date(msgDate);
+      else if (typeof msgDate === 'string' && /^\d+$/.test(msgDate)) dateObj = new Date(Number(msgDate));
+      else dateObj = new Date(msgDate);
+      const fullDate = dateObj.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
       timeSpan.title = fullDate;
       meta.appendChild(timeSpan);
     }
