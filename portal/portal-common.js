@@ -285,6 +285,10 @@ function resolveModelAlias(m) {
 // ordered list. EVERY entry must include a version number — no bare names.
 // If a new model family appears, add it WITH its version here.
 const _MODEL_RULES = [
+  // LMStudio / Local — must come FIRST because model names contain 'opus', 'claude', etc.
+  { match: ['qwen3.5-27b-claude-4.6-opus-distilled'], label: 'Qwen3.5 Opus Distilled', color: 'text-cyan-400' },
+  { match: ['qwen3-coder-30b','qwen3.coder'],        label: 'Qwen3 Coder 30B',       color: 'text-cyan-400' },
+  { match: ['qwen'],                                 label: 'Qwen (Local)',           color: 'text-cyan-400' },
   // Anthropic
   { match: ['opus-4-6','opus-4.6'],                  label: 'Opus 4.6',              color: 'text-purple-400' },
   { match: ['opus-4'],                               label: 'Opus 4',                color: 'text-purple-400' },
@@ -309,10 +313,6 @@ const _MODEL_RULES = [
   { match: ['gpt-4o'],                               label: 'GPT-4o',                color: 'text-gray-400' },
   { match: ['gpt-4'],                                label: 'GPT-4',                 color: 'text-gray-400' },
   { match: ['o1'],                                   label: 'o1',                    color: 'text-gray-400' },
-  // LMStudio / Local
-  { match: ['qwen3.5-27b-claude-4.6-opus-distilled'], label: 'Qwen3.5 Opus Distilled', color: 'text-cyan-400' },
-  { match: ['qwen3-coder-30b','qwen3.coder'],        label: 'Qwen3 Coder 30B',       color: 'text-cyan-400' },
-  { match: ['qwen'],                                 label: 'Qwen (Local)',           color: 'text-cyan-400' },
 ];
 
 function _resolveModelRule(m) {
