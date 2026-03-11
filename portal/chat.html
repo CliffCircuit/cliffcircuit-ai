@@ -1208,7 +1208,7 @@
     // Date separator
     const msgDate = msg.createdAt || msg.timestamp;
     if (msgDate) {
-      const dateObj = typeof msgDate === 'number' ? new Date(msgDate) : new Date(msgDate);
+      const dateObj = (typeof msgDate === 'number') ? new Date(msgDate) : (/^\d+$/.test(msgDate) ? new Date(Number(msgDate)) : new Date(msgDate));
       if (isNaN(dateObj.getTime())) { /* skip invalid dates */ }
       const dateStr = dateObj.toDateString();
       if (dateStr !== lastMsgDate) {
@@ -1779,7 +1779,11 @@
   // ─── Utilities ───────────────────────────────────────────────
   function formatTime(iso) {
     if (!iso) return '';
-    const d = typeof iso === 'number' ? new Date(iso) : new Date(iso);
+    // Handle numeric strings (epoch ms as string), numbers, and ISO strings
+    let d;
+    if (typeof iso === 'number') d = new Date(iso);
+    else if (typeof iso === 'string' && /^\d+$/.test(iso)) d = new Date(Number(iso));
+    else d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
