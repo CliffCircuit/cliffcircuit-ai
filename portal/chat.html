@@ -838,8 +838,11 @@
       return;
     }
 
+    // Sort by most recent activity (most recent first)
+    const sorted = [...agents].sort((a, b) => (agentLastSeen[b.id] || 0) - (agentLastSeen[a.id] || 0));
+
     let html = '';
-    for (const agent of agents) {
+    for (const agent of sorted) {
       const isActive = activeAgent === agent.id;
       const color = agentColor(agent.id);
       const lastMsg = agentLastMessage[agent.id];
@@ -1488,15 +1491,12 @@
           let previewText = '';
           if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
           else if (typeof mc === 'string') previewText = mc.slice(0, 80);
-          // Only count as unread if user has engaged with this agent AND there's real content
-          if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY' && userEngaged[agentId]) {
-            unreadCounts[agentId] = (unreadCounts[agentId] || 0) + 1;
-            playNotifSound();
-          }
+          // No badge from background WebSocket events — too many false positives
+          // from heartbeats/cron. Badges only from direct user interaction.
           // Always update preview text for sidebar (even without badge)
           if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY') {
             agentLastMessage[agentId] = previewText;
-            delete agentHistoryCache[agentId]; // invalidate search cache
+            delete agentMsgCache[agentId]; // invalidate search cache
           }
           agentLastSeen[agentId] = Date.now();
           agentTyping[agentId] = false;
