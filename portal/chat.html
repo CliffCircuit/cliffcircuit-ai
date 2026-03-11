@@ -848,12 +848,14 @@
     // Date separator
     const msgDate = msg.createdAt || msg.timestamp;
     if (msgDate) {
-      const dateStr = new Date(msgDate).toDateString();
+      const dateObj = typeof msgDate === 'number' ? new Date(msgDate) : new Date(msgDate);
+      if (isNaN(dateObj.getTime())) { /* skip invalid dates */ }
+      const dateStr = dateObj.toDateString();
       if (dateStr !== lastMsgDate) {
         lastMsgDate = dateStr;
         const sep = document.createElement('div');
         sep.className = 'date-separator';
-        const d = new Date(msgDate);
+        const d = dateObj;
         const today = new Date().toDateString();
         const yesterday = new Date(Date.now() - 86400000).toDateString();
         let label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
@@ -895,7 +897,7 @@
       timeSpan.className = 'msg-time';
       timeSpan.setAttribute('data-ts', msgDate);
       timeSpan.textContent = formatTime(msgDate);
-      const fullDate = new Date(msgDate).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
+      const fullDate = (typeof msgDate === 'number' ? new Date(msgDate) : new Date(msgDate)).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
       timeSpan.title = fullDate;
       meta.appendChild(timeSpan);
     }
@@ -1349,7 +1351,8 @@
   // ─── Utilities ───────────────────────────────────────────────
   function formatTime(iso) {
     if (!iso) return '';
-    const d = new Date(iso);
+    const d = typeof iso === 'number' ? new Date(iso) : new Date(iso);
+    if (isNaN(d.getTime())) return '';
     const now = new Date();
     const diffMs = now - d;
     const diffMin = Math.floor(diffMs / 60000);
