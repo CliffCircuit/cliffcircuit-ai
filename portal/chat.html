@@ -244,6 +244,48 @@
     .code-block-wrap:hover .code-copy-btn { opacity: 1; }
     .code-copy-btn.copied { color: #34d399; border-color: #059669; }
 
+    /* Syntax highlighting */
+    .sh-keyword { color: #c084fc; }
+    .sh-string { color: #34d399; }
+    .sh-comment { color: #6b7280; font-style: italic; }
+    .sh-number { color: #fbbf24; }
+    .sh-func { color: #60a5fa; }
+    .sh-operator { color: #f472b6; }
+    .sh-tag { color: #f87171; }
+    .sh-attr { color: #a78bfa; }
+    .sh-builtin { color: #fb923c; }
+
+    /* Avatar pulse during streaming */
+    @keyframes avatarPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+    }
+    .agent-item.streaming .agent-avatar img,
+    .agent-item.streaming .agent-avatar div { animation: avatarPulse 2s ease-in-out infinite; border-radius: 50%; }
+
+    /* Retry button on failed messages */
+    .retry-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #450a0a; border: 1px solid #7f1d1d; border-radius: 6px; color: #fca5a5; cursor: pointer; font-size: 11px; transition: all 0.15s; margin-top: 4px; }
+    .retry-btn:hover { background: #7f1d1d; color: #fecaca; border-color: #991b1b; }
+
+    /* Emoji reactions */
+    .msg-reactions { display: flex; gap: 4px; flex-wrap: wrap; padding: 2px 0; }
+    .msg-reaction { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; background: #1f2937; border: 1px solid #374151; border-radius: 9999px; font-size: 13px; cursor: pointer; transition: all 0.15s; user-select: none; }
+    .msg-reaction:hover { background: #374151; border-color: #4b5563; }
+    .msg-reaction.active { background: #312e81; border-color: #4f46e5; }
+    .msg-reaction .react-count { font-size: 10px; color: #9ca3af; }
+    .react-picker { display: none; position: absolute; bottom: 32px; left: 0; background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 6px 8px; gap: 2px; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.5); flex-wrap: nowrap; }
+    .react-picker.show { display: flex; }
+    .react-emoji { font-size: 18px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: all 0.1s; line-height: 1; }
+    .react-emoji:hover { background: #1f2937; transform: scale(1.2); }
+
+    /* Input area top shadow */
+    #input-area { box-shadow: 0 -2px 8px rgba(0,0,0,0.2); }
+
+    /* Conversation title */
+    #conv-title { font-size: 11px; color: #6b7280; cursor: pointer; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s; }
+    #conv-title:hover { color: #9ca3af; }
+    #conv-title-input { display: none; font-size: 11px; background: #111827; border: 1px solid #4f46e5; border-radius: 4px; color: #e5e7eb; padding: 1px 6px; outline: none; width: 250px; }
+
     /* Timestamp tooltip */
     .msg-time { cursor: default; }
     .msg-time[title]:hover { color: #e5e7eb; }
@@ -324,6 +366,10 @@
               <span class="text-white font-medium text-sm" id="header-name"></span>
             </div>
             <div class="text-gray-500 text-xs" id="header-model" style="font-family:'SF Mono','Fira Code',monospace;"></div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:1px;">
+              <span id="conv-title" onclick="editConvTitle()"></span>
+              <input id="conv-title-input" onblur="saveConvTitle()" onkeydown="if(event.key==='Enter')saveConvTitle();if(event.key==='Escape'){this.style.display='none';document.getElementById('conv-title').style.display='';}" />
+            </div>
           </div>
           <div style="display:flex;align-items:center;gap:2px;">
             <button id="notif-toggle" onclick="toggleNotifSound()" title="Notification sounds">
@@ -712,6 +758,13 @@
     document.getElementById('send-btn').disabled = false;
     document.getElementById('msg-input').focus();
 
+    // Load conversation title
+    const titleEl = document.getElementById('conv-title');
+    if (titleEl) {
+      titleEl.textContent = convTitles[sessionKey] || '';
+      titleEl.style.display = convTitles[sessionKey] ? '' : 'none';
+    }
+
     renderAgentList();
     loadHistory(sessionKey);
   }
@@ -736,12 +789,19 @@
 
       if (messages.length === 0) {
         const agent = agents.find(a => a.id === activeAgent);
-        messagesEl.innerHTML = `<div id="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.12;color:#6b7280;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><div class="text-sm" style="color:#4b5563;font-weight:500;">No messages yet</div><div class="text-xs" style="color:#374151;">Start a conversation with ${agent?.name || 'this agent'}</div></div>`;
+        const bigAvatar = avatarImg(activeAgent, 72);
+        messagesEl.innerHTML = `<div id="empty-state">${bigAvatar}<div class="text-sm" style="color:#9ca3af;font-weight:500;margin-top:8px;">Ask ${agent?.name || 'this agent'} anything...</div><div class="text-xs" style="color:#4b5563;margin-top:2px;">${shortModel(agent?.model) || ''}</div></div>`;
         return;
       }
 
       for (const msg of messages) {
         appendMessage(msg);
+      }
+      // Set conversation title from first user message
+      const firstUser = messages.find(m => m.role === 'user' || m.sender === 'user');
+      if (firstUser) {
+        const t = Array.isArray(firstUser.content) ? firstUser.content.filter(b=>b.type==='text').map(b=>b.text).join('') : (firstUser.content || '');
+        updateConvTitle(t);
       }
       scrollToBottom();
     } catch (e) {
@@ -881,14 +941,29 @@
       }
     }
 
-    if (msg.isError) group.classList.add('error');
+    if (msg.isError) {
+      group.classList.add('error');
+      // Add retry button for failed messages
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'retry-btn';
+      retryBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Retry`;
+      retryBtn.onclick = () => retryMessage(group, text);
+      content.appendChild(retryBtn);
+    }
+
+    // Reactions container
+    const reactionsEl = document.createElement('div');
+    reactionsEl.className = 'msg-reactions';
+    content.appendChild(reactionsEl);
 
     group.appendChild(avatar);
     group.appendChild(content);
 
-    // Add hover actions for copy
+    // Add hover actions: copy + react
     const actions = document.createElement('div');
     actions.className = 'msg-actions';
+    actions.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+
     const copyBtn = document.createElement('button');
     copyBtn.className = 'msg-action-btn';
     copyBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
@@ -903,7 +978,19 @@
         copyBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
       }, 2000);
     };
+
+    const reactBtn = document.createElement('button');
+    reactBtn.className = 'msg-action-btn';
+    reactBtn.innerHTML = '😊';
+    reactBtn.title = 'React';
+    reactBtn.style.fontSize = '13px';
+    reactBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleReactPicker(group, reactionsEl);
+    };
+
     actions.appendChild(copyBtn);
+    actions.appendChild(reactBtn);
     group.appendChild(actions);
 
     // Animate new real-time messages (not history loads)
@@ -973,6 +1060,7 @@
         isStreaming = true;
         streamBuffer = '';
         appendMessage({ role: 'assistant', content: '' }, true);
+        setAgentStreaming(activeAgent, true);
       }
       // Gateway sends cumulative text, not incremental chunks
       streamBuffer = text;
@@ -990,6 +1078,7 @@
       streamingBubble = null;
       streamBuffer = '';
       showTyping(false);
+      setAgentStreaming(activeAgent, false);
       document.getElementById('stop-btn').classList.remove('show');
       playNotifSound();
       // Add regenerate button after the last assistant message
@@ -1120,7 +1209,8 @@
       const langTag = lang ? `<span class="code-lang-tag">${escapeHtml(lang)}</span>` : '';
       const copyId = `cb_${Date.now()}_${idx}`;
       const copyBtn = `<button class="code-copy-btn" id="${copyId}" onclick="copyCode(this,'${copyId}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
-      codeBlocks.push(`<div class="code-block-wrap">${copyBtn}${langTag}<pre><code>${escapeHtml(code.trim())}</code></pre></div>`);
+      const highlighted = lang ? highlightSyntax(code.trim(), lang) : escapeHtml(code.trim());
+      codeBlocks.push(`<div class="code-block-wrap">${copyBtn}${langTag}<pre><code>${highlighted}</code></pre></div>`);
       return `%%CODEBLOCK_${idx}%%`;
     });
 
@@ -1288,7 +1378,7 @@
   function scrollToBottom(force = false) {
     const el = document.getElementById('messages');
     if (force || isAtBottom) {
-      requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+      requestAnimationFrame(() => { el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
       unreadCount = 0;
       updateScrollBtn();
     } else {
@@ -1739,6 +1829,209 @@
       btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`;
       btn.classList.remove('copied');
     }, 2000);
+  }
+
+  // ─── Retry Failed Message ──────────────────────────────────
+  async function retryMessage(errorGroup, originalText) {
+    // Remove the error message
+    errorGroup.remove();
+    // Re-send
+    showTyping(true);
+    try {
+      await rpc('chat.send', {
+        sessionKey: activeSession,
+        message: originalText,
+        idempotencyKey: crypto.randomUUID()
+      });
+    } catch (e) {
+      showTyping(false);
+      appendMessage({
+        role: 'assistant',
+        content: 'Still unable to send — check connection.',
+        createdAt: new Date().toISOString(),
+        isError: true
+      });
+    }
+  }
+
+  // ─── Emoji Reactions ─────────────────────────────────────────
+  const REACT_EMOJIS = ['👍', '👎', '❤️', '🔥', '👀', '💯', '😂', '🤔'];
+  let activePickerGroup = null;
+
+  function toggleReactPicker(msgGroup, reactionsEl) {
+    // Close any existing picker
+    document.querySelectorAll('.react-picker.show').forEach(p => { p.classList.remove('show'); p.remove(); });
+
+    const picker = document.createElement('div');
+    picker.className = 'react-picker show';
+    REACT_EMOJIS.forEach(emoji => {
+      const btn = document.createElement('span');
+      btn.className = 'react-emoji';
+      btn.textContent = emoji;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        addReaction(reactionsEl, emoji);
+        picker.remove();
+      };
+      picker.appendChild(btn);
+    });
+
+    // Position relative to message actions
+    const actions = msgGroup.querySelector('.msg-actions');
+    if (actions) {
+      actions.style.position = 'relative';
+      actions.appendChild(picker);
+    }
+
+    // Close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', () => { picker.remove(); }, { once: true });
+    }, 0);
+  }
+
+  function addReaction(reactionsEl, emoji) {
+    // Check if reaction already exists
+    const existing = reactionsEl.querySelector(`[data-emoji="${emoji}"]`);
+    if (existing) {
+      const countEl = existing.querySelector('.react-count');
+      const count = parseInt(countEl.textContent || '1') + 1;
+      countEl.textContent = count;
+      existing.classList.add('active');
+    } else {
+      const reaction = document.createElement('span');
+      reaction.className = 'msg-reaction active';
+      reaction.setAttribute('data-emoji', emoji);
+      reaction.innerHTML = `${emoji} <span class="react-count">1</span>`;
+      reaction.onclick = () => {
+        const countEl = reaction.querySelector('.react-count');
+        if (reaction.classList.contains('active')) {
+          reaction.classList.remove('active');
+          const c = parseInt(countEl.textContent) - 1;
+          if (c <= 0) reaction.remove();
+          else countEl.textContent = c;
+        } else {
+          reaction.classList.add('active');
+          countEl.textContent = parseInt(countEl.textContent) + 1;
+        }
+      };
+      reactionsEl.appendChild(reaction);
+    }
+  }
+
+  // ─── Conversation Title ──────────────────────────────────────
+  let convTitles = JSON.parse(localStorage.getItem('chat_conv_titles') || '{}');
+
+  function updateConvTitle(text) {
+    if (!activeSession) return;
+    const titleEl = document.getElementById('conv-title');
+    if (!titleEl) return;
+
+    // If we already have a title, use it
+    if (convTitles[activeSession]) {
+      titleEl.textContent = convTitles[activeSession];
+      titleEl.style.display = '';
+      return;
+    }
+
+    // Auto-generate from first user message
+    if (text && !convTitles[activeSession]) {
+      const title = text.slice(0, 60) + (text.length > 60 ? '...' : '');
+      convTitles[activeSession] = title;
+      localStorage.setItem('chat_conv_titles', JSON.stringify(convTitles));
+      titleEl.textContent = title;
+      titleEl.style.display = '';
+    }
+  }
+
+  function editConvTitle() {
+    const titleEl = document.getElementById('conv-title');
+    const inputEl = document.getElementById('conv-title-input');
+    titleEl.style.display = 'none';
+    inputEl.style.display = '';
+    inputEl.value = convTitles[activeSession] || '';
+    inputEl.focus();
+    inputEl.select();
+  }
+
+  function saveConvTitle() {
+    const titleEl = document.getElementById('conv-title');
+    const inputEl = document.getElementById('conv-title-input');
+    const val = inputEl.value.trim();
+    if (val && activeSession) {
+      convTitles[activeSession] = val;
+      localStorage.setItem('chat_conv_titles', JSON.stringify(convTitles));
+      titleEl.textContent = val;
+    }
+    inputEl.style.display = 'none';
+    titleEl.style.display = '';
+  }
+
+  // ─── Syntax Highlighting (lightweight) ────────────────────────
+  function highlightSyntax(code, lang) {
+    if (!lang) return escapeHtml(code);
+
+    let html = escapeHtml(code);
+    const l = lang.toLowerCase();
+
+    // Comments
+    if (['js','javascript','ts','typescript','java','c','cpp','go','rust','swift'].includes(l)) {
+      html = html.replace(/(\/\/[^\n]*)/g, '<span class="sh-comment">$1</span>');
+      html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="sh-comment">$1</span>');
+    } else if (['python','py','ruby','bash','sh','zsh','shell'].includes(l)) {
+      html = html.replace(/(#[^\n]*)/g, '<span class="sh-comment">$1</span>');
+    } else if (['html','xml','svg'].includes(l)) {
+      html = html.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="sh-comment">$1</span>');
+    } else if (['css','scss','less'].includes(l)) {
+      html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="sh-comment">$1</span>');
+    }
+
+    // Strings (single + double quotes)
+    html = html.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;)/g, '<span class="sh-string">$1</span>');
+    html = html.replace(/(&#39;(?:[^&]|&(?!#39;))*?&#39;)/g, '<span class="sh-string">$1</span>');
+    html = html.replace(/(`[^`]*`)/g, '<span class="sh-string">$1</span>');
+
+    // Numbers
+    html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="sh-number">$1</span>');
+
+    // Language-specific keywords
+    if (['js','javascript','ts','typescript'].includes(l)) {
+      html = html.replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await|new|this|try|catch|throw|switch|case|default|break|continue|typeof|instanceof|in|of|yield|delete|void)\b/g, '<span class="sh-keyword">$1</span>');
+      html = html.replace(/\b(console|document|window|Math|Array|Object|String|Number|Promise|Map|Set|JSON|Date|Error|RegExp|null|undefined|true|false|NaN|Infinity)\b/g, '<span class="sh-builtin">$1</span>');
+    } else if (['python','py'].includes(l)) {
+      html = html.replace(/\b(def|class|return|if|elif|else|for|while|import|from|as|with|try|except|finally|raise|pass|break|continue|and|or|not|in|is|lambda|yield|global|nonlocal|assert|del|async|await)\b/g, '<span class="sh-keyword">$1</span>');
+      html = html.replace(/\b(print|len|range|int|str|float|list|dict|set|tuple|bool|None|True|False|type|isinstance|enumerate|zip|map|filter|sorted|open|super|self)\b/g, '<span class="sh-builtin">$1</span>');
+    } else if (['bash','sh','zsh','shell'].includes(l)) {
+      html = html.replace(/\b(if|then|else|elif|fi|for|while|do|done|case|esac|function|return|exit|export|source|local|readonly|declare|set|unset|shift|trap)\b/g, '<span class="sh-keyword">$1</span>');
+      html = html.replace(/\b(echo|cd|ls|grep|sed|awk|cat|rm|mv|cp|mkdir|chmod|chown|curl|wget|git|npm|node|python|pip)\b/g, '<span class="sh-builtin">$1</span>');
+    } else if (['html','xml','svg'].includes(l)) {
+      html = html.replace(/(&lt;\/?)([\w-]+)/g, '$1<span class="sh-tag">$2</span>');
+      html = html.replace(/\b([\w-]+)=/g, '<span class="sh-attr">$1</span>=');
+    } else if (['css','scss','less'].includes(l)) {
+      html = html.replace(/([\w-]+)\s*:/g, '<span class="sh-attr">$1</span>:');
+      html = html.replace(/\b(px|em|rem|%|vh|vw|deg|s|ms)\b/g, '<span class="sh-number">$1</span>');
+    } else if (['json'].includes(l)) {
+      html = html.replace(/(&quot;[^&]*?&quot;)\s*:/g, '<span class="sh-attr">$1</span>:');
+    }
+
+    // Function calls (word followed by parenthesis)
+    html = html.replace(/\b([a-zA-Z_]\w*)\(/g, '<span class="sh-func">$1</span>(');
+
+    // Operators
+    html = html.replace(/([=!<>]+|&amp;&amp;|\|\||\?\.|\?\?)/g, '<span class="sh-operator">$1</span>');
+
+    return html;
+  }
+
+  // ─── Avatar Pulse During Streaming ────────────────────────────
+  function setAgentStreaming(agentId, streaming) {
+    const items = document.querySelectorAll('.agent-item');
+    items.forEach(item => {
+      const name = item.querySelector('.agent-name')?.textContent?.toLowerCase();
+      const agent = agents.find(a => a.id === agentId);
+      if (agent && name === agent.name.toLowerCase()) {
+        item.classList.toggle('streaming', streaming);
+      }
+    });
   }
 
   // ─── Init ────────────────────────────────────────────────────
