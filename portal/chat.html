@@ -364,6 +364,10 @@
         <div id="sidebar-header">
           <div class="flex items-center justify-between">
             <span class="text-sm font-semibold text-white">Agents</span>
+              <button onclick="newConversation()" title="New conversation" style="background:none;border:1px solid #374151;color:#9ca3af;cursor:pointer;padding:3px 8px;border-radius:6px;font-size:11px;display:flex;align-items:center;gap:4px;transition:all 0.15s;" onmouseover="this.style.color='#e5e7eb';this.style.borderColor='#4f46e5';this.style.background='#1e1b4b'" onmouseout="this.style.color='#9ca3af';this.style.borderColor='#374151';this.style.background='none'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New
+              </button>
             <div style="display:flex;align-items:center;gap:6px;">
               <span id="conn-status" class="conn-disconnected">Offline</span>
               <button id="reconnect-btn" onclick="reconnectNow()" title="Reconnect">
@@ -538,6 +542,7 @@
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Send message</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Enter</kbd></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">New line</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Shift + Enter</kbd></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">New conversation</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Cmd + Shift + N</kbd></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Focus input</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Cmd + K</kbd></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Search messages</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Cmd + F</kbd></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Stop generating</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Escape</kbd></div>
@@ -922,6 +927,35 @@
     const saved = JSON.parse(localStorage.getItem('chat-pins') || '{}');
     Object.assign(pinnedMessages, saved);
   } catch {}
+
+  // ─── New Conversation ────────────────────────────────────────
+  function newConversation() {
+    if (!activeAgent) return;
+    const agent = agents.find(a => a.id === activeAgent);
+    if (!agent) return;
+
+    // Clear current messages
+    const messagesEl = document.getElementById('messages');
+    const bigAvatar = avatarImg(activeAgent, 72);
+    messagesEl.innerHTML = `<div id="empty-state">${bigAvatar}<div class="text-sm" style="color:#9ca3af;font-weight:500;margin-top:8px;">Ask ${agent.name || 'this agent'} anything...</div><div class="text-xs" style="color:#4b5563;margin-top:2px;">${shortModel(agent.model) || ''}</div></div>`;
+
+    // Reset streaming state
+    isStreaming = false;
+    streamingBubble = null;
+    streamBuffer = '';
+    lastMsgRole = null;
+    lastMsgDate = null;
+
+    // Clear conversation title
+    const titleEl = document.getElementById('conv-title');
+    if (titleEl) { titleEl.textContent = ''; titleEl.style.display = 'none'; }
+    delete convTitles[activeSession];
+
+    // Focus input
+    document.getElementById('msg-input').value = '';
+    document.getElementById('msg-input').focus();
+    closeSidebar();
+  }
 
   // ─── Select Agent / Session ──────────────────────────────────
   function selectAgent(agentId) {
@@ -1684,6 +1718,11 @@
 
   // Global keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    // Cmd/Ctrl+Shift+N to start new conversation
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'N') {
+      e.preventDefault();
+      newConversation();
+    }
     // Cmd/Ctrl+K to focus input
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
