@@ -128,7 +128,8 @@ function connectGateway() {
   gwWs.on('message', (data) => {
     let msg;
     try { msg = JSON.parse(data); } catch { return; }
-    console.log('[proxy] GW recv:', JSON.stringify(msg).slice(0, 150));
+    const logLen = msg.event === 'chat' ? 500 : 150;
+    console.log('[proxy] GW recv:', JSON.stringify(msg).slice(0, logLen));
 
     // Auth challenge
     if (msg.type === 'event' && msg.event === 'connect.challenge') {
@@ -168,9 +169,10 @@ function connectGateway() {
       if (msg.event) desc += ` event=${msg.event}`;
       console.log(`[proxy] Forwarding to ${browsers.size} browsers: ${desc}`);
     }
+    const text = typeof data === 'string' ? data : data.toString('utf8');
     for (const bws of browsers) {
       if (bws.readyState === WebSocket.OPEN) {
-        bws.send(data);
+        bws.send(text);
       }
     }
   });

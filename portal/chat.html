@@ -521,28 +521,42 @@
     // Only handle events for the active session
     if (sk && sk !== activeSession) return;
 
-    if (payload.chunk) {
+    // Extract text from gateway message format: message.content is array of {type,text}
+    const msgContent = payload.message?.content;
+    let text = '';
+    if (Array.isArray(msgContent)) {
+      text = msgContent.filter(b => b.type === 'text').map(b => b.text).join('');
+    } else if (typeof msgContent === 'string') {
+      text = msgContent;
+    }
+
+    if (payload.state === 'delta' && text) {
       showTyping(false);
       if (!streamingBubble) {
-        // Start new assistant message
         isStreaming = true;
         streamBuffer = '';
         appendMessage({ role: 'assistant', content: '' }, true);
       }
-      streamBuffer += payload.chunk;
+      // Gateway sends cumulative text, not incremental chunks
+      streamBuffer = text;
       streamingBubble.innerHTML = renderMarkdown(streamBuffer);
       scrollToBottom();
     }
 
-    if (payload.done) {
+    if (payload.state === 'final') {
+      if (text && !streamingBubble) {
+        // Got final without any deltas — show the complete message
+        appendMessage({ role: 'assistant', content: text });
+        scrollToBottom();
+      }
       isStreaming = false;
       streamingBubble = null;
       streamBuffer = '';
       showTyping(false);
     }
 
-    // Thinking / processing state
-    if (payload.thinking || payload.status === 'thinking') {
+    // Thinking / processing state (before first delta)
+    if (payload.state === 'delta' && !text) {
       showTyping(true, 'is thinking...');
     }
   }
