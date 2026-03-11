@@ -112,6 +112,10 @@
     .msg-bubble li { margin-bottom: 4px; line-height: 1.6; color: #e2e8f0; }
     .msg-bubble img { max-width: 100%; border-radius: 8px; margin: 6px 0; cursor: pointer; }
     .msg-bubble blockquote { border-left: 3px solid #4f46e5; padding-left: 12px; margin: 8px 0; color: #cbd5e1; font-style: italic; background: rgba(79,70,229,0.05); padding: 8px 12px; border-radius: 4px; }
+    .msg-bubble table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+    .msg-bubble th { padding: 6px 10px; text-align: left; border-bottom: 2px solid #374151; font-weight: 600; color: #d1d5db; background: #0d1117; }
+    .msg-bubble td { padding: 5px 10px; border-bottom: 1px solid #1f2937; }
+    .msg-bubble tr:hover td { background: rgba(79,70,229,0.05); }
 
     /* Typing indicator */
     .typing-indicator { display: flex; align-items: center; gap: 10px; padding: 4px 20px 8px; }
@@ -425,6 +429,26 @@
 
   <!-- Lightbox for images -->
   <div id="lightbox" onclick="this.classList.remove('show')"><img id="lightbox-img" src=""></div>
+
+  <!-- Keyboard shortcuts modal -->
+  <div id="shortcuts-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;" onclick="this.style.display='none'">
+    <div onclick="event.stopPropagation()" style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:24px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-weight:600;color:#e5e7eb;font-size:14px;">Keyboard Shortcuts</span>
+        <button onclick="document.getElementById('shortcuts-modal').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Send message</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Enter</kbd></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">New line</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Shift + Enter</kbd></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Focus input</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Cmd + K</kbd></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Search messages</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Cmd + F</kbd></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Stop generating</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">Escape</kbd></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#9ca3af;font-size:13px;">Show shortcuts</span><kbd style="background:#0a0f1a;border:1px solid #374151;border-radius:4px;padding:2px 8px;font-size:11px;color:#d1d5db;font-family:monospace;">?</kbd></div>
+      </div>
+    </div>
+  </div>
 
   <script src="/portal/auth.js?v=20260310a"></script>
   <script src="/portal/portal-common.js?v=20260310c"></script>
@@ -809,6 +833,7 @@
     if (msgDate) {
       const timeSpan = document.createElement('span');
       timeSpan.className = 'msg-time';
+      timeSpan.setAttribute('data-ts', msgDate);
       timeSpan.textContent = formatTime(msgDate);
       const fullDate = new Date(msgDate).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
       timeSpan.title = fullDate;
@@ -1107,6 +1132,16 @@
     // Restore code blocks
     html = html.replace(/%%CODEBLOCK_(\d+)%%/g, (_, idx) => codeBlocks[parseInt(idx)]);
 
+    // Tables (must be before headers to avoid conflicts)
+    html = html.replace(/^(\|.+\|)\n(\|[\s:-]+\|)\n((?:\|.+\|\n?)+)/gm, (_, header, sep, body) => {
+      const thCells = header.split('|').filter(c => c.trim()).map(c => `<th style="padding:6px 10px;text-align:left;border-bottom:2px solid #374151;font-weight:600;font-size:12px;color:#d1d5db;">${c.trim()}</th>`).join('');
+      const rows = body.trim().split('\n').map(row => {
+        const cells = row.split('|').filter(c => c.trim()).map(c => `<td style="padding:5px 10px;border-bottom:1px solid #1f2937;font-size:13px;">${c.trim()}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table style="border-collapse:collapse;width:100%;margin:8px 0;border:1px solid #1f2937;border-radius:6px;overflow:hidden;"><thead><tr>${thCells}</tr></thead><tbody>${rows}</tbody></table>`;
+    });
+
     // Headers
     html = html.replace(/^#{3} (.+)$/gm, '<strong style="font-size:14px;color:#f3f4f6;">$1</strong>');
     html = html.replace(/^#{2} (.+)$/gm, '<strong style="font-size:15px;color:#f3f4f6;">$1</strong>');
@@ -1226,10 +1261,26 @@
     if (!iso) return '';
     const d = new Date(iso);
     const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHrs = Math.floor(diffMs / 3600000);
+
+    // Very recent: relative time
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+
+    // Today: show time
     const isToday = d.toDateString() === now.toDateString();
     const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return isToday ? time : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + time;
   }
+
+  // Update relative timestamps periodically
+  setInterval(() => {
+    document.querySelectorAll('.msg-time[data-ts]').forEach(el => {
+      el.textContent = formatTime(el.getAttribute('data-ts'));
+    });
+  }, 30000);
 
   let unreadCount = 0;
   let isAtBottom = true;
@@ -1334,13 +1385,21 @@
       if (!document.getElementById('search-bar').classList.contains('show')) toggleSearch();
       else document.getElementById('search-input').focus();
     }
-    // Escape to close search or stop generation
+    // Escape to close search, stop generation, or close modals
     if (e.key === 'Escape') {
-      if (document.getElementById('search-bar').classList.contains('show')) {
+      if (document.getElementById('shortcuts-modal').style.display === 'flex') {
+        document.getElementById('shortcuts-modal').style.display = 'none';
+      } else if (document.getElementById('search-bar').classList.contains('show')) {
         toggleSearch();
       } else if (isStreaming) {
         stopGeneration();
       }
+    }
+    // ? to show keyboard shortcuts (when not typing)
+    if (e.key === '?' && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+      e.preventDefault();
+      const modal = document.getElementById('shortcuts-modal');
+      modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
     }
   });
 
