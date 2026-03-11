@@ -232,7 +232,7 @@
           params: {
             minProtocol: 3,
             maxProtocol: 3,
-            client: { id: 'openclaw-control-ui', version: '1.0.0', platform: 'web', mode: 'ui' },
+            client: { id: 'webchat', version: '1.0.0', platform: 'web', mode: 'webchat' },
             role: 'operator',
             scopes: ['operator.admin', 'operator.read'],
             auth: { token: GW_TOKEN }
@@ -309,10 +309,12 @@
       const result = await rpc('sessions.list');
       const sessionList = result?.sessions || result || [];
 
-      // Extract unique agents
+      // Extract unique agents from session keys (format: agent:<agentId>:...)
       const agentMap = {};
       for (const s of sessionList) {
-        const aId = s.agentId || s.agent || 'unknown';
+        const key = s.key || s.sessionKey || '';
+        const keyParts = key.split(':');
+        const aId = s.agentId || (keyParts[0] === 'agent' ? keyParts[1] : null) || 'unknown';
         if (!agentMap[aId]) {
           agentMap[aId] = {
             id: aId,
