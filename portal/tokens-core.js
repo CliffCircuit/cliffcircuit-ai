@@ -59,9 +59,9 @@
         }
 
         const isOpen = container.querySelector('.ms-panel.ms-open') !== null;
-        // sel empty = all (no filter); sel with all options = explicit all selection
-        const allShown = !isNone && (sel.length === 0 || sel.length === options.length);
-        const showSelectAll = !allShown; // show "Select All" when partially filtered or none
+        // sel empty = none selected (show all data unfiltered); sel with all options = explicit all selection
+        const allShown = !isNone && sel.length === options.length;
+        const showSelectAll = !allShown; // show "Select All" when none or partially selected
 
         // Build option HTML — grouped or flat
         let optionsHtml = '';
@@ -70,7 +70,7 @@
             const headerHtml = `<div class="ms-group-header">${_escHtml(g.header)}</div>`;
             const itemsHtml = g.items.map(o => {
               const isDis = disabledValues.has(o.value);
-              const isSel = !isDis && !isNone && (sel.length === 0 || sel.includes(o.value));
+              const isSel = !isDis && !isNone && sel.length > 0 && sel.includes(o.value);
               return `<div class="ms-option ms-grouped-option${isSel ? ' ms-selected' : ''}${isDis ? ' ms-disabled' : ''}" data-value="${_escHtml(o.value)}">
                 <span class="ms-option-check">${isSel ? '✓' : ''}</span>
                 <span>${_escHtml(o.label)}</span>
@@ -81,7 +81,7 @@
         } else {
           optionsHtml = options.map(o => {
             const isDis = disabledValues.has(o.value);
-            const isSel = !isDis && !isNone && (sel.length === 0 || sel.includes(o.value));
+            const isSel = !isDis && !isNone && sel.length > 0 && sel.includes(o.value);
             return `<div class="ms-option${isSel ? ' ms-selected' : ''}${isDis ? ' ms-disabled' : ''}" data-value="${_escHtml(o.value)}">
               <span class="ms-option-check">${isSel ? '✓' : ''}</span>
               <span>${_escHtml(o.label)}</span>
@@ -126,14 +126,15 @@
             if (opt.classList.contains('ms-disabled')) return;
             const val = opt.dataset.value;
             if (val === '__toggle_all__') {
-              const isAllShown = sel.length === 0 || sel.length === options.length;
-              if (isAllShown) {
+              const isAllSelected = sel.length === options.length;
+              if (isAllSelected) {
                 // "Unselect All" — use sentinel so _inFilter matches nothing
                 sel.length = 0;
                 sel.push('__none__');
               } else {
-                // "Select All" — clear filters to show everything
+                // "Select All" — fill all options explicitly
                 sel.length = 0;
+                options.forEach(o => sel.push(o.value));
               }
             } else if (val === '__clear__') {
               sel.length = 0;
@@ -145,8 +146,8 @@
                 sel.length = 0;
                 sel.push(val);
               } else if (sel.length === 0) {
-                // Currently "all" — user unchecked one item → select all EXCEPT this one
-                options.forEach(o => { if (o.value !== val) sel.push(o.value); });
+                // Nothing selected — clicking an item selects just that item
+                sel.push(val);
               } else {
                 const idx = sel.indexOf(val);
                 if (idx >= 0) sel.splice(idx, 1);
