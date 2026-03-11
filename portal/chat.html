@@ -26,7 +26,7 @@
     .agent-item:hover .agent-avatar { border-color: #1f2937; }
     .agent-item.active .agent-avatar { border-color: #4f46e5; }
     .agent-name { font-weight: 500; color: #e5e7eb; font-size: 14px; }
-    .agent-model { font-size: 10px; color: #9ca3af; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; }
+    .agent-model { font-size: 10px; color: #a1a1aa; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; }
     .agent-lastseen { font-size: 10px; color: #4b5563; margin-top: 1px; }
     .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
     .dot-online { background: #34d399; box-shadow: 0 0 6px #34d39966; }
@@ -667,7 +667,11 @@
       wsReady = true;
       reconnectDelay = 1000;
       setConnStatus('connected');
-      if (wasConnected === false && document.getElementById('messages')?.children.length > 0) {
+      if (wasConnected === false && activeSession && document.querySelectorAll('.msg-group').length > 0) {
+        // Remove any previous "Reconnected" system messages to avoid stacking
+        document.querySelectorAll('.sys-msg').forEach(el => {
+          if (el.textContent.includes('Reconnected')) el.remove();
+        });
         showSystemMsg('Reconnected');
       }
       loadAgents();
