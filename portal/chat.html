@@ -24,6 +24,7 @@
     .agent-item.active { background: #1e1b4b; border-color: #4f46e5; box-shadow: 0 0 8px rgba(79,70,229,0.15); }
     .agent-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; overflow: hidden; border: 2px solid transparent; transition: border-color 0.15s; }
     .agent-item:hover .agent-avatar { border-color: #1f2937; }
+    .search-result-item:hover { background: #1f2937; }
     .agent-item.active .agent-avatar { border-color: #4f46e5; }
     .agent-info { flex: 1; min-width: 0; }
     .agent-top-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
@@ -2281,59 +2282,143 @@
     document.getElementById('clear-btn').style.display = '';
   }
 
-  // Agent search filter
-  // ─── Sidebar Search (cross-agent message content) ───────────
-  const agentHistoryCache = {}; // { agentId: "all message text lowercased" }
+  // ─── Sidebar Search (iMessage-style cross-agent content search) ───
+  const agentMsgCache = {}; // { agentId: [{text, role, ts, index}] }
   let searchDebounce = null;
+  let searchResultsVisible = false;
 
-  async function prefetchAgentHistories() {
-    // Fetch history for all agents and cache the text content
-    for (const agent of agents) {
-      if (agentHistoryCache[agent.id]) continue;
+  async function ensureAgentMsgCache() {
+    const promises = agents.map(async (agent) => {
+      if (agentMsgCache[agent.id]) return;
       try {
         const sk = `agent:${agent.id}:main`;
         const result = await rpc('chat.history', { sessionKey: sk, limit: 100 });
         const messages = result?.messages || result || [];
-        const allText = messages.map(m => {
+        agentMsgCache[agent.id] = messages.map((m, i) => {
           const c = m.content;
-          if (Array.isArray(c)) return c.filter(b => b.type === 'text').map(b => b.text).join(' ');
-          return typeof c === 'string' ? c : '';
-        }).join(' ').toLowerCase();
-        agentHistoryCache[agent.id] = allText;
-      } catch (e) {
-        agentHistoryCache[agent.id] = '';
-      }
+          const text = Array.isArray(c) ? c.filter(b => b.type === 'text').map(b => b.text).join(' ') : (typeof c === 'string' ? c : '');
+          return { text, role: m.role || 'assistant', ts: m.createdAt || m.timestamp || 0, index: i };
+        });
+      } catch (e) { agentMsgCache[agent.id] = []; }
+    });
+    await Promise.all(promises);
+  }
+
+  function buildSearchResults(query) {
+    const agentList = document.getElementById('agent-list');
+    const results = [];
+
+    for (const agent of agents) {
+      const msgs = agentMsgCache[agent.id] || [];
+      const matches = msgs.filter(m => m.text.toLowerCase().includes(query));
+      if (matches.length) results.push({ agent, matches });
     }
+
+    if (!results.length) {
+      agentList.innerHTML = '<div style="padding:20px;text-align:center;color:#6b7280;font-size:13px;">No results found</div>';
+      return;
+    }
+
+    let html = '';
+    for (const { agent, matches } of results) {
+      // Show up to 3 matches per agent
+      const shown = matches.slice(0, 3);
+      html += `<div style="padding:8px 12px 4px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        ${avatarImg(agent.id, 28)}
+        <span style="color:#e5e7eb;font-weight:600;font-size:13px;">${agent.name || agent.id}</span>
+        <span style="color:#6b7280;font-size:11px;margin-left:auto;">${matches.length} match${matches.length !== 1 ? 'es' : ''}</span>
+      </div>`;
+      for (const m of shown) {
+        const idx = m.text.toLowerCase().indexOf(query);
+        // Get snippet: ~40 chars before, match, ~40 chars after
+        const start = Math.max(0, idx - 40);
+        const end = Math.min(m.text.length, idx + query.length + 40);
+        let snippet = (start > 0 ? '...' : '') + m.text.slice(start, end) + (end < m.text.length ? '...' : '');
+        // Highlight the match
+        const esc = snippet.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const qEsc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const highlighted = esc.replace(new RegExp(qEsc, 'gi'), match => `<span style="color:#60a5fa;font-weight:600;">${match}</span>`);
+        const timeStr = m.ts ? formatTime(parseInt(m.ts) || 0) : '';
+        html += `<div class="search-result-item" onclick="jumpToSearchResult('${agent.id}', ${m.index})" style="padding:6px 8px;margin:2px 0;border-radius:6px;cursor:pointer;border-left:2px solid #4f46e5;margin-left:4px;transition:background 0.15s;">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">${m.role === 'user' ? 'You' : (agent.name || agent.id)} ${timeStr ? '· ' + timeStr : ''}</div>
+          <div style="font-size:12px;color:#d1d5db;line-height:1.4;">${highlighted}</div>
+        </div>`;
+      }
+      if (matches.length > 3) {
+        html += `<div style="padding:4px 8px;margin-left:4px;font-size:11px;color:#818cf8;cursor:pointer;" onclick="showAllSearchResults('${agent.id}','${query.replace(/'/g, "\\'")}')">Show ${matches.length - 3} more...</div>`;
+      }
+      html += '</div>';
+    }
+    agentList.innerHTML = html;
+  }
+
+  async function jumpToSearchResult(agentId, msgIndex) {
+    // Switch to agent and scroll to the message
+    await selectAgent(agentId);
+    // Wait for DOM to render
+    setTimeout(() => {
+      const msgs = document.querySelectorAll('.msg-group');
+      if (msgs[msgIndex]) {
+        msgs[msgIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        msgs[msgIndex].style.background = 'rgba(79, 70, 229, 0.15)';
+        setTimeout(() => msgs[msgIndex].style.background = '', 2000);
+      }
+    }, 300);
+  }
+
+  function showAllSearchResults(agentId, query) {
+    // Re-build showing all results for this agent
+    const agentList = document.getElementById('agent-list');
+    const agent = agents.find(a => a.id === agentId);
+    const msgs = agentMsgCache[agentId] || [];
+    const matches = msgs.filter(m => m.text.toLowerCase().includes(query));
+    let html = `<div style="padding:8px 12px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <button onclick="buildSearchResults('${query.replace(/'/g, "\\'")}')" style="background:none;border:none;color:#818cf8;cursor:pointer;font-size:12px;">&larr; Back</button>
+      <span style="color:#e5e7eb;font-weight:600;font-size:13px;">${agent?.name || agentId}</span>
+      <span style="color:#6b7280;font-size:11px;">${matches.length} results</span>
+    </div>`;
+    for (const m of matches) {
+      const idx = m.text.toLowerCase().indexOf(query);
+      const start = Math.max(0, idx - 40);
+      const end = Math.min(m.text.length, idx + query.length + 40);
+      let snippet = (start > 0 ? '...' : '') + m.text.slice(start, end) + (end < m.text.length ? '...' : '');
+      const esc = snippet.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const qEsc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const highlighted = esc.replace(new RegExp(qEsc, 'gi'), match => `<span style="color:#60a5fa;font-weight:600;">${match}</span>`);
+      const timeStr = m.ts ? formatTime(parseInt(m.ts) || 0) : '';
+      html += `<div class="search-result-item" onclick="jumpToSearchResult('${agentId}', ${m.index})" style="padding:6px 8px;margin:2px 0;border-radius:6px;cursor:pointer;border-left:2px solid #4f46e5;margin-left:4px;transition:background 0.15s;">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">${m.role === 'user' ? 'You' : (agent?.name || agentId)} · ${timeStr}</div>
+        <div style="font-size:12px;color:#d1d5db;line-height:1.4;">${highlighted}</div>
+      </div>`;
+    }
+    html += '</div>';
+    agentList.innerHTML = html;
   }
 
   const agentSearch = document.getElementById('agent-search');
   if (agentSearch) {
-    // Prefetch histories on first focus
     let prefetched = false;
     agentSearch.addEventListener('focus', () => {
-      if (!prefetched) { prefetched = true; prefetchAgentHistories(); }
+      if (!prefetched) { prefetched = true; ensureAgentMsgCache(); }
     });
 
     agentSearch.addEventListener('input', (e) => {
       clearTimeout(searchDebounce);
       const query = e.target.value.toLowerCase().trim();
-      const items = document.querySelectorAll('.agent-item');
 
       if (!query) {
-        items.forEach(item => item.style.display = '');
+        if (searchResultsVisible) {
+          searchResultsVisible = false;
+          renderAgentList();
+        }
         return;
       }
 
       searchDebounce = setTimeout(async () => {
-        // Ensure histories are loaded
-        await prefetchAgentHistories();
-        items.forEach(item => {
-          const agentId = item.dataset.agentId;
-          const nameMatch = item.textContent.toLowerCase().includes(query);
-          const contentMatch = (agentHistoryCache[agentId] || '').includes(query);
-          item.style.display = (nameMatch || contentMatch) ? '' : 'none';
-        });
-      }, 200);
+        await ensureAgentMsgCache();
+        searchResultsVisible = true;
+        buildSearchResults(query);
+      }, 250);
     });
   }
 
