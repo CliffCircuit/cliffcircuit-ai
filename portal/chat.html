@@ -564,7 +564,7 @@
     bubble.innerHTML = renderMarkdown(text);
 
     // Collapse long messages
-    const MSG_COLLAPSE_THRESHOLD = 600; // chars
+    const MSG_COLLAPSE_THRESHOLD = 400; // chars
     if (text.length > MSG_COLLAPSE_THRESHOLD && !streaming) {
       bubble.classList.add('collapsed');
       const expandBtn = document.createElement('span');
@@ -626,6 +626,14 @@
 
     // Remove [[reply_to_current]] tags
     text = text.replace(/\[\[\s*reply_to[^\]]*\]\]\s*/g, '');
+
+    // Remove session_status tool output blocks (OpenClaw status cards)
+    text = text.replace(/🦞 OpenClaw[\s\S]*?(?=\n\n|$)/g, '').trim();
+
+    // Remove raw JSON blobs (session objects, config dumps)
+    if (text.startsWith('{') && text.endsWith('}') && text.length > 200) {
+      try { JSON.parse(text); return ''; } catch {}
+    }
 
     return text.trim();
   }
