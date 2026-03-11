@@ -693,7 +693,7 @@
         });
         showSystemMsg('Reconnected');
       }
-      loadAgents();
+      loadAgents().then(() => prefetchPreviews());
     };
 
     ws.onmessage = (evt) => {
@@ -798,6 +798,29 @@
       console.error('Failed to load agents:', e);
       document.getElementById('agent-list').innerHTML = '<div class="text-red-400 text-xs p-4">Failed to load agents</div>';
     }
+  }
+
+  // Pre-fetch last message for each agent to populate sidebar previews on load
+  async function prefetchPreviews() {
+    for (const agent of agents) {
+      const sk = `agent:${agent.id}:main`;
+      try {
+        const result = await rpc('chat.history', { sessionKey: sk, limit: 1 });
+        const messages = result?.messages || result || [];
+        if (messages.length > 0) {
+          const last = messages[messages.length - 1];
+          const mc = last.content;
+          let text = '';
+          if (Array.isArray(mc)) text = mc.filter(b => b.type === 'text').map(b => b.text).join('');
+          else if (typeof mc === 'string') text = mc;
+          if (text) agentLastMessage[agent.id] = text.slice(0, 120);
+          // Use message timestamp for last seen
+          const ts = last.createdAt || last.timestamp;
+          if (ts) agentLastSeen[agent.id] = typeof ts === 'string' ? parseInt(ts) || new Date(ts).getTime() : ts;
+        }
+      } catch (e) { /* ignore — agent may have no history */ }
+    }
+    renderAgentList();
   }
 
   // ─── Render Sidebar ──────────────────────────────────────────
