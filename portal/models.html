@@ -101,6 +101,11 @@
   <script src="/portal/auth.js?v=20260312a"></script>
   <script src="/portal/portal-common.js?v=20260310c"></script>
   <script>
+    // Initialize portal nav
+    document.addEventListener('DOMContentLoaded', () => {
+      initPortal('models', renderModels);
+    });
+
     const MODELS = [
       {
         provider: 'Anthropic',
@@ -183,8 +188,7 @@
       });
     }
 
-    // Render on load
-    document.addEventListener('DOMContentLoaded', renderModels);
+
   </script>
 </body>
 </html>
