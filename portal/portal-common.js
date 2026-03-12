@@ -287,6 +287,7 @@ function resolveModelAlias(m) {
 const _MODEL_RULES = [
   // LMStudio / Local — must come FIRST because model names contain 'opus', 'claude', etc.
   { match: ['qwen3.5-27b-claude-4.6-opus-distilled'], label: 'Qwen3.5 Opus Distilled', color: 'text-cyan-400' },
+  { match: ['qwen3-coder-next','unsloth_qwen3-coder-next'], label: 'Qwen3 Coder Next', color: 'text-cyan-300' },
   { match: ['qwen3-coder-30b','qwen3.coder'],        label: 'Qwen3 Coder 30B',       color: 'text-cyan-400' },
   { match: ['qwen'],                                 label: 'Qwen (Local)',           color: 'text-cyan-400' },
   // Anthropic
@@ -309,10 +310,14 @@ const _MODEL_RULES = [
   { match: ['grok-4.1-fast','grok-4-1-fast'],        label: 'Grok 4.1 Fast',         color: 'text-orange-400' },
   { match: ['grok-4.1','grok-4-1'],                  label: 'Grok 4.1',              color: 'text-orange-400' },
   { match: ['grok'],                                 label: 'Grok 4.1',              color: 'text-orange-400' },
-  // OpenAI
-  { match: ['gpt-4o'],                               label: 'GPT-4o',                color: 'text-gray-400' },
-  { match: ['gpt-4'],                                label: 'GPT-4',                 color: 'text-gray-400' },
-  { match: ['o1'],                                   label: 'o1',                    color: 'text-gray-400' },
+  // OpenAI — newest first so longer strings match before shorter
+  { match: ['gpt-5.4-pro','gpt-5-4-pro'],            label: 'GPT-5.4 Pro',           color: 'text-emerald-300' },
+  { match: ['gpt-5.4','gpt-5-4'],                    label: 'GPT-5.4',               color: 'text-emerald-400' },
+  { match: ['gpt-5-mini','gpt-5.mini'],              label: 'GPT-5 Mini',            color: 'text-teal-400'    },
+  { match: ['gpt-5.3','gpt-5-3','5.3-codex'],        label: 'GPT-5.3 Codex',         color: 'text-green-400'   },
+  { match: ['gpt-4o'],                               label: 'GPT-4o',                color: 'text-gray-400'    },
+  { match: ['gpt-4'],                                label: 'GPT-4',                 color: 'text-gray-400'    },
+  { match: ['o1'],                                   label: 'o1',                    color: 'text-gray-400'    },
 ];
 
 function _resolveModelRule(m) {

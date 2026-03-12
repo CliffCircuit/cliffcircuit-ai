@@ -310,50 +310,50 @@
     }
 
     // ─── MODEL DROPDOWN HELPERS ───────────────────────────────────────────────
+    // Full ordered list of all known model IDs for dropdowns
+    const DROPDOWN_MODELS = [
+      'anthropic/claude-haiku-4-5',
+      'anthropic/claude-sonnet-4-6',
+      'anthropic/claude-opus-4-6',
+      'openai-codex/gpt-5-mini',
+      'openai-codex/gpt-5.3-codex',
+      'openai-codex/gpt-5.4',
+      'openai-codex/gpt-5.4-pro',
+      'google/gemini-2.0-flash',
+      'google/gemini-2.5-flash',
+      'google/gemini-2.5-pro',
+      'lmstudio/qwen3-coder-30b',
+      'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
+      'lmstudio-laptop/unsloth_qwen3-coder-next-split',
+    ];
+
+    function buildModelOptions(currentValue) {
+      return DROPDOWN_MODELS.map(id => {
+        const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
+        const selected = currentValue === id ? 'selected' : '';
+        return `<option value="${id}" ${selected}>${label}</option>`;
+      }).join('');
+    }
+
     function populateModelDropdowns(d) {
-      // Get all models from portal-common.js MODEL_ALIASES or build list
-      const allModels = typeof MODEL_ALIASES !== 'undefined' ? MODEL_ALIASES : {
-        'Haiku': 'anthropic/claude-haiku-4-5',
-        'Sonnet': 'anthropic/claude-sonnet-4-6',
-        'Opus': 'anthropic/claude-opus-4-6',
-        'GPT5.3': 'openai-codex/gpt-5.3-codex',
-        'GPT5Mini': 'openai-codex/gpt-5-mini',
-        'GPT54': 'openai-codex/gpt-5.4',
-        'GPT54Pro': 'openai-codex/gpt-5.4-pro',
-        'GeminiPro': 'google/gemini-2.5-pro',
-        'GeminiFlash': 'google/gemini-2.5-flash',
-        'Gemini2Flash': 'google/gemini-2.0-flash',
-        'Qwen3Coder': 'lmstudio/qwen3-coder-30b',
-        'OpusDistilled': 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
-        'Qwen3CoderNext': 'lmstudio-laptop/unsloth_qwen3-coder-next-split',
-      };
-      
       const ac = d.agentConfigs || {};
-      const agentDefaults = {};
-      AGENTS.forEach(agent => {
-        const cfg = ac[agent.id] || ac[agent.name.toLowerCase()] || {};
-        agentDefaults[agent.id] = cfg.model || 'Unknown';
-      });
 
       AGENTS.forEach(agent => {
         const n = agent.name.toLowerCase();
         const dropdown = document.getElementById(`${n}-model-dropdown`);
         if (!dropdown) return;
-        
-        // Build options
-        const defaultModel = agentDefaults[agent.id];
-        let html = '';
-        for (const [alias, fullId] of Object.entries(allModels)) {
-          const selected = dropdown.value === fullId ? 'selected' : '';
-          html += `<option value="${fullId}" ${selected}>${alias}</option>`;
-        }
-        dropdown.innerHTML = html;
-        
-        // Show default
+
+        const cfg = ac[agent.id] || ac[n] || {};
+        const defaultModel = cfg.model || '';
+        // Prefer current dropdown value (live session model) if already set
+        const currentVal = dropdown.value || defaultModel;
+        dropdown.innerHTML = buildModelOptions(currentVal);
+
+        // Show friendly default
         const defaultInfo = document.getElementById(`${n}-model-default-info`);
         const defaultValue = document.getElementById(`${n}-model-default-value`);
         if (defaultInfo && defaultValue) {
-          defaultValue.textContent = defaultModel;
+          defaultValue.textContent = (typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel;
           defaultInfo.classList.remove('hidden');
         }
       });
@@ -385,6 +385,22 @@
       } catch (e) {
         console.error('Error changing model:', e);
         alert(`Error changing model: ${e.message}\n\nMake sure the model-override server is running on localhost:3102`);
+      }
+    }
+
+    async function changeCronModel(cronId, newModel) {
+      if (!newModel) return;
+      try {
+        const result = await fetch(`http://localhost:3102/api/cron-model`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cronId, model: newModel })
+        });
+        if (!result.ok) throw new Error(result.statusText);
+        console.log('[agents] Cron model updated:', cronId, '->', newModel);
+      } catch (e) {
+        console.error('[agents] changeCronModel failed:', e);
+        alert(`Failed to update cron model: ${e.message}\n\nMake sure the cron-api server is running.`);
       }
     }
 
@@ -508,16 +524,23 @@
           let newJobsHtml;
           if (info.jobs.length) {
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
-            newJobsHtml = info.jobs.map(j => `<tr class="border-b border-gray-900 hover:bg-gray-800 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">
-              <td class="px-4 py-2.5 text-gray-200 font-medium">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
-              <td class="px-4 py-2.5 text-gray-400 text-xs">${jobScheduleLabel(j)}</td>
-              <td class="px-4 py-2.5 text-xs">${modelShort(j.model)}</td>
-              <td class="px-4 py-2.5 text-xs">${thinkBadge(j.thinking)}</td>
-              <td class="px-4 py-2.5 ${statusColor(j.status)}">● ${esc(j.status||'idle')}</td>
-              <td class="px-4 py-2.5 text-gray-500">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
-              <td class="px-4 py-2.5 text-gray-500">${jobNextLabel(j)}</td>
-              <td class="px-4 py-2.5 text-xs">${fmtTok(j.lastRunTokens, j)}</td>
-            </tr>`).join('');
+            newJobsHtml = info.jobs.map(j => {
+              const cronModel = j.model || j.lastRunModel || '';
+              const modelOpts = buildModelOptions(cronModel);
+              return `<tr class="border-b border-gray-900">
+              <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
+              <td class="px-4 py-2.5 text-gray-400 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobScheduleLabel(j)}</td>
+              <td class="px-4 py-2.5 text-xs">
+                <select class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="changeCronModel('${esc(j.id)}', this.value)" onclick="event.stopPropagation()">
+                  ${modelOpts}
+                </select>
+              </td>
+              <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${thinkBadge(j.thinking)}</td>
+              <td class="px-4 py-2.5 ${statusColor(j.status)} cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">● ${esc(j.status||'idle')}</td>
+              <td class="px-4 py-2.5 text-gray-500 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
+              <td class="px-4 py-2.5 text-gray-500 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobNextLabel(j)}</td>
+              <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${fmtTok(j.lastRunTokens, j)}</td>
+            </tr>`;}).join('');
           } else {
             newJobsHtml = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
           }
