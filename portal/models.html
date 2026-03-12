@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Models — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    .model-table { width: 100%; border-collapse: collapse; }
+    .model-table tbody tr {
+      border-top: 1px solid #1f2937;
+      transition: background-color 0.15s ease;
+    }
+    .model-table tbody tr:hover {
+      background-color: #1a1f35;
+    }
+    .provider-header {
+      background: #0f1419;
+      border-top: 1px solid #1f2937;
+      border-bottom: 1px solid #1f2937;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+    }
+    .model-id {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+    .alias-badge {
+      background: #312e81;
+      color: #c7d2fe;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+      border: 1px solid #4f46e5;
+    }
+    .command-code {
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #d1d5db;
+      display: inline-block;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .command-code:hover {
+      background: #374151;
+      border-color: #4b5563;
+      color: #f3f4f6;
+    }
+    .description {
+      color: #d1d5db;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="portal" class="min-h-screen">
+    <div id="portal-nav"></div>
+    <div class="p-6 max-w-6xl mx-auto">
+
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-white mb-2">Available Models</h2>
+        <p class="text-gray-400 text-sm">All 13 configured models, grouped by provider. Use /model &lt;alias&gt; to switch models in chat.</p>
+      </div>
+
+      <!-- Models Table -->
+      <div class="card overflow-hidden">
+        <table class="model-table">
+          <thead>
+            <tr style="background: #0f1419; border-bottom: 2px solid #1f2937;">
+              <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Model ID</th>
+              <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Alias</th>
+              <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Description</th>
+              <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Command</th>
+            </tr>
+          </thead>
+          <tbody id="models-body">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 text-gray-500 text-xs">
+        <p>Note: Click any command to copy to clipboard. Models are grouped by provider. Use /model to switch during a session.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/portal/auth.js?v=20260312a"></script>
+  <script src="/portal/portal-common.js?v=20260310c"></script>
+  <script>
+    const MODELS = [
+      {
+        provider: 'Anthropic',
+        models: [
+          { id: 'anthropic/claude-haiku-4-5', alias: 'Haiku', desc: 'Fast, lightweight model. Great for quick tasks, summaries, and routine work.' },
+          { id: 'anthropic/claude-sonnet-4-6', alias: 'Sonnet', desc: 'Balanced speed and reasoning. Default for most work. Excellent all-around performer.' },
+          { id: 'anthropic/claude-opus-4-6', alias: 'Opus', desc: 'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.' }
+        ]
+      },
+      {
+        provider: 'OpenAI Codex',
+        models: [
+          { id: 'openai-codex/gpt-5-mini', alias: 'GPT5Mini', desc: 'Cheapest tier. Quick answers, simple tasks, routine processing.' },
+          { id: 'openai-codex/gpt-5.3-codex', alias: null, desc: 'Codex variant. Strong on code generation and technical writing.' },
+          { id: 'openai-codex/gpt-5.4', alias: 'GPT54', desc: 'Workhorse model. Great balance of capability and cost. Recommended default.' },
+          { id: 'openai-codex/gpt-5.4-pro', alias: 'GPT54Pro', desc: 'Top-tier reasoning and analysis. Comparable to Opus in capability.' }
+        ]
+      },
+      {
+        provider: 'Google Gemini',
+        models: [
+          { id: 'google/gemini-2.5-pro', alias: 'GeminiPro', desc: 'Most capable Gemini. Excellent reasoning, multimodal support, API-based.' },
+          { id: 'google/gemini-2.5-flash', alias: 'GeminiFlash', desc: 'Fast, efficient Gemini. Good balance for most tasks. Lower latency.' },
+          { id: 'google/gemini-2.0-flash', alias: 'Gemini2Flash', desc: 'Earlier version, still capable. Good for compatibility testing.' }
+        ]
+      },
+      {
+        provider: 'LMStudio (Mac Mini)',
+        models: [
+          { id: 'lmstudio/qwen3-coder-30b', alias: 'Qwen3Coder', desc: 'Specialized for coding. Fast local inference, excellent code quality.' },
+          { id: 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx', alias: 'OpusDistilled', desc: 'Distilled Opus knowledge. Lighter than full Opus, local inference.' }
+        ]
+      },
+      {
+        provider: 'LMStudio (Laptop)',
+        models: [
+          { id: 'lmstudio-laptop/unsloth_qwen3-coder-next-split', alias: 'Qwen3CoderNext', desc: 'Qwen3 Coder Next variant. Local inference on laptop. Experimental.' }
+        ]
+      }
+    ];
+
+    function renderModels() {
+      const body = document.getElementById('models-body');
+      body.innerHTML = '';
+
+      MODELS.forEach(group => {
+        // Provider header row
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = `
+          <td colspan="4" class="provider-header">${group.provider}</td>
+        `;
+        body.appendChild(headerRow);
+
+        // Model rows
+        group.models.forEach(model => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="padding: 12px 16px;"><span class="model-id">${model.id}</span></td>
+            <td style="padding: 12px 16px;">
+              ${model.alias ? `<span class="alias-badge">${model.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
+            </td>
+            <td style="padding: 12px 16px;"><span class="description">${model.desc}</span></td>
+            <td style="padding: 12px 16px;">
+              ${model.alias ? `<span class="command-code" onclick="copyCommand('/model ${model.alias}')">/model ${model.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
+            </td>
+          `;
+          body.appendChild(row);
+        });
+      });
+    }
+
+    function copyCommand(cmd) {
+      navigator.clipboard.writeText(cmd).then(() => {
+        // Visual feedback
+        const temp = document.createElement('div');
+        temp.textContent = 'Copied!';
+        temp.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #064e3b; color: #34d399; padding: 8px 16px; border-radius: 6px; font-size: 12px; z-index: 9999;';
+        document.body.appendChild(temp);
+        setTimeout(() => temp.remove(), 1500);
+      });
+    }
+
+    // Render on load
+    document.addEventListener('DOMContentLoaded', renderModels);
+  </script>
+</body>
+</html>
