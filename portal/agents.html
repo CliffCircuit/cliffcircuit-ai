@@ -328,11 +328,13 @@
     ];
 
     function buildModelOptions(currentValue) {
-      return DROPDOWN_MODELS.map(id => {
+      const noneSelected = !currentValue || currentValue === '';
+      const opts = DROPDOWN_MODELS.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
-        const selected = currentValue === id ? 'selected' : '';
+        const selected = (!noneSelected && currentValue === id) ? 'selected' : '';
         return `<option value="${id}" ${selected}>${label}</option>`;
       }).join('');
+      return `<option value="" ${noneSelected ? 'selected' : ''}>Agent Default</option>` + opts;
     }
 
     function populateModelDropdowns(d) {
@@ -389,7 +391,7 @@
     }
 
     async function changeCronModel(cronId, newModel) {
-      if (!newModel) return;
+      if (newModel === '') return; // "Agent Default" — no-op for now (no clear-model flag)
       try {
         const result = await fetch(`http://localhost:3102/api/cron-model`, {
           method: 'POST',
