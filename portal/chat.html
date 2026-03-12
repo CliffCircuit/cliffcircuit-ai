@@ -1711,7 +1711,7 @@
     const actRow = document.getElementById('tool-activity-row');
     if (show) {
       const avatarEl = document.getElementById('typing-avatar');
-      if (avatarEl) avatarEl.innerHTML = avatarImg(activeAgent, 24);
+      if (avatarEl && activeAgent) avatarEl.innerHTML = avatarImg(activeAgent, 24);
       row.style.display = 'block';
       if (activeAgent) { agentTyping[activeAgent] = true; renderAgentList(); }
       scrollToBottom();
