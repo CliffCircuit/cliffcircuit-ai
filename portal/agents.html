@@ -200,10 +200,22 @@
                   <span class="info-tip text-gray-600 text-xs cursor-help" data-tip="Session override. Will reset to default when session ends." style="position:static;">?</span>
                   <span id="${n}-model-override-badge" class="hidden text-xs px-1.5 py-0.5 rounded bg-yellow-900 text-yellow-300 font-semibold">Override</span>
                 </div>
-                <select id="${n}-model-dropdown" class="w-full px-2 py-1.5 text-sm bg-gray-800 text-white border border-gray-700 rounded text-gray-200 focus:outline-none focus:border-indigo-500" onchange="changeAgentModel('${agent.id}', this.value, '${n}')">
-                  <option value="">Loading...</option>
-                </select>
-                <div id="${n}-model-default-info" class="text-gray-500 text-xs mt-1.5 hidden">Default: <span id="${n}-model-default-value" class="text-gray-300"></span></div>
+                <!-- Display mode -->
+                <div id="${n}-model-display" class="flex items-center gap-2">
+                  <span id="${n}-model-name" class="text-sm font-semibold text-gray-300">—</span>
+                  <button onclick="editAgentModel('${n}')" class="text-gray-600 hover:text-gray-300 transition-colors text-sm leading-none" title="Change model">&#9998;</button>
+                </div>
+                <!-- Edit mode (hidden) -->
+                <div id="${n}-model-edit" class="hidden">
+                  <select id="${n}-model-dropdown" class="w-full px-2 py-1 text-xs bg-gray-800 text-white border border-gray-700 rounded focus:outline-none focus:border-indigo-500">
+                    <option value="">Loading...</option>
+                  </select>
+                  <div class="flex gap-1.5 mt-1.5">
+                    <button onclick="applyAgentModel('${agent.id}', '${n}')" class="px-2 py-0.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded">Apply</button>
+                    <button onclick="cancelAgentModel('${n}')" class="px-2 py-0.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">Cancel</button>
+                  </div>
+                </div>
+                <div id="${n}-model-default-info" class="text-gray-500 text-xs mt-1.5 hidden">Default: <span id="${n}-model-default-value" class="text-gray-400"></span></div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
@@ -339,21 +351,24 @@
 
     function populateModelDropdowns(d) {
       const ac = d.agentConfigs || {};
-      // Fetch current overrides from server, then populate
       fetch('http://localhost:3102/api/session-overrides')
         .then(r => r.json())
         .catch(() => ({}))
         .then(overrides => {
           AGENTS.forEach(agent => {
             const n = agent.name.toLowerCase();
-            const dropdown = document.getElementById(`${n}-model-dropdown`);
-            if (!dropdown) return;
-
             const cfg = ac[agent.id] || ac[n] || {};
             const defaultModel = cfg.model || '';
-            // Use server-side override if present, otherwise no selection (Agent Default)
             const activeOverride = (overrides[agent.id] && overrides[agent.id].model) || '';
-            dropdown.innerHTML = buildModelOptions(activeOverride);
+            const displayModel = activeOverride || defaultModel;
+
+            // Update display name
+            const nameEl = document.getElementById(`${n}-model-name`);
+            if (nameEl) nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(displayModel) : displayModel;
+
+            // Pre-populate hidden dropdown options for when edit mode opens
+            const dropdown = document.getElementById(`${n}-model-dropdown`);
+            if (dropdown) dropdown.innerHTML = buildModelOptions(activeOverride);
 
             // Show friendly default
             const defaultInfo = document.getElementById(`${n}-model-default-info`);
@@ -363,11 +378,32 @@
               defaultInfo.classList.remove('hidden');
             }
 
-            // Show override badge if active
+            // Override badge
             const badge = document.getElementById(`${n}-model-override-badge`);
             if (badge) badge.classList.toggle('hidden', !activeOverride);
           });
         });
+    }
+
+    function editAgentModel(agentName) {
+      document.getElementById(`${agentName}-model-display`).classList.add('hidden');
+      document.getElementById(`${agentName}-model-edit`).classList.remove('hidden');
+    }
+
+    function cancelAgentModel(agentName) {
+      document.getElementById(`${agentName}-model-edit`).classList.add('hidden');
+      document.getElementById(`${agentName}-model-display`).classList.remove('hidden');
+    }
+
+    async function applyAgentModel(agentId, agentName) {
+      const dropdown = document.getElementById(`${agentName}-model-dropdown`);
+      if (!dropdown) return;
+      const newModel = dropdown.value;
+      await changeAgentModel(agentId, newModel, agentName);
+      // Update display name immediately
+      const nameEl = document.getElementById(`${agentName}-model-name`);
+      if (nameEl) nameEl.innerHTML = newModel ? (typeof modelShort === 'function' ? modelShort(newModel) : newModel) : '<span class="text-gray-500">Agent Default</span>';
+      cancelAgentModel(agentName);
     }
 
     async function changeAgentModel(agentId, newModel, agentName) {
