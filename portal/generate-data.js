@@ -577,6 +577,42 @@ async function main() {
         } catch(e) { console.warn('Reschedule signal sync failed:', e.message); }
       }
 
+      // ── Generate models.json from openclaw.json ──────────────────────
+      try {
+        const ocPath = '/Users/openclaw/.openclaw/openclaw.json';
+        const ocConfig = JSON.parse(fs.readFileSync(ocPath, 'utf8'));
+        const models = [];
+        
+        // Extract all models from all providers, organized by provider
+        if (ocConfig.models && ocConfig.models.providers) {
+          for (const [providerKey, providerConfig] of Object.entries(ocConfig.models.providers)) {
+            if (providerConfig.models && Array.isArray(providerConfig.models)) {
+              for (const model of providerConfig.models) {
+                models.push({
+                  id: model.id,
+                  provider: providerKey,
+                  name: model.name || model.id,
+                  reasoning: model.reasoning || false,
+                  contextWindow: model.contextWindow || 0,
+                  costInput: model.cost?.input || 0,
+                  costOutput: model.cost?.output || 0,
+                });
+              }
+            }
+          }
+        }
+        
+        // Write models.json
+        const modelsPath = path.join(PORTAL_REPO, 'portal/models.json');
+        fs.writeFileSync(modelsPath, JSON.stringify({ 
+          generatedAt: new Date().toISOString(),
+          models: models.sort((a, b) => a.provider.localeCompare(b.provider) || a.name.localeCompare(b.name))
+        }, null, 2));
+        console.log(`✅ Generated models.json (${models.length} models)`);
+      } catch (e) {
+        console.warn('⚠️ Failed to generate models.json:', e.message);
+      }
+
       // ── Git commit + push (with pull --rebase on conflict) ──
       const { execSync } = require('child_process');
       const gitOpts = { cwd: PORTAL_REPO, encoding: 'utf8', timeout: 60000 };
@@ -587,6 +623,7 @@ async function main() {
       const dataFiles = [
         'portal/data.json',
         'portal/live-sessions.json',
+        'portal/models.json',
         'portal/goals.json',
         'portal/session-labels.json',
         'portal/session-previews.json',
