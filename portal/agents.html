@@ -351,38 +351,44 @@
 
     function populateModelDropdowns(d) {
       const ac = d.agentConfigs || {};
-      fetch('http://localhost:3102/api/session-overrides')
-        .then(r => r.json())
-        .catch(() => ({}))
-        .then(overrides => {
-          AGENTS.forEach(agent => {
-            const n = agent.name.toLowerCase();
-            const cfg = ac[agent.id] || ac[n] || {};
-            const defaultModel = cfg.model || '';
-            const activeOverride = (overrides[agent.id] && overrides[agent.id].model) || '';
-            const displayModel = activeOverride || defaultModel;
+      const sessions = d.sessions || [];
 
-            // Update display name
-            const nameEl = document.getElementById(`${n}-model-name`);
-            if (nameEl) nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(displayModel) : displayModel;
+      AGENTS.forEach(agent => {
+        const n = agent.name.toLowerCase();
+        const cfg = ac[agent.id] || ac[n] || {};
+        const defaultModel = cfg.model || '';
 
-            // Pre-populate hidden dropdown options for when edit mode opens
-            const dropdown = document.getElementById(`${n}-model-dropdown`);
-            if (dropdown) dropdown.innerHTML = buildModelOptions(activeOverride);
+        // Best current session for this agent (most recently active)
+        const bestSession = sessions
+          .filter(s => s.agentId === agent.id)
+          .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
 
-            // Show friendly default
-            const defaultInfo = document.getElementById(`${n}-model-default-info`);
-            const defaultValue = document.getElementById(`${n}-model-default-value`);
-            if (defaultInfo && defaultValue) {
-              defaultValue.textContent = (typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel;
-              defaultInfo.classList.remove('hidden');
-            }
+        const activeModel = bestSession?.model || defaultModel;
+        const hasOverride = !!(activeModel && defaultModel && activeModel !== defaultModel);
 
-            // Override badge
-            const badge = document.getElementById(`${n}-model-override-badge`);
-            if (badge) badge.classList.toggle('hidden', !activeOverride);
-          });
-        });
+        // Display name
+        const nameEl = document.getElementById(`${n}-model-name`);
+        if (nameEl) nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(activeModel) : activeModel;
+
+        // Build dropdown options once (don't reset while user is interacting)
+        const dropdown = document.getElementById(`${n}-model-dropdown`);
+        const editOpen = !document.getElementById(`${n}-model-edit`)?.classList.contains('hidden');
+        if (dropdown && !editOpen) {
+          dropdown.innerHTML = buildModelOptions(hasOverride ? activeModel : '');
+        }
+
+        // Friendly default label
+        const defaultInfo = document.getElementById(`${n}-model-default-info`);
+        const defaultValue = document.getElementById(`${n}-model-default-value`);
+        if (defaultInfo && defaultValue) {
+          defaultValue.textContent = (typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel;
+          defaultInfo.classList.remove('hidden');
+        }
+
+        // Override badge
+        const badge = document.getElementById(`${n}-model-override-badge`);
+        if (badge) badge.classList.toggle('hidden', !hasOverride);
+      });
     }
 
     function closeAllModelEdits() {
