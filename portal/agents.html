@@ -339,26 +339,35 @@
 
     function populateModelDropdowns(d) {
       const ac = d.agentConfigs || {};
+      // Fetch current overrides from server, then populate
+      fetch('http://localhost:3102/api/session-overrides')
+        .then(r => r.json())
+        .catch(() => ({}))
+        .then(overrides => {
+          AGENTS.forEach(agent => {
+            const n = agent.name.toLowerCase();
+            const dropdown = document.getElementById(`${n}-model-dropdown`);
+            if (!dropdown) return;
 
-      AGENTS.forEach(agent => {
-        const n = agent.name.toLowerCase();
-        const dropdown = document.getElementById(`${n}-model-dropdown`);
-        if (!dropdown) return;
+            const cfg = ac[agent.id] || ac[n] || {};
+            const defaultModel = cfg.model || '';
+            // Use server-side override if present, otherwise no selection (Agent Default)
+            const activeOverride = (overrides[agent.id] && overrides[agent.id].model) || '';
+            dropdown.innerHTML = buildModelOptions(activeOverride);
 
-        const cfg = ac[agent.id] || ac[n] || {};
-        const defaultModel = cfg.model || '';
-        // Prefer current dropdown value (live session model) if already set
-        const currentVal = dropdown.value || defaultModel;
-        dropdown.innerHTML = buildModelOptions(currentVal);
+            // Show friendly default
+            const defaultInfo = document.getElementById(`${n}-model-default-info`);
+            const defaultValue = document.getElementById(`${n}-model-default-value`);
+            if (defaultInfo && defaultValue) {
+              defaultValue.textContent = (typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel;
+              defaultInfo.classList.remove('hidden');
+            }
 
-        // Show friendly default
-        const defaultInfo = document.getElementById(`${n}-model-default-info`);
-        const defaultValue = document.getElementById(`${n}-model-default-value`);
-        if (defaultInfo && defaultValue) {
-          defaultValue.textContent = (typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel;
-          defaultInfo.classList.remove('hidden');
-        }
-      });
+            // Show override badge if active
+            const badge = document.getElementById(`${n}-model-override-badge`);
+            if (badge) badge.classList.toggle('hidden', !activeOverride);
+          });
+        });
     }
 
     async function changeAgentModel(agentId, newModel, agentName) {
