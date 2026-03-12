@@ -582,23 +582,43 @@ async function main() {
         const ocPath = '/Users/openclaw/.openclaw/openclaw.json';
         const ocConfig = JSON.parse(fs.readFileSync(ocPath, 'utf8'));
         const models = [];
+        const modelMetadataMap = {};
         
-        // Extract all models from all providers, organized by provider
+        // Build a map of model metadata from models.providers (cost, context window, etc.)
         if (ocConfig.models && ocConfig.models.providers) {
           for (const [providerKey, providerConfig] of Object.entries(ocConfig.models.providers)) {
             if (providerConfig.models && Array.isArray(providerConfig.models)) {
               for (const model of providerConfig.models) {
-                models.push({
-                  id: model.id,
-                  provider: providerKey,
+                modelMetadataMap[model.id] = {
                   name: model.name || model.id,
                   reasoning: model.reasoning || false,
                   contextWindow: model.contextWindow || 0,
                   costInput: model.cost?.input || 0,
                   costOutput: model.cost?.output || 0,
-                });
+                };
               }
             }
+          }
+        }
+        
+        // Extract all models from agents.defaults.models (the authoritative list)
+        if (ocConfig.agents && ocConfig.agents.defaults && ocConfig.agents.defaults.models) {
+          for (const [modelId, modelConfig] of Object.entries(ocConfig.agents.defaults.models)) {
+            // Parse provider from model ID (format: "provider/model-id")
+            const [provider, ...rest] = modelId.split('/');
+            const model = {
+              id: modelId,
+              provider: provider,
+              alias: modelConfig.alias || null,
+              ...(modelMetadataMap[modelId] || {
+                name: modelId,
+                reasoning: false,
+                contextWindow: 0,
+                costInput: 0,
+                costOutput: 0,
+              })
+            };
+            models.push(model);
           }
         }
         
