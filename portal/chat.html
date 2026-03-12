@@ -1658,18 +1658,34 @@
     // Show typing
     showTyping(true);
 
-    // Send via WS — group chat fans out to all agents
+    // Send via WS or HTTP depending on chat type
     try {
       if (activeGroupChat) {
-        await Promise.allSettled(activeGroupChat.agentIds.map(agentId => {
-          const sk = `agent:${agentId}:main`;
-          return rpc('chat.send', {
-            sessionKey: sk,
-            message: content,
-            idempotencyKey: crypto.randomUUID()
+        // Group chat: use HTTP REST endpoint on proxy for cross-agent sends
+        const token = getAuthToken();
+        // Convert wss://chat-proxy.cliffcircuit.ai to https://chat-proxy.cliffcircuit.ai
+        const proxyHttpUrl = PROXY_URL.replace('wss://', 'https://');
+        await Promise.allSettled(activeGroupChat.agentIds.map(async agentId => {
+          const resp = await fetch(proxyHttpUrl + '/api/send-to-agent', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              agentId: agentId,
+              message: content,
+              idempotencyKey: crypto.randomUUID()
+            })
           });
+          if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.error || `HTTP ${resp.status}`);
+          }
+          return await resp.json();
         }));
       } else {
+        // 1:1 chat: use WebSocket RPC
         await rpc('chat.send', {
           sessionKey: activeSession,
           message: content,

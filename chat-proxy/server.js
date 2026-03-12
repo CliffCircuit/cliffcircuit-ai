@@ -191,10 +191,117 @@ function connectGateway() {
   });
 }
 
+// ─── HTTP Helper: Send message to other agents (for group chat) ─────────────
+async function sendToAgent(agentId, message, idempotencyKey) {
+  return new Promise((resolve) => {
+    if (!gwWs || gwWs.readyState !== WebSocket.OPEN || !gwReady) {
+      resolve({ ok: false, error: 'Gateway not ready' });
+      return;
+    }
+
+    const reqId = 'send-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    const payload = {
+      type: 'req',
+      id: reqId,
+      method: 'sessions_send',
+      params: {
+        label: `agent:${agentId}:main`,
+        message: message
+      }
+    };
+    if (idempotencyKey) {
+      payload.params.idempotencyKey = idempotencyKey;
+    }
+
+    // Send RPC and wait for response
+    let timeout;
+    const listener = (data) => {
+      let msg;
+      try { msg = JSON.parse(data); } catch { return; }
+      if (msg.type === 'res' && msg.id === reqId) {
+        clearTimeout(timeout);
+        gwWs.off('message', listener);
+        console.log(`[proxy] sendToAgent response for ${agentId}: ${msg.ok ? 'ok' : 'error'}`);
+        resolve({ ok: msg.ok, status: msg.ok ? 200 : 400, result: msg.ok ? msg.payload : msg.error });
+      }
+    };
+
+    gwWs.on('message', listener);
+    timeout = setTimeout(() => {
+      gwWs.off('message', listener);
+      console.error(`[proxy] sendToAgent timeout for ${agentId}`);
+      resolve({ ok: false, error: 'Timeout waiting for response' });
+    }, 5000);
+
+    console.log(`[proxy] Sending sessions_send RPC for agent:${agentId}:main (id: ${reqId})`);
+    gwWs.send(JSON.stringify(payload));
+  });
+}
+
 // ─── WebSocket server (browser connections) ──────────────────────────────────
 const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('chat-proxy running\n');
+  // Health check
+  if (req.method === 'GET' && req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('chat-proxy running\n');
+    return;
+  }
+
+  // Cross-agent send endpoint
+  if (req.method === 'POST' && req.url === '/api/send-to-agent') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+      if (body.length > 1024 * 100) {  // 100KB limit
+        res.writeHead(413);
+        res.end('Payload too large');
+        req.connection.destroy();
+      }
+    });
+
+    req.on('end', async () => {
+      try {
+        const auth = req.headers.authorization || '';
+        const token = auth.replace(/^Bearer\s+/, '');
+        
+        // Validate token (same as WebSocket)
+        const user = await validateToken(token);
+        if (!user) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Unauthorized' }));
+          return;
+        }
+
+        const payload = JSON.parse(body);
+        const { agentId, message, idempotencyKey } = payload;
+
+        if (!agentId || !message) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Missing agentId or message' }));
+          return;
+        }
+
+        const result = await sendToAgent(agentId, message, idempotencyKey);
+        
+        if (result.ok) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, payload: result.result }));
+        } else {
+          res.writeHead(result.status || 500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: result.error || result.result }));
+        }
+      } catch (err) {
+        console.error('[proxy] /api/send-to-agent error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 404
+  res.writeHead(404);
+  res.end('Not found\n');
 });
 
 const wss = new WebSocketServer({ noServer: true });
