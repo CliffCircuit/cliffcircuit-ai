@@ -305,7 +305,8 @@ const _MODEL_RULES = [
   { match: ['gemini-3.1-pro'],                       label: 'Gemini 3.1 Pro',        color: 'text-green-400' },
   { match: ['gemini-2.5-flash'],                     label: 'Gemini 2.5 Flash',      color: 'text-green-400' },
   { match: ['gemini-2.5-pro'],                       label: 'Gemini 2.5 Pro',        color: 'text-green-400' },
-  { match: ['gemini'],                               label: 'Gemini 2.5 Flash',      color: 'text-green-400' },
+  { match: ['gemini-2.0-flash'],                     label: 'Gemini 2.0 Flash',      color: 'text-green-300' },
+  { match: ['gemini'],                               label: 'Gemini',                color: 'text-green-400' },
   // xAI
   { match: ['grok-4.1-fast','grok-4-1-fast'],        label: 'Grok 4.1 Fast',         color: 'text-orange-400' },
   { match: ['grok-4.1','grok-4-1'],                  label: 'Grok 4.1',              color: 'text-orange-400' },

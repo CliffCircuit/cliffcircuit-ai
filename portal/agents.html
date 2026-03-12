@@ -203,7 +203,7 @@
                 <!-- Display mode -->
                 <div id="${n}-model-display" class="flex items-center gap-2">
                   <span id="${n}-model-name" class="text-sm font-semibold text-gray-300">—</span>
-                  <button onclick="editAgentModel('${n}')" class="text-gray-600 hover:text-gray-300 transition-colors text-sm leading-none" title="Change model">&#9998;</button>
+                  <button onclick="editAgentModel('${n}')" data-model-edit-btn="${n}" class="text-gray-600 hover:text-gray-300 transition-colors text-sm leading-none" title="Change model">&#9998;</button>
                 </div>
                 <!-- Edit mode (hidden) -->
                 <div id="${n}-model-edit" class="hidden">
@@ -385,7 +385,28 @@
         });
     }
 
+    // Close all open model edit panels
+    function closeAllModelEdits() {
+      AGENTS.forEach(a => {
+        const n = a.name.toLowerCase();
+        const edit = document.getElementById(`${n}-model-edit`);
+        const display = document.getElementById(`${n}-model-display`);
+        if (edit && !edit.classList.contains('hidden')) {
+          edit.classList.add('hidden');
+          display && display.classList.remove('hidden');
+        }
+      });
+    }
+
+    // Click outside → close
+    document.addEventListener('click', e => {
+      const inEdit = e.target.closest('[id$="-model-edit"]');
+      const isEditBtn = e.target.closest('[data-model-edit-btn]');
+      if (!inEdit && !isEditBtn) closeAllModelEdits();
+    });
+
     function editAgentModel(agentName) {
+      closeAllModelEdits(); // close any other open ones first
       document.getElementById(`${agentName}-model-display`).classList.add('hidden');
       document.getElementById(`${agentName}-model-edit`).classList.remove('hidden');
     }
