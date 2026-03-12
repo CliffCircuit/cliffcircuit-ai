@@ -29,7 +29,7 @@ const GW_TOKEN      = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
 const IDENTITY_PATH = path.join(process.env.HOME, '.openclaw/workspace/chat-proxy-device.json');
 
 const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
-const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com'];
+const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
 
 // ─── Load device identity ───────────────────────────────────────────────────
 let identity;
