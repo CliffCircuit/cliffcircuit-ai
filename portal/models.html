@@ -102,102 +102,85 @@
   <script src="/portal/auth.js?v=20260312a"></script>
   <script src="/portal/portal-common.js?v=20260310c"></script>
   <script>
-    // Model metadata (aliases + descriptions) — maintained manually
-    // These map to models pulled from models.json (generated from openclaw.json)
-    const MODEL_METADATA = {
-      'anthropic/claude-haiku-4-5': { alias: 'Haiku', desc: 'Fast, lightweight model. Great for quick tasks, summaries, and routine work.' },
-      'anthropic/claude-sonnet-4-6': { alias: 'Sonnet', desc: 'Balanced speed and reasoning. Default for most work. Excellent all-around performer.' },
-      'anthropic/claude-opus-4-6': { alias: 'Opus', desc: 'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.' },
-      'openai-codex/gpt-5-mini': { alias: 'GPT5Mini', desc: 'Cheapest tier. Quick answers, simple tasks, routine processing.' },
-      'openai-codex/gpt-5.3-codex': { alias: null, desc: 'Codex variant. Strong on code generation and technical writing.' },
-      'openai-codex/gpt-5.4': { alias: 'GPT54', desc: 'Workhorse model. Great balance of capability and cost. Recommended default.' },
-      'openai-codex/gpt-5.4-pro': { alias: 'GPT54Pro', desc: 'Top-tier reasoning and analysis. Comparable to Opus in capability.' },
-      'google/gemini-2.5-pro': { alias: 'GeminiPro', desc: 'Most capable Gemini. Excellent reasoning, multimodal support, API-based.' },
-      'google/gemini-2.5-flash': { alias: 'GeminiFlash', desc: 'Fast, efficient Gemini. Good balance for most tasks. Lower latency.' },
-      'google/gemini-2.0-flash': { alias: 'Gemini2Flash', desc: 'Earlier version, still capable. Good for compatibility testing.' },
-      'lmstudio/qwen3-coder-30b': { alias: 'Qwen3Coder', desc: 'Specialized for coding. Fast local inference, excellent code quality.' },
-      'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx': { alias: 'OpusDistilled', desc: 'Distilled Opus knowledge. Lighter than full Opus, local inference.' },
-      'lmstudio-laptop/unsloth_qwen3-coder-next-split': { alias: 'Qwen3CoderNext', desc: 'Qwen3 Coder Next variant. Local inference on laptop. Experimental.' }
-    };
-
-    // Provider display names
-    const PROVIDER_NAMES = {
-      'anthropic': 'Anthropic',
-      'openai-codex': 'OpenAI Codex',
-      'google': 'Google Gemini',
-      'lmstudio': 'LMStudio (Mac Mini)',
-      'lmstudio-laptop': 'LMStudio (Laptop)'
-    };
-
-    // Initialize portal nav + fetch models
+    // Initialize portal nav
     document.addEventListener('DOMContentLoaded', () => {
       initPortal('models', renderModels);
     });
 
-    async function renderModels() {
-      const body = document.getElementById('models-body');
-      body.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #9ca3af; font-size: 13px;">Loading models...</td></tr>';
-
-      try {
-        // Fetch dynamic models list from generate-data.js output
-        const resp = await fetch('/portal/models.json?t=' + Date.now());
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        const models = data.models || [];
-
-        // Group by provider
-        const grouped = {};
-        models.forEach(model => {
-          if (!grouped[model.provider]) grouped[model.provider] = [];
-          grouped[model.provider].push(model);
-        });
-
-        // Sort providers by display name
-        const providerOrder = Object.keys(PROVIDER_NAMES);
-        const sortedProviders = Object.keys(grouped).sort((a, b) => {
-          const aIdx = providerOrder.indexOf(a);
-          const bIdx = providerOrder.indexOf(b);
-          return (aIdx >= 0 ? aIdx : 999) - (bIdx >= 0 ? bIdx : 999);
-        });
-
-        body.innerHTML = '';
-
-        // Render grouped table
-        sortedProviders.forEach(provider => {
-          const providerLabel = PROVIDER_NAMES[provider] || provider;
-          const headerRow = document.createElement('tr');
-          headerRow.innerHTML = `<td colspan="4" class="provider-header">${providerLabel}</td>`;
-          body.appendChild(headerRow);
-
-          grouped[provider].forEach(model => {
-            const metadata = MODEL_METADATA[model.id] || { alias: null, desc: 'Model description not available.' };
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td style="padding: 12px 16px;"><span class="model-id">${model.id}</span></td>
-              <td style="padding: 12px 16px;">
-                ${metadata.alias ? `<span class="alias-badge">${metadata.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
-              </td>
-              <td style="padding: 12px 16px;"><span class="description">${metadata.desc}</span></td>
-              <td style="padding: 12px 16px;">
-                ${metadata.alias ? `<span class="command-code" onclick="copyCommand('/model ${metadata.alias}')">/model ${metadata.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
-              </td>
-            `;
-            body.appendChild(row);
-          });
-        });
-
-        // If no models found, show message
-        if (Object.keys(grouped).length === 0) {
-          body.innerHTML = '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #ef5350;">No models found. Check models.json generation.</td></tr>';
-        }
-      } catch (e) {
-        console.error('Failed to load models:', e);
-        body.innerHTML = `<tr><td colspan="4" style="padding: 20px; text-align: center; color: #ef5350;">Error loading models: ${e.message}</td></tr>`;
+    const MODELS = [
+      {
+        provider: 'Anthropic',
+        models: [
+          { id: 'anthropic/claude-haiku-4-5', alias: 'Haiku', desc: 'Fast, lightweight model. Great for quick tasks, summaries, and routine work.' },
+          { id: 'anthropic/claude-sonnet-4-6', alias: 'Sonnet', desc: 'Balanced speed and reasoning. Default for most work. Excellent all-around performer.' },
+          { id: 'anthropic/claude-opus-4-6', alias: 'Opus', desc: 'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.' }
+        ]
+      },
+      {
+        provider: 'OpenAI Codex',
+        models: [
+          { id: 'openai-codex/gpt-5-mini', alias: 'GPT5Mini', desc: 'Cheapest tier. Quick answers, simple tasks, routine processing.' },
+          { id: 'openai-codex/gpt-5.3-codex', alias: null, desc: 'Codex variant. Strong on code generation and technical writing.' },
+          { id: 'openai-codex/gpt-5.4', alias: 'GPT54', desc: 'Workhorse model. Great balance of capability and cost. Recommended default.' },
+          { id: 'openai-codex/gpt-5.4-pro', alias: 'GPT54Pro', desc: 'Top-tier reasoning and analysis. Comparable to Opus in capability.' }
+        ]
+      },
+      {
+        provider: 'Google Gemini',
+        models: [
+          { id: 'google/gemini-2.5-pro', alias: 'GeminiPro', desc: 'Most capable Gemini. Excellent reasoning, multimodal support, API-based.' },
+          { id: 'google/gemini-2.5-flash', alias: 'GeminiFlash', desc: 'Fast, efficient Gemini. Good balance for most tasks. Lower latency.' },
+          { id: 'google/gemini-2.0-flash', alias: 'Gemini2Flash', desc: 'Earlier version, still capable. Good for compatibility testing.' }
+        ]
+      },
+      {
+        provider: 'LMStudio (Mac Mini)',
+        models: [
+          { id: 'lmstudio/qwen3-coder-30b', alias: 'Qwen3Coder', desc: 'Specialized for coding. Fast local inference, excellent code quality.' },
+          { id: 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx', alias: 'OpusDistilled', desc: 'Distilled Opus knowledge. Lighter than full Opus, local inference.' }
+        ]
+      },
+      {
+        provider: 'LMStudio (Laptop)',
+        models: [
+          { id: 'lmstudio-laptop/unsloth_qwen3-coder-next-split', alias: 'Qwen3CoderNext', desc: 'Qwen3 Coder Next variant. Local inference on laptop. Experimental.' }
+        ]
       }
+    ];
+
+    function renderModels() {
+      const body = document.getElementById('models-body');
+      body.innerHTML = '';
+
+      MODELS.forEach(group => {
+        // Provider header row
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = `
+          <td colspan="4" class="provider-header">${group.provider}</td>
+        `;
+        body.appendChild(headerRow);
+
+        // Model rows
+        group.models.forEach(model => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="padding: 12px 16px;"><span class="model-id">${model.id}</span></td>
+            <td style="padding: 12px 16px;">
+              ${model.alias ? `<span class="alias-badge">${model.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
+            </td>
+            <td style="padding: 12px 16px;"><span class="description">${model.desc}</span></td>
+            <td style="padding: 12px 16px;">
+              ${model.alias ? `<span class="command-code" onclick="copyCommand('/model ${model.alias}')">/model ${model.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
+            </td>
+          `;
+          body.appendChild(row);
+        });
+      });
     }
 
     function copyCommand(cmd) {
       navigator.clipboard.writeText(cmd).then(() => {
+        // Visual feedback
         const temp = document.createElement('div');
         temp.textContent = 'Copied!';
         temp.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #064e3b; color: #34d399; padding: 8px 16px; border-radius: 6px; font-size: 12px; z-index: 9999;';
