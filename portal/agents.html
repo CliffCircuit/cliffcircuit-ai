@@ -385,30 +385,36 @@
         });
     }
 
-    // Close all open model edit panels
     function closeAllModelEdits() {
-      AGENTS.forEach(a => {
-        const n = a.name.toLowerCase();
-        const edit = document.getElementById(`${n}-model-edit`);
-        const display = document.getElementById(`${n}-model-display`);
-        if (edit && !edit.classList.contains('hidden')) {
-          edit.classList.add('hidden');
-          display && display.classList.remove('hidden');
+      document.querySelectorAll('[id$="-model-edit"]').forEach(el => {
+        if (!el.classList.contains('hidden')) {
+          el.classList.add('hidden');
+          const name = el.id.replace('-model-edit', '');
+          const display = document.getElementById(`${name}-model-display`);
+          if (display) display.classList.remove('hidden');
         }
       });
     }
 
-    // Click outside → close
-    document.addEventListener('click', e => {
-      const inEdit = e.target.closest('[id$="-model-edit"]');
-      const isEditBtn = e.target.closest('[data-model-edit-btn]');
-      if (!inEdit && !isEditBtn) closeAllModelEdits();
+    // Click outside any open edit panel → close it
+    document.addEventListener('click', function(e) {
+      // Walk up from click target — if we hit a model-edit panel or the pencil btn, stay open
+      let el = e.target;
+      while (el) {
+        if (el.id && el.id.endsWith('-model-edit')) return;
+        if (el.dataset && el.dataset.modelEditBtn !== undefined) return;
+        el = el.parentElement;
+      }
+      closeAllModelEdits();
     });
 
     function editAgentModel(agentName) {
-      closeAllModelEdits(); // close any other open ones first
-      document.getElementById(`${agentName}-model-display`).classList.add('hidden');
-      document.getElementById(`${agentName}-model-edit`).classList.remove('hidden');
+      const wasHidden = document.getElementById(`${agentName}-model-edit`).classList.contains('hidden');
+      closeAllModelEdits();
+      if (wasHidden) {
+        document.getElementById(`${agentName}-model-display`).classList.add('hidden');
+        document.getElementById(`${agentName}-model-edit`).classList.remove('hidden');
+      }
     }
 
     function cancelAgentModel(agentName) {
@@ -421,7 +427,6 @@
       if (!dropdown) return;
       const newModel = dropdown.value;
       await changeAgentModel(agentId, newModel, agentName);
-      // Update display name immediately
       const nameEl = document.getElementById(`${agentName}-model-name`);
       if (nameEl) nameEl.innerHTML = newModel ? (typeof modelShort === 'function' ? modelShort(newModel) : newModel) : '<span class="text-gray-500">Agent Default</span>';
       cancelAgentModel(agentName);
