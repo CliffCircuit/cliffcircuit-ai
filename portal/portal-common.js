@@ -468,7 +468,7 @@ function renderNav(activePage) {
     { id: 'marketing', label: 'Marketing', href: '/portal/marketing.html' },
     { id: 'agents', label: 'Agents', href: '/portal/agents.html' },
     { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
-    { id: 'models', label: 'Models', href: '/portal/models.html' },
+    { id: 'models', label: 'Models', href: '/portal/models/' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
     { id: 'chat', label: 'Chat', href: '/portal/chat.html' },
     { id: 'settings', label: 'Settings', href: '/portal/settings.html' },
