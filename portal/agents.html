@@ -195,9 +195,15 @@
             <!-- Stats row -->
             <div class="grid grid-cols-4 gap-4 mb-5">
               <div class="bg-gray-900 rounded-lg p-3">
-                <div class="text-xs text-gray-500 mb-1">Model</div>
-                <div id="${n}-model" class="text-white text-sm font-semibold">—</div>
-                <div id="${n}-model-provider" class="text-gray-600 text-xs">anthropic</div>
+                <div class="flex items-center gap-1.5 mb-2">
+                  <span class="text-xs text-gray-500">Model</span>
+                  <span class="info-tip text-gray-600 text-xs cursor-help" data-tip="Session override. Will reset to default when session ends." style="position:static;">?</span>
+                  <span id="${n}-model-override-badge" class="hidden text-xs px-1.5 py-0.5 rounded bg-yellow-900 text-yellow-300 font-semibold">Override</span>
+                </div>
+                <select id="${n}-model-dropdown" class="w-full px-2 py-1.5 text-sm bg-gray-800 text-white border border-gray-700 rounded text-gray-200 focus:outline-none focus:border-indigo-500" onchange="changeAgentModel('${agent.id}', this.value, '${n}')">
+                  <option value="">Loading...</option>
+                </select>
+                <div id="${n}-model-default-info" class="text-gray-500 text-xs mt-1.5 hidden">Default: <span id="${n}-model-default-value" class="text-gray-300"></span></div>
               </div>
               <div class="bg-gray-900 rounded-lg p-3">
                 <div class="text-xs text-gray-500 mb-1">Thinking</div>
@@ -301,6 +307,85 @@
       if (mins < 60) return mins + 'm ago';
       const hrs = Math.round(mins / 60);
       return hrs < 24 ? hrs + 'h ago' : new Date(ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    }
+
+    // ─── MODEL DROPDOWN HELPERS ───────────────────────────────────────────────
+    function populateModelDropdowns(d) {
+      // Get all models from portal-common.js MODEL_ALIASES or build list
+      const allModels = typeof MODEL_ALIASES !== 'undefined' ? MODEL_ALIASES : {
+        'Haiku': 'anthropic/claude-haiku-4-5',
+        'Sonnet': 'anthropic/claude-sonnet-4-6',
+        'Opus': 'anthropic/claude-opus-4-6',
+        'GPT5.3': 'openai-codex/gpt-5.3-codex',
+        'GPT5Mini': 'openai-codex/gpt-5-mini',
+        'GPT54': 'openai-codex/gpt-5.4',
+        'GPT54Pro': 'openai-codex/gpt-5.4-pro',
+        'GeminiPro': 'google/gemini-2.5-pro',
+        'GeminiFlash': 'google/gemini-2.5-flash',
+        'Gemini2Flash': 'google/gemini-2.0-flash',
+        'Qwen3Coder': 'lmstudio/qwen3-coder-30b',
+        'OpusDistilled': 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
+        'Qwen3CoderNext': 'lmstudio-laptop/unsloth_qwen3-coder-next-split',
+      };
+      
+      const ac = d.agentConfigs || {};
+      const agentDefaults = {};
+      AGENTS.forEach(agent => {
+        const cfg = ac[agent.id] || ac[agent.name.toLowerCase()] || {};
+        agentDefaults[agent.id] = cfg.model || 'Unknown';
+      });
+
+      AGENTS.forEach(agent => {
+        const n = agent.name.toLowerCase();
+        const dropdown = document.getElementById(`${n}-model-dropdown`);
+        if (!dropdown) return;
+        
+        // Build options
+        const defaultModel = agentDefaults[agent.id];
+        let html = '';
+        for (const [alias, fullId] of Object.entries(allModels)) {
+          const selected = dropdown.value === fullId ? 'selected' : '';
+          html += `<option value="${fullId}" ${selected}>${alias}</option>`;
+        }
+        dropdown.innerHTML = html;
+        
+        // Show default
+        const defaultInfo = document.getElementById(`${n}-model-default-info`);
+        const defaultValue = document.getElementById(`${n}-model-default-value`);
+        if (defaultInfo && defaultValue) {
+          defaultValue.textContent = defaultModel;
+          defaultInfo.classList.remove('hidden');
+        }
+      });
+    }
+
+    async function changeAgentModel(agentId, newModel, agentName) {
+      if (!newModel) return;
+      
+      try {
+        const response = await fetch('http://localhost:3102/api/set-session-model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId, newModel })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to change model:', response.statusText);
+          alert(`Failed to change model. Is the model-override server running on port 3102?`);
+          return;
+        }
+        
+        const result = await response.json();
+        console.log('Model changed:', result);
+        
+        // Update badge to show override is active
+        const badge = document.getElementById(`${agentName}-model-override-badge`);
+        if (badge) badge.classList.remove('hidden');
+        
+      } catch (e) {
+        console.error('Error changing model:', e);
+        alert(`Error changing model: ${e.message}\n\nMake sure the model-override server is running on localhost:3102`);
+      }
     }
 
     // ─── MAIN RENDER ─────────────────────────────────────────────────────────
@@ -441,6 +526,9 @@
       });
 
       enrichCronTokens(d);
+      
+      // Populate model dropdowns
+      populateModelDropdowns(d);
     }
 
     // ─── VIEW TOGGLE ─────────────────────────────────────────────────────────
