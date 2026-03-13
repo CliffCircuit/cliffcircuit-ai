@@ -359,17 +359,24 @@
       return `<option value="" ${noneSelected ? 'selected' : ''}>Agent Default</option>` + opts;
     }
 
+    const _pendingSessionModels = Object.create(null);
+    const _pendingDefaultModels = Object.create(null);
+
     // Cron edit dropdown — explicit model choices only.
-    // agentDefault: the agent's configured default model (used as an optgroup label so the
-    // user knows what "no override" would mean, without exposing a fake clear action).
+    // If the cron has no explicit override, preselect the effective model (agent default)
+    // rather than falling back to the browser's first option.
     function buildCronEditOptions(currentValue, agentDefault) {
+      const effectiveSelected = currentValue || agentDefault || '';
       const defaultLabel = agentDefault
         ? ((typeof friendlyModel === 'function') ? friendlyModel(agentDefault) : agentDefault.split('/').pop())
         : 'global default';
+      const ordered = effectiveSelected
+        ? [effectiveSelected, ...DROPDOWN_MODELS.filter(id => id !== effectiveSelected)]
+        : DROPDOWN_MODELS.slice();
       const header = `<optgroup label="Default: ${defaultLabel}"></optgroup>`;
-      const opts = DROPDOWN_MODELS.map(id => {
+      const opts = ordered.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
-        const selected = (currentValue === id) ? 'selected' : '';
+        const selected = (effectiveSelected === id) ? 'selected' : '';
         return `<option value="${id}" ${selected}>${label}</option>`;
       }).join('');
       return header + opts;
@@ -405,14 +412,18 @@
       AGENTS.forEach(agent => {
         const n = agent.name.toLowerCase();
         const cfg = ac[agent.id] || ac[n] || {};
-        const defaultModel = cfg.model || '';
+        const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
+          ? _pendingDefaultModels[agent.id]
+          : (cfg.model || '');
 
         // Best current session for this agent (most recently active)
         const bestSession = sessions
           .filter(s => s.agentId === agent.id)
           .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
 
-        const activeModel = bestSession?.model || defaultModel;
+        const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
+          ? _pendingSessionModels[agent.id]
+          : (bestSession?.model || defaultModel);
         const hasOverride = !!(activeModel && defaultModel && activeModel !== defaultModel);
 
         // Read-only display: Current model name
@@ -490,24 +501,31 @@
       const newCurrent = currentDropdown.value; // always a real model ID (no pseudo-options)
       const newDefault = defaultDropdown.value; // '' = inherit global (clear per-agent default)
 
-      // Apply session override
-      await changeAgentModel(agentId, newCurrent, agentName);
+      try {
+        // Apply session override
+        await changeAgentModel(agentId, newCurrent, agentName);
 
-      // Apply persistent per-agent default (or clear it)
-      await setAgentDefaultModel(agentId, newDefault);
+        // Apply persistent per-agent default (or clear it)
+        await setAgentDefaultModel(agentId, newDefault);
 
-      _exitCardEditMode(agentName);
+        _pendingSessionModels[agentId] = newCurrent;
+        _pendingDefaultModels[agentId] = newDefault;
 
-      // Optimistically update read-only display using established model color helper
-      const nameEl = document.getElementById(`${agentName}-model-name`);
-      if (nameEl) {
-        nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(newCurrent) : newCurrent;
-      }
-      const defaultNameEl = document.getElementById(`${agentName}-model-default-name`);
-      if (defaultNameEl) {
-        defaultNameEl.textContent = newDefault
-          ? ((typeof friendlyModel === 'function') ? friendlyModel(newDefault) : newDefault)
-          : 'Inherit global';
+        _exitCardEditMode(agentName);
+
+        // Optimistically update read-only display using established model color helper
+        const nameEl = document.getElementById(`${agentName}-model-name`);
+        if (nameEl) {
+          nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(newCurrent) : newCurrent;
+        }
+        const defaultNameEl = document.getElementById(`${agentName}-model-default-name`);
+        if (defaultNameEl) {
+          defaultNameEl.textContent = newDefault
+            ? ((typeof friendlyModel === 'function') ? friendlyModel(newDefault) : newDefault)
+            : 'Inherit global';
+        }
+      } catch (e) {
+        alert(`Failed to save model changes: ${e.message}`);
       }
     }
 
@@ -520,11 +538,12 @@
           body: JSON.stringify({ agentId, newModel: newModel || null })
         });
         if (!response.ok) {
-          console.error('[agents] set-session-model failed:', response.statusText);
+          const text = await response.text();
+          throw new Error(text || response.statusText || 'session model update failed');
         }
       } catch (e) {
-        // localhost:3102 may not be running — log only, do not interrupt UX
         console.warn('[agents] set-session-model unavailable:', e.message);
+        throw e;
       }
     }
 
@@ -539,11 +558,12 @@
           body: JSON.stringify({ agentId, model: newModel || null })
         });
         if (!response.ok) {
-          console.error('[agents] set-agent-default-model failed:', response.statusText);
+          const text = await response.text();
+          throw new Error(text || response.statusText || 'default model update failed');
         }
       } catch (e) {
-        // Expected if endpoint not yet implemented server-side
         console.warn('[agents] set-agent-default-model unavailable:', e.message);
+        throw e;
       }
     }
 
