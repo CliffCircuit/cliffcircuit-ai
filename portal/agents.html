@@ -348,6 +348,15 @@
       'lmstudio-laptop/unsloth_qwen3-coder-next-split',
     ];
 
+    // Default models per agent from openclaw.json
+    const AGENT_DEFAULT_MODELS = {
+      'main': 'google/gemini-2.5-pro',
+      'samantha': 'openai-codex/gpt-5.4',
+      'scout': 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
+      'atlas': 'anthropic/claude-opus-4-6',
+      'fernanda': 'anthropic/claude-sonnet-4-6',
+    };
+
     // Used by cron job rows — "Agent Default" = inherit from agent config
     function buildModelOptions(currentValue) {
       const noneSelected = !currentValue || currentValue === '';
@@ -385,9 +394,9 @@
     // Card-level current model dropdown — pre-selects the actual active model.
     // No "Use default" pseudo-option; the current model is always a real selection.
     function buildCurrentOptions(selectedModel) {
-      // If selectedModel is unknown/missing, fall back to first entry so the dropdown
-      // always has a sensible selection rather than an empty/misleading state.
-      const effectiveSelected = selectedModel || DROPDOWN_MODELS[0];
+      // Pre-select the given model. If somehow empty, don't force a selection
+      // (this should not happen with AGENT_DEFAULT_MODELS fallback above).
+      const effectiveSelected = selectedModel;
       return DROPDOWN_MODELS.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (effectiveSelected === id) ? 'selected' : '';
@@ -443,7 +452,7 @@
         const cfg = ac[agent.id] || ac[n] || {};
         const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
           ? _pendingDefaultModels[agent.id]
-          : (cfg.model || '');
+          : (cfg.model || AGENT_DEFAULT_MODELS[agent.id] || '');
 
         // Best current session for this agent (most recently active)
         const bestSession = sessions
@@ -530,7 +539,7 @@
           // Recalculate current values
           const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
             ? _pendingDefaultModels[agent.id]
-            : (cfg.model || '');
+            : (cfg.model || AGENT_DEFAULT_MODELS[agent.id] || '');
           
           const bestSession = sessions
             .filter(s => s.agentId === agent.id)
