@@ -8,10 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
   <style>
-    /* Cron section edit mode — controlled by .cron-editing class on tbody */
-    .cron-model-select { display: none; }
-    tbody.cron-editing .cron-model-select { display: inline-block; }
-    tbody.cron-editing .cron-model-ro { display: none; }
     .info-tip { position: relative; cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
     .info-tip:hover { color: #a5b4fc; }
     .info-tip:hover::after {
@@ -569,20 +565,68 @@
     // Matches the top-card edit pattern — no per-row micro-affordances.
     const _cronSectionEditing = new Set(); // keyed by agent name (e.g. 'cliff')
 
-    function _applyCronEditDisplay(tbody, editing) {
+    function _rebuildCronTbody(agentName) {
+      if (!_lastData) return;
+      const agent = AGENTS.find(a => a.name.toLowerCase() === agentName);
+      if (!agent) return;
+      const tbody = document.getElementById(`${agentName}-jobs-body`);
       if (!tbody) return;
-      if (editing) {
-        tbody.querySelectorAll('.cron-model-ro').forEach(el => { el.style.display = 'none'; });
-        tbody.querySelectorAll('.cron-model-select').forEach(el => { el.style.display = 'inline-block'; });
-      } else {
-        tbody.querySelectorAll('.cron-model-select').forEach(el => { el.style.display = ''; });
-        tbody.querySelectorAll('.cron-model-ro').forEach(el => { el.style.display = ''; });
-      }
+      const ac = _lastData.agentConfigs || {};
+      const cfg = ac[agent.id] || ac[agentName] || {};
+      const crons = _lastData.crons || [];
+      const agentJobMap = {};
+      crons.forEach(job => {
+        const a = cronAgentFromName(job.name) || job.agent || 'main';
+        if (!agentJobMap[a]) agentJobMap[a] = [];
+        agentJobMap[a].push(job);
+      });
+      const jobs = agentJobMap[agent.id] || agentJobMap[agentName] || [];
+      tbody.innerHTML = _buildCronRows(jobs, cfg, _cronSectionEditing.has(agentName));
+    }
+
+    function _buildCronRows(jobs, cfg, isEditing) {
+      if (!jobs.length) return '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
+      const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
+      const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {off:{l:'OFF',c:'text-gray-400'},low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
+      const fmtTok = (t, j) => {
+        if (!t) return '<span class="text-gray-700">—</span>';
+        if (j && (j.lastRunInputTokens != null || j.lastRunOutputTokens != null)) {
+          const inK = ((j.lastRunInputTokens||0)/1000).toFixed(1);
+          const outK = ((j.lastRunOutputTokens||0)/1000).toFixed(1);
+          const c = t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400';
+          return `<span class="${c} font-medium">${inK}K / ${outK}K</span>`;
+        }
+        const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400';
+        return `<span class="${c} font-medium">${k}K</span>`;
+      };
+      return jobs.map(j => {
+        window._jobMap = window._jobMap || {};
+        window._jobMap[j.name] = j;
+        const cronModel = j.model || j.lastRunModel || '';
+        const hasModelOverride = !!cronModel;
+        const overrideDot = hasModelOverride
+          ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`
+          : '';
+        const modelColoredLabel = (typeof modelShort === 'function') ? modelShort(cronModel || '') : `<span class="text-gray-400">${cronModel || 'Agent Default'}</span>`;
+        const modelCell = isEditing
+          ? `<select class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${buildCronEditOptions(cronModel, cfg.model || '')}</select>`
+          : `<span class="flex items-center gap-0.5">${hasModelOverride ? modelColoredLabel + overrideDot : '<span class="text-gray-600">Agent Default</span>'}</span>`;
+        return `<tr class="border-b border-gray-900">
+          <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
+          <td class="px-4 py-2.5 text-gray-400 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobScheduleLabel(j)}</td>
+          <td class="px-4 py-2.5 text-xs">${modelCell}</td>
+          <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${thinkBadge(j.thinking)}</td>
+          <td class="px-4 py-2.5 ${statusColor(j.status)} cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">● ${esc(j.status||'idle')}</td>
+          <td class="px-4 py-2.5 text-gray-500 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
+          <td class="px-4 py-2.5 text-gray-500 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobNextLabel(j)}</td>
+          <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${fmtTok(j.lastRunTokens, j)}</td>
+        </tr>`;
+      }).join('');
     }
 
     function enterCronSectionEdit(agentName) {
       _cronSectionEditing.add(agentName);
-      _applyCronEditDisplay(document.getElementById(`${agentName}-jobs-body`), true);
+      _rebuildCronTbody(agentName);
       const btn = document.getElementById(`${agentName}-cron-edit-btn`);
       if (btn) {
         btn.textContent = 'Done';
@@ -592,7 +636,7 @@
 
     function exitCronSectionEdit(agentName) {
       _cronSectionEditing.delete(agentName);
-      _applyCronEditDisplay(document.getElementById(`${agentName}-jobs-body`), false);
+      _rebuildCronTbody(agentName);
       const btn = document.getElementById(`${agentName}-cron-edit-btn`);
       if (btn) {
         btn.textContent = 'Edit';
@@ -600,18 +644,11 @@
       }
     }
 
-    // Called by cron row dropdown onchange — fires immediately, no per-row save needed.
+    // Called by cron row dropdown onchange — fires immediately on selection change.
     async function updateCronModel(cronId, selectEl) {
       const newModel = selectEl.value;
       if (!newModel) return;
-      const roEl = selectEl.closest('td') && selectEl.closest('td').querySelector('.cron-model-ro');
       await changeCronModel(cronId, newModel);
-      // Optimistic update of read-only span so it's correct when Done is clicked
-      if (roEl) {
-        const coloredLabel = (typeof modelShort === 'function') ? modelShort(newModel) : `<span class="text-gray-400">${newModel.split('/').pop()}</span>`;
-        const dot = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`;
-        roEl.innerHTML = coloredLabel + dot;
-      }
     }
 
     // ─── MAIN RENDER ─────────────────────────────────────────────────────────
@@ -716,58 +753,11 @@
           if (el('ctx-sublabel')) { el('ctx-sublabel').textContent = timeAgo(lastRunJob.lastRunMs); if (lastRunJob.lastRunMs) el('ctx-sublabel').dataset.ts = lastRunJob.lastRunMs; }
         }
 
-        // Job table rows — skip DOM update if unchanged (prevents hover flicker)
+        // Job table rows — rendered with edit state baked in; no post-render toggling.
         const tbody = document.getElementById(`${n}-jobs-body`);
-        if (tbody) {
-          const statusColor = s => s === 'ok' ? 'text-green-400' : s === 'error' ? 'text-red-400' : 'text-gray-500';
-          const thinkBadge = t => { if (!t) return '<span class="text-gray-700">—</span>'; const m = {off:{l:'OFF',c:'text-gray-400'},low:{l:'Low',c:'text-blue-400'},medium:{l:'Medium',c:'text-yellow-400'},high:{l:'High',c:'text-orange-400'}}; const v = m[t]||{l:t,c:'text-gray-400'}; return `<span class="${v.c}">${v.l}</span>`; };
-          const fmtTok = (t, j) => {
-            if (!t) return '<span class="text-gray-700">—</span>';
-            if (j && (j.lastRunInputTokens != null || j.lastRunOutputTokens != null)) {
-              const inK = ((j.lastRunInputTokens||0)/1000).toFixed(1);
-              const outK = ((j.lastRunOutputTokens||0)/1000).toFixed(1);
-              const c = t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400';
-              return `<span class="${c} font-medium">${inK}K / ${outK}K</span>`;
-            }
-            const k=(t/1000).toFixed(1); const c=t>100000?'text-red-400':t>50000?'text-yellow-400':'text-green-400'; return `<span class="${c} font-medium">${k}K</span>`;
-          };
-          let newJobsHtml;
-          if (info.jobs.length) {
-            info.jobs.forEach(j => { window._jobMap[j.name] = j; });
-            newJobsHtml = info.jobs.map(j => {
-              const cronModel = j.model || j.lastRunModel || '';
-              const hasModelOverride = !!cronModel;
-              const modelLabel = hasModelOverride
-                ? ((typeof friendlyModel === 'function') ? friendlyModel(cronModel) : cronModel.split('/').pop())
-                : 'Agent Default';
-              const overrideDot = hasModelOverride
-                ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`
-                : '';
-              const cronEditOpts = buildCronEditOptions(cronModel, cfg.model || '');
-              const modelColoredLabel = (typeof modelShort === 'function') ? modelShort(cronModel || '') : `<span class="text-gray-400">${modelLabel}</span>`;
-              return `<tr class="border-b border-gray-900">
-              <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
-              <td class="px-4 py-2.5 text-gray-400 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobScheduleLabel(j)}</td>
-              <td class="px-4 py-2.5 text-xs">
-                <span class="cron-model-ro flex items-center gap-0.5">${hasModelOverride ? modelColoredLabel + overrideDot : '<span class="text-gray-600">Agent Default</span>'}</span>
-                <select class="cron-model-select px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${cronEditOpts}</select>
-              </td>
-              <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${thinkBadge(j.thinking)}</td>
-              <td class="px-4 py-2.5 ${statusColor(j.status)} cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">● ${esc(j.status||'idle')}</td>
-              <td class="px-4 py-2.5 text-gray-500 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${j.lastRunMs ? timeAgo(j.lastRunMs) : (j.lastRun ? timeAgo(j.lastRun) : '—')}</td>
-              <td class="px-4 py-2.5 text-gray-500 cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobNextLabel(j)}</td>
-              <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${fmtTok(j.lastRunTokens, j)}</td>
-            </tr>`;}).join('');
-          } else {
-            newJobsHtml = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
-          }
-          // Always update tbody so edit mode can find the rows to show/hide.
-          // onchange fires immediately so no user selection is lost on refresh.
-          if (tbody.innerHTML !== newJobsHtml) {
-            tbody.innerHTML = newJobsHtml;
-            // Re-apply edit display after innerHTML replace (new elements lose inline styles)
-            if (_cronSectionEditing.has(n)) _applyCronEditDisplay(tbody, true);
-          }
+        if (tbody && !_cronSectionEditing.has(n)) {
+          const newJobsHtml = _buildCronRows(info.jobs, cfg, false);
+          if (tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
         }
       });
 
