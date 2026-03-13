@@ -206,10 +206,7 @@
                 <div class="text-xs text-gray-500 mb-2">Model</div>
                 <!-- Read-only state -->
                 <div id="${n}-model-readonly">
-                  <div class="flex items-center gap-1.5 mb-1">
-                    <span class="text-xs text-gray-400">Current</span>
-                    <span id="${n}-model-override-badge" class="hidden text-xs px-1.5 py-0.5 rounded bg-yellow-900 text-yellow-300 font-semibold">Override</span>
-                  </div>
+                  <div class="text-xs text-gray-400 mb-1">Current model</div>
                   <div id="${n}-model-name" class="text-sm font-semibold text-gray-300 mb-2">—</div>
                   <div class="text-xs text-gray-400 mb-1">Default</div>
                   <div id="${n}-model-default-name" class="text-xs text-gray-500">—</div>
@@ -363,6 +360,17 @@
       return `<option value="" ${noneSelected ? 'selected' : ''}>Agent Default</option>` + opts;
     }
 
+    // Cron edit dropdown — explicit model choices only.
+    // Does NOT include an "Agent Default" / clear option because the clear path is not
+    // implemented end-to-end. Exposing a fake clear would silently no-op; honest omission.
+    function buildCronEditOptions(currentValue) {
+      return DROPDOWN_MODELS.map(id => {
+        const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
+        const selected = (currentValue === id) ? 'selected' : '';
+        return `<option value="${id}" ${selected}>${label}</option>`;
+      }).join('');
+    }
+
     // Card-level current model dropdown — '' = "Use default" (clears session override)
     function buildCurrentOptions(selectedModel) {
       const opts = DROPDOWN_MODELS.map(id => {
@@ -411,10 +419,6 @@
         if (defaultNameEl) defaultNameEl.textContent = defaultModel
           ? ((typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel)
           : 'Inherit global';
-
-        // Override badge
-        const badge = document.getElementById(`${n}-model-override-badge`);
-        if (badge) badge.classList.toggle('hidden', !hasOverride);
 
         // Populate edit dropdowns only when card is NOT in edit mode (don't stomp user changes)
         const editState = document.getElementById(`${n}-model-editstate`);
@@ -492,8 +496,6 @@
           ? ((typeof friendlyModel === 'function') ? friendlyModel(newDefault) : newDefault)
           : 'Inherit global';
       }
-      const badge = document.getElementById(`${agentName}-model-override-badge`);
-      if (badge) badge.classList.toggle('hidden', !newCurrent);
     }
 
     // Session override — '' clears the override so agent reverts to its default
@@ -533,7 +535,7 @@
     }
 
     async function changeCronModel(cronId, newModel) {
-      if (newModel === '') return; // "Agent Default" — no-op for now (no clear-model flag)
+      if (!newModel) return; // empty = "Agent Default" — clear not implemented, skip
       try {
         const result = await fetch(`http://localhost:3102/api/cron-model`, {
           method: 'POST',
@@ -546,6 +548,51 @@
         console.error('[agents] changeCronModel failed:', e);
         alert(`Failed to update cron model: ${e.message}\n\nMake sure the cron-api server is running.`);
       }
+    }
+
+    // ─── CRON EDIT MODE ───────────────────────────────────────────────────────
+    // Track open cron edits so tbody refresh doesn't stomp in-progress edits
+    const _cronEditing = new Set();
+
+    function enterCronEditMode(cronId) {
+      const ro = document.getElementById(`cron-ro-${cronId}`);
+      const ed = document.getElementById(`cron-edit-${cronId}`);
+      if (ro) ro.classList.add('hidden');
+      if (ed) ed.classList.remove('hidden');
+      _cronEditing.add(cronId);
+    }
+
+    function cancelCronEdit(cronId) {
+      const ro = document.getElementById(`cron-ro-${cronId}`);
+      const ed = document.getElementById(`cron-edit-${cronId}`);
+      if (ed) ed.classList.add('hidden');
+      if (ro) ro.classList.remove('hidden');
+      _cronEditing.delete(cronId);
+    }
+
+    async function applyCronEdit(cronId) {
+      const sel = document.getElementById(`cron-select-${cronId}`);
+      if (!sel) return;
+      const newModel = sel.value;
+      if (!newModel) { cancelCronEdit(cronId); return; } // nothing to apply
+
+      const saveBtn = document.querySelector(`#cron-edit-${cronId} button:first-child`);
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '...'; }
+
+      try {
+        await changeCronModel(cronId, newModel);
+        // Optimistic update of read-only display
+        const ro = document.getElementById(`cron-ro-${cronId}`);
+        if (ro) {
+          const label = (typeof friendlyModel === 'function') ? friendlyModel(newModel) : newModel.split('/').pop();
+          ro.innerHTML = `<span class="text-gray-400">${label}</span>`
+            + `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;"></span>`
+            + `<button onclick="enterCronEditMode('${cronId}'); event.stopPropagation();" class="text-gray-700 hover:text-gray-400 ml-1" title="Edit cron model">&#9998;</button>`;
+        }
+      } finally {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      }
+      cancelCronEdit(cronId);
     }
 
     // ─── MAIN RENDER ─────────────────────────────────────────────────────────
@@ -670,14 +717,28 @@
             info.jobs.forEach(j => { window._jobMap[j.name] = j; });
             newJobsHtml = info.jobs.map(j => {
               const cronModel = j.model || j.lastRunModel || '';
-              const modelOpts = buildModelOptions(cronModel);
+              const hasModelOverride = !!cronModel;
+              const modelLabel = hasModelOverride
+                ? ((typeof friendlyModel === 'function') ? friendlyModel(cronModel) : cronModel.split('/').pop())
+                : 'Agent Default';
+              const overrideDot = hasModelOverride
+                ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`
+                : '';
+              const cronEditOpts = buildCronEditOptions(cronModel);
               return `<tr class="border-b border-gray-900">
               <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
               <td class="px-4 py-2.5 text-gray-400 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">
-                <select class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="changeCronModel('${esc(j.id)}', this.value)" onclick="event.stopPropagation()">
-                  ${modelOpts}
-                </select>
+                <div id="cron-ro-${esc(j.id)}" class="flex items-center gap-0.5">
+                  <span class="text-gray-400">${modelLabel}</span>${overrideDot}<button onclick="enterCronEditMode('${esc(j.id)}'); event.stopPropagation();" class="text-gray-700 hover:text-gray-400 ml-1" title="Edit cron model">&#9998;</button>
+                </div>
+                <div id="cron-edit-${esc(j.id)}" class="hidden">
+                  <select id="cron-select-${esc(j.id)}" class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onclick="event.stopPropagation()">${cronEditOpts}</select>
+                  <div class="flex gap-1 mt-1">
+                    <button onclick="applyCronEdit('${esc(j.id)}'); event.stopPropagation();" class="px-1.5 py-0.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded">Save</button>
+                    <button onclick="cancelCronEdit('${esc(j.id)}'); event.stopPropagation();" class="px-1.5 py-0.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">Cancel</button>
+                  </div>
+                </div>
               </td>
               <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${thinkBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)} cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">● ${esc(j.status||'idle')}</td>
@@ -688,7 +749,9 @@
           } else {
             newJobsHtml = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
           }
-          if (tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
+          // Don't overwrite tbody if any cron in this agent is being edited
+          const anyEditing = info.jobs.some(j => _cronEditing.has(j.id));
+          if (!anyEditing && tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
         }
       });
 
