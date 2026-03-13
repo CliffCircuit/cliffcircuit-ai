@@ -74,6 +74,10 @@
   <script>
     if (!window._jobMap) window._jobMap = {};
 
+    // ─── PRODUCTION MODE CHECK ─────────────────────────────────────────────
+    const isProduction = () => window.location.hostname === 'cliffcircuit.ai';
+    const IS_PRODUCTION = isProduction();
+
     // ─── CRON DISPLAY NAMES — reuse CRON_DISPLAY from portal-common.js ────
     function cronDisplayName(rawName) {
       if (typeof CRON_DISPLAY !== 'undefined' && CRON_DISPLAY[rawName]) return CRON_DISPLAY[rawName];
@@ -475,6 +479,10 @@
     }
 
     function enterCardEditMode(agentName) {
+      if (IS_PRODUCTION) {
+        alert('Model editing is not available in production. Use the CLI: openclaw agent <id> --model <model>');
+        return;
+      }
       closeAllCardEdits(); // only one card in edit mode at a time
       const editState = document.getElementById(`${agentName}-model-editstate`);
       const readOnly  = document.getElementById(`${agentName}-model-readonly`);
@@ -494,6 +502,11 @@
     }
 
     async function applyCardEdit(agentId, agentName) {
+      if (IS_PRODUCTION) {
+        alert('Model editing is not available in production. Use the CLI: openclaw agent <id> --model <model>');
+        return;
+      }
+
       const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
       const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
       if (!currentDropdown || !defaultDropdown) return;
@@ -568,6 +581,10 @@
     }
 
     async function changeCronModel(cronId, newModel) {
+      if (IS_PRODUCTION) {
+        alert('Cron model editing is not available in production. Use the CLI: openclaw cron edit <id> --model <model>');
+        return;
+      }
       if (!newModel) return; // empty = "Agent Default" — clear not implemented, skip
       try {
         const result = await fetch(`http://localhost:3102/api/cron-model`, {
