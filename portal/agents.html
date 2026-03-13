@@ -405,6 +405,35 @@
       return `<option value="" ${!selectedModel ? 'selected' : ''}>Inherit global</option>` + opts;
     }
 
+    // Cached session model overrides
+    let _sessionModelOverrides = {};
+    
+    // Fetch session model overrides in the background
+    function fetchSessionModelOverrides() {
+      const promises = AGENTS.map(agent =>
+        fetch(`https://api.cliffcircuit.ai/api/get-session-model-override?agentId=${agent.id}`)
+          .then(r => r.ok ? r.json() : null)
+          .catch(e => {
+            console.warn(`[fetchSessionModelOverrides] Failed for ${agent.id}:`, e.message);
+            return null;
+          })
+      );
+      
+      Promise.all(promises).then(results => {
+        results.forEach((result, idx) => {
+          if (result?.override?.model) {
+            const agentId = AGENTS[idx].id;
+            _sessionModelOverrides[agentId] = result.override.model;
+            console.log(`[fetchSessionModelOverrides] Cached override for ${agentId}: ${result.override.model}`);
+          }
+        });
+        // Re-render after fetching overrides
+        console.log('[fetchSessionModelOverrides] Re-rendering with fresh overrides');
+        if (_currentView === 'full') renderAgentsPage(_lastData);
+        else renderCondensedData(_lastData);
+      });
+    }
+
     function populateModelDropdowns(d) {
       const ac = d.agentConfigs || {};
       const sessions = d.sessions || [];
@@ -421,9 +450,10 @@
           .filter(s => s.agentId === agent.id)
           .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
 
-        const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
+        // Determine active model: check overrides first, then session, then default
+        let activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
           ? _pendingSessionModels[agent.id]
-          : (bestSession?.model || defaultModel);
+          : (_sessionModelOverrides[agent.id] || bestSession?.model || defaultModel);
         const hasOverride = !!(activeModel && defaultModel && activeModel !== defaultModel);
 
         // Read-only display: Current model name
@@ -1032,10 +1062,15 @@
           if (_currentView === 'full') renderAgentsPage(d);
           else renderCondensedData(d);
           enrichCronTokens(d);
+          // Refresh session model overrides
+          fetchSessionModelOverrides();
         });
       });
       // Apply saved view after init
       setView(_currentView);
+      
+      // Fetch session model overrides in the background
+      fetchSessionModelOverrides();
     });
   </script>
 </body>
