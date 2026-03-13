@@ -538,7 +538,7 @@
           
           const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
             ? _pendingSessionModels[agent.id]
-            : (bestSession?.model || defaultModel);
+            : (_sessionModelOverrides[agent.id] || bestSession?.model || defaultModel);
           
           console.log(`[enterCardEditMode] defaultModel=${defaultModel}, activeModel=${activeModel}, bestSession=`, bestSession?.label);
           
