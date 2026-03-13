@@ -269,10 +269,7 @@
         <!-- Collapsible job table -->
         <div class="border-t border-gray-800 px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors" onclick="toggleJobs('${n}')">
           <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Job Responsibilities</span>
-          <div class="flex items-center gap-3">
-            <button id="${n}-cron-edit-btn" onclick="enterCronSectionEdit('${n}'); event.stopPropagation();" class="text-xs text-gray-600 hover:text-gray-300 border border-gray-800 hover:border-gray-600 rounded px-2 py-0.5 transition-colors">Edit</button>
-            <span id="${n}-jobs-toggle" class="text-gray-600 text-xs">&#9658; show</span>
-          </div>
+          <span id="${n}-jobs-toggle" class="text-gray-600 text-xs">&#9658; show</span>
         </div>
         <div id="${n}-jobs-list" class="hidden border-t border-gray-900">
           <table class="w-full text-xs">
@@ -461,6 +458,9 @@
       if (readOnly)  readOnly.classList.remove('hidden');
       if (ctrlEdit)  ctrlEdit.classList.add('hidden');
       if (ctrlRO)    ctrlRO.classList.remove('hidden');
+      // Cron rows revert to read-only when card exits edit mode
+      _cronSectionEditing.delete(agentName);
+      _rebuildCronTbody(agentName);
     }
 
     function enterCardEditMode(agentName) {
@@ -473,6 +473,9 @@
       if (editState) editState.classList.remove('hidden');
       if (ctrlRO)    ctrlRO.classList.add('hidden');
       if (ctrlEdit)  ctrlEdit.classList.remove('hidden');
+      // Cron rows become dropdowns when card enters edit mode
+      _cronSectionEditing.add(agentName);
+      _rebuildCronTbody(agentName);
     }
 
     function cancelCardEdit(agentName) {
@@ -622,26 +625,6 @@
           <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${fmtTok(j.lastRunTokens, j)}</td>
         </tr>`;
       }).join('');
-    }
-
-    function enterCronSectionEdit(agentName) {
-      _cronSectionEditing.add(agentName);
-      _rebuildCronTbody(agentName);
-      const btn = document.getElementById(`${agentName}-cron-edit-btn`);
-      if (btn) {
-        btn.textContent = 'Done';
-        btn.onclick = (e) => { e.stopPropagation(); exitCronSectionEdit(agentName); };
-      }
-    }
-
-    function exitCronSectionEdit(agentName) {
-      _cronSectionEditing.delete(agentName);
-      _rebuildCronTbody(agentName);
-      const btn = document.getElementById(`${agentName}-cron-edit-btn`);
-      if (btn) {
-        btn.textContent = 'Edit';
-        btn.onclick = (e) => { e.stopPropagation(); enterCronSectionEdit(agentName); };
-      }
     }
 
     // Called by cron row dropdown onchange — fires immediately on selection change.
