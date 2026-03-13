@@ -569,10 +569,20 @@
     // Matches the top-card edit pattern — no per-row micro-affordances.
     const _cronSectionEditing = new Set(); // keyed by agent name (e.g. 'cliff')
 
+    function _applyCronEditDisplay(tbody, editing) {
+      if (!tbody) return;
+      if (editing) {
+        tbody.querySelectorAll('.cron-model-ro').forEach(el => { el.style.display = 'none'; });
+        tbody.querySelectorAll('.cron-model-select').forEach(el => { el.style.display = 'inline-block'; });
+      } else {
+        tbody.querySelectorAll('.cron-model-select').forEach(el => { el.style.display = ''; });
+        tbody.querySelectorAll('.cron-model-ro').forEach(el => { el.style.display = ''; });
+      }
+    }
+
     function enterCronSectionEdit(agentName) {
       _cronSectionEditing.add(agentName);
-      const tbody = document.getElementById(`${agentName}-jobs-body`);
-      if (tbody) tbody.classList.add('cron-editing');
+      _applyCronEditDisplay(document.getElementById(`${agentName}-jobs-body`), true);
       const btn = document.getElementById(`${agentName}-cron-edit-btn`);
       if (btn) {
         btn.textContent = 'Done';
@@ -582,8 +592,7 @@
 
     function exitCronSectionEdit(agentName) {
       _cronSectionEditing.delete(agentName);
-      const tbody = document.getElementById(`${agentName}-jobs-body`);
-      if (tbody) tbody.classList.remove('cron-editing');
+      _applyCronEditDisplay(document.getElementById(`${agentName}-jobs-body`), false);
       const btn = document.getElementById(`${agentName}-cron-edit-btn`);
       if (btn) {
         btn.textContent = 'Edit';
@@ -752,8 +761,13 @@
           } else {
             newJobsHtml = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
           }
-          // Don't overwrite tbody while section is in edit mode (would reset dropdown selections)
-          if (!_cronSectionEditing.has(n) && tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
+          // Always update tbody so edit mode can find the rows to show/hide.
+          // onchange fires immediately so no user selection is lost on refresh.
+          if (tbody.innerHTML !== newJobsHtml) {
+            tbody.innerHTML = newJobsHtml;
+            // Re-apply edit display after innerHTML replace (new elements lose inline styles)
+            if (_cronSectionEditing.has(n)) _applyCronEditDisplay(tbody, true);
+          }
         }
       });
 
