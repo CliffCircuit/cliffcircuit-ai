@@ -269,7 +269,10 @@
         <!-- Collapsible job table -->
         <div class="border-t border-gray-800 px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors" onclick="toggleJobs('${n}')">
           <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Job Responsibilities</span>
-          <span id="${n}-jobs-toggle" class="text-gray-600 text-xs">&#9658; show</span>
+          <div class="flex items-center gap-3">
+            <button id="${n}-cron-edit-btn" onclick="enterCronSectionEdit('${n}'); event.stopPropagation();" class="text-xs text-gray-600 hover:text-gray-300 border border-gray-800 hover:border-gray-600 rounded px-2 py-0.5 transition-colors">Edit</button>
+            <span id="${n}-jobs-toggle" class="text-gray-600 text-xs">&#9658; show</span>
+          </div>
         </div>
         <div id="${n}-jobs-list" class="hidden border-t border-gray-900">
           <table class="w-full text-xs">
@@ -552,49 +555,51 @@
       }
     }
 
-    // ─── CRON EDIT MODE ───────────────────────────────────────────────────────
-    // Track open cron edits so tbody refresh doesn't stomp in-progress edits
-    const _cronEditing = new Set();
+    // ─── CRON SECTION EDIT MODE ───────────────────────────────────────────────
+    // Section-level edit: one Edit/Done button per agent reveals all row dropdowns at once.
+    // Matches the top-card edit pattern — no per-row micro-affordances.
+    const _cronSectionEditing = new Set(); // keyed by agent name (e.g. 'cliff')
 
-    function enterCronEditMode(cronId) {
-      const ro = document.getElementById(`cron-ro-${cronId}`);
-      const ed = document.getElementById(`cron-edit-${cronId}`);
-      if (ro) ro.classList.add('hidden');
-      if (ed) ed.classList.remove('hidden');
-      _cronEditing.add(cronId);
-    }
-
-    function cancelCronEdit(cronId) {
-      const ro = document.getElementById(`cron-ro-${cronId}`);
-      const ed = document.getElementById(`cron-edit-${cronId}`);
-      if (ed) ed.classList.add('hidden');
-      if (ro) ro.classList.remove('hidden');
-      _cronEditing.delete(cronId);
-    }
-
-    async function applyCronEdit(cronId) {
-      const sel = document.getElementById(`cron-select-${cronId}`);
-      if (!sel) return;
-      const newModel = sel.value;
-      if (!newModel) { cancelCronEdit(cronId); return; } // nothing to apply
-
-      const saveBtn = document.querySelector(`#cron-edit-${cronId} button:first-child`);
-      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '...'; }
-
-      try {
-        await changeCronModel(cronId, newModel);
-        // Optimistic update of read-only display
-        const ro = document.getElementById(`cron-ro-${cronId}`);
-        if (ro) {
-          const label = (typeof friendlyModel === 'function') ? friendlyModel(newModel) : newModel.split('/').pop();
-          ro.innerHTML = `<span class="text-gray-400">${label}</span>`
-            + `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;"></span>`
-            + `<button onclick="enterCronEditMode('${cronId}'); event.stopPropagation();" class="text-gray-700 hover:text-gray-400 ml-1" title="Edit cron model">&#9998;</button>`;
-        }
-      } finally {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+    function enterCronSectionEdit(agentName) {
+      _cronSectionEditing.add(agentName);
+      const tbody = document.getElementById(`${agentName}-jobs-body`);
+      if (tbody) {
+        tbody.querySelectorAll('.cron-model-ro').forEach(el => el.classList.add('hidden'));
+        tbody.querySelectorAll('.cron-model-select').forEach(el => el.classList.remove('hidden'));
       }
-      cancelCronEdit(cronId);
+      const btn = document.getElementById(`${agentName}-cron-edit-btn`);
+      if (btn) {
+        btn.textContent = 'Done';
+        btn.onclick = (e) => { e.stopPropagation(); exitCronSectionEdit(agentName); };
+      }
+    }
+
+    function exitCronSectionEdit(agentName) {
+      _cronSectionEditing.delete(agentName);
+      const tbody = document.getElementById(`${agentName}-jobs-body`);
+      if (tbody) {
+        tbody.querySelectorAll('.cron-model-select').forEach(el => el.classList.add('hidden'));
+        tbody.querySelectorAll('.cron-model-ro').forEach(el => el.classList.remove('hidden'));
+      }
+      const btn = document.getElementById(`${agentName}-cron-edit-btn`);
+      if (btn) {
+        btn.textContent = 'Edit';
+        btn.onclick = (e) => { e.stopPropagation(); enterCronSectionEdit(agentName); };
+      }
+    }
+
+    // Called by cron row dropdown onchange — fires immediately, no per-row save needed.
+    async function updateCronModel(cronId, selectEl) {
+      const newModel = selectEl.value;
+      if (!newModel) return;
+      const roEl = selectEl.closest('td') && selectEl.closest('td').querySelector('.cron-model-ro');
+      await changeCronModel(cronId, newModel);
+      // Optimistic update of read-only span so it's correct when Done is clicked
+      if (roEl) {
+        const coloredLabel = (typeof modelShort === 'function') ? modelShort(newModel) : `<span class="text-gray-400">${newModel.split('/').pop()}</span>`;
+        const dot = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`;
+        roEl.innerHTML = coloredLabel + dot;
+      }
     }
 
     // ─── MAIN RENDER ─────────────────────────────────────────────────────────
@@ -727,20 +732,13 @@
                 ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`
                 : '';
               const cronEditOpts = buildCronEditOptions(cronModel);
+              const modelColoredLabel = (typeof modelShort === 'function') ? modelShort(cronModel || '') : `<span class="text-gray-400">${modelLabel}</span>`;
               return `<tr class="border-b border-gray-900">
               <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
               <td class="px-4 py-2.5 text-gray-400 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">
-                <div id="cron-ro-${esc(j.id)}" class="flex items-center gap-0.5">
-                  <span class="text-gray-400">${modelLabel}</span>${overrideDot}<button onclick="enterCronEditMode('${esc(j.id)}'); event.stopPropagation();" class="text-gray-700 hover:text-gray-400 ml-1" title="Edit cron model">&#9998;</button>
-                </div>
-                <div id="cron-edit-${esc(j.id)}" class="hidden">
-                  <select id="cron-select-${esc(j.id)}" class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onclick="event.stopPropagation()">${cronEditOpts}</select>
-                  <div class="flex gap-1 mt-1">
-                    <button onclick="applyCronEdit('${esc(j.id)}'); event.stopPropagation();" class="px-1.5 py-0.5 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded">Save</button>
-                    <button onclick="cancelCronEdit('${esc(j.id)}'); event.stopPropagation();" class="px-1.5 py-0.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">Cancel</button>
-                  </div>
-                </div>
+                <span class="cron-model-ro flex items-center gap-0.5">${hasModelOverride ? modelColoredLabel + overrideDot : '<span class="text-gray-600">Agent Default</span>'}</span>
+                <select class="cron-model-select hidden px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${cronEditOpts}</select>
               </td>
               <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${thinkBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)} cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">● ${esc(j.status||'idle')}</td>
@@ -751,9 +749,8 @@
           } else {
             newJobsHtml = '<tr><td colspan="8" class="px-4 py-4 text-center text-gray-700">No scheduled jobs</td></tr>';
           }
-          // Don't overwrite tbody if any cron in this agent is being edited
-          const anyEditing = info.jobs.some(j => _cronEditing.has(j.id));
-          if (!anyEditing && tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
+          // Don't overwrite tbody while section is in edit mode (would reset dropdown selections)
+          if (!_cronSectionEditing.has(n) && tbody.innerHTML !== newJobsHtml) tbody.innerHTML = newJobsHtml;
         }
       });
 
