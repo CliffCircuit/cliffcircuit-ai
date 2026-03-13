@@ -370,14 +370,17 @@
       }).join('');
     }
 
-    // Card-level current model dropdown — '' = "Use default" (clears session override)
+    // Card-level current model dropdown — pre-selects the actual active model.
+    // No "Use default" pseudo-option; the current model is always a real selection.
     function buildCurrentOptions(selectedModel) {
-      const opts = DROPDOWN_MODELS.map(id => {
+      // If selectedModel is unknown/missing, fall back to first entry so the dropdown
+      // always has a sensible selection rather than an empty/misleading state.
+      const effectiveSelected = selectedModel || DROPDOWN_MODELS[0];
+      return DROPDOWN_MODELS.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
-        const selected = (selectedModel === id) ? 'selected' : '';
+        const selected = (effectiveSelected === id) ? 'selected' : '';
         return `<option value="${id}" ${selected}>${label}</option>`;
       }).join('');
-      return `<option value="" ${!selectedModel ? 'selected' : ''}>Use default</option>` + opts;
     }
 
     // Card-level default model dropdown — '' = "Inherit global" (clears per-agent default)
@@ -425,7 +428,7 @@
         if (!isEditing) {
           const currentDropdown = document.getElementById(`${n}-current-dropdown`);
           const defaultDropdown = document.getElementById(`${n}-default-dropdown`);
-          if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(hasOverride ? activeModel : '');
+          if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(activeModel);
           if (defaultDropdown) defaultDropdown.innerHTML = buildDefaultOptions(defaultModel);
         }
       });
@@ -473,10 +476,10 @@
       const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
       if (!currentDropdown || !defaultDropdown) return;
 
-      const newCurrent = currentDropdown.value; // '' = clear session override (use default)
+      const newCurrent = currentDropdown.value; // always a real model ID (no pseudo-options)
       const newDefault = defaultDropdown.value; // '' = inherit global (clear per-agent default)
 
-      // Apply session override (or clear it)
+      // Apply session override
       await changeAgentModel(agentId, newCurrent, agentName);
 
       // Apply persistent per-agent default (or clear it)
@@ -484,9 +487,9 @@
 
       _exitCardEditMode(agentName);
 
-      // Optimistically update read-only display
+      // Optimistically update read-only display using established model color helper
       const nameEl = document.getElementById(`${agentName}-model-name`);
-      if (nameEl && newCurrent) {
+      if (nameEl) {
         nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(newCurrent) : newCurrent;
       }
       const defaultNameEl = document.getElementById(`${agentName}-model-default-name`);
