@@ -8,6 +8,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
   <style>
+    /* Cron section edit mode — controlled by .cron-editing class on tbody */
+    .cron-model-select { display: none; }
+    tbody.cron-editing .cron-model-select { display: inline-block; }
+    tbody.cron-editing .cron-model-ro { display: none; }
     .info-tip { position: relative; cursor: help; color: #6b7280; font-size: 14px; margin-left: 4px; }
     .info-tip:hover { color: #a5b4fc; }
     .info-tip:hover::after {
@@ -363,14 +367,19 @@
     }
 
     // Cron edit dropdown — explicit model choices only.
-    // Does NOT include an "Agent Default" / clear option because the clear path is not
-    // implemented end-to-end. Exposing a fake clear would silently no-op; honest omission.
-    function buildCronEditOptions(currentValue) {
-      return DROPDOWN_MODELS.map(id => {
+    // agentDefault: the agent's configured default model (used as an optgroup label so the
+    // user knows what "no override" would mean, without exposing a fake clear action).
+    function buildCronEditOptions(currentValue, agentDefault) {
+      const defaultLabel = agentDefault
+        ? ((typeof friendlyModel === 'function') ? friendlyModel(agentDefault) : agentDefault.split('/').pop())
+        : 'global default';
+      const header = `<optgroup label="Default: ${defaultLabel}"></optgroup>`;
+      const opts = DROPDOWN_MODELS.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (currentValue === id) ? 'selected' : '';
         return `<option value="${id}" ${selected}>${label}</option>`;
       }).join('');
+      return header + opts;
     }
 
     // Card-level current model dropdown — pre-selects the actual active model.
@@ -563,10 +572,7 @@
     function enterCronSectionEdit(agentName) {
       _cronSectionEditing.add(agentName);
       const tbody = document.getElementById(`${agentName}-jobs-body`);
-      if (tbody) {
-        tbody.querySelectorAll('.cron-model-ro').forEach(el => el.classList.add('hidden'));
-        tbody.querySelectorAll('.cron-model-select').forEach(el => el.classList.remove('hidden'));
-      }
+      if (tbody) tbody.classList.add('cron-editing');
       const btn = document.getElementById(`${agentName}-cron-edit-btn`);
       if (btn) {
         btn.textContent = 'Done';
@@ -577,10 +583,7 @@
     function exitCronSectionEdit(agentName) {
       _cronSectionEditing.delete(agentName);
       const tbody = document.getElementById(`${agentName}-jobs-body`);
-      if (tbody) {
-        tbody.querySelectorAll('.cron-model-select').forEach(el => el.classList.add('hidden'));
-        tbody.querySelectorAll('.cron-model-ro').forEach(el => el.classList.remove('hidden'));
-      }
+      if (tbody) tbody.classList.remove('cron-editing');
       const btn = document.getElementById(`${agentName}-cron-edit-btn`);
       if (btn) {
         btn.textContent = 'Edit';
@@ -731,14 +734,14 @@
               const overrideDot = hasModelOverride
                 ? `<span class="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 ml-1" style="box-shadow:0 0 4px #facc15;" title="Explicit model override"></span>`
                 : '';
-              const cronEditOpts = buildCronEditOptions(cronModel);
+              const cronEditOpts = buildCronEditOptions(cronModel, cfg.model || '');
               const modelColoredLabel = (typeof modelShort === 'function') ? modelShort(cronModel || '') : `<span class="text-gray-400">${modelLabel}</span>`;
               return `<tr class="border-b border-gray-900">
               <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
               <td class="px-4 py-2.5 text-gray-400 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${jobScheduleLabel(j)}</td>
               <td class="px-4 py-2.5 text-xs">
                 <span class="cron-model-ro flex items-center gap-0.5">${hasModelOverride ? modelColoredLabel + overrideDot : '<span class="text-gray-600">Agent Default</span>'}</span>
-                <select class="cron-model-select hidden px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${cronEditOpts}</select>
+                <select class="cron-model-select px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${cronEditOpts}</select>
               </td>
               <td class="px-4 py-2.5 text-xs cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">${thinkBadge(j.thinking)}</td>
               <td class="px-4 py-2.5 ${statusColor(j.status)} cursor-pointer" onclick="openJobDetail('${esc(j.name)}')">● ${esc(j.status||'idle')}</td>
