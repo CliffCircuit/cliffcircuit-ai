@@ -486,30 +486,48 @@
       if (ctrlEdit)  ctrlEdit.classList.remove('hidden');
       
       // Refresh dropdowns with current values to ensure they're not stale
-      const agent = AGENTS.find(a => a.name.toLowerCase() === agentName);
-      if (agent && _lastData) {
-        const ac = _lastData.agentConfigs || {};
-        const cfg = ac[agent.id] || ac[agentName] || {};
-        const sessions = _lastData.sessions || [];
+      try {
+        const agent = AGENTS.find(a => a.name.toLowerCase() === agentName);
+        console.log(`[enterCardEditMode] agentName=${agentName}, found agent:`, agent);
         
-        // Recalculate current values
-        const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
-          ? _pendingDefaultModels[agent.id]
-          : (cfg.model || '');
-        
-        const bestSession = sessions
-          .filter(s => s.agentId === agent.id)
-          .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
-        
-        const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
-          ? _pendingSessionModels[agent.id]
-          : (bestSession?.model || defaultModel);
-        
-        // Rebuild dropdowns with current values
-        const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
-        const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
-        if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(activeModel);
-        if (defaultDropdown) defaultDropdown.innerHTML = buildDefaultOptions(defaultModel);
+        if (agent && _lastData) {
+          const ac = _lastData.agentConfigs || {};
+          const cfg = ac[agent.id] || ac[agentName] || {};
+          const sessions = _lastData.sessions || [];
+          
+          console.log(`[enterCardEditMode] cfg=`, cfg, `sessions.length=${sessions.length}`);
+          
+          // Recalculate current values
+          const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
+            ? _pendingDefaultModels[agent.id]
+            : (cfg.model || '');
+          
+          const bestSession = sessions
+            .filter(s => s.agentId === agent.id)
+            .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
+          
+          const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
+            ? _pendingSessionModels[agent.id]
+            : (bestSession?.model || defaultModel);
+          
+          console.log(`[enterCardEditMode] defaultModel=${defaultModel}, activeModel=${activeModel}, bestSession=`, bestSession?.label);
+          
+          // Rebuild dropdowns with current values
+          const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
+          const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
+          if (currentDropdown) {
+            currentDropdown.innerHTML = buildCurrentOptions(activeModel);
+            console.log(`[enterCardEditMode] rebuilt currentDropdown for activeModel=${activeModel}`);
+          }
+          if (defaultDropdown) {
+            defaultDropdown.innerHTML = buildDefaultOptions(defaultModel);
+            console.log(`[enterCardEditMode] rebuilt defaultDropdown for defaultModel=${defaultModel}`);
+          }
+        } else {
+          console.log(`[enterCardEditMode] Agent not found or _lastData missing`);
+        }
+      } catch (e) {
+        console.error(`[enterCardEditMode] ERROR:`, e.message);
       }
       
       // Cron rows become dropdowns when card enters edit mode
