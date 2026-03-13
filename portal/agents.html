@@ -393,10 +393,9 @@
 
     // Card-level current model dropdown — pre-selects the actual active model.
     // No "Use default" pseudo-option; the current model is always a real selection.
-    function buildCurrentOptions(selectedModel) {
-      // Pre-select the given model. If somehow empty, don't force a selection
-      // (this should not happen with AGENT_DEFAULT_MODELS fallback above).
-      const effectiveSelected = selectedModel;
+    function buildCurrentOptions(selectedModel, agentId) {
+      // Pre-select the given model. If empty, fall back to agent's default.
+      const effectiveSelected = selectedModel || (agentId ? AGENT_DEFAULT_MODELS[agentId] : '') || DROPDOWN_MODELS[0];
       return DROPDOWN_MODELS.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (effectiveSelected === id) ? 'selected' : '';
@@ -405,12 +404,13 @@
     }
 
     // Card-level default model dropdown — '' = "Inherit global" (clears per-agent default)
-    function buildDefaultOptions(selectedModel) {
+    function buildDefaultOptions(selectedModel, agentId) {
       const opts = DROPDOWN_MODELS.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (selectedModel === id) ? 'selected' : '';
         return `<option value="${id}" ${selected}>${label}</option>`;
       }).join('');
+      // Always show "Inherit global" as first option; select it only if selectedModel is truly empty
       return `<option value="" ${!selectedModel ? 'selected' : ''}>Inherit global</option>` + opts;
     }
 
@@ -483,8 +483,8 @@
         if (!isEditing) {
           const currentDropdown = document.getElementById(`${n}-current-dropdown`);
           const defaultDropdown = document.getElementById(`${n}-default-dropdown`);
-          if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(activeModel);
-          if (defaultDropdown) defaultDropdown.innerHTML = buildDefaultOptions(defaultModel);
+          if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(activeModel, agent.id);
+          if (defaultDropdown) defaultDropdown.innerHTML = buildDefaultOptions(defaultModel, agent.id);
         }
       });
     }
@@ -555,11 +555,11 @@
           const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
           const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
           if (currentDropdown) {
-            currentDropdown.innerHTML = buildCurrentOptions(activeModel);
+            currentDropdown.innerHTML = buildCurrentOptions(activeModel, agent.id);
             console.log(`[enterCardEditMode] rebuilt currentDropdown for activeModel=${activeModel}`);
           }
           if (defaultDropdown) {
-            defaultDropdown.innerHTML = buildDefaultOptions(defaultModel);
+            defaultDropdown.innerHTML = buildDefaultOptions(defaultModel, agent.id);
             console.log(`[enterCardEditMode] rebuilt defaultDropdown for defaultModel=${defaultModel}`);
           }
         } else {
