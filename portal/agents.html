@@ -528,6 +528,10 @@
 
       const newCurrent = currentDropdown.value; // always a real model ID (no pseudo-options)
       const newDefault = defaultDropdown.value; // '' = inherit global (clear per-agent default)
+      
+      console.log(`[applyCardEdit] agentId=${agentId}, agentName=${agentName}`);
+      console.log(`[applyCardEdit] newCurrent=${newCurrent}, newDefault=${newDefault}`);
+      console.log(`[applyCardEdit] currentDropdown.id=${currentDropdown.id}, defaultDropdown.id=${defaultDropdown.id}`);
 
       try {
         // Apply session override
@@ -561,6 +565,7 @@
     // Proxied through https://api.cliffcircuit.ai (Cloudflare tunnel)
     async function changeAgentModel(agentId, newModel, agentName) {
       try {
+        console.log(`[changeAgentModel] Sending to /api/set-session-model: agentId=${agentId}, newModel=${newModel}`);
         const response = await fetch('https://api.cliffcircuit.ai/api/set-session-model', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -581,6 +586,7 @@
     // Proxied through https://api.cliffcircuit.ai (Cloudflare tunnel)
     async function setAgentDefaultModel(agentId, newModel) {
       try {
+        console.log(`[setAgentDefaultModel] Sending to /api/set-agent-default-model: agentId=${agentId}, model=${newModel}`);
         const response = await fetch('https://api.cliffcircuit.ai/api/set-agent-default-model', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
