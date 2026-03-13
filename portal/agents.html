@@ -484,6 +484,34 @@
       if (editState) editState.classList.remove('hidden');
       if (ctrlRO)    ctrlRO.classList.add('hidden');
       if (ctrlEdit)  ctrlEdit.classList.remove('hidden');
+      
+      // Refresh dropdowns with current values to ensure they're not stale
+      const agent = AGENTS.find(a => a.name.toLowerCase() === agentName);
+      if (agent && _lastData) {
+        const ac = _lastData.agentConfigs || {};
+        const cfg = ac[agent.id] || ac[agentName] || {};
+        const sessions = _lastData.sessions || [];
+        
+        // Recalculate current values
+        const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
+          ? _pendingDefaultModels[agent.id]
+          : (cfg.model || '');
+        
+        const bestSession = sessions
+          .filter(s => s.agentId === agent.id)
+          .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
+        
+        const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
+          ? _pendingSessionModels[agent.id]
+          : (bestSession?.model || defaultModel);
+        
+        // Rebuild dropdowns with current values
+        const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
+        const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
+        if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(activeModel);
+        if (defaultDropdown) defaultDropdown.innerHTML = buildDefaultOptions(defaultModel);
+      }
+      
       // Cron rows become dropdowns when card enters edit mode
       _cronSectionEditing.add(agentName);
       _rebuildCronTbody(agentName);
