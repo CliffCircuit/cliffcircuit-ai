@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-15T18:51:15.485Z",
+  "generatedAt": "2026-03-15T19:06:16.333Z",
   "count": 295,
   "previews": {
     "agent:main:cron:fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5": {
@@ -63,14 +63,14 @@
       "sessionId": "a50cf089-94fc-41bc-9732-096aadd76809"
     },
     "agent:main:telegram:direct:8386624734": {
-      "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Sunday, March 15th, 2026 — 9:43 AM (America/Los_Angeles) / 2026-03-15 16:43 UTC",
-      "response": "[[reply_to_current]] Yeah, that’s reasonable.\n\nIf the old web session is just visually stuck, a fresh session is usually the fastest way to separate:\n- **actual agent lockup**\nfrom\n- **web UI spinner nonsense**\n\nIf the new session comes up clean, the old one was probably just stale. If the new one also behaves weirdly, then we’ve learned it’s a broader issue.",
-      "sessionId": "d5f8575e-113d-4307-9880-129e419d98db"
+      "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Sunday, March 15th, 2026 — 11:52 AM (America/Los_Angeles) / 2026-03-15 18:52 UTC",
+      "response": "[[reply_to_current]] He’s not completely stripped down, but he is heavily limited.\n\nIn this session right now, I still have:\n- `memory_search`\n- `memory_get`\n\nAnd I do **not** have basics like:\n- `exec`\n- `read`\n- `browser`\n- `group:ui`\n\nSo this looks less like “browser specifically is missing” and more like “this Telegram session came up with a very minimal tool set.”",
+      "sessionId": "0314f87a-911b-4f98-aefc-b731597efe31"
     },
-    "d5f8575e-113d-4307-9880-129e419d98db": {
-      "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Sunday, March 15th, 2026 — 9:43 AM (America/Los_Angeles) / 2026-03-15 16:43 UTC",
-      "response": "[[reply_to_current]] Yeah, that’s reasonable.\n\nIf the old web session is just visually stuck, a fresh session is usually the fastest way to separate:\n- **actual agent lockup**\nfrom\n- **web UI spinner nonsense**\n\nIf the new session comes up clean, the old one was probably just stale. If the new one also behaves weirdly, then we’ve learned it’s a broader issue.",
-      "sessionId": "d5f8575e-113d-4307-9880-129e419d98db"
+    "0314f87a-911b-4f98-aefc-b731597efe31": {
+      "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Sunday, March 15th, 2026 — 11:52 AM (America/Los_Angeles) / 2026-03-15 18:52 UTC",
+      "response": "[[reply_to_current]] He’s not completely stripped down, but he is heavily limited.\n\nIn this session right now, I still have:\n- `memory_search`\n- `memory_get`\n\nAnd I do **not** have basics like:\n- `exec`\n- `read`\n- `browser`\n- `group:ui`\n\nSo this looks less like “browser specifically is missing” and more like “this Telegram session came up with a very minimal tool set.”",
+      "sessionId": "0314f87a-911b-4f98-aefc-b731597efe31"
     },
     "agent:main:cron:087d28b7-261a-4261-926a-cb0b4e7a2825": {
       "task": "[cron:087d28b7-261a-4261-926a-cb0b4e7a2825 daily-cost-report] Run: node /Users/openclaw/workspace/cost-tracker.js — output the result verbatim. Do not add commentary or modify the output.\nCurrent time: Saturday, March 14th, 2026 — 11:00 PM (America/Los_Angeles) / 2026-03-15 06:00 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
@@ -84,12 +84,12 @@
     },
     "agent:main:main": {
       "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Saturday, March 14th, 2026 — 5:06 PM (America/Los_Angeles) / 2026-03-15 00:06 UTC",
-      "response": "Done — global tools allow list is now `[\"group:plugins\", \"browser\", \"group:ui\"]`. All agents will have browser access after a gateway restart.",
+      "response": "\n\n**There it is.** `\"contextEngine\": \"lossless-claw\"` is still set. Even though you restored the old lossless-claw files, the context engine is failing silently and stripping all tools.\n\nChange it to `\"legacy\"`:\n\n```\nsed -i.bak 's/\"contextEngine\": \"lossless-claw\"/\"contextEngine\": \"legacy\"/' ~/.openclaw/openclaw.json\n```\n\nThen do a gateway restart. That should bring all tools back for every agent.",
       "sessionId": "37e720cb-60aa-46be-8e05-69691ff9b4ec"
     },
     "37e720cb-60aa-46be-8e05-69691ff9b4ec": {
       "task": "A new session was started via /new or /reset. Execute your Session Startup sequence now - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Saturday, March 14th, 2026 — 5:06 PM (America/Los_Angeles) / 2026-03-15 00:06 UTC",
-      "response": "Done — global tools allow list is now `[\"group:plugins\", \"browser\", \"group:ui\"]`. All agents will have browser access after a gateway restart.",
+      "response": "\n\n**There it is.** `\"contextEngine\": \"lossless-claw\"` is still set. Even though you restored the old lossless-claw files, the context engine is failing silently and stripping all tools.\n\nChange it to `\"legacy\"`:\n\n```\nsed -i.bak 's/\"contextEngine\": \"lossless-claw\"/\"contextEngine\": \"legacy\"/' ~/.openclaw/openclaw.json\n```\n\nThen do a gateway restart. That should bring all tools back for every agent.",
       "sessionId": "37e720cb-60aa-46be-8e05-69691ff9b4ec"
     },
     "agent:main:imessage:direct:+17074809777": {
@@ -212,22 +212,12 @@
       "response": "**Multi-Agent Task Supervisor Status — 2026-03-14 18:52 UTC**\n\n- **No active worker tasks detected** under target \"cliff\" — awaiting task assignment or worker initiation.\n- **Reviewer session ready** (5ec22fdc...); no updates to report yet.\n- **Blocker:** Test appears to be waiting for task payload or worker engagement signal.\n\nReady to proceed once worker tasks are spawned or status updates arrive.",
       "sessionId": "6b0947a7-3d6d-4ed5-8564-c9150eac3124"
     },
-    "agent:main:cron:4a15a18c-7d6d-48e2-88a3-6c164b8f23a4:run:6b0947a7-3d6d-4ed5-8564-c9150eac3124": {
-      "task": "[cron:4a15a18c-7d6d-48e2-88a3-6c164b8f23a4 multi-agent-task-supervisor-haiku-contained-test] Controlled Multi-Agent Task supervisor live test.\nProject: Multi-Agent Task.\nWorker target: cliff.\nReviewer session: agent:main:subagent:5ec22fdc-35d5-447d-ae6b-5c544d3b378d.\nTrace style: status-only.\nReply in 2-4 short lines with only concrete progress, blockers, or stalls.\nCurrent time: Saturday, March 14th, 2026 — 11:52 AM (America/Los_Angeles) / 2026-03-14 18:52 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "**Multi-Agent Task Supervisor Status — 2026-03-14 18:52 UTC**\n\n- **No active worker tasks detected** under target \"cliff\" — awaiting task assignment or worker initiation.\n- **Reviewer session ready** (5ec22fdc...); no updates to report yet.\n- **Blocker:** Test appears to be waiting for task payload or worker engagement signal.\n\nReady to proceed once worker tasks are spawned or status updates arrive.",
-      "sessionId": "6b0947a7-3d6d-4ed5-8564-c9150eac3124"
-    },
     "agent:main:cron:f32737a4-9b4e-448d-a2e0-70bf7faebac8": {
       "task": "[cron:f32737a4-9b4e-448d-a2e0-70bf7faebac8 multi-agent-task-runtime-defaults-verification] Check the supervised run for project Multi-Agent Task.\nWorker target: cliff.\nReviewer session: agent:main:subagent:5ec22fdc-35d5-447d-ae6b-5c544d3b378d.\nTrace style: status-only.\nReply in 2-4 short lines only.\nReport only concrete progress, blockers, or stalls.\nIf nothing concrete happened, say so plainly.\nCurrent time: Saturday, March 14th, 2026 — 11:59 AM (America/Los_Angeles) / 2026-03-14 18:59 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "**Multi-Agent Task Status — Saturday 11:59 AM**\n\n✅ **Avatars:** Retired cleanly (local + nested Dropbox, zero operational refs)  \n✅ **Agency-agents:** Ready for retirement (compare + narrower ref checks passed reviewer approval)  \n⏸️ **Config:** Compare-first pass complete; awaiting review submission  \n🔧 **System state:** Intentionally paused for orchestrator integration; worker + reviewer both frozen cleanly; first resume test case ready",
       "sessionId": "413d8065-2894-4213-9a66-3a6a47e4fcb3"
     },
     "413d8065-2894-4213-9a66-3a6a47e4fcb3": {
-      "task": "[cron:f32737a4-9b4e-448d-a2e0-70bf7faebac8 multi-agent-task-runtime-defaults-verification] Check the supervised run for project Multi-Agent Task.\nWorker target: cliff.\nReviewer session: agent:main:subagent:5ec22fdc-35d5-447d-ae6b-5c544d3b378d.\nTrace style: status-only.\nReply in 2-4 short lines only.\nReport only concrete progress, blockers, or stalls.\nIf nothing concrete happened, say so plainly.\nCurrent time: Saturday, March 14th, 2026 — 11:59 AM (America/Los_Angeles) / 2026-03-14 18:59 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "**Multi-Agent Task Status — Saturday 11:59 AM**\n\n✅ **Avatars:** Retired cleanly (local + nested Dropbox, zero operational refs)  \n✅ **Agency-agents:** Ready for retirement (compare + narrower ref checks passed reviewer approval)  \n⏸️ **Config:** Compare-first pass complete; awaiting review submission  \n🔧 **System state:** Intentionally paused for orchestrator integration; worker + reviewer both frozen cleanly; first resume test case ready",
-      "sessionId": "413d8065-2894-4213-9a66-3a6a47e4fcb3"
-    },
-    "agent:main:cron:f32737a4-9b4e-448d-a2e0-70bf7faebac8:run:413d8065-2894-4213-9a66-3a6a47e4fcb3": {
       "task": "[cron:f32737a4-9b4e-448d-a2e0-70bf7faebac8 multi-agent-task-runtime-defaults-verification] Check the supervised run for project Multi-Agent Task.\nWorker target: cliff.\nReviewer session: agent:main:subagent:5ec22fdc-35d5-447d-ae6b-5c544d3b378d.\nTrace style: status-only.\nReply in 2-4 short lines only.\nReport only concrete progress, blockers, or stalls.\nIf nothing concrete happened, say so plainly.\nCurrent time: Saturday, March 14th, 2026 — 11:59 AM (America/Los_Angeles) / 2026-03-14 18:59 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "**Multi-Agent Task Status — Saturday 11:59 AM**\n\n✅ **Avatars:** Retired cleanly (local + nested Dropbox, zero operational refs)  \n✅ **Agency-agents:** Ready for retirement (compare + narrower ref checks passed reviewer approval)  \n⏸️ **Config:** Compare-first pass complete; awaiting review submission  \n🔧 **System state:** Intentionally paused for orchestrator integration; worker + reviewer both frozen cleanly; first resume test case ready",
       "sessionId": "413d8065-2894-4213-9a66-3a6a47e4fcb3"
@@ -2008,14 +1998,14 @@
       "sessionId": "8f1985a7-57ac-4d0e-ae9b-f1cb0169155e"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:44 AM (America/Los_Angeles) / 2026-03-15 18:44 UTC",
-      "response": "✅ **Heartbeat: All clear**\n\n- Inbox clean\n- Last idle check: 10:49 AM — nominal\n- No pending tasks\n- Standing by for next assignment\n\n---\n\n*Scout — monitoring and ready*",
-      "sessionId": "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e"
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:59 AM (America/Los_Angeles) / 2026-03-15 18:59 UTC",
+      "response": "✅ **Scout heartbeat confirmed — 11:59 AM PT**\n\nSecond check of the day. Status remains all clear:\n- No new messages in inbox\n- No pending task assignments\n- Standing by for next cron task\n\n---\n\n_Scout — monitoring and standing by_",
+      "sessionId": "64173273-7faa-4884-ba8d-537440772f38"
     },
-    "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:44 AM (America/Los_Angeles) / 2026-03-15 18:44 UTC",
-      "response": "✅ **Heartbeat: All clear**\n\n- Inbox clean\n- Last idle check: 10:49 AM — nominal\n- No pending tasks\n- Standing by for next assignment\n\n---\n\n*Scout — monitoring and ready*",
-      "sessionId": "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e"
+    "64173273-7faa-4884-ba8d-537440772f38": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:59 AM (America/Los_Angeles) / 2026-03-15 18:59 UTC",
+      "response": "✅ **Scout heartbeat confirmed — 11:59 AM PT**\n\nSecond check of the day. Status remains all clear:\n- No new messages in inbox\n- No pending task assignments\n- Standing by for next cron task\n\n---\n\n_Scout — monitoring and standing by_",
+      "sessionId": "64173273-7faa-4884-ba8d-537440772f38"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:002874e6-4e65-4bd7-8182-cd7d2f64c4d6": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 14th, 2026 — 12:04 PM (America/Los_Angeles) / 2026-03-14 19:04 UTC",
@@ -2951,6 +2941,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:44 AM (America/Los_Angeles) / 2026-03-15 18:44 UTC",
       "response": "✅ **Heartbeat: All clear**\n\n- Inbox clean\n- Last idle check: 10:49 AM — nominal\n- No pending tasks\n- Standing by for next assignment\n\n---\n\n*Scout — monitoring and ready*",
       "sessionId": "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e"
+    },
+    "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:44 AM (America/Los_Angeles) / 2026-03-15 18:44 UTC",
+      "response": "✅ **Heartbeat: All clear**\n\n- Inbox clean\n- Last idle check: 10:49 AM — nominal\n- No pending tasks\n- Standing by for next assignment\n\n---\n\n*Scout — monitoring and ready*",
+      "sessionId": "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:64173273-7faa-4884-ba8d-537440772f38": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 11:59 AM (America/Los_Angeles) / 2026-03-15 18:59 UTC",
+      "response": "✅ **Scout heartbeat confirmed — 11:59 AM PT**\n\nSecond check of the day. Status remains all clear:\n- No new messages in inbox\n- No pending task assignments\n- Standing by for next cron task\n\n---\n\n_Scout — monitoring and standing by_",
+      "sessionId": "64173273-7faa-4884-ba8d-537440772f38"
     }
   }
 }
