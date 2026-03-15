@@ -57,14 +57,14 @@
     #chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     #chat-header { padding: 14px 20px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 16px; background: linear-gradient(to bottom, #0f1419, #0a0f1a); }
     #chat-header .agent-avatar { width: 56px; height: 56px; font-size: 28px; }
-    #messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; animation: fadeIn 0.3s ease-in; min-height: 0; }
+    #messages { flex: 1; overflow-y: auto; padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; animation: fadeIn 0.3s ease-in; min-height: 0; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Messages */
     .msg-group { display: flex; gap: 10px; max-width: 100%; position: relative; }
     .msg-group:hover .msg-actions { opacity: 1; }
     .msg-group.user { align-self: flex-end; flex-direction: row-reverse; max-width: min(78%, 780px); }
-    .msg-group.assistant { align-self: flex-start; max-width: min(98%, 1600px); }
+    .msg-group.assistant { align-self: flex-start; width: calc(100% - 2px); max-width: none; }
     .msg-group.continuation { margin-top: 1px; }
     .msg-group.continuation .msg-avatar { visibility: hidden; }
     .msg-group.continuation .msg-meta { display: none; }
@@ -143,7 +143,16 @@
     .msg-group.new-msg { animation: msgAppear 0.2s ease-out; }
 
     /* Streaming bubble pulse */
-    .msg-bubble.streaming { border-color: #4f46e5; }
+    @keyframes bubbleGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.10), 0 0 0 1px rgba(99,102,241,0.18) inset; border-color: #4f46e5; }
+      50% { box-shadow: 0 0 0 3px rgba(99,102,241,0.10), 0 0 18px rgba(99,102,241,0.18), 0 0 0 1px rgba(129,140,248,0.28) inset; border-color: #818cf8; }
+    }
+    .msg-group.assistant .msg-bubble.streaming {
+      position: relative;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99,102,241,0.18) inset, 0 0 14px rgba(99,102,241,0.12);
+      animation: bubbleGlow 1.8s ease-in-out infinite;
+    }
 
     /* Header model tag */
     .model-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; background: #1f2937; color: #9ca3af; margin-left: 6px; }
@@ -167,7 +176,7 @@
     .msg-bubble p:last-child { margin-bottom: 0; }
     .msg-bubble code { background: #1a2332; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: #fbbf24; border: 1px solid #2a3444; }
     .msg-bubble pre { background: #1a2332; border: none; border-radius: 0; padding: 14px; margin: 0; overflow-x: auto; }
-    .msg-bubble pre code { background: none; padding: 0; font-size: 12.5px; color: #e2e8f0; border: none; line-height: 1.55; white-space: pre; word-break: normal; overflow-wrap: normal; }
+    .msg-bubble pre code { display: block; background: none; padding: 0; font-size: 12.5px; color: #e2e8f0; border: none; line-height: 1.55; white-space: pre; word-break: normal; overflow-wrap: normal; }
     .msg-bubble strong { font-weight: 700; color: #f9fafb; }
     .msg-bubble em { font-style: italic; color: #d1d5db; }
     .msg-bubble h1 { font-size: 18px; font-weight: 700; margin: 8px 0; color: #f9fafb; }
@@ -180,7 +189,8 @@
     .msg-bubble li { margin-bottom: 4px; line-height: 1.6; color: #e2e8f0; }
     .msg-bubble img { max-width: 100%; border-radius: 8px; margin: 6px 0; cursor: pointer; }
     .msg-bubble blockquote { border-left: 3px solid #4f46e5; padding-left: 12px; margin: 8px 0; color: #cbd5e1; font-style: italic; background: rgba(79,70,229,0.05); padding: 8px 12px; border-radius: 4px; }
-    .msg-bubble table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+    .table-wrap { width: 100%; overflow-x: auto; margin: 8px 0; }
+    .msg-bubble table { border-collapse: collapse; width: 100%; margin: 0; font-size: 13px; }
     .msg-bubble th { padding: 6px 10px; text-align: left; border-bottom: 2px solid #374151; font-weight: 600; color: #d1d5db; background: #1a2332; }
     .msg-bubble td { padding: 5px 10px; border-bottom: 1px solid #1f2937; }
     .msg-bubble tr:hover td { background: rgba(79,70,229,0.05); }
@@ -307,8 +317,8 @@
 
     /* Code block panel */
     .code-block-wrap { position: relative; display: block; width: 100%; margin: 10px 0; border: 1px solid #2a3444; border-radius: 8px; overflow: hidden; background: #1a2332; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-    .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: #1e2b3a; border-bottom: 1px solid #2a3444; min-height: 32px; position: sticky; top: 0; z-index: 1; flex-shrink: 0; }
-    .code-lang-tag { font-size: 11px; color: #8899aa; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; user-select: none; }
+    .code-block-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 12px; background: #1e2b3a; border-bottom: 1px solid #2a3444; min-height: 32px; position: sticky; top: 0; z-index: 1; flex-shrink: 0; }
+    .code-lang-tag { font-size: 11px; color: #8899aa; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; user-select: none; flex: 1; min-width: 0; }
     .code-copy-btn { font-size: 11px; padding: 3px 8px; background: #253345; border: 1px solid #354555; border-radius: 5px; color: #8899aa; cursor: pointer; opacity: 0; transition: all 0.15s; display: flex; align-items: center; gap: 4px; line-height: 1; flex-shrink: 0; }
     .code-block-wrap:hover .code-copy-btn { opacity: 1; }
     .code-copy-btn:hover { background: #354555; color: #c9d1d9; border-color: #4a5a6a; }
@@ -386,7 +396,7 @@
       #sidebar-backdrop { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.5); }
       #sidebar-backdrop.show { display: block; }
       .msg-group { max-width: 100%; }
-      .msg-group.assistant { max-width: 98%; }
+      .msg-group.assistant { width: 100%; max-width: 100%; }
       .msg-group.user { max-width: 92%; }
       #chat-app { position: relative; overflow: hidden; }
       /* Hide action icons that are less critical on mobile */
@@ -400,17 +410,22 @@
     #channel-list:empty { display: none; }
     .channel-section-label { font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 12px 6px; display: flex; align-items: center; gap: 6px; }
     .channel-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; border-left: 3px solid #6366f1; margin-bottom: 2px; }
+    .channel-item:hover .channel-dismiss-btn { opacity: 1; }
     .channel-item:hover { background: #111827; border-color: #1f2937; border-left-color: #818cf8; }
     .channel-item.active { background: #1e1b4b; border-color: #4f46e5; border-left-color: #818cf8; box-shadow: 0 0 8px rgba(79,70,229,0.15); }
     .channel-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; flex-shrink: 0; animation: channelPulse 2s infinite; }
     @keyframes channelPulse { 0%,100% { opacity: 1; box-shadow: 0 0 4px #34d39966; } 50% { opacity: 0.5; box-shadow: 0 0 8px #34d39900; } }
     .channel-dot.inactive { background: #4b5563; animation: none; }
     .channel-info { flex: 1; min-width: 0; }
+    .channel-dismiss-btn { opacity: 0; width: 20px; height: 20px; border: none; border-radius: 9999px; background: transparent; color: #6b7280; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+    .channel-dismiss-btn:hover { opacity: 1; background: #1f2937; color: #d1d5db; }
+    .channel-dismiss-btn:focus-visible { opacity: 1; outline: 2px solid #4f46e5; outline-offset: 1px; }
     .channel-name { font-weight: 500; color: #e5e7eb; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .channel-meta { font-size: 11px; color: #6b7280; margin-top: 1px; }
 
     /* Channel view */
     .channel-live-badge { display: inline-flex; align-items: center; gap: 4px; background: #065f46; color: #34d399; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; letter-spacing: 0.5px; }
+    .channel-live-badge.hidden { display: none; }
     .channel-live-badge .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; animation: channelPulse 2s infinite; }
     .channel-event { display: flex; gap: 10px; max-width: min(90%, 780px); align-self: flex-start; position: relative; margin-bottom: 4px; }
     .channel-event-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; background: #1e293b; margin-top: 2px; }
@@ -481,6 +496,7 @@
               </div>
               <span id="header-context" style="font-size:11px;color:#9ca3af;font-family:'SF Mono','Fira Code',monospace;"></span>
               <span id="conv-stats" style="font-size:10px;color:#4b5563;font-family:'SF Mono','Fira Code',monospace;"></span>
+              <span id="channel-live-indicator" class="channel-live-badge hidden"><span class="pulse-dot"></span>live</span>
             </div>
             <!-- hidden elements kept for JS compatibility -->
             <span id="conv-title" style="display:none;"></span>
@@ -1149,6 +1165,7 @@
     isStreaming = false;
     streamingBubble = null;
     streamBuffer = '';
+    syncGenerationUi();
     lastMsgRole = null;
     lastMsgMinuteKey = null;
     lastMsgDate = null;
@@ -1184,6 +1201,7 @@
   function selectSession(agentId, sessionKey) {
     activeAgent = agentId;
     activeSession = sessionKey;
+    unreadCounts[agentId] = 0; // Clear unread badge when opening a specific session
     closeSidebar(); // Auto-close on mobile
     const agent = agents.find(a => a.id === agentId);
 
@@ -1600,13 +1618,13 @@
       // Group chats don't stream (multiple agents would conflict) — wait for final
       if (activeGroupChat) return;
       showTyping(false);
-      document.getElementById('stop-btn').classList.add('show');
       if (!streamingBubble) {
         isStreaming = true;
         streamBuffer = '';
         appendMessage({ role: 'assistant', content: '', agentId: eventAgentId }, true);
         setAgentStreaming(activeAgent || eventAgentId, true);
       }
+      syncGenerationUi();
       // Gateway sends cumulative text, not incremental chunks
       streamBuffer = text;
       streamingBubble.innerHTML = renderMarkdown(streamBuffer);
@@ -1654,7 +1672,7 @@
       streamBuffer = '';
       showTyping(false);
       setAgentStreaming(activeAgent, false);
-      document.getElementById('stop-btn').classList.remove('show');
+      syncGenerationUi();
       playNotifSound();
       // Add regenerate button after the last assistant message
       addRegenButton();
@@ -1757,6 +1775,7 @@
   function showTyping(show) {
     const row = document.getElementById('typing-row');
     const actRow = document.getElementById('tool-activity-row');
+    if (!show && !isStreaming) syncGenerationUi();
     if (show) {
       const avatarEl = document.getElementById('typing-avatar');
       if (avatarEl && activeAgent) avatarEl.innerHTML = avatarImg(activeAgent, 24);
@@ -1805,79 +1824,86 @@
     row.style.display = 'flex';
   }
 
-  // ─── Markdown Rendering (lightweight) ────────────────────────
-  function renderMarkdown(text) {
-    if (!text) return '';
+  // ─── Markdown Rendering ──────────────────────────────────────
+  function buildCodeBlockHtml(rawCode, lang = '', preserveHtml = false) {
+    const normalizedLang = String(lang || '').trim().toLowerCase();
+    const langLabel = escapeHtml(normalizedLang || 'code');
+    const copyId = `cb_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const copyBtn = `<button class="code-copy-btn" id="${copyId}" onclick="copyCode(this,'${copyId}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
+    const header = `<div class="code-block-header"><span class="code-lang-tag">${langLabel}</span>${copyBtn}</div>`;
+    const code = String(rawCode || '').replace(/^\n+|\n+$/g, '');
+    const rendered = preserveHtml
+      ? code
+      : (normalizedLang ? highlightSyntax(code, normalizedLang) : escapeHtml(code));
+    return `<div class="code-block-wrap">${header}<pre><code>${rendered}</code></pre></div>`;
+  }
 
+  function enhanceRenderedMarkdown(html) {
+    if (!html) return '';
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    temp.querySelectorAll('pre > code').forEach(codeEl => {
+      const pre = codeEl.parentElement;
+      if (!pre || pre.parentElement?.classList.contains('code-block-wrap')) return;
+      const className = codeEl.className || '';
+      const langMatch = className.match(/language-([\w-]+)/i) || className.match(/lang(?:uage)?-([\w-]+)/i);
+      const lang = langMatch ? langMatch[1] : '';
+      const replacement = document.createElement('div');
+      replacement.innerHTML = buildCodeBlockHtml(codeEl.textContent || '', lang, false);
+      pre.replaceWith(replacement.firstElementChild);
+    });
+
+    temp.querySelectorAll('table').forEach(table => {
+      if (!table.parentElement?.classList.contains('table-wrap')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'table-wrap';
+        table.parentNode.insertBefore(wrap, table);
+        wrap.appendChild(table);
+      }
+    });
+
+    return temp.innerHTML;
+  }
+
+  function renderMarkdownFallback(text) {
     // Extract code blocks first to protect them from other transforms
     const codeBlocks = [];
     let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const idx = codeBlocks.length;
-      const langLabel = lang ? escapeHtml(lang) : 'code';
-      const copyId = `cb_${Date.now()}_${idx}`;
-      const copyBtn = `<button class="code-copy-btn" id="${copyId}" onclick="copyCode(this,'${copyId}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
-      const header = `<div class="code-block-header"><span class="code-lang-tag">${langLabel}</span>${copyBtn}</div>`;
-      const highlighted = lang ? highlightSyntax(code.trim(), lang) : escapeHtml(code.trim());
-      codeBlocks.push(`<div class="code-block-wrap">${header}<pre><code>${highlighted}</code></pre></div>`);
+      codeBlocks.push(buildCodeBlockHtml(code, lang, false));
       return `%%CODEBLOCK_${idx}%%`;
     });
 
-    // Escape HTML but protect codeblock placeholders
-    // Split on placeholders, escape each non-placeholder part, then rejoin
     const parts = processed.split(/(%%CODEBLOCK_\d+%%)/);
     let html = parts.map((p, i) => i % 2 === 1 ? p : escapeHtml(p)).join('');
+    html = html.replace(/%%CODEBLOCK_(\d+)%%/g, (_, idx) => codeBlocks[parseInt(idx, 10)] || '');
 
-    // Restore code blocks
-    html = html.replace(/%%CODEBLOCK_(\d+)%%/g, (_, idx) => codeBlocks[parseInt(idx)]);
-
-    // Tables (must be before headers to avoid conflicts)
     html = html.replace(/^(\|.+\|)\n(\|[\s:-]+\|)\n((?:\|.+\|\n?)+)/gm, (_, header, sep, body) => {
       const thCells = header.split('|').filter(c => c.trim()).map(c => `<th style="padding:6px 10px;text-align:left;border-bottom:2px solid #374151;font-weight:600;font-size:12px;color:#d1d5db;">${c.trim()}</th>`).join('');
       const rows = body.trim().split('\n').map(row => {
         const cells = row.split('|').filter(c => c.trim()).map(c => `<td style="padding:5px 10px;border-bottom:1px solid #1f2937;font-size:13px;">${c.trim()}</td>`).join('');
         return `<tr>${cells}</tr>`;
       }).join('');
-      return `<table style="border-collapse:collapse;width:100%;margin:8px 0;border:1px solid #1f2937;border-radius:6px;overflow:hidden;"><thead><tr>${thCells}</tr></thead><tbody>${rows}</tbody></table>`;
+      return `<div class="table-wrap"><table style="border-collapse:collapse;width:100%;margin:8px 0;border:1px solid #1f2937;border-radius:6px;overflow:hidden;"><thead><tr>${thCells}</tr></thead><tbody>${rows}</tbody></table></div>`;
     });
 
-    // Headers
     html = html.replace(/^#{3} (.+)$/gm, '<strong style="font-size:14px;color:#f3f4f6;">$1</strong>');
     html = html.replace(/^#{2} (.+)$/gm, '<strong style="font-size:15px;color:#f3f4f6;">$1</strong>');
     html = html.replace(/^#{1} (.+)$/gm, '<strong style="font-size:16px;color:#f3f4f6;">$1</strong>');
-
-    // Horizontal rules
     html = html.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #374151;margin:8px 0;">');
-
-    // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Bold
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-    // Italic
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-    // Links
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-    // Blockquotes
     html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-
-    // Ordered lists
     html = html.replace(/^(\d+)\. (.+)$/gm, '<li style="list-style:decimal;">$2</li>');
-
-    // Unordered lists
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-
-    // Wrap consecutive <li> in <ul>/<ol>
     html = html.replace(/((?:<li[^>]*>.*<\/li>\s*)+)/g, (match) => {
       if (match.includes('list-style:decimal')) return '<ol style="margin:4px 0 8px 20px;">' + match + '</ol>';
       return '<ul style="margin:4px 0 8px 20px;">' + match + '</ul>';
     });
 
-    // Line breaks → paragraphs (don't break up block elements)
-    // Split on block-level elements to avoid wrapping them in <p>
-    const blockTags = /<\/?(?:div|pre|ul|ol|li|blockquote|hr|strong|h\d)[^>]*>/;
     const lines = html.split('\n');
     const paragraphs = [];
     let current = [];
@@ -1891,10 +1917,21 @@
     if (current.length) paragraphs.push('<p>' + current.join('<br>') + '</p>');
     html = paragraphs.join('\n');
     html = html.replace(/<p><\/p>/g, '');
-    // Fix: don't double-wrap block elements
     html = html.replace(/<p>(<(?:div|pre|ul|ol|blockquote|hr)[^>]*>[\s\S]*?<\/(?:div|pre|ul|ol|blockquote)>)<\/p>/g, '$1');
 
-    return html;
+    return enhanceRenderedMarkdown(html);
+  }
+
+  function renderMarkdown(text) {
+    if (!text) return '';
+    if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+      try {
+        return enhanceRenderedMarkdown(marked.parse(text));
+      } catch (err) {
+        console.warn('marked.parse failed, using fallback renderer', err);
+      }
+    }
+    return renderMarkdownFallback(text);
   }
 
   function escapeHtml(text) {
@@ -2134,6 +2171,7 @@
   function scrollToBottom(force = false) {
     const el = document.getElementById('messages');
     if (force || isAtBottom) {
+      if (force) isAtBottom = true;
       requestAnimationFrame(() => { el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
       unreadCount = 0;
       updateScrollBtn();
@@ -2541,16 +2579,26 @@
     });
   }
 
+  function syncGenerationUi() {
+    const stopBtn = document.getElementById('stop-btn');
+    if (!stopBtn) return;
+    stopBtn.classList.toggle('show', !!isStreaming);
+    if (!isStreaming && streamingBubble) streamingBubble.classList.remove('streaming');
+  }
+
   // ─── Stop Generation ──────────────────────────────────────────
   function stopGeneration() {
-    if (!isStreaming) return;
+    if (!isStreaming) {
+      syncGenerationUi();
+      return;
+    }
     // Mark streaming complete
     if (streamingBubble) streamingBubble.classList.remove('streaming');
     isStreaming = false;
     streamingBubble = null;
     streamBuffer = '';
     showTyping(false);
-    document.getElementById('stop-btn').classList.remove('show');
+    syncGenerationUi();
     // TODO: Send cancel RPC to gateway when supported
   }
 
@@ -3199,6 +3247,7 @@
   let activeChannel = null;
   let channelPollTimer = null;
   let channelLastEventId = null;
+  let channelEventCount = 0;
 
   function getProxyHttpUrl() {
     return PROXY_URL.replace('wss://', 'https://');
@@ -3236,6 +3285,7 @@
           <div class="channel-name">${esc(ch.project || ch.id)}</div>
           <div class="channel-meta">${ch.eventCount || 0} events${relTime ? ' · ' + relTime : ''}</div>
         </div>
+        <button class="channel-dismiss-btn" title="Archive channel" onclick="archiveChannel(event, '${safeId}')">✕</button>
       </div>`;
     }
     container.innerHTML = html;
@@ -3251,6 +3301,31 @@
     return Math.floor(s / 86400) + 'd ago';
   }
 
+  async function archiveChannel(event, id) {
+    event.stopPropagation();
+    try {
+      const token = getAuthToken();
+      const res = await fetch(getProxyHttpUrl() + '/api/channels/' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'archived' })
+      });
+      if (!res.ok) return;
+      channels = channels.filter(ch => ch.id !== id);
+      if (activeChannel && activeChannel.id === id) {
+        deselectChannel();
+        document.getElementById('chat-header').style.display = 'none';
+        document.getElementById('messages').innerHTML = '<div id="empty-state"><svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.15;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><div class="text-sm">Select an agent to start chatting</div></div>';
+      }
+      renderChannelList();
+    } catch (e) {
+      console.warn('[channels] archive failed', e);
+    }
+  }
+
   async function selectChannel(id) {
     console.log("selectChannel called with:", id);
     const ch = channels.find(c => c.id === id);
@@ -3259,31 +3334,30 @@
     // Deselect any active agent
     activeAgent = null;
     activeSession = null;
+    activeGroupChat = null;
     document.querySelectorAll('.agent-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
 
     activeChannel = ch;
     channelLastEventId = null;
+    channelEventCount = 0;
     renderChannelList();
 
-    // Show channel header
+    // Reuse existing shared header DOM instead of replacing it
     const header = document.getElementById('chat-header');
     header.style.display = 'flex';
-    const liveBadge = ch.active !== false
-      ? ' <span class="channel-live-badge"><span class="pulse-dot"></span>LIVE</span>'
-      : '';
-    header.innerHTML = `
-      <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <div class="agent-avatar" style="background:#1e1b4b;font-size:24px;">📡</div>
-      <div style="flex:1;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="color:#fff;font-weight:600;font-size:18px;">${esc(ch.project || ch.id)}</span>
-          ${liveBadge}
-        </div>
-        <div style="font-size:12px;color:#6b7280;margin-top:2px;">Run ${esc(ch.runId || ch.id)} · ${ch.eventCount || 0} events</div>
-      </div>`;
+    document.getElementById('header-avatar').innerHTML = '<div style="width:56px;height:56px;border-radius:50%;background:#1e1b4b;display:flex;align-items:center;justify-content:center;font-size:24px;">📡</div>';
+    const statusDot = document.getElementById('header-status-dot');
+    if (statusDot) statusDot.style.display = 'none';
+    document.getElementById('header-name').textContent = ch.project || ch.id;
+    document.getElementById('header-model').textContent = ch.active !== false ? 'Live Channel' : 'Channel';
+    document.getElementById('channel-live-indicator').classList.remove('hidden');
+    document.getElementById('header-context').textContent = `Run ${ch.runId || ch.id}`;
+    document.getElementById('conv-stats').textContent = `${ch.eventCount || 0} events`;
+    const modelSelector = document.getElementById('model-selector');
+    if (modelSelector) modelSelector.style.display = 'none';
+    const titleEl = document.getElementById('conv-title');
+    if (titleEl) { titleEl.textContent = ''; titleEl.style.display = 'none'; }
 
     // Hide input area, show messages
     document.getElementById('input-area').style.display = 'none';
@@ -3306,17 +3380,24 @@
       const data = await res.json();
       const events = data.events || [];
       if (!events.length && full) {
+        channelEventCount = 0;
         document.getElementById('messages').innerHTML = '<div class="flex items-center justify-center h-32 text-gray-500 text-sm">No events yet</div>';
         return;
       }
       const msgs = document.getElementById('messages');
       if (full) msgs.innerHTML = '';
+      const hadEvents = channelEventCount > 0;
+      let appended = 0;
       for (const evt of events) {
         msgs.appendChild(renderChannelEvent(evt));
         channelLastEventId = evt.id;
+        appended += 1;
       }
-      // Auto-scroll
-      msgs.scrollTop = msgs.scrollHeight;
+      if (full) channelEventCount = data.total || events.length;
+      else channelEventCount += appended;
+      if (appended > 0 || full || !hadEvents) {
+        msgs.scrollTop = msgs.scrollHeight;
+      }
     } catch (e) { console.warn('[channels] events load failed', e); }
   }
 
@@ -3350,14 +3431,16 @@
 
   function startChannelPolling(channelId) {
     stopChannelPolling();
+    document.getElementById('channel-live-indicator').classList.remove('hidden');
     channelPollTimer = setInterval(() => {
       if (!activeChannel || activeChannel.id !== channelId) { stopChannelPolling(); return; }
       loadChannelEvents(channelId, false);
-    }, 3000);
+    }, 5000);
   }
 
   function stopChannelPolling() {
     if (channelPollTimer) { clearInterval(channelPollTimer); channelPollTimer = null; }
+    document.getElementById('channel-live-indicator')?.classList.add('hidden');
   }
 
   // Patch: when selecting an agent, deselect channel and restore input
@@ -3368,6 +3451,16 @@
       stopChannelPolling();
       renderChannelList();
       document.getElementById('input-area').style.display = '';
+      const modelSelector = document.getElementById('model-selector');
+      if (modelSelector) modelSelector.style.display = '';
+      const statusDot = document.getElementById('header-status-dot');
+      if (statusDot) statusDot.style.display = '';
+      const contextEl = document.getElementById('header-context');
+      if (contextEl) contextEl.textContent = '';
+      const statsEl = document.getElementById('conv-stats');
+      if (statsEl) statsEl.textContent = '';
+      channelLastEventId = null;
+      channelEventCount = 0;
     }
   }
 

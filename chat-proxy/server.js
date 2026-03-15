@@ -21,13 +21,84 @@ const path      = require('node:path');
 const http      = require('node:http');
 const { URL }   = require('node:url');
 const { WebSocketServer, WebSocket } = require('ws');
+const {
+  STATE_BASE,
+  CHANNELS_DIR,
+  PROJECTS_DIR,
+  IDENTITY_PATH,
+} = require('../../../runtime/scripts/multi-agent-task/config');
 
 // ─── Config ────────────────────────────────────────────────────────────────
 const PORT          = 3200;
 const GW_URL        = 'wss://gateway.cliffcircuit.ai';
 const GW_TOKEN      = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
-const IDENTITY_PATH = '/Users/openclaw/workspace/runtime/chat-proxy-device.json';
-const CHANNELS_DIR  = '/Users/openclaw/workspace/runtime/state/multi-agent-task/channels';
+
+// ─── Channel discovery helpers ──────────────────────────────────────────────
+/**
+ * Discover all channels from project-scoped and legacy flat directories.
+ * Returns array of { channelId, dir, meta } where dir is the resolved path.
+ */
+function discoverAllChannels() {
+  const channels = [];
+  const seen = new Set();
+
+  // Project-scoped: projects/{slug}/channel/
+  if (fs.existsSync(PROJECTS_DIR)) {
+    for (const slug of fs.readdirSync(PROJECTS_DIR)) {
+      const channelDir = path.join(PROJECTS_DIR, slug, 'channel');
+      const metaPath = path.join(channelDir, 'channel.json');
+      if (fs.existsSync(metaPath)) {
+        try {
+          const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+          meta._projectSlug = slug;
+          channels.push({ channelId: meta.channelId || slug, dir: channelDir, meta });
+          if (meta.channelId) seen.add(meta.channelId);
+          seen.add(slug);
+        } catch {}
+      }
+    }
+  }
+
+  // Legacy flat: channels/{channelId}/
+  if (fs.existsSync(CHANNELS_DIR)) {
+    for (const name of fs.readdirSync(CHANNELS_DIR)) {
+      if (seen.has(name)) continue;
+      const channelDir = path.join(CHANNELS_DIR, name);
+      try { fs.realpathSync(channelDir); } catch {}
+      const metaPath = path.join(channelDir, 'channel.json');
+      if (fs.existsSync(metaPath)) {
+        try {
+          const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+          channels.push({ channelId: meta.channelId || name, dir: channelDir, meta });
+        } catch {}
+      }
+    }
+  }
+
+  return channels;
+}
+
+/**
+ * Resolve the directory for a specific channel ID.
+ * Checks project-scoped locations first, then legacy flat.
+ */
+function resolveChannelDir(channelId) {
+  if (fs.existsSync(PROJECTS_DIR)) {
+    for (const slug of fs.readdirSync(PROJECTS_DIR)) {
+      const channelDir = path.join(PROJECTS_DIR, slug, 'channel');
+      const metaPath = path.join(channelDir, 'channel.json');
+      if (fs.existsSync(metaPath)) {
+        try {
+          const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+          if (meta.channelId === channelId || slug === channelId) return channelDir;
+        } catch {}
+      }
+    }
+  }
+  const legacyDir = path.join(CHANNELS_DIR, channelId);
+  if (fs.existsSync(path.join(legacyDir, 'channel.json'))) return legacyDir;
+  return null;
+}
 
 const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
 const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
@@ -47,7 +118,6 @@ try {
 async function validateToken(token) {
   if (!token) return null;
   try {
-    // Token could be a Google ID token (JWT) — JWTs have 3 dot-separated parts
     if (token.split('.').length === 3) {
       const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`);
       if (!resp.ok) return null;
@@ -56,7 +126,6 @@ async function validateToken(token) {
       if (!ALLOWED_EMAILS.includes(info.email)) return null;
       return { email: info.email, name: info.name || info.email };
     }
-    // Fallback: token is just an email (from stored auth)
     if (ALLOWED_EMAILS.includes(token)) {
       return { email: token, name: token };
     }
@@ -66,7 +135,6 @@ async function validateToken(token) {
   }
 }
 
-// ─── Ed25519 signing helpers ────────────────────────────────────────────────
 function rawPublicKeyBase64url(publicKeyPem) {
   const pubKey = crypto.createPublicKey(publicKeyPem);
   const spkiDer = pubKey.export({ type: 'spki', format: 'der' });
@@ -80,7 +148,7 @@ function buildConnectRequest(id, nonce, ts) {
   const scopes       = ['operator.admin', 'operator.read', 'operator.write'];
   const scopesStr    = scopes.join(',');
   const platform     = 'node';
-  const deviceFamily = ''; // must match what gateway receives in client.deviceFamily
+  const deviceFamily = '';
 
   const payload = [
     'v3', identity.deviceId, 'gateway-client', mode, role, scopesStr,
@@ -112,11 +180,10 @@ function buildConnectRequest(id, nonce, ts) {
   });
 }
 
-// ─── Gateway connection (singleton, persistent) ─────────────────────────────
 let gwWs         = null;
 let gwReady      = false;
 let gwReconnectDelay = 2000;
-const browsers   = new Set();       // connected browser WebSockets
+const browsers   = new Set();
 
 function connectGateway() {
   console.log('[proxy] Connecting to gateway...');
@@ -132,7 +199,6 @@ function connectGateway() {
     const logLen = msg.event === 'chat' ? 500 : 150;
     console.log('[proxy] GW recv:', JSON.stringify(msg).slice(0, logLen));
 
-    // Auth challenge
     if (msg.type === 'event' && msg.event === 'connect.challenge') {
       const nonce = msg.payload?.nonce;
       const ts    = msg.payload?.ts || Date.now();
@@ -140,13 +206,11 @@ function connectGateway() {
       return;
     }
 
-    // Connect success — gateway responds with payload.type === 'hello-ok'
     if (msg.type === 'res' && msg.ok && (msg.payload?.connected || msg.payload?.type === 'hello-ok')) {
       console.log('[proxy] Gateway connected and authenticated');
       gwReady = true;
       gwReconnectDelay = 2000;
 
-      // Flush any pending messages from browsers
       for (const bws of browsers) {
         if (bws._pendingMessages?.length) {
           for (const m of bws._pendingMessages) gwWs.send(m);
@@ -156,14 +220,12 @@ function connectGateway() {
       return;
     }
 
-    // Connect failure (NOT_PAIRED etc.)
     if (msg.type === 'res' && !msg.ok && !gwReady) {
       console.error('[proxy] Gateway auth failed:', msg.error?.code, msg.error?.message);
       gwWs.close();
       return;
     }
 
-    // Forward everything else to all connected browsers
     if (msg.type === 'res' || msg.type === 'event') {
       let desc = `${msg.type}`;
       if (msg.id) desc += ` id=${msg.id}`;
@@ -188,11 +250,9 @@ function connectGateway() {
 
   gwWs.on('error', (err) => {
     console.error('[proxy] Gateway error:', err.message);
-    // close event will fire and handle reconnect
   });
 }
 
-// ─── HTTP Helper: Send message to other agents (for group chat) ─────────────
 async function sendToAgent(agentId, message, idempotencyKey) {
   return new Promise((resolve) => {
     if (!gwWs || gwWs.readyState !== WebSocket.OPEN || !gwReady) {
@@ -214,7 +274,6 @@ async function sendToAgent(agentId, message, idempotencyKey) {
       payload.params.idempotencyKey = idempotencyKey;
     }
 
-    // Send RPC and wait for response
     let timeout;
     const listener = (data) => {
       let msg;
@@ -239,21 +298,18 @@ async function sendToAgent(agentId, message, idempotencyKey) {
   });
 }
 
-// ─── WebSocket server (browser connections) ──────────────────────────────────
 const server = http.createServer(async (req, res) => {
-  // Health check
   if (req.method === 'GET' && req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('chat-proxy running\n');
     return;
   }
 
-  // Cross-agent send endpoint
   if (req.method === 'POST' && req.url === '/api/send-to-agent') {
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
-      if (body.length > 1024 * 100) {  // 100KB limit
+      if (body.length > 1024 * 100) {
         res.writeHead(413);
         res.end('Payload too large');
         req.connection.destroy();
@@ -264,8 +320,6 @@ const server = http.createServer(async (req, res) => {
       try {
         const auth = req.headers.authorization || '';
         const token = auth.replace(/^Bearer\s+/, '');
-        
-        // Validate token (same as WebSocket)
         const user = await validateToken(token);
         if (!user) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -283,7 +337,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         const result = await sendToAgent(agentId, message, idempotencyKey);
-        
+
         if (result.ok) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ ok: true, payload: result.result }));
@@ -300,11 +354,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ─── Channel API endpoints ──────────────────────────────────────────────
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
   };
 
   if (req.method === 'OPTIONS') {
@@ -313,7 +366,6 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Auth helper for channel endpoints
   async function requireAuth(req, res) {
     const auth = req.headers.authorization || '';
     const token = auth.replace(/^Bearer\s+/, '');
@@ -326,47 +378,52 @@ const server = http.createServer(async (req, res) => {
     return user;
   }
 
-  // GET /api/channels — list all channels
-  if (req.method === 'GET' && req.url === '/api/channels') {
-    const user = await requireAuth(req, res);
-    if (!user) return;
-    try {
-      const channels = [];
-      if (fs.existsSync(CHANNELS_DIR)) {
-        for (const name of fs.readdirSync(CHANNELS_DIR)) {
-          const metaPath = path.join(CHANNELS_DIR, name, 'channel.json');
-          if (fs.existsSync(metaPath)) {
-            try { channels.push(JSON.parse(fs.readFileSync(metaPath, 'utf8'))); } catch {}
-          }
-        }
+  if (req.method === 'GET' && req.url.startsWith('/api/channels')) {
+    const pathname = new URL(req.url, 'http://localhost').pathname;
+    if (pathname === '/api/channels') {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      try {
+        const params = new URL(req.url, 'http://localhost').searchParams;
+        const includeArchived = params.get('includeArchived') === 'true';
+        const discovered = discoverAllChannels();
+        const channels = discovered
+          .map(d => d.meta)
+          .filter(ch => includeArchived || ch.status !== 'archived');
+        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ channels }));
+      } catch (err) {
+        res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
       }
-      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ channels }));
-    } catch (err) {
-      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
+      return;
     }
-    return;
   }
 
-  // GET /api/channels/:id/events?after=<eventId>&limit=<n>
   const eventsMatch = req.url.match(/^\/api\/channels\/([^/]+)\/events/);
   if (req.method === 'GET' && eventsMatch) {
     const user = await requireAuth(req, res);
     if (!user) return;
     const channelId = decodeURIComponent(eventsMatch[1]);
     try {
-      const eventsPath = path.join(CHANNELS_DIR, channelId, 'events.jsonl');
-      if (!fs.existsSync(eventsPath)) {
+      const dir = resolveChannelDir(channelId);
+      if (!dir) {
         res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Channel not found' }));
+        return;
+      }
+      const eventsPath = path.join(dir, 'events.jsonl');
+      if (!fs.existsSync(eventsPath)) {
+        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ channelId, events: [], total: 0 }));
         return;
       }
       const params = new URL(req.url, 'http://localhost').searchParams;
       const afterId = params.get('after') || null;
       const limit = parseInt(params.get('limit')) || 200;
 
-      const lines = fs.readFileSync(eventsPath, 'utf8').trim().split('\n').filter(Boolean);
+      const raw = fs.readFileSync(eventsPath, 'utf8').trim();
+      const lines = raw ? raw.split('\n').filter(Boolean) : [];
       let events = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
 
       if (afterId) {
@@ -384,20 +441,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // GET /api/channels/:id — channel metadata
   const channelMatch = req.url.match(/^\/api\/channels\/([^/]+)$/);
   if (req.method === 'GET' && channelMatch) {
     const user = await requireAuth(req, res);
     if (!user) return;
     const channelId = decodeURIComponent(channelMatch[1]);
     try {
-      const metaPath = path.join(CHANNELS_DIR, channelId, 'channel.json');
-      if (!fs.existsSync(metaPath)) {
+      const dir = resolveChannelDir(channelId);
+      if (!dir) {
         res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Channel not found' }));
         return;
       }
-      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      const meta = JSON.parse(fs.readFileSync(path.join(dir, 'channel.json'), 'utf8'));
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
       res.end(JSON.stringify(meta));
     } catch (err) {
@@ -407,14 +463,53 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 404
+  if (req.method === 'PATCH' && channelMatch) {
+    const user = await requireAuth(req, res);
+    if (!user) return;
+    const channelId = decodeURIComponent(channelMatch[1]);
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+      if (body.length > 1024 * 10) {
+        res.writeHead(413, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large' }));
+        req.destroy();
+      }
+    });
+    req.on('end', () => {
+      try {
+        const dir = resolveChannelDir(channelId);
+        if (!dir) {
+          res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Channel not found' }));
+          return;
+        }
+        const payload = body ? JSON.parse(body) : {};
+        if (payload.status !== 'archived') {
+          res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Unsupported status' }));
+          return;
+        }
+        const metaPath = path.join(dir, 'channel.json');
+        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+        meta.status = payload.status;
+        fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2) + '\n');
+        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(meta));
+      } catch (err) {
+        res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   res.writeHead(404);
   res.end('Not found\n');
 });
 
 const wss = new WebSocketServer({ noServer: true });
 
-// Explicit upgrade handler for WS requests
 server.on('upgrade', (req, socket, head) => {
   console.log(`[proxy] WS upgrade request: ${req.url}`);
   wss.handleUpgrade(req, socket, head, (browserWs) => {
@@ -425,7 +520,6 @@ server.on('upgrade', (req, socket, head) => {
 wss.on('connection', async (browserWs, req) => {
   const ip = req.socket.remoteAddress;
 
-  // Parse Supabase token from query string
   let token;
   try {
     const u = new URL(req.url, 'http://localhost');
@@ -435,7 +529,6 @@ wss.on('connection', async (browserWs, req) => {
     return;
   }
 
-  // Validate auth token
   console.log(`[proxy] Browser connect from ${ip}, token: ${token ? token.slice(0, 30) + '...' : 'null'}`);
   const user = await validateToken(token);
   if (!user) {
@@ -471,12 +564,11 @@ wss.on('connection', async (browserWs, req) => {
   });
 });
 
-// ─── Start ───────────────────────────────────────────────────────────────────
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`[proxy] Chat proxy listening on ws://127.0.0.1:${PORT}`);
   console.log(`[proxy] Gateway: ${GW_URL}`);
   console.log(`[proxy] Auth: Google OAuth (allowed: ${ALLOWED_EMAILS.join(', ')})`);
-  connectGateway(); // Connect to gateway immediately on startup
+  connectGateway();
 });
 
 process.on('SIGTERM', () => {
