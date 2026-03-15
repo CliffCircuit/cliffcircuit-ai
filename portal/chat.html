@@ -830,7 +830,6 @@
   }
 
   // ─── Load Agents from Sessions ───────────────────────────────
-  // Known agents — avoids needing sessions.list (operator.read scope)
   const KNOWN_AGENTS = [
     { id: 'main', name: 'Cliff', emoji: '', model: 'claude-opus-4-6' },
     { id: 'samantha', name: 'Samantha', emoji: '', model: 'claude-haiku-4-5' },
@@ -838,17 +837,113 @@
     { id: 'atlas', name: 'Atlas', emoji: '', model: 'claude-opus-4-6' },
     { id: 'fernanda', name: 'Fernanda', emoji: '', model: 'claude-sonnet-4-6' }
   ];
+  const KNOWN_AGENT_IDS = new Set(KNOWN_AGENTS.map(a => a.id));
+
+  function normalizeTs(value, fallback = Date.now()) {
+    if (value == null || value === '') return fallback;
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const num = Number(value);
+      if (Number.isFinite(num) && value.trim() !== '') return num;
+      const parsed = new Date(value).getTime();
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return fallback;
+  }
+
+  function defaultSessionForAgent(agentId) {
+    return { key: `agent:${agentId}:main`, label: 'Main', updatedAt: 0, kind: 'direct' };
+  }
+
+  function sessionLabelFromKey(sessionKey) {
+    if (!sessionKey) return 'Session';
+    if (sessionKey.endsWith(':main')) return 'Main';
+    const parts = sessionKey.split(':').filter(Boolean);
+    const subIdx = parts.indexOf('subagent');
+    if (subIdx >= 0) {
+      const suffix = parts[subIdx + 1] || parts[parts.length - 1] || 'session';
+      return `Sub-agent ${suffix.slice(0, 8)}`;
+    }
+    const tail = parts[parts.length - 1] || sessionKey;
+    return tail.length > 18 ? tail.slice(0, 18) + '…' : tail;
+  }
+
+  function getSessionKeyFromRecord(record) {
+    return record?.key || record?.sessionKey || record?.id || record?.name || null;
+  }
+
+  function getSessionLabel(record, sessionKey) {
+    const raw = record?.label || record?.title || record?.name || record?.sessionLabel || record?.displayName || record?.metadata?.label || record?.metadata?.title;
+    if (raw && typeof raw === 'string' && raw.trim()) return raw.trim();
+    return sessionLabelFromKey(sessionKey);
+  }
+
+  function ensureAgent(agentId) {
+    if (!agentId || !KNOWN_AGENT_IDS.has(agentId)) return null;
+    let agent = agents.find(a => a.id === agentId);
+    if (!agent) {
+      const known = KNOWN_AGENTS.find(a => a.id === agentId);
+      agent = { ...known, sessions: [defaultSessionForAgent(agentId)] };
+      agents.push(agent);
+    }
+    if (!Array.isArray(agent.sessions)) agent.sessions = [defaultSessionForAgent(agentId)];
+    return agent;
+  }
+
+  function upsertAgentSession(agentId, record = {}) {
+    const agent = ensureAgent(agentId);
+    if (!agent) return null;
+
+    const key = getSessionKeyFromRecord(record) || defaultSessionForAgent(agentId).key;
+    const updatedAt = normalizeTs(record.updatedAt || record.lastSeenAt || record.lastMessageAt || record.createdAt || record.timestamp, Date.now());
+    const next = {
+      key,
+      label: getSessionLabel(record, key),
+      updatedAt,
+      kind: record.kind || (key.includes(':subagent:') ? 'subagent' : 'direct')
+    };
+
+    const existing = agent.sessions.find(s => s.key === key);
+    if (existing) {
+      existing.label = next.label || existing.label;
+      existing.updatedAt = Math.max(normalizeTs(existing.updatedAt, 0), next.updatedAt);
+      existing.kind = next.kind || existing.kind;
+      return existing;
+    }
+
+    agent.sessions.push(next);
+    agent.sessions.sort((a, b) => normalizeTs(b.updatedAt, 0) - normalizeTs(a.updatedAt, 0));
+    return next;
+  }
+
+  async function discoverSessions() {
+    try {
+      const result = await rpc('sessions.list', {});
+      const list = Array.isArray(result) ? result : (result?.sessions || result?.items || []);
+      if (!Array.isArray(list) || !list.length) return false;
+
+      for (const record of list) {
+        const sessionKey = getSessionKeyFromRecord(record);
+        const agentId = getAgentIdFromSessionKey(sessionKey);
+        if (!agentId || !KNOWN_AGENT_IDS.has(agentId)) continue;
+        upsertAgentSession(agentId, { ...record, key: sessionKey });
+      }
+      return true;
+    } catch (e) {
+      console.warn('sessions.list unavailable, using live discovery fallback:', e);
+      return false;
+    }
+  }
 
   async function loadAgents() {
     try {
-      {
-        // Use known agents directly (sessions.list requires operator.read scope)
-        agents = KNOWN_AGENTS.map(a => ({
-          ...a,
-          sessions: [{ key: `agent:${a.id}:main`, label: 'Main', updatedAt: Date.now(), kind: 'direct' }]
-        }));
-      }
+      agents = KNOWN_AGENTS.map(a => ({
+        ...a,
+        sessions: [defaultSessionForAgent(a.id)]
+      }));
 
+      await discoverSessions();
+      loadGroupChats();
       renderAgentList();
     } catch (e) {
       console.error('Failed to load agents:', e);
@@ -856,25 +951,28 @@
     }
   }
 
-  // Pre-fetch last message for each agent to populate sidebar previews on load
+  // Pre-fetch last message for each agent/session to populate sidebar previews on load
   async function prefetchPreviews() {
     for (const agent of agents) {
-      const sk = `agent:${agent.id}:main`;
-      try {
-        const result = await rpc('chat.history', { sessionKey: sk, limit: 1 });
-        const messages = result?.messages || result || [];
-        if (messages.length > 0) {
+      const sessions = [...(agent.sessions || [])].sort((a, b) => normalizeTs(b.updatedAt, 0) - normalizeTs(a.updatedAt, 0));
+      for (const session of sessions) {
+        try {
+          const result = await rpc('chat.history', { sessionKey: session.key, limit: 1 });
+          const messages = result?.messages || result || [];
+          if (messages.length === 0) continue;
+
           const last = messages[messages.length - 1];
-          const mc = last.content;
-          let text = '';
-          if (Array.isArray(mc)) text = mc.filter(b => b.type === 'text').map(b => b.text).join('');
-          else if (typeof mc === 'string') text = mc;
-          if (text && text.trim() !== 'NO_REPLY') agentLastMessage[agent.id] = text.slice(0, 120);
-          // Use message timestamp for last seen
-          const ts = last.createdAt || last.timestamp;
-          if (ts) agentLastSeen[agent.id] = typeof ts === 'string' ? parseInt(ts) || new Date(ts).getTime() : ts;
-        }
-      } catch (e) { /* ignore — agent may have no history */ }
+          const text = cleanMessageText(extractChatText(last.content));
+          const ts = normalizeTs(last.createdAt || last.timestamp, session.updatedAt || Date.now());
+          session.updatedAt = ts;
+          agentLastSeen[agent.id] = Math.max(normalizeTs(agentLastSeen[agent.id], 0), ts);
+          if (text) {
+            agentLastMessage[agent.id] = text.slice(0, 120);
+            break;
+          }
+        } catch (e) { /* ignore — session may have no history */ }
+      }
+      agent.sessions.sort((a, b) => normalizeTs(b.updatedAt, 0) - normalizeTs(a.updatedAt, 0));
     }
     renderAgentList();
   }
@@ -898,7 +996,7 @@
     for (const group of groupChats) {
       const isActive = activeGroupChat?.id === group.id;
       html += `
-        <div class="agent-item ${isActive ? 'active' : ''}" onclick="selectGroupChat('${group.id}')" style="position:relative;">
+        <div class="agent-item ${isActive ? 'active' : ''}" onclick='selectGroupChat(${JSON.stringify(group.id)})' style="position:relative;">
           <div class="agent-avatar" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
             ${renderGroupAvatars(group.agentIds, 28, 16)}
           </div>
@@ -1186,6 +1284,7 @@
     deselectChannel();
     activeAgent = agentId;
     activeGroupChat = null;  // Clear group chat when selecting single agent
+    pendingGroupChatAgents.clear();
     unreadCounts[agentId] = 0;  // Clear unread badge
     const agent = agents.find(a => a.id === agentId);
     if (!agent) return;
@@ -1211,6 +1310,10 @@
     document.getElementById('header-avatar').innerHTML = avatarImg(agentId, 56);
     document.getElementById('header-name').textContent = agent?.name || agentId;
     document.getElementById('header-model').textContent = shortModel(agent?.model);
+    document.getElementById('channel-live-indicator')?.classList.add('hidden');
+    const modelSelector = document.getElementById('model-selector');
+    if (modelSelector) modelSelector.style.display = '';
+    document.getElementById('input-area').style.display = '';
 
     // Enable input
     document.getElementById('msg-input').disabled = false;
@@ -1595,6 +1698,14 @@
     if (!payload) return;
     const sk = payload.sessionKey;
     const eventAgentId = getAgentIdFromSessionKey(sk) || activeAgent;
+    if (sk && eventAgentId && KNOWN_AGENT_IDS.has(eventAgentId)) {
+      upsertAgentSession(eventAgentId, {
+        key: sk,
+        label: payload.label || payload.sessionLabel || payload.message?.label || payload.message?.sessionLabel,
+        updatedAt: payload.message?.createdAt || payload.message?.timestamp || payload.updatedAt || Date.now(),
+        kind: sk.includes(':subagent:') ? 'subagent' : 'direct'
+      });
+    }
     const isKnownAgent = !!eventAgentId && agents.some(a => a.id === eventAgentId);
     const isGroupMember = !!(activeGroupChat && eventAgentId && activeGroupChat.agentIds.includes(eventAgentId));
 
@@ -1611,18 +1722,20 @@
           unreadCounts[eventAgentId] = (unreadCounts[eventAgentId] || 0) + 1;
           playNotifSound();
         }
+        const eventTs = normalizeTs(payload.message?.createdAt || payload.message?.timestamp || payload.updatedAt, Date.now());
         // Always update preview text for sidebar with the cleaned user-visible text.
         if (visibleText) {
           agentLastMessage[eventAgentId] = visibleText.slice(0, 80);
           delete agentMsgCache[eventAgentId]; // invalidate search cache
         }
-        agentLastSeen[eventAgentId] = Date.now();
+        agentLastSeen[eventAgentId] = eventTs;
+        if (sk) upsertAgentSession(eventAgentId, { key: sk, updatedAt: eventTs });
         agentTyping[eventAgentId] = false;
         renderAgentList();
       }
-      // If in group chat and this agent is a member, fall through to render
+      // If in group chat and this agent is a member, only render replies for the current pending send.
       if (!isGroupMember) return;
-      if (activeGroupChat && Date.now() - lastGroupChatSendTime >= 300000) return;
+      if (!pendingGroupChatAgents.has(eventAgentId)) return;
     }
 
     if (payload.state === 'delta' && text) {
@@ -1646,15 +1759,28 @@
 
     if (payload.state === 'final') {
       if (visibleText && !streamingBubble) {
-        appendMessage({ role: 'assistant', content: visibleText, createdAt: Date.now(), agentId: eventAgentId });
+        const finalMessage = { role: 'assistant', content: visibleText, createdAt: Date.now(), agentId: eventAgentId };
+        appendMessage(finalMessage);
+        if (activeGroupChat && isGroupMember && pendingGroupChatAgents.has(eventAgentId)) {
+          if (!Array.isArray(activeGroupChat.messages)) activeGroupChat.messages = [];
+          activeGroupChat.messages.push(finalMessage);
+          saveGroupChats();
+          updateActiveGroupChatStats();
+          pendingGroupChatAgents.delete(eventAgentId);
+        }
         scrollToBottom();
       }
       // Update last-seen for the agent that actually produced this event.
       if (eventAgentId) {
-        agentLastSeen[eventAgentId] = Date.now();
+        const eventTs = normalizeTs(payload.message?.createdAt || payload.message?.timestamp || payload.updatedAt, Date.now());
+        agentLastSeen[eventAgentId] = eventTs;
+        if (sk) upsertAgentSession(eventAgentId, { key: sk, updatedAt: eventTs });
         if (visibleText) agentLastMessage[eventAgentId] = visibleText.slice(0, 80);
         agentTyping[eventAgentId] = false;
         renderAgentList();
+      }
+      if (activeGroupChat && isGroupMember && payload.state === 'final') {
+        pendingGroupChatAgents.delete(eventAgentId);
       }
       if (streamingBubble) {
         streamingBubble.classList.remove('streaming');
@@ -1720,12 +1846,19 @@
     }
 
     // Show user message immediately
-    appendMessage({
+    const outgoingMessage = {
       role: 'user',
       content: text,
       attachments: attachments.length ? attachments : undefined,
       createdAt: new Date().toISOString()
-    });
+    };
+    appendMessage(outgoingMessage);
+    if (activeGroupChat) {
+      if (!Array.isArray(activeGroupChat.messages)) activeGroupChat.messages = [];
+      activeGroupChat.messages.push(outgoingMessage);
+      saveGroupChats();
+      updateActiveGroupChatStats();
+    }
     scrollToBottom();
 
     // Clear input
@@ -1739,12 +1872,13 @@
     // Send via WS or HTTP depending on chat type
     try {
       if (activeGroupChat) {
-        lastGroupChatSendTime = Date.now();
+        pendingGroupChatAgents.clear();
+        activeGroupChat.agentIds.forEach(agentId => pendingGroupChatAgents.add(agentId));
         // Group chat: use HTTP REST endpoint on proxy for cross-agent sends
         const token = getAuthToken();
         // Convert wss://chat-proxy.cliffcircuit.ai to https://chat-proxy.cliffcircuit.ai
         const proxyHttpUrl = PROXY_URL.replace('wss://', 'https://');
-        await Promise.allSettled(activeGroupChat.agentIds.map(async agentId => {
+        const results = await Promise.allSettled(activeGroupChat.agentIds.map(async agentId => {
           const resp = await fetch(proxyHttpUrl + '/api/send-to-agent', {
             method: 'POST',
             headers: {
@@ -1763,6 +1897,13 @@
           }
           return await resp.json();
         }));
+        const failedAgentIds = results
+          .map((result, index) => result.status === 'rejected' ? activeGroupChat.agentIds[index] : null)
+          .filter(Boolean);
+        failedAgentIds.forEach(agentId => pendingGroupChatAgents.delete(agentId));
+        if (failedAgentIds.length === activeGroupChat.agentIds.length) {
+          throw new Error('Failed to send to all group chat agents');
+        }
       } else {
         // 1:1 chat: use WebSocket RPC
         await rpc('chat.send', {
@@ -2913,8 +3054,68 @@
   // ─── Mobile Sidebar Toggle ───────────────────────────────────
   // ─── New Chat / Group Chat Dropdown ─────────────────────────
   const composeSelected = new Set();
-  const groupChats = []; // { id, agentIds, name }
-  let lastGroupChatSendTime = 0;
+  const GROUP_CHATS_STORAGE_KEY = 'chat_group_chats_v1';
+  const groupChats = []; // { id, agentIds, name, messages }
+  const pendingGroupChatAgents = new Set();
+
+  function saveGroupChats() {
+    try {
+      localStorage.setItem(GROUP_CHATS_STORAGE_KEY, JSON.stringify(groupChats.map(group => ({
+        id: group.id,
+        agentIds: Array.isArray(group.agentIds) ? [...group.agentIds] : [],
+        name: group.name || '',
+        messages: Array.isArray(group.messages) ? group.messages.slice(-100) : []
+      }))));
+    } catch (e) {
+      console.warn('Failed to save group chats:', e);
+    }
+  }
+
+  function loadGroupChats() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(GROUP_CHATS_STORAGE_KEY) || '[]');
+      if (!Array.isArray(saved)) return;
+      const knownAgentIds = new Set(agents.map(a => a.id));
+      groupChats.splice(0, groupChats.length, ...saved
+        .map(group => ({
+          id: typeof group?.id === 'string' ? group.id : '',
+          agentIds: Array.isArray(group?.agentIds) ? group.agentIds.filter(id => knownAgentIds.has(id)) : [],
+          name: typeof group?.name === 'string' ? group.name : '',
+          messages: Array.isArray(group?.messages) ? group.messages : []
+        }))
+        .filter(group => group.id && group.agentIds.length > 1)
+      );
+    } catch (e) {
+      console.warn('Failed to load group chats:', e);
+    }
+  }
+
+  function buildGroupChatId(agentIds) {
+    return 'group:' + [...new Set(agentIds)].sort().map(id => encodeURIComponent(id)).join('|');
+  }
+
+  function updateActiveGroupChatStats() {
+    if (!activeGroupChat) return;
+    document.getElementById('conv-stats').textContent = `${(activeGroupChat.messages || []).length} messages`;
+  }
+
+  function renderGroupChatMessages(group) {
+    const messagesEl = document.getElementById('messages');
+    const messages = Array.isArray(group?.messages) ? group.messages : [];
+    messagesEl.innerHTML = '';
+    lastMsgRole = null;
+    lastMsgMinuteKey = null;
+    lastMsgDate = null;
+    if (activeGroupChat?.id === group?.id) updateActiveGroupChatStats();
+
+    if (!messages.length) {
+      messagesEl.innerHTML = '<div id="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#6b7280;"><div style="font-size:48px;margin-bottom:16px;">👥</div><div style="font-size:16px;">Group chat with ' + escapeHtml(group.name) + '</div><div style="font-size:12px;margin-top:4px;color:#4b5563;">Messages will be sent to all agents</div></div>';
+      return;
+    }
+
+    for (const msg of messages) appendMessage(msg);
+    scrollToBottom();
+  }
 
   function toggleNewChatDropdown() {
     const dd = document.getElementById('new-chat-dropdown');
@@ -2979,13 +3180,15 @@
   }
 
   function startGroupChat() {
-    const agentIds = [...composeSelected];
+    const agentIds = [...new Set([...composeSelected])];
     document.getElementById('new-chat-dropdown').style.display = 'none';
-    const names = agentIds.map(id => agents.find(a => a.id === id)?.name || id);
-    const groupId = 'group-' + agentIds.sort().join('-');
+    const sortedAgentIds = [...agentIds].sort();
+    const names = sortedAgentIds.map(id => agents.find(a => a.id === id)?.name || id);
+    const groupId = buildGroupChatId(sortedAgentIds);
     // Check if group already exists
     if (!groupChats.find(g => g.id === groupId)) {
-      groupChats.push({ id: groupId, agentIds, name: names.join(', ') });
+      groupChats.push({ id: groupId, agentIds: sortedAgentIds, name: names.join(', '), messages: [] });
+      saveGroupChats();
     }
     selectGroupChat(groupId);
     renderAgentList();
@@ -3000,11 +3203,31 @@
     activeGroupChat = group;
     activeAgent = null;
     activeSession = null;
+    pendingGroupChatAgents.clear();
+
+    const header = document.getElementById('chat-header');
+    if (header) header.style.display = 'flex';
+    const inputArea = document.getElementById('input-area');
+    if (inputArea) inputArea.style.display = '';
+    const modelSelector = document.getElementById('model-selector');
+    if (modelSelector) modelSelector.style.display = 'none';
+    const liveIndicator = document.getElementById('channel-live-indicator');
+    if (liveIndicator) liveIndicator.classList.add('hidden');
+    const statusDot = document.getElementById('header-status-dot');
+    if (statusDot) statusDot.style.display = '';
+
     // Update header
     document.getElementById('header-name').textContent = group.name;
     document.getElementById('header-model').textContent = 'Group Chat';
-    document.getElementById('header-context').textContent = '';
-    document.getElementById('conv-stats').textContent = '';
+    document.getElementById('header-context').textContent = `${group.agentIds.length} agents`;
+    document.getElementById('conv-stats').textContent = `${(group.messages || []).length} messages`;
+    const titleEl = document.getElementById('conv-title');
+    if (titleEl) {
+      titleEl.textContent = '';
+      titleEl.style.display = 'none';
+    }
+    updatePinsCount();
+
     // Update avatar to stacked group
     const avatarEl = document.getElementById('header-avatar');
     if (avatarEl) avatarEl.innerHTML = renderGroupAvatars(group.agentIds, 36, 22);
@@ -3012,10 +3235,9 @@
     const inp = document.getElementById('msg-input');
     inp.disabled = false;
     inp.placeholder = 'Message group... (Enter to send, Shift+Enter for newline)';
+    inp.focus();
     document.getElementById('send-btn').disabled = false;
-    // Clear messages and show empty state
-    const messagesEl = document.getElementById('messages');
-    messagesEl.innerHTML = '<div id="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#6b7280;"><div style="font-size:48px;margin-bottom:16px;">👥</div><div style="font-size:16px;">Group chat with ' + group.name + '</div><div style="font-size:12px;margin-top:4px;color:#4b5563;">Messages will be sent to all agents</div></div>';
+    renderGroupChatMessages(group);
     renderAgentList();
   }
 
