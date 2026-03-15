@@ -187,7 +187,7 @@
     .msg-bubble a:hover { color: #a5b4fc; }
     .msg-bubble ul, .msg-bubble ol { margin: 6px 0 8px 24px; padding: 0; }
     .msg-bubble li { margin-bottom: 4px; line-height: 1.6; color: #e2e8f0; }
-    .msg-bubble img { max-width: 100%; border-radius: 8px; margin: 6px 0; cursor: pointer; }
+    .msg-bubble img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 6px 0; cursor: pointer; object-fit: contain; }
     .msg-bubble blockquote { border-left: 3px solid #4f46e5; padding-left: 12px; margin: 8px 0; color: #cbd5e1; font-style: italic; background: rgba(79,70,229,0.05); padding: 8px 12px; border-radius: 4px; }
     .table-wrap { width: 100%; overflow-x: auto; margin: 8px 0; }
     .msg-bubble table { border-collapse: collapse; width: 100%; margin: 0; font-size: 13px; }
@@ -224,8 +224,8 @@
 
     /* Image paste preview */
     .paste-preview { display: flex; gap: 8px; padding: 8px 0; flex-wrap: wrap; }
-    .paste-thumb { position: relative; }
-    .paste-thumb img { height: 60px; border-radius: 8px; border: 1px solid #374151; }
+    .paste-thumb { position: relative; max-width: 120px; }
+    .paste-thumb img { display: block; max-width: 100%; max-height: 60px; border-radius: 8px; border: 1px solid #374151; object-fit: contain; }
     .paste-thumb button { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
     /* Image lightbox */
@@ -2172,7 +2172,7 @@
       wrap.style.cssText = 'position:relative;display:inline-block;margin:6px 0;max-width:100%;';
       const img = document.createElement('img');
       img.src = url; img.alt = name;
-      img.style.cssText = 'max-width:100%;border-radius:8px;cursor:pointer;display:block;';
+      img.style.cssText = 'max-width:100%;max-height:400px;border-radius:8px;cursor:pointer;display:block;object-fit:contain;';
       img.onclick = () => openLightbox(url);
       const dl = makeDownloadBtn(url, name);
       wrap.onmouseenter = () => dl.style.opacity = '1';
