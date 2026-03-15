@@ -1564,54 +1564,66 @@
     return text.trim();
   }
 
+  function getAgentIdFromSessionKey(sessionKey) {
+    if (!sessionKey || typeof sessionKey !== 'string') return null;
+    const parts = sessionKey.split(':').filter(Boolean);
+    if (!parts.length) return null;
+
+    const knownIds = new Set(agents.map(a => a.id));
+
+    // Standard OpenClaw session keys are usually agent:<agentId>:...
+    if (parts[0] === 'agent' && parts[1] && knownIds.has(parts[1])) return parts[1];
+
+    // Fallback: find the first segment that matches a known sidebar agent.
+    return parts.find(part => knownIds.has(part)) || (parts[0] === 'agent' ? parts[1] || null : null);
+  }
+
+  function extractChatText(content) {
+    if (Array.isArray(content)) {
+      return content.filter(b => b.type === 'text').map(b => b.text).join('');
+    }
+    return typeof content === 'string' ? content : '';
+  }
+
+  function isVisibleChatReply(text) {
+    const cleaned = cleanMessageText(text || '');
+    return !!cleaned;
+  }
+
   // ─── Streaming Chat Events ───────────────────────────────────
   function handleChatEvent(payload) {
     if (!payload) return;
     const sk = payload.sessionKey;
+    const eventAgentId = getAgentIdFromSessionKey(sk) || activeAgent;
+    const isKnownAgent = !!eventAgentId && agents.some(a => a.id === eventAgentId);
+    const isGroupMember = !!(activeGroupChat && eventAgentId && activeGroupChat.agentIds.includes(eventAgentId));
+
+    // Extract text from gateway message format: message.content is array of {type,text}
+    const msgContent = payload.message?.content;
+    const text = extractChatText(msgContent);
+    const visibleText = cleanMessageText(text);
 
     // Track unread + last-seen for non-active agents
-    const skParts = sk ? sk.split(':') : [];
-    const skAgentId = skParts[1] || null;
-    const isGroupMember = activeGroupChat && activeGroupChat.agentIds.includes(skAgentId);
-
     if (sk && sk !== activeSession) {
-      if (payload.state === 'final' && skAgentId && agents.some(a => a.id === skAgentId)) {
-        // Extract preview text for sidebar
-        const mc = payload.message?.content;
-        let previewText = '';
-        if (Array.isArray(mc)) previewText = mc.filter(b => b.type === 'text').map(b => b.text).join('').slice(0, 80);
-        else if (typeof mc === 'string') previewText = mc.slice(0, 80);
-        // Badge+sound for non-cron, non-active-group-member agents
+      if (payload.state === 'final' && isKnownAgent) {
         const isCron = sk.includes(':cron:');
-        if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY' && !isCron && !isGroupMember) {
-          unreadCounts[skAgentId] = (unreadCounts[skAgentId] || 0) + 1;
+        if (!isCron && !isGroupMember && isVisibleChatReply(text)) {
+          unreadCounts[eventAgentId] = (unreadCounts[eventAgentId] || 0) + 1;
           playNotifSound();
         }
-        // Always update preview text for sidebar (even without badge)
-        if (previewText && previewText.trim() && previewText.trim() !== 'NO_REPLY') {
-          agentLastMessage[skAgentId] = previewText;
-          delete agentMsgCache[skAgentId]; // invalidate search cache
+        // Always update preview text for sidebar with the cleaned user-visible text.
+        if (visibleText) {
+          agentLastMessage[eventAgentId] = visibleText.slice(0, 80);
+          delete agentMsgCache[eventAgentId]; // invalidate search cache
         }
-        agentLastSeen[skAgentId] = Date.now();
-        agentTyping[skAgentId] = false;
+        agentLastSeen[eventAgentId] = Date.now();
+        agentTyping[eventAgentId] = false;
         renderAgentList();
       }
       // If in group chat and this agent is a member, fall through to render
       if (!isGroupMember) return;
       if (activeGroupChat && Date.now() - lastGroupChatSendTime >= 300000) return;
     }
-
-    // Extract text from gateway message format: message.content is array of {type,text}
-    const msgContent = payload.message?.content;
-    let text = '';
-    if (Array.isArray(msgContent)) {
-      text = msgContent.filter(b => b.type === 'text').map(b => b.text).join('');
-    } else if (typeof msgContent === 'string') {
-      text = msgContent;
-    }
-
-    // Determine which agent sent this (for group chats)
-    const eventAgentId = sk ? sk.split(':')[1] : activeAgent;
 
     if (payload.state === 'delta' && text) {
       // Skip NO_REPLY and HEARTBEAT_OK from streaming
@@ -1633,15 +1645,15 @@
     }
 
     if (payload.state === 'final') {
-      if (text && !streamingBubble) {
-        appendMessage({ role: 'assistant', content: text, createdAt: Date.now(), agentId: eventAgentId });
+      if (visibleText && !streamingBubble) {
+        appendMessage({ role: 'assistant', content: visibleText, createdAt: Date.now(), agentId: eventAgentId });
         scrollToBottom();
       }
-      // Update last-seen for active agent
-      if (activeAgent) {
-        agentLastSeen[activeAgent] = Date.now();
-        if (text && text.trim() !== 'NO_REPLY') agentLastMessage[activeAgent] = text.slice(0, 80);
-        agentTyping[activeAgent] = false;
+      // Update last-seen for the agent that actually produced this event.
+      if (eventAgentId) {
+        agentLastSeen[eventAgentId] = Date.now();
+        if (visibleText) agentLastMessage[eventAgentId] = visibleText.slice(0, 80);
+        agentTyping[eventAgentId] = false;
         renderAgentList();
       }
       if (streamingBubble) {
@@ -1672,9 +1684,8 @@
       streamingBubble = null;
       streamBuffer = '';
       showTyping(false);
-      setAgentStreaming(activeAgent, false);
+      setAgentStreaming(activeAgent || eventAgentId, false);
       syncGenerationUi();
-      playNotifSound();
       // Add regenerate button after the last assistant message
       addRegenButton();
     }
