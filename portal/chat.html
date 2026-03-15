@@ -63,14 +63,14 @@
     /* Messages */
     .msg-group { display: flex; gap: 10px; max-width: 100%; position: relative; }
     .msg-group:hover .msg-actions { opacity: 1; }
-    .msg-group.user { align-self: flex-end; flex-direction: row-reverse; max-width: min(82%, 860px); }
-    .msg-group.assistant { align-self: flex-start; max-width: min(94%, 1200px); }
+    .msg-group.user { align-self: flex-end; flex-direction: row-reverse; max-width: min(78%, 780px); }
+    .msg-group.assistant { align-self: flex-start; max-width: min(98%, 1600px); }
     .msg-group.continuation { margin-top: 1px; }
     .msg-group.continuation .msg-avatar { visibility: hidden; }
     .msg-group.continuation .msg-meta { display: none; }
     .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 12px; }
     .msg-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow: hidden; max-width: 100%; }
-    .msg-group.assistant .msg-content { align-self: flex-start; width: min(100%, 1120px); }
+    .msg-group.assistant .msg-content { align-self: flex-start; width: 100%; }
     .msg-meta { font-size: 11px; color: #9ca3af; display: flex; gap: 8px; align-items: center; padding: 0 6px; font-weight: 400; line-height: 1.2; }
     .msg-group.user .msg-content { width: fit-content; align-self: flex-end; align-items: flex-end; }
     .msg-group.user .msg-meta { justify-content: flex-end; }
@@ -165,9 +165,9 @@
     /* Markdown in messages */
     .msg-bubble p { margin: 0 0 8px 0; }
     .msg-bubble p:last-child { margin-bottom: 0; }
-    .msg-bubble code { background: #0d1117; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: #fbbf24; border: 1px solid #1f2937; }
-    .msg-bubble pre { background: #0d1117; border: none; border-radius: 0; padding: 14px; margin: 0; overflow-x: auto; }
-    .msg-bubble pre code { background: none; padding: 0; font-size: 12.5px; color: #e2e8f0; border: none; line-height: 1.55; }
+    .msg-bubble code { background: #1a2332; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: #fbbf24; border: 1px solid #2a3444; }
+    .msg-bubble pre { background: #1a2332; border: none; border-radius: 0; padding: 14px; margin: 0; overflow-x: auto; }
+    .msg-bubble pre code { background: none; padding: 0; font-size: 12.5px; color: #e2e8f0; border: none; line-height: 1.55; white-space: pre; word-break: normal; overflow-wrap: normal; }
     .msg-bubble strong { font-weight: 700; color: #f9fafb; }
     .msg-bubble em { font-style: italic; color: #d1d5db; }
     .msg-bubble h1 { font-size: 18px; font-weight: 700; margin: 8px 0; color: #f9fafb; }
@@ -181,7 +181,7 @@
     .msg-bubble img { max-width: 100%; border-radius: 8px; margin: 6px 0; cursor: pointer; }
     .msg-bubble blockquote { border-left: 3px solid #4f46e5; padding-left: 12px; margin: 8px 0; color: #cbd5e1; font-style: italic; background: rgba(79,70,229,0.05); padding: 8px 12px; border-radius: 4px; }
     .msg-bubble table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
-    .msg-bubble th { padding: 6px 10px; text-align: left; border-bottom: 2px solid #374151; font-weight: 600; color: #d1d5db; background: #0d1117; }
+    .msg-bubble th { padding: 6px 10px; text-align: left; border-bottom: 2px solid #374151; font-weight: 600; color: #d1d5db; background: #1a2332; }
     .msg-bubble td { padding: 5px 10px; border-bottom: 1px solid #1f2937; }
     .msg-bubble tr:hover td { background: rgba(79,70,229,0.05); }
 
@@ -306,13 +306,13 @@
     #drop-overlay .drop-text { color: #a5b4fc; font-size: 14px; font-weight: 500; }
 
     /* Code block panel */
-    .code-block-wrap { position: relative; margin: 10px 0; border: 1px solid #1e293b; border-radius: 8px; overflow: hidden; background: #0d1117; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
-    .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: #161b22; border-bottom: 1px solid #1e293b; min-height: 30px; }
-    .code-lang-tag { font-size: 11px; color: #7c8493; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; user-select: none; }
-    .code-copy-btn { font-size: 11px; padding: 3px 8px; background: #21262d; border: 1px solid #30363d; border-radius: 5px; color: #8b949e; cursor: pointer; opacity: 0; transition: all 0.15s; display: flex; align-items: center; gap: 4px; line-height: 1; }
+    .code-block-wrap { position: relative; margin: 10px 0; border: 1px solid #2a3444; border-radius: 8px; overflow: hidden; background: #1a2332; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: #1e2b3a; border-bottom: 1px solid #2a3444; min-height: 32px; position: sticky; top: 0; z-index: 1; flex-shrink: 0; }
+    .code-lang-tag { font-size: 11px; color: #8899aa; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; user-select: none; }
+    .code-copy-btn { font-size: 11px; padding: 3px 8px; background: #253345; border: 1px solid #354555; border-radius: 5px; color: #8899aa; cursor: pointer; opacity: 0; transition: all 0.15s; display: flex; align-items: center; gap: 4px; line-height: 1; flex-shrink: 0; }
     .code-block-wrap:hover .code-copy-btn { opacity: 1; }
-    .code-copy-btn:hover { background: #30363d; color: #c9d1d9; border-color: #484f58; }
-    .code-copy-btn.copied { color: #3fb950; border-color: #238636; background: #0d1117; }
+    .code-copy-btn:hover { background: #354555; color: #c9d1d9; border-color: #4a5a6a; }
+    .code-copy-btn.copied { color: #3fb950; border-color: #238636; background: #1a2332; }
 
     /* Syntax highlighting */
     .sh-keyword { color: #c084fc; }
@@ -3225,7 +3225,8 @@
       const isActive = activeChannel && activeChannel.id === ch.id;
       const dotClass = ch.active !== false ? '' : ' inactive';
       const relTime = ch.lastActivity ? timeAgo(new Date(ch.lastActivity)) : '';
-      html += `<div class="channel-item${isActive ? ' active' : ''}" onclick="selectChannel('${ch.id}')">
+      const safeId = (ch.id || "").replace(/'/g, "\''''");
+      html += `<div class="channel-item${isActive ? ' active' : ''}" onclick="selectChannel('${safeId}')">
         <div class="channel-dot${dotClass}"></div>
         <div class="channel-info">
           <div class="channel-name">${esc(ch.project || ch.id)}</div>
@@ -3247,6 +3248,7 @@
   }
 
   async function selectChannel(id) {
+    console.log("selectChannel called with:", id);
     const ch = channels.find(c => c.id === id);
     if (!ch) return;
 
