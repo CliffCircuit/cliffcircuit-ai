@@ -61,24 +61,23 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Messages */
-    .msg-group { display: flex; gap: 10px; max-width: min(80%, 720px); position: relative; }
+    .msg-group { display: flex; gap: 10px; max-width: 100%; position: relative; }
     .msg-group:hover .msg-actions { opacity: 1; }
-    .msg-group.user { align-self: flex-end; flex-direction: row-reverse; }
-    .msg-group.assistant { align-self: flex-start; }
-    .msg-group.continuation { margin-top: -2px; }
+    .msg-group.user { align-self: flex-end; flex-direction: row-reverse; max-width: min(82%, 860px); }
+    .msg-group.assistant { align-self: flex-start; max-width: min(94%, 1200px); }
+    .msg-group.continuation { margin-top: 1px; }
     .msg-group.continuation .msg-avatar { visibility: hidden; }
-    .msg-group.continuation .msg-meta .msg-sender { display: none; }
-    .msg-group.continuation .msg-meta .msg-tokens { display: none; }
-    .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
-    .msg-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; width: fit-content; }
-    .msg-group.assistant .msg-content { align-self: flex-start; }
-    .msg-meta { font-size: 12px; color: #9ca3af; display: flex; gap: 8px; align-items: center; padding: 2px 4px; font-weight: 400; }
+    .msg-group.continuation .msg-meta { display: none; }
+    .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 12px; }
+    .msg-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; overflow: hidden; max-width: 100%; }
+    .msg-group.assistant .msg-content { align-self: flex-start; width: min(100%, 1120px); }
+    .msg-meta { font-size: 11px; color: #9ca3af; display: flex; gap: 8px; align-items: center; padding: 0 6px; font-weight: 400; line-height: 1.2; }
     .msg-group.user .msg-content { width: fit-content; align-self: flex-end; align-items: flex-end; }
     .msg-group.user .msg-meta { justify-content: flex-end; }
     .msg-group.user .msg-meta .msg-sender { margin-right: auto; }
     .msg-tokens { font-size: 10px; color: #6b7280; font-family: 'SF Mono','Fira Code',monospace; cursor: default; display: none; }
     .msg-group:hover .msg-tokens { display: inline; }
-    .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-break: break-word; overflow-wrap: break-word; overflow: hidden; }
+    .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-break: break-word; overflow-wrap: break-word; overflow: hidden; width: 100%; }
     .msg-group.assistant .msg-bubble { background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     .msg-group.user .msg-bubble { background: #312e81; color: #e0e7ff; border-top-right-radius: 4px; box-shadow: 0 2px 4px rgba(79,70,229,0.15); }
 
@@ -167,8 +166,8 @@
     .msg-bubble p { margin: 0 0 8px 0; }
     .msg-bubble p:last-child { margin-bottom: 0; }
     .msg-bubble code { background: #0d1117; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: #fbbf24; border: 1px solid #1f2937; }
-    .msg-bubble pre { background: #0d1117; border: 1px solid #1e40af; border-radius: 8px; padding: 14px; margin: 8px 0; overflow-x: auto; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); }
-    .msg-bubble pre code { background: none; padding: 0; font-size: 12px; color: #e5e7eb; }
+    .msg-bubble pre { background: #0d1117; border: none; border-radius: 0; padding: 14px; margin: 0; overflow-x: auto; }
+    .msg-bubble pre code { background: none; padding: 0; font-size: 12.5px; color: #e2e8f0; border: none; line-height: 1.55; }
     .msg-bubble strong { font-weight: 700; color: #f9fafb; }
     .msg-bubble em { font-style: italic; color: #d1d5db; }
     .msg-bubble h1 { font-size: 18px; font-weight: 700; margin: 8px 0; color: #f9fafb; }
@@ -306,12 +305,14 @@
     #drop-overlay .drop-icon { color: #818cf8; opacity: 0.6; }
     #drop-overlay .drop-text { color: #a5b4fc; font-size: 14px; font-weight: 500; }
 
-    /* Code block language tag */
-    .code-block-wrap { position: relative; margin: 8px 0; }
-    .code-lang-tag { position: absolute; top: 8px; right: 10px; font-size: 10px; color: #6b7280; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; }
-    .code-copy-btn { position: absolute; top: 6px; right: 42px; font-size: 10px; padding: 2px 6px; background: #1f2937; border: 1px solid #374151; border-radius: 4px; color: #9ca3af; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+    /* Code block panel */
+    .code-block-wrap { position: relative; margin: 10px 0; border: 1px solid #1e293b; border-radius: 8px; overflow: hidden; background: #0d1117; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+    .code-block-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: #161b22; border-bottom: 1px solid #1e293b; min-height: 30px; }
+    .code-lang-tag { font-size: 11px; color: #7c8493; font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: 0.3px; text-transform: lowercase; user-select: none; }
+    .code-copy-btn { font-size: 11px; padding: 3px 8px; background: #21262d; border: 1px solid #30363d; border-radius: 5px; color: #8b949e; cursor: pointer; opacity: 0; transition: all 0.15s; display: flex; align-items: center; gap: 4px; line-height: 1; }
     .code-block-wrap:hover .code-copy-btn { opacity: 1; }
-    .code-copy-btn.copied { color: #34d399; border-color: #059669; }
+    .code-copy-btn:hover { background: #30363d; color: #c9d1d9; border-color: #484f58; }
+    .code-copy-btn.copied { color: #3fb950; border-color: #238636; background: #0d1117; }
 
     /* Syntax highlighting */
     .sh-keyword { color: #c084fc; }
@@ -384,7 +385,9 @@
       #sidebar-toggle { display: block; }
       #sidebar-backdrop { display: none; position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.5); }
       #sidebar-backdrop.show { display: block; }
-      .msg-group { max-width: 90%; }
+      .msg-group { max-width: 100%; }
+      .msg-group.assistant { max-width: 98%; }
+      .msg-group.user { max-width: 92%; }
       #chat-app { position: relative; overflow: hidden; }
       /* Hide action icons that are less critical on mobile */
       #chat-header .header-actions { gap: 4px !important; }
@@ -1147,6 +1150,7 @@
     streamingBubble = null;
     streamBuffer = '';
     lastMsgRole = null;
+    lastMsgMinuteKey = null;
     lastMsgDate = null;
 
     // Clear conversation title
@@ -1223,6 +1227,7 @@
       const messages = result?.messages || result || [];
       messagesEl.innerHTML = '';
       lastMsgRole = null;
+      lastMsgMinuteKey = null;
       lastMsgDate = null;
 
       if (messages.length === 0) {
@@ -1262,6 +1267,7 @@
 
   // Track last message for grouping
   let lastMsgRole = null;
+  let lastMsgMinuteKey = null;
   let lastMsgDate = null;
 
   // ─── Append Message to DOM ───────────────────────────────────
@@ -1316,9 +1322,20 @@
       }
     }
 
-    // Check if this is a continuation (same sender, close in time)
-    const isContinuation = (role === lastMsgRole) && !streaming;
+    // Check if this is a continuation (same sender within the same minute)
+    let minuteKey = null;
+    if (msgDate) {
+      let minuteDate;
+      if (typeof msgDate === 'number') minuteDate = new Date(msgDate);
+      else if (typeof msgDate === 'string' && /^\d+$/.test(msgDate)) minuteDate = new Date(Number(msgDate));
+      else minuteDate = new Date(msgDate);
+      if (!isNaN(minuteDate.getTime())) {
+        minuteKey = `${role}:${minuteDate.getFullYear()}-${minuteDate.getMonth()+1}-${minuteDate.getDate()}-${minuteDate.getHours()}-${minuteDate.getMinutes()}`;
+      }
+    }
+    const isContinuation = (role === lastMsgRole) && !!minuteKey && (minuteKey === lastMsgMinuteKey) && !streaming;
     lastMsgRole = role;
+    lastMsgMinuteKey = minuteKey;
 
     const group = document.createElement('div');
     group.className = `msg-group ${isUser ? 'user' : 'assistant'}${isContinuation ? ' continuation' : ''}`;
@@ -1388,12 +1405,12 @@
           expandBtn.textContent = 'Show more';
         }
       };
-      content.appendChild(meta);
       content.appendChild(bubble);
       content.appendChild(expandBtn);
-    } else {
       content.appendChild(meta);
+    } else {
       content.appendChild(bubble);
+      content.appendChild(meta);
     }
 
     // Handle attachments — rich media rendering
@@ -1796,11 +1813,12 @@
     const codeBlocks = [];
     let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const idx = codeBlocks.length;
-      const langTag = lang ? `<span class="code-lang-tag">${escapeHtml(lang)}</span>` : '';
+      const langLabel = lang ? escapeHtml(lang) : 'code';
       const copyId = `cb_${Date.now()}_${idx}`;
-      const copyBtn = `<button class="code-copy-btn" id="${copyId}" onclick="copyCode(this,'${copyId}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
+      const copyBtn = `<button class="code-copy-btn" id="${copyId}" onclick="copyCode(this,'${copyId}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>`;
+      const header = `<div class="code-block-header"><span class="code-lang-tag">${langLabel}</span>${copyBtn}</div>`;
       const highlighted = lang ? highlightSyntax(code.trim(), lang) : escapeHtml(code.trim());
-      codeBlocks.push(`<div class="code-block-wrap">${copyBtn}${langTag}<pre><code>${highlighted}</code></pre></div>`);
+      codeBlocks.push(`<div class="code-block-wrap">${header}<pre><code>${highlighted}</code></pre></div>`);
       return `%%CODEBLOCK_${idx}%%`;
     });
 
@@ -2375,6 +2393,7 @@
     messagesEl.innerHTML = '';
     lastMsgDate = null;
     lastMsgRole = null;
+    lastMsgMinuteKey = null;
     cancelClear();
   }
   function cancelClear() {
@@ -2964,10 +2983,10 @@
     const wrap = btn.closest('.code-block-wrap');
     const code = wrap.querySelector('code')?.textContent || '';
     await navigator.clipboard.writeText(code);
-    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Copied`;
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Copied`;
     btn.classList.add('copied');
     setTimeout(() => {
-      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`;
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy`;
       btn.classList.remove('copied');
     }, 2000);
   }
@@ -3187,6 +3206,7 @@
 
   async function loadChannels() {
     try {
+      const token = getAuthToken();
       const res = await fetch(getProxyHttpUrl() + '/api/channels', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
