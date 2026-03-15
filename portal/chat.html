@@ -3291,6 +3291,7 @@
 
   async function loadChannelEvents(channelId, full) {
     try {
+      const token = getAuthToken();
       const afterParam = (!full && channelLastEventId) ? '?after=' + encodeURIComponent(channelLastEventId) : '';
       const res = await fetch(getProxyHttpUrl() + '/api/channels/' + encodeURIComponent(channelId) + '/events' + afterParam, {
         headers: { 'Authorization': 'Bearer ' + token }
