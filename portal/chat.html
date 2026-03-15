@@ -1890,6 +1890,7 @@
             body: JSON.stringify({
               agentId: agentId,
               message: content,
+              attachments: attachments.length ? attachments : undefined,
               idempotencyKey: crypto.randomUUID()
             })
           });
@@ -1911,6 +1912,7 @@
         await rpc('chat.send', {
           sessionKey: activeSession,
           message: content,
+          attachments: attachments.length ? attachments : undefined,
           idempotencyKey: crypto.randomUUID()
         });
       }

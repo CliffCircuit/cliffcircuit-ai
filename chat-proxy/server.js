@@ -253,7 +253,7 @@ function connectGateway() {
   });
 }
 
-async function sendToAgent(agentId, message, idempotencyKey) {
+async function sendToAgent(agentId, message, idempotencyKey, attachments) {
   return new Promise((resolve) => {
     if (!gwWs || gwWs.readyState !== WebSocket.OPEN || !gwReady) {
       resolve({ ok: false, error: 'Gateway not ready' });
@@ -270,6 +270,9 @@ async function sendToAgent(agentId, message, idempotencyKey) {
         message: message
       }
     };
+    if (attachments?.length) {
+      payload.params.attachments = attachments;
+    }
     if (idempotencyKey) {
       payload.params.idempotencyKey = idempotencyKey;
     }
@@ -309,7 +312,7 @@ const server = http.createServer(async (req, res) => {
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
-      if (body.length > 1024 * 100) {
+      if (body.length > 1024 * 1024 * 10) {
         res.writeHead(413);
         res.end('Payload too large');
         req.connection.destroy();
@@ -328,7 +331,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         const payload = JSON.parse(body);
-        const { agentId, message, idempotencyKey } = payload;
+        const { agentId, message, idempotencyKey, attachments } = payload;
 
         if (!agentId || !message) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -336,7 +339,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const result = await sendToAgent(agentId, message, idempotencyKey);
+        const result = await sendToAgent(agentId, message, idempotencyKey, attachments);
 
         if (result.ok) {
           res.writeHead(200, { 'Content-Type': 'application/json' });
