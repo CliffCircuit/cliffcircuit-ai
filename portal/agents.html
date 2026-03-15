@@ -348,14 +348,17 @@
       'lmstudio-laptop/unsloth_qwen3-coder-next-split',
     ];
 
-    // Default models per agent from openclaw.json
-    const AGENT_DEFAULT_MODELS = {
-      'main': 'google/gemini-2.5-pro',
-      'samantha': 'openai-codex/gpt-5.4',
-      'scout': 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
-      'atlas': 'anthropic/claude-opus-4-6',
-      'fernanda': 'anthropic/claude-sonnet-4-6',
-    };
+    // Default models per agent — populated live from the status API (agentConfigs).
+    // Hardcoded fallback only used before first API response arrives.
+    let AGENT_DEFAULT_MODELS = {};
+
+    // Called after first data load to sync defaults from live config
+    function syncAgentDefaultModels(agentConfigs) {
+      if (!agentConfigs) return;
+      for (const [id, cfg] of Object.entries(agentConfigs)) {
+        if (cfg.model) AGENT_DEFAULT_MODELS[id] = cfg.model;
+      }
+    }
 
     // Used by cron job rows — "Agent Default" = inherit from agent config
     function buildModelOptions(currentValue) {
@@ -1059,6 +1062,7 @@
     let _cardsBuilt = false;
     initPortal('agents', d => {
       _lastData = d;
+      syncAgentDefaultModels(d.agentConfigs);
       if (!_cardsBuilt) { rebuildCards(d); _cardsBuilt = true; }
       if (_currentView === 'full') renderAgentsPage(d);
       else renderCondensedData(d);
@@ -1067,6 +1071,7 @@
         loadData().then(d => {
           if (!d) return;
           _lastData = d;
+          syncAgentDefaultModels(d.agentConfigs);
           // Update data in-place — do NOT rebuild cards (would reset expanded job drawers)
           if (_currentView === 'full') renderAgentsPage(d);
           else renderCondensedData(d);
