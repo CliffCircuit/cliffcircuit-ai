@@ -27,6 +27,7 @@ const PORT          = 3200;
 const GW_URL        = 'wss://gateway.cliffcircuit.ai';
 const GW_TOKEN      = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
 const IDENTITY_PATH = '/Users/openclaw/workspace/runtime/chat-proxy-device.json';
+const CHANNELS_DIR  = '/Users/openclaw/workspace/runtime/state/multi-agent-task/channels';
 
 const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
 const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
@@ -239,7 +240,7 @@ async function sendToAgent(agentId, message, idempotencyKey) {
 }
 
 // ─── WebSocket server (browser connections) ──────────────────────────────────
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   // Health check
   if (req.method === 'GET' && req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -296,6 +297,113 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: err.message }));
       }
     });
+    return;
+  }
+
+  // ─── Channel API endpoints ──────────────────────────────────────────────
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  };
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, corsHeaders);
+    res.end();
+    return;
+  }
+
+  // Auth helper for channel endpoints
+  async function requireAuth(req, res) {
+    const auth = req.headers.authorization || '';
+    const token = auth.replace(/^Bearer\s+/, '');
+    const user = await validateToken(token);
+    if (!user) {
+      res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return null;
+    }
+    return user;
+  }
+
+  // GET /api/channels — list all channels
+  if (req.method === 'GET' && req.url === '/api/channels') {
+    const user = await requireAuth(req, res);
+    if (!user) return;
+    try {
+      const channels = [];
+      if (fs.existsSync(CHANNELS_DIR)) {
+        for (const name of fs.readdirSync(CHANNELS_DIR)) {
+          const metaPath = path.join(CHANNELS_DIR, name, 'channel.json');
+          if (fs.existsSync(metaPath)) {
+            try { channels.push(JSON.parse(fs.readFileSync(metaPath, 'utf8'))); } catch {}
+          }
+        }
+      }
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ channels }));
+    } catch (err) {
+      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // GET /api/channels/:id/events?after=<eventId>&limit=<n>
+  const eventsMatch = req.url.match(/^\/api\/channels\/([^/]+)\/events/);
+  if (req.method === 'GET' && eventsMatch) {
+    const user = await requireAuth(req, res);
+    if (!user) return;
+    const channelId = decodeURIComponent(eventsMatch[1]);
+    try {
+      const eventsPath = path.join(CHANNELS_DIR, channelId, 'events.jsonl');
+      if (!fs.existsSync(eventsPath)) {
+        res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Channel not found' }));
+        return;
+      }
+      const params = new URL(req.url, 'http://localhost').searchParams;
+      const afterId = params.get('after') || null;
+      const limit = parseInt(params.get('limit')) || 200;
+
+      const lines = fs.readFileSync(eventsPath, 'utf8').trim().split('\n').filter(Boolean);
+      let events = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+
+      if (afterId) {
+        const idx = events.findIndex(e => e.id === afterId);
+        if (idx >= 0) events = events.slice(idx + 1);
+      }
+      events = events.slice(-limit);
+
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ channelId, events, total: lines.length }));
+    } catch (err) {
+      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // GET /api/channels/:id — channel metadata
+  const channelMatch = req.url.match(/^\/api\/channels\/([^/]+)$/);
+  if (req.method === 'GET' && channelMatch) {
+    const user = await requireAuth(req, res);
+    if (!user) return;
+    const channelId = decodeURIComponent(channelMatch[1]);
+    try {
+      const metaPath = path.join(CHANNELS_DIR, channelId, 'channel.json');
+      if (!fs.existsSync(metaPath)) {
+        res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Channel not found' }));
+        return;
+      }
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(meta));
+    } catch (err) {
+      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
     return;
   }
 
