@@ -1598,6 +1598,7 @@
       }
       // If in group chat and this agent is a member, fall through to render
       if (!isGroupMember) return;
+      if (activeGroupChat && Date.now() - lastGroupChatSendTime >= 300000) return;
     }
 
     // Extract text from gateway message format: message.content is array of {type,text}
@@ -1727,6 +1728,7 @@
     // Send via WS or HTTP depending on chat type
     try {
       if (activeGroupChat) {
+        lastGroupChatSendTime = Date.now();
         // Group chat: use HTTP REST endpoint on proxy for cross-agent sends
         const token = getAuthToken();
         // Convert wss://chat-proxy.cliffcircuit.ai to https://chat-proxy.cliffcircuit.ai
@@ -2901,6 +2903,7 @@
   // ─── New Chat / Group Chat Dropdown ─────────────────────────
   const composeSelected = new Set();
   const groupChats = []; // { id, agentIds, name }
+  let lastGroupChatSendTime = 0;
 
   function toggleNewChatDropdown() {
     const dd = document.getElementById('new-chat-dropdown');
