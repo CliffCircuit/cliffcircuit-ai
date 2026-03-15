@@ -908,11 +908,13 @@
       existing.label = next.label || existing.label;
       existing.updatedAt = Math.max(normalizeTs(existing.updatedAt, 0), next.updatedAt);
       existing.kind = next.kind || existing.kind;
+      agentLastSeen[agentId] = Math.max(normalizeTs(agentLastSeen[agentId], 0), existing.updatedAt);
       return existing;
     }
 
     agent.sessions.push(next);
     agent.sessions.sort((a, b) => normalizeTs(b.updatedAt, 0) - normalizeTs(a.updatedAt, 0));
+    agentLastSeen[agentId] = Math.max(normalizeTs(agentLastSeen[agentId], 0), next.updatedAt);
     return next;
   }
 
@@ -3653,8 +3655,13 @@
     const ts = evt.timestamp ? new Date(evt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
     const renderedText = typeof marked !== 'undefined' && marked.parse ? marked.parse(evt.text || '') : esc(evt.text || '');
 
+    // Try to resolve speaker to an agent avatar
+    const speakerLower = (evt.speaker || '').toLowerCase();
+    const matchedAgent = KNOWN_AGENTS.find(a => a.name.toLowerCase() === speakerLower || a.id === speakerLower);
+    const avatarHtml = matchedAgent ? avatarImg(matchedAgent.id, 28) : `<span>${evt.icon || '📡'}</span>`;
+
     div.innerHTML = `
-      <div class="channel-event-icon">${evt.icon || '📡'}</div>
+      <div class="channel-event-icon" style="${matchedAgent ? 'background:none;' : ''}">${avatarHtml}</div>
       <div class="channel-event-content">
         <div class="channel-event-meta">
           <span style="color:#e5e7eb;font-weight:500;">${esc(evt.speaker || '')}</span>
