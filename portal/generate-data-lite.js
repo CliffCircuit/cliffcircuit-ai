@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const PORTAL_REPO = '/Users/openclaw/workspace/cliffcircuit-ai';
+const PORTAL_REPO = '/Users/openclaw/workspace/repos/cliffcircuit-ai';
 const DATA_PATH = path.join(PORTAL_REPO, 'portal/data.json');
-const QUEUE_FILE = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
+const QUEUE_FILE = '/Users/openclaw/workspace/runtime/agents/samantha/content-queue.json';
 
 try {
   console.log('Generating light portal data...');

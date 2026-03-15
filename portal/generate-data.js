@@ -10,8 +10,9 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const WORKSPACE = '/Users/openclaw/.openclaw/workspace';
-const QUEUE_FILE = path.join(WORKSPACE, 'samantha/content-queue.json');
+const RUNTIME_DIR = '/Users/openclaw/workspace/runtime';
+const WORKSPACE_ROOT = '/Users/openclaw/workspace';
+const QUEUE_FILE = path.join(RUNTIME_DIR, 'agents/samantha/content-queue.json');
 const REPO_DIR = `/tmp/cliffcircuit-data-${process.pid}`;
 
 function run(cmd, opts = {}) {
@@ -49,11 +50,18 @@ async function main() {
   try {
     const raw = fs.readFileSync(QUEUE_FILE, 'utf8');
     const parsed = JSON.parse(raw);
-    if (!parsed.queue || !Array.isArray(parsed.queue)) {
-      console.error("ABORT: content-queue.json missing .queue array (keys:", Object.keys(parsed).slice(0,5).join(","), "). Not overwriting data.json.");
+    if (Array.isArray(parsed)) {
+      if (parsed.length > 1 && Array.isArray(parsed[1])) {
+        queue = parsed[1]; // legacy tuple-style queue store
+      } else {
+        queue = parsed.filter(item => item && typeof item === 'object' && !Array.isArray(item));
+      }
+    } else if (parsed && Array.isArray(parsed.queue)) {
+      queue = parsed.queue;
+    } else {
+      console.error('ABORT: content-queue.json not in recognized format. Not overwriting data.json.');
       process.exit(1);
     }
-    queue = parsed.queue;
   } catch (e) {
     console.warn('Could not read queue:', e.message);
   }
@@ -84,7 +92,7 @@ async function main() {
 
   // ── Twitter Stats (live from TwitterAPI.io) ────────────────────
   let twitter = {};
-  const GROWTH_FILE = path.join(WORKSPACE, 'memory/follower-growth.json');
+  const GROWTH_FILE = path.join(RUNTIME_DIR, 'memory/follower-growth.json');
 
   async function getTwitterProfile(username) {
     const apiKey = keychain('twitterapi-io-key');
@@ -206,7 +214,7 @@ async function main() {
   // ── Disk ───────────────────────────────────────────────────────
   let disk = {};
   try {
-    const dfOut = run(`df -h ${WORKSPACE} | tail -1`);
+    const dfOut = run(`df -h ${WORKSPACE_ROOT} | tail -1`);
     const parts = dfOut.split(/\s+/);
     const pct = parts.find(p => p.includes('%'));
     if (pct) disk.percent = parseInt(pct);
@@ -253,7 +261,7 @@ async function main() {
   // DB is updated by OpenClaw's own session tracking; seed runs separately if needed
   // Auto-apply task_name mapping
   try {
-    const _db2 = new (require('better-sqlite3'))('/Users/openclaw/.openclaw/workspace/portal-data.db');
+    const _db2 = new (require('better-sqlite3'))('/Users/openclaw/workspace/runtime/portal-data.db');
     try { _db2.exec('ALTER TABLE subagent_sessions ADD COLUMN task_name TEXT'); } catch(e) {}
     const cronMap = {
       'af79f87e-7b1d-4dfc-bda8-b7b81b6c4cc1':'Publish','785dc24f-e15b-420b-a7e5-0116f5e60e93':'Portal Data Refresh',
@@ -322,9 +330,9 @@ async function main() {
   let execEvents = { total: 0, failureCount: 0, items: [] };
   try {
     // Incremental DB sync — only scans JSONL files modified since last run (~50ms)
-    try { require('child_process').execSync('node /Users/openclaw/.openclaw/workspace/portal-db-sync.js', { timeout: 15000, stdio: 'pipe' }); } catch(e) { console.error('sync warn:', e.message); }
+    try { require('child_process').execSync('node /Users/openclaw/workspace/runtime/portal-db-sync.js', { timeout: 15000, stdio: 'pipe' }); } catch(e) { console.error('sync warn:', e.message); }
     const Database = require('better-sqlite3');
-    const db = new Database('/Users/openclaw/.openclaw/workspace/portal-data.db', { readonly: true });
+    const db = new Database('/Users/openclaw/workspace/runtime/portal-data.db', { readonly: true });
 
     const sessions = db.prepare('SELECT *, COALESCE(task_name, label) as display_name FROM subagent_sessions ORDER BY started_at DESC LIMIT 500').all();
     const totalSessions = db.prepare('SELECT COUNT(*) as c FROM subagent_sessions').get().c;
@@ -458,7 +466,7 @@ async function main() {
     execEvents,
     sessionTickets: (() => {
       // Scan atlas session dirs for tickets.json files
-      const sessionsDir = path.join(WORKSPACE, 'atlas/sessions');
+      const sessionsDir = path.join(RUNTIME_DIR, 'atlas/sessions');
       const tickets = {};
       try {
         if (fs.existsSync(sessionsDir)) {
@@ -478,18 +486,26 @@ async function main() {
     })(),
   };
 
-  // ── Write + Push (uses workspace repo directly — no clone needed) ───
-  const PORTAL_REPO = '/Users/openclaw/workspace/cliffcircuit-ai';
+  // ── Write + Push (uses a temp clone so generated data never dirties the working repo) ───
+  const PORTAL_REPO = REPO_DIR;
   const ghToken = keychain('github-cliffcircuit');
   if (ghToken) {
     try {
+      const repoExists = fs.existsSync(path.join(PORTAL_REPO, '.git'));
+      if (repoExists) {
+        run(`cd ${PORTAL_REPO} && git fetch https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git main && git reset --hard FETCH_HEAD`, { stdio: 'pipe', timeout: 60000 });
+      } else {
+        run(`rm -rf ${PORTAL_REPO}`, { stdio: 'pipe', timeout: 60000 });
+        run(`git clone https://${ghToken}@github.com/CliffCircuit/cliffcircuit-ai.git ${PORTAL_REPO}`, { stdio: 'pipe', timeout: 60000 });
+      }
+
       const outPath = path.join(PORTAL_REPO, 'portal/data.json');
       fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
       console.log('Wrote data.json');
 
       // Generate tweet-ids.json for portal (articles table lacks tweet_id column)
       try {
-        const queuePath = '/Users/openclaw/.openclaw/workspace/samantha/content-queue.json';
+        const queuePath = '/Users/openclaw/workspace/runtime/agents/samantha/content-queue.json';
         if (fs.existsSync(queuePath)) {
           const q = JSON.parse(fs.readFileSync(queuePath, 'utf8'));
           const map = {};
@@ -521,7 +537,7 @@ async function main() {
           fs.mkdirSync(previewDestDir, { recursive: true });
           approved.forEach(item => {
             if (item.heroImage) {
-              const srcPath = `/Users/openclaw/.openclaw/workspace/cliffmart${item.heroImage}`;
+              const srcPath = `/Users/openclaw/workspace/repos/cliffmart${item.heroImage}`;
               const slug = path.basename(item.heroImage);
               const destPath = path.join(imgDestDir, slug);
               if (fs.existsSync(srcPath)) fs.copyFileSync(srcPath, destPath);
@@ -558,7 +574,7 @@ async function main() {
         try {
           const goalsRaw = fs.readFileSync(repoGoalsPath, 'utf8');
           const goals = JSON.parse(goalsRaw);
-          fs.writeFileSync(path.join(WORKSPACE, 'daily-goals.json'), JSON.stringify(goals, null, 2));
+          fs.writeFileSync(path.join(WORKSPACE_ROOT, 'daily-goals.json'), JSON.stringify(goals, null, 2));
           console.log('Synced portal/goals.json → daily-goals.json');
         } catch(e) { console.warn('Goals sync failed:', e.message); }
       }
@@ -571,7 +587,7 @@ async function main() {
           const signal = JSON.parse(signalRaw);
           const signalAge = Date.now() - new Date(signal.triggeredAt || 0).getTime();
           if (signalAge < 2 * 60 * 60 * 1000) {
-            fs.writeFileSync(path.join(WORKSPACE, 'reschedule-signal.json'), signalRaw);
+            fs.writeFileSync(path.join(WORKSPACE_ROOT, 'reschedule-signal.json'), signalRaw);
             console.log('Synced reschedule-signal (age:', Math.round(signalAge/60000), 'min)');
           }
         } catch(e) { console.warn('Reschedule signal sync failed:', e.message); }
@@ -683,3 +699,8 @@ async function main() {
 }
 
 main().catch(console.error);
+
+// Cleanup tmp dir on exit (success or failure)
+process.on('exit', () => { try { require('child_process').execSync(`rm -rf ${REPO_DIR}`); } catch(e) {} });
+process.on('SIGINT', () => process.exit(1));
+process.on('SIGTERM', () => process.exit(1));

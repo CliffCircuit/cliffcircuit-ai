@@ -26,7 +26,7 @@ const { WebSocketServer, WebSocket } = require('ws');
 const PORT          = 3200;
 const GW_URL        = 'wss://gateway.cliffcircuit.ai';
 const GW_TOKEN      = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
-const IDENTITY_PATH = path.join(process.env.HOME, '.openclaw/workspace/chat-proxy-device.json');
+const IDENTITY_PATH = '/Users/openclaw/workspace/runtime/chat-proxy-device.json';
 
 const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
 const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];

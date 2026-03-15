@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 /**
  * One-time script to generate Ed25519 device identity for the chat proxy.
- * Saves to /Users/openclaw/.openclaw/workspace/chat-proxy-device.json
+ * Saves to /Users/openclaw/workspace/runtime/chat-proxy-device.json
  */
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const OUT_PATH = path.join(
-  process.env.HOME,
-  '.openclaw/workspace/chat-proxy-device.json'
-);
+const OUT_PATH = '/Users/openclaw/workspace/runtime/chat-proxy-device.json';
 
 // Generate Ed25519 keypair
 const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
