@@ -685,12 +685,16 @@
           ? ((typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel)
           : 'Inherit global';
 
-        // Read-only display: Fallback model (per-agent from model object, or legacy cfg.fallbacks)
+        // Read-only display: Fallback model (per-agent from model object, or global)
         const fallbackModel = cfgFallbacks[0] || '';
         const fallbackNameEl = document.getElementById(`${n}-model-fallback-name`);
-        if (fallbackNameEl) fallbackNameEl.textContent = fallbackModel
-          ? ((typeof friendlyModel === 'function') ? friendlyModel(fallbackModel) : fallbackModel)
-          : 'None';
+        if (fallbackNameEl) {
+          const fallbackLabel = fallbackModel
+            ? ((typeof friendlyModel === 'function') ? friendlyModel(fallbackModel) : fallbackModel)
+            : 'None';
+          const isPerAgent = cfg.hasPerAgentFallback;
+          fallbackNameEl.innerHTML = fallbackLabel + (isPerAgent ? '' : ' <span title="Shared global fallback — save a fallback here to make it per-agent" style="opacity:0.5;font-size:0.65rem;">(global)</span>');
+        }
 
         // Populate edit dropdowns only when card is NOT in edit mode (don't stomp user changes)
         const editState = document.getElementById(`${n}-model-editstate`);
