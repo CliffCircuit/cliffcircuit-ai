@@ -175,12 +175,14 @@
     const _fmtDur = ms => { if (!ms || ms <= 0) return '—'; const s = Math.round(ms/1000); if (s < 60) return s + 's'; const m = Math.round(s/60); if (m < 60) return m + 'm'; return Math.round(m/60) + 'h ' + (m%60) + 'm'; };
     const _fmtTs = ts => ts ? new Date(ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Los_Angeles' }) + ' PT' : '—';
 
-    const _agentCls = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400', atlas:'text-orange-400', fernanda:'text-emerald-400' };
-    const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
+    const _agentCls = { samantha:'text-teal-400', scout:'text-green-400', main:'text-indigo-400', cliff:'text-indigo-400', 'claude-code':'text-purple-400', atlas:'text-orange-400', fernanda:'text-emerald-400', cora:'text-cyan-400' };
+    const _agentLabel = { main:'Cliff', cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', cora:'Cora', 'claude-code':'Claude Code' };
 
     // Augment CRON_DISPLAY with Fernanda cron entries (defined in portal-common.js)
     if (typeof CRON_DISPLAY === 'object') {
       CRON_DISPLAY['fernanda-heartbeat'] = 'Heartbeat';
+      CRON_DISPLAY['cora-heartbeat'] = 'Heartbeat';
+      CRON_DISPLAY['cora-wake'] = 'Wake';
     }
 
     // Use the shared modelShort from portal-common.js (loaded before this script)
@@ -703,6 +705,7 @@
       'Heartbeat':                  'Periodic check-in — reads inbox and responds to messages.',
       'Wake':                       'One-shot cron that boots an agent\'s session for the first time after configuration.',
       'Martin (Msgs DM)':           'iMessage conversation with Martin.',
+      'Mary (Msgs DM)':             'iMessage conversation with Mary Vargas.',
       'Heartbeat':                  'Periodic health poll — checks the agent inbox for messages, verifies systems are running, and handles lightweight background tasks.',
       'Live Sessions Refresh':      'Checks which AI sessions are currently running and writes the results to a file the portal reads. This is how the Agents page knows who\'s online and what they\'re doing.',
       'Session Previews Refresh':   'Grabs the task description and latest response from each recent session so the portal can show what each session was working on when you click into it.',
@@ -861,7 +864,7 @@
       for (let i = tArr.length - 1; i >= 0; i--) { if (!filtered.includes(tArr[i])) tArr.splice(i, 1); }
 
       // Build grouped structure: tasks organized by owning agent
-      const agentLabels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', 'claude-code': 'Claude Code' };
+      const agentLabels = { cliff: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', cora: 'Cora', 'claude-code': 'Claude Code' };
       const atMap = window._agentTaskMap || {};
       const groupMap = {}; // agentKey → [taskName]
       filtered.forEach(t => {
@@ -1181,6 +1184,7 @@
       scout:         { alias: 'scout',      name: 'Scout',       avatar: '/portal/scout-avatar.jpg',     accentClass: 'text-green-400'  },
       atlas:         { alias: 'atlas',      name: 'Atlas',       avatar: '/portal/atlas-avatar.png',     accentClass: 'text-orange-400' },
       fernanda:      { alias: 'fernanda',  name: 'Fernanda',    avatar: '/portal/fernanda-avatar.jpg',  accentClass: 'text-emerald-400'},
+      cora:          { alias: 'cora',      name: 'Cora',        avatar: '/portal/cora-avatar.png',      accentClass: 'text-cyan-400' },
       'claude-code': { alias: 'claude-code',name: 'Claude Code', avatar: '',                             accentClass: 'text-purple-400' },
     };
 
@@ -1214,7 +1218,7 @@
       }
 
       // Sort: known agents first (cliff, samantha, scout, atlas), then alphabetical
-      const knownOrder = ['cliff','samantha','scout','atlas','fernanda'];
+      const knownOrder = ['cliff','samantha','scout','atlas','fernanda','cora'];
       agentIds.sort((a,b) => {
         const ai = knownOrder.indexOf(a), bi = knownOrder.indexOf(b);
         if (ai !== -1 && bi !== -1) return ai - bi;
@@ -2374,7 +2378,7 @@ function _renderStackedCostChart(items, mode) {
       const taskF  = window._globalTask  || [];
       const provF  = window._globalProvider || [];
       const modelF = window._globalModel || [];
-      const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
+      const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', cora:'Cora', 'claude-code':'Claude Code' };
       const parts = [];
       if (!_isAll(agentF)) parts.push(agentF.map(a => labels[a] || a).join(', '));
       if (!_isAll(taskF))  parts.push(taskF.length === 1 ? taskF[0] : taskF.length + ' tasks');

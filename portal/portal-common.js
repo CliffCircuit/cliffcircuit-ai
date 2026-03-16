@@ -79,6 +79,7 @@ let CRON_UUID_MAP = {
   // Deleted crons — kept here so historical sessions still resolve correctly
   '505efdbf-cf39-436b-93eb-ffe983b12f31': 'fernanda-heartbeat',
   '53a89a99-7c48-4b6b-9e78-3f1e5d2b8c4a': 'fernanda-wake',
+  'f4ef2020-4ba7-4181-a98d-1bf420f12abf': 'cora-heartbeat',
 };
 
 // Dynamically merge live cron UUIDs so new/recreated crons resolve automatically
@@ -123,6 +124,8 @@ const CRON_DISPLAY = {
   'live-sessions-refresh':   'Live Sessions Refresh',
   'fernanda-heartbeat':      'Heartbeat',
   'fernanda-wake':           'Wake',
+  'cora-heartbeat':          'Heartbeat',
+  'cora-wake':               'Wake',
 };
 
 // ── Route cron jobs to agents by name prefix ────────────────────────────
@@ -131,6 +134,7 @@ function cronAgentFromName(name) {
   if (name.startsWith('samantha-')) return 'samantha';
   if (name.startsWith('atlas-')) return 'atlas';
   if (name.startsWith('fernanda-')) return 'fernanda';
+  if (name.startsWith('cora-')) return 'cora';
   if (name.startsWith('scout-') || name === 'portal-data-refresh') return 'scout';
   if (name.startsWith('cliff-')) return 'main';
   // Everything else (pipeline-health-check, morning-check-in, etc.) → main (Cliff)
@@ -146,6 +150,7 @@ const DIRECT_DISPLAY = {
   'scout:telegram':    'Scout (Telegram DM)',
   'atlas:telegram':    'Atlas (Telegram DM)',
   'atlas:main':        'Atlas (Web UI)',
+  'cora:imessage':     'Mary (Msgs DM)',
 };
 
 const AGENT_DISPLAY = {
@@ -154,6 +159,7 @@ const AGENT_DISPLAY = {
   'samantha':   'Samantha',
   'scout':      'Scout',
   'fernanda':   'Fernanda',
+  'cora':       'Cora',
   'claude-code':'Claude Code',
 };
 
@@ -637,7 +643,7 @@ function updateAgentStatusDots(sessions) {
   const now = Date.now();
   const ONLINE_MS = 5 * 60 * 1000;
   const IDLE_MS   = 24 * 60 * 60 * 1000;
-  ['cliff', 'samantha', 'scout', 'fernanda'].forEach(name => {
+  ['cliff', 'samantha', 'scout', 'fernanda', 'cora'].forEach(name => {
     const agentId = name === 'cliff' ? 'main' : name;
     const agentSessions = (sessions || []).filter(s => s.agentId === agentId && s.lastActiveAt);
     const mostRecent = agentSessions.reduce((best, s) => {
