@@ -457,10 +457,12 @@
           ? _pendingDefaultModels[agent.id]
           : (cfg.model || AGENT_DEFAULT_MODELS[agent.id] || '');
 
-        // Best current session for this agent (most recently active)
-        const bestSession = sessions
-          .filter(s => s.agentId === agent.id)
-          .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
+        // Best current session for this agent — prefer direct/interactive sessions over cron/run
+        const agentSessions = sessions.filter(s => s.agentId === agent.id);
+        const directSession = agentSessions.find(s => (s.label || '').includes('direct'));
+        const bestSession = directSession
+          || agentSessions.sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0]
+          || null;
 
         // Determine active model: check overrides first, then session, then default
         let activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
@@ -544,9 +546,11 @@
             ? _pendingDefaultModels[agent.id]
             : (cfg.model || AGENT_DEFAULT_MODELS[agent.id] || '');
           
-          const bestSession = sessions
-            .filter(s => s.agentId === agent.id)
-            .sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
+          const editAgentSessions = sessions.filter(s => s.agentId === agent.id);
+          const editDirectSession = editAgentSessions.find(s => (s.label || '').includes('direct'));
+          const bestSession = editDirectSession
+            || editAgentSessions.sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0]
+            || null;
           
           const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
             ? _pendingSessionModels[agent.id]
@@ -970,8 +974,9 @@
         const info = agentJobMap[agentId]||{jobs:[],errors:0};
         const cfg = (d.agentConfigs||{})[agentId]||{};
 
-        // Model
-        const bestSession = agentSessions.sort((a,b)=>new Date(b.lastActiveAt||0)-new Date(a.lastActiveAt||0))[0]||null;
+        // Model — prefer direct/interactive session over cron/run
+        const condensedDirect = agentSessions.find(s => (s.label || '').includes('direct'));
+        const bestSession = condensedDirect || agentSessions.sort((a,b)=>new Date(b.lastActiveAt||0)-new Date(a.lastActiveAt||0))[0]||null;
         const model = bestSession?.model||cfg.model||'—';
         const el = id2 => document.getElementById(`${n}-c-${id2}`);
         if (el('model')) el('model').textContent = friendlyModel(model);
