@@ -686,37 +686,19 @@
   const AGENT_COLORS = ['#818cf8','#34d399','#f472b6','#fbbf24','#60a5fa','#a78bfa','#fb923c'];
 
   // Agent avatar images
-  // Avatar lookup: explicit overrides, then convention-based auto-discovery.
-  // Convention: /portal/{id}-avatar.{jpg,png} — tried in order.
-  const AGENT_AVATAR_OVERRIDES = {
+  const AGENT_AVATARS = {
     main: '/portal/cliff-avatar.jpg',
-    cliff: '/portal/cliff-avatar.jpg'
+    cliff: '/portal/cliff-avatar.jpg',
+    samantha: '/portal/samantha-avatar.jpg',
+    scout: '/portal/scout-avatar.jpg',
+    atlas: '/portal/atlas-avatar.png',
+    fernanda: '/portal/fernanda-avatar.jpg',
+    cora: '/portal/cora-avatar.png'
   };
-  const _avatarCache = {};   // agentId → resolved URL or null
   const USER_AVATAR = '/portal/tim-avatar.jpg';
 
-  function avatarUrl(agentId) {
-    if (AGENT_AVATAR_OVERRIDES[agentId]) return AGENT_AVATAR_OVERRIDES[agentId];
-    if (_avatarCache[agentId] !== undefined) return _avatarCache[agentId];
-    // Not yet resolved — return null (caller will show initial); probe async
-    probeAvatar(agentId);
-    return null;
-  }
-
-  async function probeAvatar(agentId) {
-    if (_avatarCache[agentId] !== undefined) return;
-    for (const ext of ['jpg', 'png', 'webp']) {
-      const url = `/portal/${agentId}-avatar.${ext}`;
-      try {
-        const res = await fetch(url, { method: 'HEAD' });
-        if (res.ok) { _avatarCache[agentId] = url; renderAgentList(); return; }
-      } catch {}
-    }
-    _avatarCache[agentId] = null; // no avatar found
-  }
-
   function avatarImg(agentId, size = 36) {
-    const src = avatarUrl(agentId);
+    const src = AGENT_AVATARS[agentId];
     if (src) return `<img src="${src}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;">`;
     const color = agentColor(agentId);
     const name = agents.find(a => a.id === agentId)?.name || agentId;
@@ -849,47 +831,15 @@
   }
 
   // ─── Load Agents from Sessions ───────────────────────────────
-  // Agents are discovered dynamically from sessions.json agentConfigs.
-  // Fallback list used only if the fetch fails.
-  const FALLBACK_AGENTS = [
-    { id: 'main', name: 'Cliff', emoji: '', model: 'claude-opus-4-6' }
+  const KNOWN_AGENTS = [
+    { id: 'main', name: 'Cliff', emoji: '', model: 'claude-opus-4-6' },
+    { id: 'samantha', name: 'Samantha', emoji: '', model: 'claude-haiku-4-5' },
+    { id: 'scout', name: 'Scout', emoji: '', model: 'claude-haiku-4-5' },
+    { id: 'atlas', name: 'Atlas', emoji: '', model: 'claude-opus-4-6' },
+    { id: 'fernanda', name: 'Fernanda', emoji: '', model: 'claude-sonnet-4-6' },
+    { id: 'cora', name: 'Cora', emoji: '✨', model: 'claude-sonnet-4-6' }
   ];
-  let KNOWN_AGENTS = [...FALLBACK_AGENTS];
-  let KNOWN_AGENT_IDS = new Set(KNOWN_AGENTS.map(a => a.id));
-
-  // Preferred order for sidebar display (agents not listed here appear alphabetically after)
-  const AGENT_SORT_ORDER = ['main', 'samantha', 'scout', 'atlas', 'fernanda'];
-
-  async function fetchAgentConfigs() {
-    try {
-      const res = await fetch('https://api.cliffcircuit.ai/sessions.json?t=' + Date.now());
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data.agentConfigs || null;
-    } catch (e) {
-      console.warn('[fetchAgentConfigs] Failed:', e);
-      return null;
-    }
-  }
-
-  function buildAgentsFromConfigs(configs) {
-    const list = Object.entries(configs).map(([id, cfg]) => ({
-      id,
-      name: cfg.name || id.charAt(0).toUpperCase() + id.slice(1),
-      emoji: '',
-      model: (cfg.model || 'unknown').replace(/^[^/]+\//, '')
-    }));
-    // Sort: preferred order first, then alphabetical
-    list.sort((a, b) => {
-      const ai = AGENT_SORT_ORDER.indexOf(a.id);
-      const bi = AGENT_SORT_ORDER.indexOf(b.id);
-      if (ai >= 0 && bi >= 0) return ai - bi;
-      if (ai >= 0) return -1;
-      if (bi >= 0) return 1;
-      return a.name.localeCompare(b.name);
-    });
-    return list;
-  }
+  const KNOWN_AGENT_IDS = new Set(KNOWN_AGENTS.map(a => a.id));
 
   function normalizeTs(value, fallback = Date.now()) {
     if (value == null || value === '') return fallback;
@@ -934,7 +884,7 @@
     if (!agentId || !KNOWN_AGENT_IDS.has(agentId)) return null;
     let agent = agents.find(a => a.id === agentId);
     if (!agent) {
-      const known = KNOWN_AGENTS.find(a => a.id === agentId) || { id: agentId, name: agentId.charAt(0).toUpperCase() + agentId.slice(1), emoji: '', model: 'unknown' };
+      const known = KNOWN_AGENTS.find(a => a.id === agentId);
       agent = { ...known, sessions: [defaultSessionForAgent(agentId)] };
       agents.push(agent);
     }
@@ -991,14 +941,6 @@
 
   async function loadAgents() {
     try {
-      // Dynamically discover agents from sessions.json agentConfigs
-      const configs = await fetchAgentConfigs();
-      if (configs) {
-        KNOWN_AGENTS = buildAgentsFromConfigs(configs);
-        KNOWN_AGENT_IDS = new Set(KNOWN_AGENTS.map(a => a.id));
-      }
-      // else: fall back to FALLBACK_AGENTS
-
       agents = KNOWN_AGENTS.map(a => ({
         ...a,
         sessions: [defaultSessionForAgent(a.id)]
