@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-16T18:27:26.806Z",
+  "generatedAt": "2026-03-16T18:58:00.684Z",
   "auth": {
     "passwordHash": "1b2a92a86286fbc041d175321caa4a11309d3daf6c7502209edbb60135287cb7"
   },
@@ -2056,25 +2056,45 @@
     "main": {
       "id": "main",
       "name": "main",
-      "model": "anthropic/claude-opus-4-6",
+      "model": {
+        "primary": "anthropic/claude-opus-4-6",
+        "fallbacks": [
+          "openai-codex/gpt-5.4"
+        ]
+      },
       "thinking": "low"
     },
     "samantha": {
       "id": "samantha",
       "name": "samantha",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": {
+        "primary": "anthropic/claude-opus-4-6",
+        "fallbacks": [
+          "openai-codex/gpt-5.4"
+        ]
+      },
       "thinking": "low"
     },
     "scout": {
       "id": "scout",
       "name": "scout",
-      "model": "google/gemini-2.0-flash",
+      "model": {
+        "primary": "openai-codex/gpt-5-mini",
+        "fallbacks": [
+          "anthropic/claude-haiku-4-5"
+        ]
+      },
       "thinking": "low"
     },
     "atlas": {
       "id": "atlas",
       "name": "atlas",
-      "model": "openai-codex/gpt-5.4",
+      "model": {
+        "primary": "openai-codex/gpt-5.4",
+        "fallbacks": [
+          "google/gemini-2.5-pro"
+        ]
+      },
       "thinking": "low"
     },
     "fernanda": {
@@ -2089,7 +2109,7 @@
       "model": {
         "primary": "anthropic/claude-opus-4-6",
         "fallbacks": [
-          "google/gemini-2.5-pro"
+          "openai-codex/gpt-5.4"
         ]
       },
       "thinking": "low"
@@ -2098,7 +2118,7 @@
   "sessions": [
     {
       "label": "Unknown",
-      "key": "1m",
+      "key": "32m",
       "used": 22000,
       "limit": 1000000,
       "pct": 2,
@@ -2107,7 +2127,7 @@
     },
     {
       "label": "Unknown",
-      "key": "22m",
+      "key": "53m",
       "used": 10000,
       "limit": 272000,
       "pct": 4,
@@ -2116,7 +2136,7 @@
     },
     {
       "label": "Unknown",
-      "key": "22m",
+      "key": "53m",
       "used": 10000,
       "limit": 272000,
       "pct": 4,
@@ -2125,26 +2145,8 @@
     },
     {
       "label": "Unknown",
-      "key": "36m",
+      "key": "1h",
       "used": 20000,
-      "limit": 1000000,
-      "pct": 2,
-      "model": "claude-opus-4-6",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "36m",
-      "used": 20000,
-      "limit": 1000000,
-      "pct": 2,
-      "model": "claude-opus-4-6",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "41m",
-      "used": 19000,
       "limit": 1000000,
       "pct": 2,
       "model": "claude-opus-4-6",
@@ -2153,10 +2155,19 @@
     {
       "label": "Unknown",
       "key": "1h",
-      "used": 10000,
-      "limit": 272000,
-      "pct": 4,
-      "model": "gpt-5-mini",
+      "used": 20000,
+      "limit": 1000000,
+      "pct": 2,
+      "model": "claude-opus-4-6",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "1h",
+      "used": 19000,
+      "limit": 1000000,
+      "pct": 2,
+      "model": "claude-opus-4-6",
       "lastActiveAt": null
     },
     {
@@ -2251,38 +2262,11 @@
     },
     {
       "label": "Unknown",
-      "key": "3h",
+      "key": "4h",
       "used": 10000,
       "limit": 272000,
       "pct": 4,
       "model": "gpt-5-mini",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "3h",
-      "used": 10000,
-      "limit": 272000,
-      "pct": 4,
-      "model": "gpt-5-mini",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "3h",
-      "used": 115000,
-      "limit": 272000,
-      "pct": 42,
-      "model": "gpt-5.4",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "3h",
-      "used": 115000,
-      "limit": 272000,
-      "pct": 42,
-      "model": "gpt-5.4",
       "lastActiveAt": null
     },
     {
@@ -2292,6 +2276,33 @@
       "limit": 272000,
       "pct": 4,
       "model": "gpt-5-mini",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "4h",
+      "used": 10000,
+      "limit": 272000,
+      "pct": 4,
+      "model": "gpt-5-mini",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "4h",
+      "used": 115000,
+      "limit": 272000,
+      "pct": 42,
+      "model": "gpt-5.4",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "4h",
+      "used": 115000,
+      "limit": 272000,
+      "pct": 42,
+      "model": "gpt-5.4",
       "lastActiveAt": null
     },
     {
@@ -2341,6 +2352,15 @@
     },
     {
       "label": "Unknown",
+      "key": "10h",
+      "used": 10000,
+      "limit": 272000,
+      "pct": 4,
+      "model": "gpt-5-mini",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
       "key": "11h",
       "used": 10000,
       "limit": 272000,
@@ -2377,16 +2397,7 @@
     },
     {
       "label": "Unknown",
-      "key": "12h",
-      "used": 14000,
-      "limit": 272000,
-      "pct": 5,
-      "model": "gpt-5.4",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "12h",
+      "key": "13h",
       "used": 14000,
       "limit": 272000,
       "pct": 5,
@@ -2396,10 +2407,10 @@
     {
       "label": "Unknown",
       "key": "13h",
-      "used": 10000,
+      "used": 14000,
       "limit": 272000,
-      "pct": 4,
-      "model": "gpt-5-mini",
+      "pct": 5,
+      "model": "gpt-5.4",
       "lastActiveAt": null
     },
     {
@@ -2423,6 +2434,15 @@
     {
       "label": "Unknown",
       "key": "14h",
+      "used": 10000,
+      "limit": 272000,
+      "pct": 4,
+      "model": "gpt-5-mini",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "15h",
       "used": 10000,
       "limit": 272000,
       "pct": 4,
@@ -2467,7 +2487,7 @@
     },
     {
       "label": "Unknown",
-      "key": "15h",
+      "key": "16h",
       "used": 10000,
       "limit": 272000,
       "pct": 4,
@@ -2494,24 +2514,6 @@
     },
     {
       "label": "Unknown",
-      "key": "16h",
-      "used": 11000,
-      "limit": 272000,
-      "pct": 4,
-      "model": "gpt-5.4",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
-      "key": "16h",
-      "used": 11000,
-      "limit": 272000,
-      "pct": 4,
-      "model": "gpt-5.4",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
       "key": "17h",
       "used": 11000,
       "limit": 272000,
@@ -2548,7 +2550,25 @@
     },
     {
       "label": "Unknown",
-      "key": "17h",
+      "key": "18h",
+      "used": 11000,
+      "limit": 272000,
+      "pct": 4,
+      "model": "gpt-5.4",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "18h",
+      "used": 11000,
+      "limit": 272000,
+      "pct": 4,
+      "model": "gpt-5.4",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "18h",
       "used": 118000,
       "limit": 272000,
       "pct": 43,
@@ -2557,7 +2577,7 @@
     },
     {
       "label": "Unknown",
-      "key": "17h",
+      "key": "18h",
       "used": 118000,
       "limit": 272000,
       "pct": 43,
@@ -2584,7 +2604,7 @@
     },
     {
       "label": "Unknown",
-      "key": "18h",
+      "key": "19h",
       "used": 15000,
       "limit": 200000,
       "pct": 8,
@@ -2611,15 +2631,6 @@
     },
     {
       "label": "Unknown",
-      "key": "19h",
-      "used": 15000,
-      "limit": 200000,
-      "pct": 7,
-      "model": "claude-haiku-4-5",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
       "key": "20h",
       "used": 15000,
       "limit": 200000,
@@ -2648,6 +2659,15 @@
     {
       "label": "Unknown",
       "key": "21h",
+      "used": 15000,
+      "limit": 200000,
+      "pct": 7,
+      "model": "claude-haiku-4-5",
+      "lastActiveAt": null
+    },
+    {
+      "label": "Unknown",
+      "key": "22h",
       "used": 15000,
       "limit": 200000,
       "pct": 7,
@@ -2674,7 +2694,7 @@
     },
     {
       "label": "Unknown",
-      "key": "22h",
+      "key": "23h",
       "used": 17000,
       "limit": 272000,
       "pct": 6,
@@ -2683,20 +2703,11 @@
     },
     {
       "label": "Unknown",
-      "key": "22h",
-      "used": 15000,
-      "limit": 200000,
-      "pct": 7,
-      "model": "gpt-5-mini",
-      "lastActiveAt": null
-    },
-    {
-      "label": "Unknown",
       "key": "23h",
       "used": 15000,
       "limit": 200000,
       "pct": 7,
-      "model": "claude-haiku-4-5",
+      "model": "gpt-5-mini",
       "lastActiveAt": null
     },
     {
@@ -2719,7 +2730,7 @@
     },
     {
       "label": "Unknown",
-      "key": "26h",
+      "key": "27h",
       "used": 81000,
       "limit": 272000,
       "pct": 30,
@@ -2746,7 +2757,7 @@
     },
     {
       "label": "Unknown",
-      "key": "39h",
+      "key": "40h",
       "used": 13000,
       "limit": 200000,
       "pct": 7,
@@ -2755,7 +2766,7 @@
     },
     {
       "label": "Unknown",
-      "key": "44h",
+      "key": "45h",
       "used": 19000,
       "limit": 200000,
       "pct": 10,
@@ -2764,7 +2775,7 @@
     },
     {
       "label": "Unknown",
-      "key": "47h",
+      "key": "2d",
       "used": 20000,
       "limit": 200000,
       "pct": 10,
@@ -2773,7 +2784,7 @@
     },
     {
       "label": "Unknown",
-      "key": "47h",
+      "key": "2d",
       "used": 19000,
       "limit": 200000,
       "pct": 10,
@@ -2953,7 +2964,7 @@
     },
     {
       "label": "Unknown",
-      "key": "9d",
+      "key": "10d",
       "used": 18000,
       "limit": 200000,
       "pct": 9,
@@ -3052,7 +3063,7 @@
     },
     {
       "label": "Unknown",
-      "key": "13d",
+      "key": "14d",
       "used": 19000,
       "limit": 200000,
       "pct": 10,
@@ -3088,7 +3099,7 @@
     },
     {
       "label": "Unknown",
-      "key": "15d",
+      "key": "16d",
       "used": 39000,
       "limit": 200000,
       "pct": 20,
@@ -3116,16 +3127,250 @@
   ],
   "conversationSessions": [
     {
+      "sessionId": "48c02f76-f28c-460b-95e9-983ef5fb616f",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 21570,
+      "inputTokens": 8,
+      "outputTokens": 750,
+      "percentUsed": 0,
+      "updatedAt": 1773687480420,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "48c02f76-f28c-460b-95e9-983ef5fb616f",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:48c02f76-f28c-460b-95e9-983ef5fb616f",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 21570,
+      "inputTokens": 8,
+      "outputTokens": 750,
+      "percentUsed": 0,
+      "updatedAt": 1773687480420,
+      "thinkingLevel": null
+    },
+    {
       "sessionId": "95339b74-22cb-435f-a9c7-4fc0607e8a26",
       "key": "agent:samantha:telegram:direct:8386624734",
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-opus-4-6",
-      "totalTokens": 143455,
-      "inputTokens": 4,
-      "outputTokens": 468,
+      "totalTokens": 46000,
+      "inputTokens": 21,
+      "outputTokens": 3404,
       "percentUsed": 0,
-      "updatedAt": 1773685647863,
+      "updatedAt": 1773687393282,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "42bf0252-f334-4c3d-b216-a283b540232a",
+      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 17407,
+      "inputTokens": 30,
+      "outputTokens": 3178,
+      "percentUsed": 0,
+      "updatedAt": 1773687349106,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "42bf0252-f334-4c3d-b216-a283b540232a",
+      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:42bf0252-f334-4c3d-b216-a283b540232a",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 17407,
+      "inputTokens": 30,
+      "outputTokens": 3178,
+      "percentUsed": 0,
+      "updatedAt": 1773687349106,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "90054bbf-af5a-4bb9-bb88-9b55e9744754",
+      "key": "agent:cora:main",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gpt-5.4",
+      "totalTokens": 34243,
+      "inputTokens": 34243,
+      "outputTokens": 48,
+      "percentUsed": 0,
+      "updatedAt": 1773687343902,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "a0a15d83-3a16-40ba-8d64-7c772d7d66fa",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gpt-5.4",
+      "totalTokens": 11614,
+      "inputTokens": 10356,
+      "outputTokens": 143,
+      "percentUsed": 0,
+      "updatedAt": 1773687219523,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "a0a15d83-3a16-40ba-8d64-7c772d7d66fa",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:a0a15d83-3a16-40ba-8d64-7c772d7d66fa",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gpt-5.4",
+      "totalTokens": 11614,
+      "inputTokens": 10356,
+      "outputTokens": 143,
+      "percentUsed": 0,
+      "updatedAt": 1773687219523,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "9edf4a06-4ab6-49f0-bd7c-e1ffb3ca71f6",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:9edf4a06-4ab6-49f0-bd7c-e1ffb3ca71f6",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 21570,
+      "inputTokens": 8,
+      "outputTokens": 750,
+      "percentUsed": 0,
+      "updatedAt": 1773687180404,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "5c477701-7f2d-4d2a-ba26-27bbaa20e3dd",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:5c477701-7f2d-4d2a-ba26-27bbaa20e3dd",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gpt-5.4",
+      "totalTokens": 11845,
+      "inputTokens": 12025,
+      "outputTokens": 368,
+      "percentUsed": 0,
+      "updatedAt": 1773686919520,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "4aee3218-b1f0-475c-b027-b2261daf0702",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:4aee3218-b1f0-475c-b027-b2261daf0702",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 19838,
+      "inputTokens": 8,
+      "outputTokens": 661,
+      "percentUsed": 0,
+      "updatedAt": 1773686880390,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "9557a8ab-4608-4528-b8a3-5bfab7426e33",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:9557a8ab-4608-4528-b8a3-5bfab7426e33",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gpt-5.4",
+      "totalTokens": 11769,
+      "inputTokens": 12075,
+      "outputTokens": 216,
+      "percentUsed": 0,
+      "updatedAt": 1773686619502,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "05c95363-d57d-4b43-bc60-0a2fd145db20",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:05c95363-d57d-4b43-bc60-0a2fd145db20",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 23440,
+      "inputTokens": 8,
+      "outputTokens": 890,
+      "percentUsed": 0,
+      "updatedAt": 1773686580373,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "bb715934-964c-4b52-8769-2e5e4e0efcd3",
+      "key": "agent:samantha:subagent:f3b28d5f-9ab3-4271-88da-813883777a8a",
+      "agentId": "samantha",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 19200,
+      "inputTokens": 7,
+      "outputTokens": 1920,
+      "percentUsed": 0,
+      "updatedAt": 1773686495904,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "9e58caa5-85bd-4565-8bd8-b5928d7bc00b",
+      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:9e58caa5-85bd-4565-8bd8-b5928d7bc00b",
+      "agentId": "scout",
+      "kind": "direct",
+      "model": "claude-haiku-4-5",
+      "totalTokens": 17370,
+      "inputTokens": 41,
+      "outputTokens": 3201,
+      "percentUsed": 0,
+      "updatedAt": 1773686449089,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "170cc067-8432-4b76-b83a-c350a2364bc1",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:170cc067-8432-4b76-b83a-c350a2364bc1",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gpt-5.4",
+      "totalTokens": 11663,
+      "inputTokens": 12038,
+      "outputTokens": 369,
+      "percentUsed": 0,
+      "updatedAt": 1773686319490,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "a0f15c71-9235-4536-a90a-ca4a7f9b1b99",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:a0f15c71-9235-4536-a90a-ca4a7f9b1b99",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 19848,
+      "inputTokens": 8,
+      "outputTokens": 853,
+      "percentUsed": 0,
+      "updatedAt": 1773686280357,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "28937022-53d6-4ffd-a2b5-bee7b1e8470a",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:28937022-53d6-4ffd-a2b5-bee7b1e8470a",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gemini-2.5-flash",
+      "totalTokens": 15030,
+      "inputTokens": 7,
+      "outputTokens": 728,
+      "percentUsed": 0,
+      "updatedAt": 1773686018914,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "10e2e426-9950-4cb3-a87c-099f0cde28ba",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:10e2e426-9950-4cb3-a87c-099f0cde28ba",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 20688,
+      "inputTokens": 8,
+      "outputTokens": 830,
+      "percentUsed": 0,
+      "updatedAt": 1773685980339,
       "thinkingLevel": null
     },
     {
@@ -3134,11 +3379,37 @@
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 36842,
-      "inputTokens": 42,
-      "outputTokens": 6810,
+      "totalTokens": 45897,
+      "inputTokens": 23,
+      "outputTokens": 4982,
       "percentUsed": 0,
-      "updatedAt": 1773685638123,
+      "updatedAt": 1773685781291,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "7efa4c2b-96e9-497f-adba-848f631546d0",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:7efa4c2b-96e9-497f-adba-848f631546d0",
+      "agentId": "cora",
+      "kind": "direct",
+      "model": "gemini-2.5-flash",
+      "totalTokens": 15030,
+      "inputTokens": 7,
+      "outputTokens": 728,
+      "percentUsed": 0,
+      "updatedAt": 1773685714690,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "78edfa57-de00-4242-8c56-da4d10eb2e5d",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:78edfa57-de00-4242-8c56-da4d10eb2e5d",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 17919,
+      "inputTokens": 7,
+      "outputTokens": 610,
+      "percentUsed": 0,
+      "updatedAt": 1773685680321,
       "thinkingLevel": null
     },
     {
@@ -3156,19 +3427,6 @@
     },
     {
       "sessionId": "568f22f4-48f2-46c2-9a47-5587b60ce366",
-      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "gemini-2.0-flash",
-      "totalTokens": 13208,
-      "inputTokens": 9585,
-      "outputTokens": 2426,
-      "percentUsed": 0,
-      "updatedAt": 1773685549076,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "568f22f4-48f2-46c2-9a47-5587b60ce366",
       "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:568f22f4-48f2-46c2-9a47-5587b60ce366",
       "agentId": "scout",
       "kind": "direct",
@@ -3178,32 +3436,6 @@
       "outputTokens": 2426,
       "percentUsed": 0,
       "updatedAt": 1773685549076,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "90054bbf-af5a-4bb9-bb88-9b55e9744754",
-      "key": "agent:cora:main",
-      "agentId": "cora",
-      "kind": "direct",
-      "model": "gpt-5.4",
-      "totalTokens": 18009,
-      "inputTokens": 18017,
-      "outputTokens": 199,
-      "percentUsed": 0,
-      "updatedAt": 1773685534001,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "776e6ca9-cd9e-4a9c-8c70-e199be9298a3",
-      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf",
-      "agentId": "cora",
-      "kind": "direct",
-      "model": "gemini-2.5-flash",
-      "totalTokens": 15030,
-      "inputTokens": 7,
-      "outputTokens": 728,
-      "percentUsed": 0,
-      "updatedAt": 1773685414685,
       "thinkingLevel": null
     },
     {
@@ -3217,19 +3449,6 @@
       "outputTokens": 728,
       "percentUsed": 0,
       "updatedAt": 1773685414685,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "f0adc141-363d-4c4c-b0e5-396a260fc438",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90",
-      "agentId": "fernanda",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 21690,
-      "inputTokens": 8,
-      "outputTokens": 787,
-      "percentUsed": 0,
-      "updatedAt": 1773685380309,
       "thinkingLevel": null
     },
     {
@@ -7943,7 +8162,7 @@
       "key": "agent:samantha:telegram:slash:8386624734",
       "agentId": "samantha",
       "kind": "direct",
-      "model": "claude-sonnet-4-6",
+      "model": "claude-opus-4-6",
       "totalTokens": 0,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -9096,110 +9315,6 @@
       "thinkingLevel": null
     },
     {
-      "sessionId": "42284485-32fd-4d71-9c55-89d35c647a98",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:42284485-32fd-4d71-9c55-89d35c647a98",
-      "agentId": "fernanda",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 22402,
-      "inputTokens": 27,
-      "outputTokens": 741,
-      "percentUsed": 0,
-      "updatedAt": 1773600531576,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "a50cf089-94fc-41bc-9732-096aadd76809",
-      "key": "agent:main:cron:46b53934-fd27-4950-959d-9218f4201756:run:a50cf089-94fc-41bc-9732-096aadd76809",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 14565,
-      "inputTokens": 15,
-      "outputTokens": 757,
-      "percentUsed": 0,
-      "updatedAt": 1773600321297,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "feeb67a5-13eb-4d52-b6a3-4cf03effbc8e",
-      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:feeb67a5-13eb-4d52-b6a3-4cf03effbc8e",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 12826,
-      "inputTokens": 30,
-      "outputTokens": 620,
-      "percentUsed": 0,
-      "updatedAt": 1773600263099,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "aa5cc5f8-0c61-4803-b0e9-2589c61d1f6f",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:aa5cc5f8-0c61-4803-b0e9-2589c61d1f6f",
-      "agentId": "fernanda",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 21316,
-      "inputTokens": 32,
-      "outputTokens": 1380,
-      "percentUsed": 0,
-      "updatedAt": 1773600231559,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "f28832a6-4fd0-440c-8604-bacbbeca0a81",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:f28832a6-4fd0-440c-8604-bacbbeca0a81",
-      "agentId": "fernanda",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 17754,
-      "inputTokens": 49,
-      "outputTokens": 1397,
-      "percentUsed": 0,
-      "updatedAt": 1773599931529,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "7b94b8a0-7aeb-410d-9e8e-330fabddd2f7",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:7b94b8a0-7aeb-410d-9e8e-330fabddd2f7",
-      "agentId": "fernanda",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 18998,
-      "inputTokens": 58,
-      "outputTokens": 1529,
-      "percentUsed": 0,
-      "updatedAt": 1773599631507,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "3fe1eba2-052f-4fc9-a954-6d556b73b4ab",
-      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:3fe1eba2-052f-4fc9-a954-6d556b73b4ab",
-      "agentId": "scout",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 12196,
-      "inputTokens": 50,
-      "outputTokens": 692,
-      "percentUsed": 0,
-      "updatedAt": 1773599363077,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "1b54709e-b5bb-4296-a8c3-5845db30a51e",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:1b54709e-b5bb-4296-a8c3-5845db30a51e",
-      "agentId": "fernanda",
-      "kind": "direct",
-      "model": "claude-haiku-4-5",
-      "totalTokens": 23539,
-      "inputTokens": 74,
-      "outputTokens": 1834,
-      "percentUsed": 0,
-      "updatedAt": 1773599331490,
-      "thinkingLevel": null
-    },
-    {
       "sessionId": "7834dae8-1df1-4872-a652-02bd91601b10",
       "key": "agent:main:cron:bbbd846b-ecb6-420f-822b-4c95e69a6d4d",
       "agentId": "main",
@@ -10101,7 +10216,7 @@
       "key": "agent:samantha:cron:b2055796-4f19-4200-b970-f40c7212e649",
       "agentId": "samantha",
       "kind": "direct",
-      "model": "claude-sonnet-4-6",
+      "model": "claude-opus-4-6",
       "totalTokens": 0,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -10463,73 +10578,73 @@
   ],
   "sessionHistory": [
     {
+      "sessionId": "48c02f76-f28c-460b-95e9-983ef5fb616f",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 21570,
+      "inputTokens": 8,
+      "outputTokens": 750,
+      "cacheRead": 86460,
+      "percentUsed": 2,
+      "updatedAt": 1773687480420,
+      "thinkingLevel": null
+    },
+    {
+      "sessionId": "48c02f76-f28c-460b-95e9-983ef5fb616f",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:48c02f76-f28c-460b-95e9-983ef5fb616f",
+      "agentId": "fernanda",
+      "kind": "direct",
+      "model": "claude-sonnet-4-6",
+      "totalTokens": 21570,
+      "inputTokens": 8,
+      "outputTokens": 750,
+      "cacheRead": 86460,
+      "percentUsed": 2,
+      "updatedAt": 1773687480420,
+      "thinkingLevel": null
+    },
+    {
       "sessionId": "95339b74-22cb-435f-a9c7-4fc0607e8a26",
       "key": "agent:samantha:telegram:direct:8386624734",
       "agentId": "samantha",
       "kind": "direct",
       "model": "claude-opus-4-6",
-      "totalTokens": 143455,
-      "inputTokens": 4,
-      "outputTokens": 468,
-      "cacheRead": 141911,
-      "percentUsed": 14,
-      "updatedAt": 1773685647863,
+      "totalTokens": 46000,
+      "inputTokens": 21,
+      "outputTokens": 3404,
+      "cacheRead": 45647,
+      "percentUsed": 5,
+      "updatedAt": 1773687393282,
       "thinkingLevel": null
     },
     {
-      "sessionId": "3102162b-7acf-495b-8f51-8b38cec735dc",
-      "key": "agent:samantha:subagent:68b6e2a7-eb41-4589-9e2c-47c739c2cbdb",
-      "agentId": "samantha",
-      "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 36842,
-      "inputTokens": 42,
-      "outputTokens": 6810,
-      "cacheRead": 1099117,
-      "percentUsed": 4,
-      "updatedAt": 1773685638123,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "10e938e9-b33e-4e56-b7e4-a6814e1022fc",
-      "key": "agent:main:telegram:direct:8386624734",
-      "agentId": "main",
-      "kind": "direct",
-      "model": "claude-opus-4-6",
-      "totalTokens": 21922,
-      "inputTokens": 3,
-      "outputTokens": 280,
-      "cacheRead": 21756,
-      "percentUsed": 2,
-      "updatedAt": 1773685562873,
-      "thinkingLevel": null
-    },
-    {
-      "sessionId": "568f22f4-48f2-46c2-9a47-5587b60ce366",
+      "sessionId": "42bf0252-f334-4c3d-b216-a283b540232a",
       "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b",
       "agentId": "scout",
       "kind": "direct",
-      "model": "gemini-2.0-flash",
-      "totalTokens": 13208,
-      "inputTokens": 9585,
-      "outputTokens": 2426,
-      "cacheRead": 32128,
-      "percentUsed": 5,
-      "updatedAt": 1773685549076,
+      "model": "claude-haiku-4-5",
+      "totalTokens": 17407,
+      "inputTokens": 30,
+      "outputTokens": 3178,
+      "cacheRead": 37855,
+      "percentUsed": 9,
+      "updatedAt": 1773687349106,
       "thinkingLevel": null
     },
     {
-      "sessionId": "568f22f4-48f2-46c2-9a47-5587b60ce366",
-      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:568f22f4-48f2-46c2-9a47-5587b60ce366",
+      "sessionId": "42bf0252-f334-4c3d-b216-a283b540232a",
+      "key": "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:42bf0252-f334-4c3d-b216-a283b540232a",
       "agentId": "scout",
       "kind": "direct",
-      "model": "gemini-2.0-flash",
-      "totalTokens": 13208,
-      "inputTokens": 9585,
-      "outputTokens": 2426,
-      "cacheRead": 32128,
-      "percentUsed": 5,
-      "updatedAt": 1773685549076,
+      "model": "claude-haiku-4-5",
+      "totalTokens": 17407,
+      "inputTokens": 30,
+      "outputTokens": 3178,
+      "cacheRead": 37855,
+      "percentUsed": 9,
+      "updatedAt": 1773687349106,
       "thinkingLevel": null
     },
     {
@@ -10538,68 +10653,68 @@
       "agentId": "cora",
       "kind": "direct",
       "model": "gpt-5.4",
-      "totalTokens": 18009,
-      "inputTokens": 18017,
-      "outputTokens": 199,
-      "cacheRead": 16256,
-      "percentUsed": 7,
-      "updatedAt": 1773685534001,
+      "totalTokens": 34243,
+      "inputTokens": 34243,
+      "outputTokens": 48,
+      "cacheRead": 0,
+      "percentUsed": 13,
+      "updatedAt": 1773687343902,
       "thinkingLevel": null
     },
     {
-      "sessionId": "776e6ca9-cd9e-4a9c-8c70-e199be9298a3",
+      "sessionId": "a0a15d83-3a16-40ba-8d64-7c772d7d66fa",
       "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf",
       "agentId": "cora",
       "kind": "direct",
-      "model": "gemini-2.5-flash",
-      "totalTokens": 15030,
-      "inputTokens": 7,
-      "outputTokens": 728,
-      "cacheRead": 62167,
-      "percentUsed": 2,
-      "updatedAt": 1773685414685,
+      "model": "gpt-5.4",
+      "totalTokens": 11614,
+      "inputTokens": 10356,
+      "outputTokens": 143,
+      "cacheRead": 29312,
+      "percentUsed": 4,
+      "updatedAt": 1773687219523,
       "thinkingLevel": null
     },
     {
-      "sessionId": "776e6ca9-cd9e-4a9c-8c70-e199be9298a3",
-      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:776e6ca9-cd9e-4a9c-8c70-e199be9298a3",
+      "sessionId": "a0a15d83-3a16-40ba-8d64-7c772d7d66fa",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:a0a15d83-3a16-40ba-8d64-7c772d7d66fa",
       "agentId": "cora",
       "kind": "direct",
-      "model": "gemini-2.5-flash",
-      "totalTokens": 15030,
-      "inputTokens": 7,
-      "outputTokens": 728,
-      "cacheRead": 62167,
-      "percentUsed": 2,
-      "updatedAt": 1773685414685,
+      "model": "gpt-5.4",
+      "totalTokens": 11614,
+      "inputTokens": 10356,
+      "outputTokens": 143,
+      "cacheRead": 29312,
+      "percentUsed": 4,
+      "updatedAt": 1773687219523,
       "thinkingLevel": null
     },
     {
-      "sessionId": "f0adc141-363d-4c4c-b0e5-396a260fc438",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90",
+      "sessionId": "9edf4a06-4ab6-49f0-bd7c-e1ffb3ca71f6",
+      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:9edf4a06-4ab6-49f0-bd7c-e1ffb3ca71f6",
       "agentId": "fernanda",
       "kind": "direct",
       "model": "claude-sonnet-4-6",
-      "totalTokens": 21690,
+      "totalTokens": 21570,
       "inputTokens": 8,
-      "outputTokens": 787,
-      "cacheRead": 86516,
+      "outputTokens": 750,
+      "cacheRead": 86460,
       "percentUsed": 2,
-      "updatedAt": 1773685380309,
+      "updatedAt": 1773687180404,
       "thinkingLevel": null
     },
     {
-      "sessionId": "f0adc141-363d-4c4c-b0e5-396a260fc438",
-      "key": "agent:fernanda:cron:fa3b12e6-86e6-4e42-9cb4-a414dc49af90:run:f0adc141-363d-4c4c-b0e5-396a260fc438",
-      "agentId": "fernanda",
+      "sessionId": "5c477701-7f2d-4d2a-ba26-27bbaa20e3dd",
+      "key": "agent:cora:cron:f4ef2020-4ba7-4181-a98d-1bf420f12abf:run:5c477701-7f2d-4d2a-ba26-27bbaa20e3dd",
+      "agentId": "cora",
       "kind": "direct",
-      "model": "claude-sonnet-4-6",
-      "totalTokens": 21690,
-      "inputTokens": 8,
-      "outputTokens": 787,
-      "cacheRead": 86516,
-      "percentUsed": 2,
-      "updatedAt": 1773685380309,
+      "model": "gpt-5.4",
+      "totalTokens": 11845,
+      "inputTokens": 12025,
+      "outputTokens": 368,
+      "cacheRead": 39808,
+      "percentUsed": 4,
+      "updatedAt": 1773686919520,
       "thinkingLevel": null
     }
   ],
@@ -10688,7 +10803,7 @@
   },
   "gateway": {
     "reachable": true,
-    "latencyMs": 135,
+    "latencyMs": 231,
     "version": "2026.3.13",
     "error": null,
     "running": true
