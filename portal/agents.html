@@ -207,8 +207,10 @@
                 <!-- Read-only state -->
                 <div id="${n}-model-readonly">
                   <div id="${n}-model-name" class="text-sm font-semibold text-white">—</div>
-                  <div class="text-xs text-gray-500 mt-1">Default Model</div>
+                  <div class="text-xs text-gray-500 mt-1">Default</div>
                   <div id="${n}-model-default-name" class="text-xs text-gray-600">—</div>
+                  <div class="text-xs text-gray-500 mt-1">Fallback</div>
+                  <div id="${n}-model-fallback-name" class="text-xs text-gray-600">—</div>
                 </div>
                 <!-- Edit state (hidden) -->
                 <div id="${n}-model-editstate" class="hidden">
@@ -218,10 +220,16 @@
                       <option value="">Use default</option>
                     </select>
                   </div>
-                  <div>
+                  <div class="mb-2">
                     <div class="text-xs text-gray-400 mb-1">Default</div>
                     <select id="${n}-default-dropdown" class="w-full px-2 py-1 text-xs bg-gray-800 text-white border border-gray-700 rounded focus:outline-none focus:border-indigo-500">
                       <option value="">Inherit global</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="text-xs text-gray-400 mb-1">Fallback</div>
+                    <select id="${n}-fallback-dropdown" class="w-full px-2 py-1 text-xs bg-gray-800 text-white border border-gray-700 rounded focus:outline-none focus:border-indigo-500">
+                      <option value="">None</option>
                     </select>
                   </div>
                 </div>
@@ -417,6 +425,16 @@
       return `<option value="" ${!selectedModel ? 'selected' : ''}>Inherit global</option>` + opts;
     }
 
+    // Global fallback model dropdown — '' = "None" (no fallback)
+    function buildFallbackOptions(selectedModel) {
+      const opts = DROPDOWN_MODELS.map(id => {
+        const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
+        const selected = (selectedModel === id) ? 'selected' : '';
+        return `<option value="${id}" ${selected}>${label}</option>`;
+      }).join('');
+      return `<option value="" ${!selectedModel ? 'selected' : ''}>None</option>` + opts;
+    }
+
     // Cached session model overrides
     let _sessionModelOverrides = {};
     
@@ -479,14 +497,23 @@
           ? ((typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel)
           : 'Inherit global';
 
+        // Read-only display: Fallback model (global, first entry in fallbacks array)
+        const fallbackModel = (cfg.fallbacks || [])[0] || '';
+        const fallbackNameEl = document.getElementById(`${n}-model-fallback-name`);
+        if (fallbackNameEl) fallbackNameEl.textContent = fallbackModel
+          ? ((typeof friendlyModel === 'function') ? friendlyModel(fallbackModel) : fallbackModel)
+          : 'None';
+
         // Populate edit dropdowns only when card is NOT in edit mode (don't stomp user changes)
         const editState = document.getElementById(`${n}-model-editstate`);
         const isEditing = editState && !editState.classList.contains('hidden');
         if (!isEditing) {
           const currentDropdown = document.getElementById(`${n}-current-dropdown`);
           const defaultDropdown = document.getElementById(`${n}-default-dropdown`);
+          const fallbackDropdown = document.getElementById(`${n}-fallback-dropdown`);
           if (currentDropdown) currentDropdown.innerHTML = buildCurrentOptions(activeModel, agent.id);
           if (defaultDropdown) defaultDropdown.innerHTML = buildDefaultOptions(defaultModel, agent.id);
+          if (fallbackDropdown) fallbackDropdown.innerHTML = buildFallbackOptions(fallbackModel);
         }
       });
     }
@@ -555,6 +582,8 @@
           // Rebuild dropdowns with current values
           const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
           const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
+          const fallbackDropdown = document.getElementById(`${agentName}-fallback-dropdown`);
+          const fallbackModel = (cfg.fallbacks || [])[0] || '';
           if (currentDropdown) {
             currentDropdown.innerHTML = buildCurrentOptions(activeModel, agent.id);
             console.log(`[enterCardEditMode] rebuilt currentDropdown for activeModel=${activeModel}`);
@@ -562,6 +591,10 @@
           if (defaultDropdown) {
             defaultDropdown.innerHTML = buildDefaultOptions(defaultModel, agent.id);
             console.log(`[enterCardEditMode] rebuilt defaultDropdown for defaultModel=${defaultModel}`);
+          }
+          if (fallbackDropdown) {
+            fallbackDropdown.innerHTML = buildFallbackOptions(fallbackModel);
+            console.log(`[enterCardEditMode] rebuilt fallbackDropdown for fallbackModel=${fallbackModel}`);
           }
         } else {
           console.log(`[enterCardEditMode] Agent not found or _lastData missing`);
@@ -582,14 +615,15 @@
     async function applyCardEdit(agentId, agentName) {
       const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
       const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
+      const fallbackDropdown = document.getElementById(`${agentName}-fallback-dropdown`);
       if (!currentDropdown || !defaultDropdown) return;
 
-      const newCurrent = currentDropdown.value; // always a real model ID (no pseudo-options)
-      const newDefault = defaultDropdown.value; // '' = inherit global (clear per-agent default)
+      const newCurrent = currentDropdown.value;
+      const newDefault = defaultDropdown.value;
+      const newFallback = fallbackDropdown ? fallbackDropdown.value : null;
       
       console.log(`[applyCardEdit] agentId=${agentId}, agentName=${agentName}`);
-      console.log(`[applyCardEdit] newCurrent=${newCurrent}, newDefault=${newDefault}`);
-      console.log(`[applyCardEdit] currentDropdown.id=${currentDropdown.id}, defaultDropdown.id=${defaultDropdown.id}`);
+      console.log(`[applyCardEdit] newCurrent=${newCurrent}, newDefault=${newDefault}, newFallback=${newFallback}`);
 
       try {
         // Apply session override
@@ -598,12 +632,17 @@
         // Apply persistent per-agent default (or clear it)
         await setAgentDefaultModel(agentId, newDefault);
 
+        // Apply global fallback model (if changed)
+        if (newFallback !== null) {
+          await setFallbackModel(newFallback);
+        }
+
         _pendingSessionModels[agentId] = newCurrent;
         _pendingDefaultModels[agentId] = newDefault;
 
         _exitCardEditMode(agentName);
 
-        // Optimistically update read-only display using established model color helper
+        // Optimistically update read-only display
         const nameEl = document.getElementById(`${agentName}-model-name`);
         if (nameEl) {
           nameEl.innerHTML = (typeof modelShort === 'function') ? modelShort(newCurrent) : newCurrent;
@@ -613,6 +652,12 @@
           defaultNameEl.textContent = newDefault
             ? ((typeof friendlyModel === 'function') ? friendlyModel(newDefault) : newDefault)
             : 'Inherit global';
+        }
+        const fallbackNameEl = document.getElementById(`${agentName}-model-fallback-name`);
+        if (fallbackNameEl) {
+          fallbackNameEl.textContent = newFallback
+            ? ((typeof friendlyModel === 'function') ? friendlyModel(newFallback) : newFallback)
+            : 'None';
         }
       } catch (e) {
         alert(`Failed to save model changes: ${e.message}`);
@@ -656,6 +701,26 @@
         }
       } catch (e) {
         console.warn('[agents] set-agent-default-model failed:', e.message);
+        throw e;
+      }
+    }
+
+    // Global fallback model — writes to agents.defaults.model.fallbacks
+    async function setFallbackModel(model) {
+      try {
+        const fallbacks = model ? [model] : [];
+        console.log(`[setFallbackModel] Sending to /api/set-fallback-model: fallbacks=${JSON.stringify(fallbacks)}`);
+        const response = await fetch('https://api.cliffcircuit.ai/api/set-fallback-model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fallbacks })
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || response.statusText || 'fallback model update failed');
+        }
+      } catch (e) {
+        console.warn('[agents] set-fallback-model failed:', e.message);
         throw e;
       }
     }
