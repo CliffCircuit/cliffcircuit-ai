@@ -544,7 +544,11 @@
     function syncAgentDefaultModels(agentConfigs) {
       if (!agentConfigs) return;
       for (const [id, cfg] of Object.entries(agentConfigs)) {
-        if (cfg.model) AGENT_DEFAULT_MODELS[id] = cfg.model;
+        if (cfg.model) {
+          // cfg.model may be a string or {primary, fallbacks} object
+          const m = cfg.model;
+          AGENT_DEFAULT_MODELS[id] = (m && typeof m === 'object') ? (m.primary || '') : m;
+        }
       }
     }
 
@@ -975,7 +979,7 @@
           : '';
         const modelColoredLabel = (typeof modelShort === 'function') ? modelShort(cronModel || '') : `<span class="text-gray-400">${cronModel || 'Agent Default'}</span>`;
         const modelCell = isEditing
-          ? `<select class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${buildCronEditOptions(cronModel, cfg.model || '')}</select>`
+          ? `<select class="px-1.5 py-1 text-xs bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-indigo-500 text-gray-200" onchange="updateCronModel('${esc(j.id)}', this)" onclick="event.stopPropagation()">${buildCronEditOptions(cronModel, (cfg.model && typeof cfg.model === 'object' ? cfg.model.primary : cfg.model) || '')}</select>`
           : `<span class="flex items-center gap-0.5">${hasModelOverride ? modelColoredLabel + overrideDot : '<span class="text-gray-600">Agent Default</span>'}</span>`;
         return `<tr class="border-b border-gray-900">
           <td class="px-4 py-2.5 text-gray-200 font-medium cursor-pointer hover:text-white" onclick="openJobDetail('${esc(j.name)}')">${esc(cronDisplayName(j.name))}${j.description ? ` <span class="info-tip" data-tip="${esc(j.description)}">&#9432;</span>` : ''}</td>
@@ -1028,7 +1032,9 @@
         const bestSession = directSession || agentSessions.sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] || null;
         const liveModel = bestSession ? bestSession.model : null;
         const level = (bestSession?.thinking || cfg.thinking || 'off').toLowerCase();
-        const model = liveModel || cfg.model || 'Unknown';
+        const cfgModelRaw = cfg.model;
+        const cfgModelStr2 = (cfgModelRaw && typeof cfgModelRaw === 'object') ? (cfgModelRaw.primary || '') : (cfgModelRaw || '');
+        const model = liveModel || cfgModelStr2 || 'Unknown';
         const meta = thinkingMeta[level] || thinkingMeta.off;
 
         const el = id2 => document.getElementById(`${n}-${id2}`);
@@ -1223,7 +1229,9 @@
 
         // Model — prefer direct/interactive session over cron/run
         const bestSession = agentSessions.find(s => (s.label || '').includes('direct')) || null;
-        const model = bestSession?.model||cfg.model||'—';
+        const cfgModelRaw3 = cfg.model;
+        const cfgModelStr3 = (cfgModelRaw3 && typeof cfgModelRaw3 === 'object') ? (cfgModelRaw3.primary || '') : (cfgModelRaw3 || '');
+        const model = bestSession?.model||cfgModelStr3||'—';
         const el = id2 => document.getElementById(`${n}-c-${id2}`);
         if (el('model')) el('model').textContent = friendlyModel(model);
 
