@@ -542,8 +542,8 @@
     }
 
     // ─── MODEL DROPDOWN HELPERS ───────────────────────────────────────────────
-    // Full ordered list of all known model IDs for dropdowns
-    const DROPDOWN_MODELS = [
+    // Full ordered list of all known model IDs for dropdowns (static fallback)
+    const ALL_KNOWN_MODELS = [
       'anthropic/claude-haiku-4-5',
       'anthropic/claude-sonnet-4-6',
       'anthropic/claude-opus-4-6',
@@ -558,6 +558,74 @@
       'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
       'lmstudio-laptop/unsloth_qwen3-coder-next-split',
     ];
+
+    // Health data from /api/models-health — keyed by model key
+    let _modelsHealthData = {}; // key -> { status: 'connected'|'unreachable'|'missing', latencyMs }
+    let _modelsHealthLoaded = false;
+
+    // Returns only models that are connected (healthy). Falls back to all known models if health data not loaded yet.
+    function getDropdownModels() {
+      if (!_modelsHealthLoaded) return ALL_KNOWN_MODELS;
+      return ALL_KNOWN_MODELS.filter(id => {
+        const h = _modelsHealthData[id];
+        // Include if connected, or if we have no health data for this model
+        return !h || h.status === 'connected';
+      });
+    }
+
+    // Convenience alias kept for backward compat in places that reference DROPDOWN_MODELS directly
+    // (now dynamic — evaluated at call time via getter)
+    const DROPDOWN_MODELS = ALL_KNOWN_MODELS; // Used only as static fallback in legacy spots
+
+    // Fetch health data in background and refresh dropdowns once loaded
+    async function fetchModelsHealthForAgents() {
+      try {
+        const res = await fetch('https://api.cliffcircuit.ai/api/models-health');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.models) {
+          data.models.forEach(m => { _modelsHealthData[m.key] = m; });
+          _modelsHealthLoaded = true;
+          console.log('[agents] Model health loaded:', data.summary);
+          // Refresh dropdowns if data is available
+          if (_lastData) {
+            populateModelDropdowns(_lastData);
+            updateUnreachableWarnings();
+          }
+        }
+      } catch (e) {
+        console.warn('[agents] Could not load model health:', e.message);
+      }
+    }
+
+    // Show warning on agent card if their current model is unreachable
+    function updateUnreachableWarnings() {
+      if (!_lastData || !_modelsHealthLoaded) return;
+      AGENTS.forEach(agent => {
+        const n = agent.name.toLowerCase();
+        const ac = _lastData.agentConfigs || {};
+        const cfg = ac[agent.id] || ac[n] || {};
+        const rawModel = cfg.model;
+        const cfgModelStr = (rawModel && typeof rawModel === 'object') ? (rawModel.primary || '') : (rawModel || '');
+        const sessions = _lastData.sessions || [];
+        const agentSessions = sessions.filter(s => s.agentId === agent.id);
+        const sortedSessions = agentSessions.slice().sort((a,b) => new Date(b.lastActiveAt||0)-new Date(a.lastActiveAt||0));
+        const bestSession = agentSessions.find(s=>(s.label||'').includes('direct')) || sortedSessions[0] || null;
+        const activeModel = _sessionModelOverrides[agent.id] || bestSession?.model || cfgModelStr;
+
+        const h = activeModel ? _modelsHealthData[activeModel] : null;
+        const isUnreachable = h && (h.status === 'unreachable' || h.status === 'missing');
+
+        const errEl = document.getElementById(`${n}-job-errors`);
+        if (errEl && isUnreachable) {
+          errEl.classList.remove('hidden');
+          const existing = errEl.textContent || '';
+          if (!existing.includes('unreachable')) {
+            errEl.textContent = (existing ? existing + ' · ' : '') + `Model unreachable: ${activeModel}`;
+          }
+        }
+      });
+    }
 
     // Default models per agent — populated live from the status API (agentConfigs).
     // Hardcoded fallback only used before first API response arrives.
@@ -578,10 +646,16 @@
     // Used by cron job rows — "Agent Default" = inherit from agent config
     function buildModelOptions(currentValue) {
       const noneSelected = !currentValue || currentValue === '';
-      const opts = DROPDOWN_MODELS.map(id => {
+      const models = getDropdownModels();
+      // Always include currentValue even if unreachable (so existing config shows correctly)
+      const modelList = (currentValue && !models.includes(currentValue))
+        ? [currentValue, ...models] : models;
+      const opts = modelList.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (!noneSelected && currentValue === id) ? 'selected' : '';
-        return `<option value="${id}" ${selected}>${label}</option>`;
+        const h = _modelsHealthData[id];
+        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
       return `<option value="" ${noneSelected ? 'selected' : ''}>Agent Default</option>` + opts;
     }
@@ -597,14 +671,20 @@
       const defaultLabel = agentDefault
         ? ((typeof friendlyModel === 'function') ? friendlyModel(agentDefault) : agentDefault.split('/').pop())
         : 'global default';
+      const models = getDropdownModels();
+      // Always include effectiveSelected even if unreachable
+      const baseList = (effectiveSelected && !models.includes(effectiveSelected))
+        ? [effectiveSelected, ...models] : models;
       const ordered = effectiveSelected
-        ? [effectiveSelected, ...DROPDOWN_MODELS.filter(id => id !== effectiveSelected)]
-        : DROPDOWN_MODELS.slice();
+        ? [effectiveSelected, ...baseList.filter(id => id !== effectiveSelected)]
+        : baseList.slice();
       const header = `<optgroup label="Default: ${defaultLabel}"></optgroup>`;
       const opts = ordered.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (effectiveSelected === id) ? 'selected' : '';
-        return `<option value="${id}" ${selected}>${label}</option>`;
+        const h = _modelsHealthData[id];
+        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
       return header + opts;
     }
@@ -613,20 +693,32 @@
     // No "Use default" pseudo-option; the current model is always a real selection.
     function buildCurrentOptions(selectedModel, agentId) {
       // Pre-select the given model. If empty, fall back to agent's default.
-      const effectiveSelected = selectedModel || (agentId ? AGENT_DEFAULT_MODELS[agentId] : '') || DROPDOWN_MODELS[0];
-      return DROPDOWN_MODELS.map(id => {
+      const models = getDropdownModels();
+      const effectiveSelected = selectedModel || (agentId ? AGENT_DEFAULT_MODELS[agentId] : '') || models[0] || ALL_KNOWN_MODELS[0];
+      // Always include effectiveSelected even if currently unreachable
+      const modelList = (effectiveSelected && !models.includes(effectiveSelected))
+        ? [effectiveSelected, ...models] : models;
+      return modelList.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (effectiveSelected === id) ? 'selected' : '';
-        return `<option value="${id}" ${selected}>${label}</option>`;
+        const h = _modelsHealthData[id];
+        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
     }
 
     // Card-level default model dropdown — '' = "Inherit global" (clears per-agent default)
     function buildDefaultOptions(selectedModel, agentId) {
-      const opts = DROPDOWN_MODELS.map(id => {
+      const models = getDropdownModels();
+      // Always include selectedModel even if unreachable
+      const modelList = (selectedModel && !models.includes(selectedModel))
+        ? [selectedModel, ...models] : models;
+      const opts = modelList.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (selectedModel === id) ? 'selected' : '';
-        return `<option value="${id}" ${selected}>${label}</option>`;
+        const h = _modelsHealthData[id];
+        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
       // Always show "Inherit global" as first option; select it only if selectedModel is truly empty
       return `<option value="" ${!selectedModel ? 'selected' : ''}>Inherit global</option>` + opts;
@@ -634,10 +726,16 @@
 
     // Global fallback model dropdown — '' = "None" (no fallback)
     function buildFallbackOptions(selectedModel) {
-      const opts = DROPDOWN_MODELS.map(id => {
+      const models = getDropdownModels();
+      // Always include selectedModel even if unreachable
+      const modelList = (selectedModel && !models.includes(selectedModel))
+        ? [selectedModel, ...models] : models;
+      const opts = modelList.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (selectedModel === id) ? 'selected' : '';
-        return `<option value="${id}" ${selected}>${label}</option>`;
+        const h = _modelsHealthData[id];
+        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
       return `<option value="" ${!selectedModel ? 'selected' : ''}>None</option>` + opts;
     }
@@ -1385,6 +1483,9 @@
       
       // Fetch session model overrides in the background
       fetchSessionModelOverrides();
+
+      // Fetch model health to filter dropdowns to connected-only models
+      fetchModelsHealthForAgents();
     });
   </script>
 </body>

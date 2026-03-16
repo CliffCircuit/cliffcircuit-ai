@@ -63,6 +63,63 @@
       font-size: 13px;
       line-height: 1.4;
     }
+    /* Health status indicators */
+    .status-cell {
+      min-width: 120px;
+    }
+    .health-connected {
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .health-unreachable {
+      color: #f87171;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .health-missing {
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .health-testing {
+      color: #fbbf24;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .health-latency {
+      color: #6b7280;
+      font-size: 11px;
+      display: block;
+      margin-top: 2px;
+    }
+    .health-error {
+      color: #6b7280;
+      font-size: 10px;
+      display: block;
+      margin-top: 2px;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .health-summary {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .health-summary-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .health-summary-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
   </style>
 </head>
 <body class="min-h-screen">
@@ -70,9 +127,20 @@
     <div id="portal-nav"></div>
     <div class="p-6 max-w-6xl mx-auto">
 
-      <div class="mb-8">
+      <div class="mb-6">
         <h2 class="text-3xl font-bold text-white mb-2">Available Models</h2>
-        <p class="text-gray-400 text-sm">All 13 configured models, grouped by provider. Use /model &lt;alias&gt; to switch models in chat.</p>
+        <p class="text-gray-400 text-sm mb-4">All configured models, grouped by provider. Use /model &lt;alias&gt; to switch models in chat.</p>
+
+        <!-- Health check summary bar -->
+        <div id="health-summary-bar" class="card p-4 flex items-center justify-between">
+          <div class="health-summary" id="health-summary-content">
+            <span class="text-gray-400 text-sm">Running connectivity tests...</span>
+          </div>
+          <div id="health-refresh-area">
+            <span id="health-checked-at" class="text-gray-600 text-xs"></span>
+            <button onclick="refreshHealth()" id="health-refresh-btn" class="ml-3 text-xs px-3 py-1 rounded border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 transition-colors">Retest</button>
+          </div>
+        </div>
       </div>
 
       <!-- Models Table -->
@@ -83,6 +151,7 @@
               <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Model ID</th>
               <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Alias</th>
               <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Description</th>
+              <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
               <th style="text-align: left; padding: 14px 16px; font-weight: 600; color: #9ca3af; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Command</th>
             </tr>
           </thead>
@@ -92,7 +161,7 @@
       </div>
 
       <div class="mt-6 text-gray-500 text-xs">
-        <p>Note: Click any command to copy to clipboard. Models are grouped by provider. Use /model to switch during a session.</p>
+        <p>Click any command to copy to clipboard. Health status is checked live on page load with a 5-minute cache. Click Retest to force a fresh check.</p>
       </div>
 
     </div>
@@ -107,68 +176,88 @@
       initPortal('models', renderModels);
     });
 
-    const MODELS = [
-      {
-        provider: 'Anthropic',
-        models: [
-          { id: 'anthropic/claude-haiku-4-5', alias: 'Haiku', desc: 'Fast, lightweight model. Great for quick tasks, summaries, and routine work.' },
-          { id: 'anthropic/claude-sonnet-4-6', alias: 'Sonnet', desc: 'Balanced speed and reasoning. Default for most work. Excellent all-around performer.' },
-          { id: 'anthropic/claude-opus-4-6', alias: 'Opus', desc: 'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.' }
-        ]
-      },
-      {
-        provider: 'OpenAI Codex',
-        models: [
-          { id: 'openai-codex/gpt-5-mini', alias: 'GPT5Mini', desc: 'Cheapest tier. Quick answers, simple tasks, routine processing.' },
-          { id: 'openai-codex/gpt-5.3-codex', alias: null, desc: 'Codex variant. Strong on code generation and technical writing.' },
-          { id: 'openai-codex/gpt-5.4', alias: 'GPT54', desc: 'Workhorse model. Great balance of capability and cost. Recommended default.' },
-          { id: 'openai-codex/gpt-5.4-pro', alias: 'GPT54Pro', desc: 'Top-tier reasoning and analysis. Comparable to Opus in capability.' }
-        ]
-      },
-      {
-        provider: 'Google Gemini',
-        models: [
-          { id: 'google/gemini-2.5-pro', alias: 'GeminiPro', desc: 'Most capable Gemini. Excellent reasoning, multimodal support, API-based.' },
-          { id: 'google/gemini-2.5-flash', alias: 'GeminiFlash', desc: 'Fast, efficient Gemini. Good balance for most tasks. Lower latency.' },
-          { id: 'google/gemini-2.0-flash', alias: 'Gemini2Flash', desc: 'Earlier version, still capable. Good for compatibility testing.' }
-        ]
-      },
-      {
-        provider: 'LMStudio (Mac Mini)',
-        models: [
-          { id: 'lmstudio/qwen3-coder-30b', alias: 'Qwen3Coder', desc: 'Specialized for coding. Fast local inference, excellent code quality.' },
-          { id: 'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx', alias: 'OpusDistilled', desc: 'Distilled Opus knowledge. Lighter than full Opus, local inference.' }
-        ]
-      },
-      {
-        provider: 'LMStudio (Laptop)',
-        models: [
-          { id: 'lmstudio-laptop/unsloth_qwen3-coder-next-split', alias: 'Qwen3CoderNext', desc: 'Qwen3 Coder Next variant. Local inference on laptop. Experimental.' }
-        ]
-      }
-    ];
+    const API_BASE = 'https://api.cliffcircuit.ai';
+
+    // Descriptions for known models
+    const MODEL_DESCRIPTIONS = {
+      'anthropic/claude-haiku-4-5':   'Fast, lightweight model. Great for quick tasks, summaries, and routine work.',
+      'anthropic/claude-sonnet-4-6':  'Balanced speed and reasoning. Default for most work. Excellent all-around performer.',
+      'anthropic/claude-opus-4-6':    'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.',
+      'openai-codex/gpt-5-mini':      'Cheapest tier. Quick answers, simple tasks, routine processing.',
+      'openai-codex/gpt-5.3-codex':   'Codex variant. Strong on code generation and technical writing.',
+      'openai-codex/gpt-5.4':         'Workhorse model. Great balance of capability and cost. Recommended default.',
+      'openai-codex/gpt-5.4-pro':     'Top-tier reasoning and analysis. Comparable to Opus in capability.',
+      'google/gemini-2.5-pro':        'Most capable Gemini. Excellent reasoning, multimodal support, API-based.',
+      'google/gemini-2.5-flash':      'Fast, efficient Gemini. Good balance for most tasks. Lower latency.',
+      'google/gemini-2.0-flash':      'Earlier version, still capable. Good for compatibility testing.',
+    };
+
+    // Provider display names
+    const PROVIDER_LABELS = {
+      'anthropic':    'Anthropic',
+      'openai-codex': 'OpenAI Codex',
+      'google':       'Google Gemini',
+    };
+
+    // Health state: key -> { status, latencyMs, error }
+    let _healthData = {}; // keyed by model key
 
     function renderModels() {
+      // Render table with "testing" placeholders immediately
+      renderTable();
+      // Then fetch health
+      fetchHealth();
+    }
+
+    function renderTable() {
       const body = document.getElementById('models-body');
       body.innerHTML = '';
 
-      MODELS.forEach(group => {
-        // Provider header row
+      // Group by provider
+      const providers = {};
+      for (const [key, desc] of Object.entries(MODEL_DESCRIPTIONS)) {
+        const provider = key.split('/')[0];
+        if (!providers[provider]) providers[provider] = [];
+        const alias = extractAlias(key);
+        providers[provider].push({ key, alias, desc });
+      }
+
+      // Also add any models from health data not in our descriptions list
+      for (const [key, h] of Object.entries(_healthData)) {
+        const provider = key.split('/')[0];
+        if (!MODEL_DESCRIPTIONS[key]) {
+          if (!providers[provider]) providers[provider] = [];
+          if (!providers[provider].find(m => m.key === key)) {
+            const alias = extractAlias(key);
+            providers[provider].push({ key, alias, desc: h.name || key });
+          }
+        }
+      }
+
+      const providerOrder = ['anthropic', 'openai-codex', 'google'];
+      const allProviders = [...new Set([...providerOrder, ...Object.keys(providers)])];
+
+      allProviders.forEach(provider => {
+        const models = providers[provider];
+        if (!models || !models.length) return;
+
+        const label = PROVIDER_LABELS[provider] || provider;
         const headerRow = document.createElement('tr');
-        headerRow.innerHTML = `
-          <td colspan="4" class="provider-header">${group.provider}</td>
-        `;
+        headerRow.innerHTML = `<td colspan="5" class="provider-header">${label}</td>`;
         body.appendChild(headerRow);
 
-        // Model rows
-        group.models.forEach(model => {
+        models.forEach(model => {
           const row = document.createElement('tr');
+          row.id = `model-row-${model.key.replace(/[^a-z0-9]/gi, '-')}`;
           row.innerHTML = `
-            <td style="padding: 12px 16px;"><span class="model-id">${model.id}</span></td>
+            <td style="padding: 12px 16px;"><span class="model-id">${model.key}</span></td>
             <td style="padding: 12px 16px;">
               ${model.alias ? `<span class="alias-badge">${model.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
             </td>
             <td style="padding: 12px 16px;"><span class="description">${model.desc}</span></td>
+            <td style="padding: 12px 16px;" class="status-cell" id="status-${model.key.replace(/[^a-z0-9]/gi, '-')}">
+              ${renderStatusCell(model.key)}
+            </td>
             <td style="padding: 12px 16px;">
               ${model.alias ? `<span class="command-code" onclick="copyCommand('/model ${model.alias}')">/model ${model.alias}</span>` : '<span style="color: #6b7280; font-size: 12px;">—</span>'}
             </td>
@@ -178,9 +267,118 @@
       });
     }
 
+    function extractAlias(key) {
+      const aliases = {
+        'anthropic/claude-haiku-4-5':   'Haiku',
+        'anthropic/claude-sonnet-4-6':  'Sonnet',
+        'anthropic/claude-opus-4-6':    'Opus',
+        'openai-codex/gpt-5-mini':      'GPT5Mini',
+        'openai-codex/gpt-5.3-codex':   null,
+        'openai-codex/gpt-5.4':         'GPT54',
+        'openai-codex/gpt-5.4-pro':     'GPT54Pro',
+        'google/gemini-2.5-pro':        'GeminiPro',
+        'google/gemini-2.5-flash':      'GeminiFlash',
+        'google/gemini-2.0-flash':      'Gemini2Flash',
+      };
+      return aliases[key] !== undefined ? aliases[key] : null;
+    }
+
+    function renderStatusCell(key) {
+      const h = _healthData[key];
+      if (!h) {
+        return `<span class="health-testing">testing...</span>`;
+      }
+      if (h.status === 'connected') {
+        return `<span class="health-connected">connected</span><span class="health-latency">${h.latencyMs}ms</span>`;
+      }
+      if (h.status === 'unreachable') {
+        const errText = h.error ? `<span class="health-error" title="${escapeAttr(h.error)}">${escapeHtml(h.error.slice(0, 60))}${h.error.length > 60 ? '...' : ''}</span>` : '';
+        return `<span class="health-unreachable">unreachable</span>${errText}`;
+      }
+      if (h.status === 'missing') {
+        return `<span class="health-missing">not configured</span>`;
+      }
+      return `<span class="health-testing">unknown</span>`;
+    }
+
+    function updateStatusCell(key) {
+      const safeKey = key.replace(/[^a-z0-9]/gi, '-');
+      const el = document.getElementById(`status-${safeKey}`);
+      if (el) el.innerHTML = renderStatusCell(key);
+    }
+
+    async function fetchHealth(force) {
+      try {
+        const url = force
+          ? `${API_BASE}/api/models-health?t=${Date.now()}`
+          : `${API_BASE}/api/models-health`;
+
+        if (force) {
+          // Invalidate cache on backend first
+          await fetch(`${API_BASE}/api/models-health/refresh`, { method: 'POST' }).catch(() => {});
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (data.models) {
+          data.models.forEach(m => {
+            _healthData[m.key] = m;
+            updateStatusCell(m.key);
+          });
+          updateSummaryBar(data);
+          renderTable(); // re-render with full health data to pick up any new models
+        }
+      } catch (e) {
+        console.error('[models] fetchHealth error:', e.message);
+        const bar = document.getElementById('health-summary-content');
+        if (bar) bar.innerHTML = `<span class="text-red-400 text-sm">Health check failed: ${escapeHtml(e.message)}</span>`;
+      }
+    }
+
+    function updateSummaryBar(data) {
+      const s = data.summary || {};
+      const bar = document.getElementById('health-summary-content');
+      if (bar) {
+        bar.innerHTML = `
+          <div class="health-summary-item">
+            <span class="health-summary-dot" style="background:#34d399;"></span>
+            <span class="text-gray-300">${s.connected || 0} connected</span>
+          </div>
+          <div class="health-summary-item">
+            <span class="health-summary-dot" style="background:#f87171;"></span>
+            <span class="text-gray-300">${s.unreachable || 0} unreachable</span>
+          </div>
+          ${(s.missing || 0) > 0 ? `<div class="health-summary-item">
+            <span class="health-summary-dot" style="background:#6b7280;"></span>
+            <span class="text-gray-300">${s.missing} not configured</span>
+          </div>` : ''}
+        `;
+      }
+      if (data.checkedAt) {
+        const el = document.getElementById('health-checked-at');
+        if (el) {
+          const d = new Date(data.checkedAt);
+          el.textContent = 'checked ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+      }
+    }
+
+    async function refreshHealth() {
+      const btn = document.getElementById('health-refresh-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Testing...'; }
+      const bar = document.getElementById('health-summary-content');
+      if (bar) bar.innerHTML = `<span class="text-gray-400 text-sm">Running connectivity tests...</span>`;
+      // Reset health data so cells show "testing..."
+      _healthData = {};
+      renderTable();
+      await fetchHealth(true);
+      if (btn) { btn.disabled = false; btn.textContent = 'Retest'; }
+    }
+
     function copyCommand(cmd) {
       navigator.clipboard.writeText(cmd).then(() => {
-        // Visual feedback
         const temp = document.createElement('div');
         temp.textContent = 'Copied!';
         temp.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #064e3b; color: #34d399; padding: 8px 16px; border-radius: 6px; font-size: 12px; z-index: 9999;';
@@ -189,7 +387,12 @@
       });
     }
 
-
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function escapeAttr(s) {
+      return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
   </script>
 </body>
 </html>
