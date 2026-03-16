@@ -332,22 +332,45 @@
     }
 
     function renderSkills(d) {
-      const skills = (d.skills || []).filter(s => s.status === 'ready');
-      skills.sort((a, b) => a.name.localeCompare(b.name));
+      const allSkills = (d.skills || []).filter(s => s.status === 'ready');
       AGENTS.forEach(agent => {
         const n = agent.name.toLowerCase();
+        const cfg = (d.agentConfigs || {})[n] || {};
+        // Per-agent filtering: if agent has skills array, only show those; otherwise all
+        let skills = allSkills;
+        if (Array.isArray(cfg.skills) && cfg.skills.length > 0) {
+          const allowed = new Set(cfg.skills.map(s => s.toLowerCase()));
+          skills = allSkills.filter(s => allowed.has(s.name.toLowerCase()));
+        }
         const countEl = document.getElementById(`${n}-skills-count`);
         if (countEl) countEl.textContent = `(${skills.length})`;
         const grid = document.getElementById(`${n}-skills-grid`);
         if (!grid) return;
-        grid.innerHTML = skills.map(s => {
-          const emoji = s.emoji || '📦';
-          const desc = s.description ? s.description.split('.')[0] : '';
-          return `<div class="flex items-start gap-2 bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors" title="${(s.description || '').replace(/"/g, '&quot;')}">
-            <span class="text-sm flex-shrink-0">${emoji}</span>
-            <div class="min-w-0">
-              <div class="text-xs font-medium text-white truncate">${s.name}</div>
-              <div class="text-xs text-gray-500 truncate">${desc}</div>
+        // Group by category
+        const cats = {};
+        skills.forEach(s => {
+          const cat = s.category || 'Other';
+          if (!cats[cat]) cats[cat] = [];
+          cats[cat].push(s);
+        });
+        const catOrder = Object.keys(cats).sort();
+        grid.className = 'space-y-3';
+        grid.innerHTML = catOrder.map(cat => {
+          const items = cats[cat].sort((a, b) => a.name.localeCompare(b.name));
+          return `<div>
+            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1.5">${cat}</div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
+              ${items.map(s => {
+                const emoji = s.emoji || '📦';
+                const desc = s.description ? s.description.split('.')[0] : '';
+                return `<div class="flex items-start gap-2 bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors" title="${(s.description || '').replace(/"/g, '&quot;')}">
+                  <span class="text-sm flex-shrink-0">${emoji}</span>
+                  <div class="min-w-0">
+                    <div class="text-xs font-medium text-white truncate">${s.name}</div>
+                    <div class="text-xs text-gray-500 truncate">${desc}</div>
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
           </div>`;
         }).join('');
