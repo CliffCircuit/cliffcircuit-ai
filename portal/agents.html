@@ -369,13 +369,18 @@
         const cfg = (d.agentConfigs || {})[agentId] || (d.agentConfigs || {})[n] || {};
         const agentSkillsCfg = cfg.skills; // null/undefined = all, array = explicit list
 
-        // Only init state if not already tracked (don't overwrite live user changes)
-        if (!_skillState[agentId]) {
+        // Init or refresh state — if isAllMode, always sync activeSet to latest skills cache
+        // (skills may arrive asynchronously after initial render)
+        const existing = _skillState[agentId];
+        if (!existing) {
           const isAllMode = agentSkillsCfg === null || agentSkillsCfg === undefined;
           const activeSet = isAllMode
             ? new Set(_allSkillsCache.map(s => s.name.toLowerCase()))
             : new Set((agentSkillsCfg || []).map(s => s.toLowerCase()));
           _skillState[agentId] = { isAllMode, activeSet };
+        } else if (existing.isAllMode) {
+          // Refresh activeSet to match current skills cache
+          existing.activeSet = new Set(_allSkillsCache.map(s => s.name.toLowerCase()));
         }
 
         _renderSkillsForAgent(agent, agentId, n, totalCount);
@@ -412,12 +417,16 @@
       });
       const catOrder = Object.keys(cats).sort();
 
-      // Select All / Clear All header
-      const btnRow = `<div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-800">
+      // Check if card is in edit mode
+      const editState = document.getElementById(`${n}-model-editstate`);
+      const isEditing = editState && !editState.classList.contains('hidden');
+
+      // Select All / Clear All header — only show in edit mode
+      const btnRow = isEditing ? `<div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-800">
         <button onclick="selectAllSkills('${agentId}','${n}')" class="text-xs px-2.5 py-0.5 rounded border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 transition-colors">Select All</button>
         <button onclick="clearAllSkills('${agentId}','${n}')" class="text-xs px-2.5 py-0.5 rounded border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 transition-colors">Clear All</button>
         <span class="text-xs text-gray-600 ml-1">${isAllMode ? 'all' : activeCount}/${total} active</span>
-      </div>`;
+      </div>` : '';
 
       const groupsHtml = catOrder.map(cat => {
         const items = cats[cat].sort((a, b) => a.name.localeCompare(b.name));
@@ -426,11 +435,11 @@
             ${items.map(s => {
               const active = activeSet.has(s.name.toLowerCase());
               const desc = (s.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-              // Active pills: solid, matching agent accent. Inactive: outlined/dimmed.
               const pillCls = active
-                ? `pill ${agent.pillClass} cursor-pointer`
-                : 'cursor-pointer inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border border-gray-700 text-gray-600 hover:border-gray-500 hover:text-gray-400 bg-transparent';
-              return `<button class="skill-pill ${pillCls}" style="font-size:0.7rem;" data-desc="${desc}" onclick="toggleSkillPill('${agentId}','${n}','${s.name.replace(/'/g,"\\'")}')">
+                ? `pill ${agent.pillClass}` + (isEditing ? ' cursor-pointer' : '')
+                : 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border border-gray-700 text-gray-600 bg-transparent' + (isEditing ? ' cursor-pointer hover:border-gray-500 hover:text-gray-400' : '');
+              const click = isEditing ? ` onclick="toggleSkillPill('${agentId}','${n}','${s.name.replace(/'/g,"\\'")}')"` : '';
+              return `<button class="skill-pill ${pillCls}" style="font-size:0.7rem;" data-desc="${desc}"${click}>
                 ${esc(s.name)}
               </button>`;
             }).join('')}
@@ -746,6 +755,10 @@
       // Cron rows revert to read-only when card exits edit mode
       _cronSectionEditing.delete(agentName);
       _rebuildCronTbody(agentName);
+
+      // Re-render skills to disable editing controls
+      const skillAgent = AGENTS.find(a => a.name.toLowerCase() === agentName);
+      if (skillAgent) _renderSkillsForAgent(skillAgent, skillAgent.id, agentName, _allSkillsCache.length, true);
     }
 
     function enterCardEditMode(agentName) {
@@ -815,6 +828,10 @@
       // Cron rows become dropdowns when card enters edit mode
       _cronSectionEditing.add(agentName);
       _rebuildCronTbody(agentName);
+
+      // Re-render skills to enable editing controls
+      const skillAgent = AGENTS.find(a => a.name.toLowerCase() === agentName);
+      if (skillAgent) _renderSkillsForAgent(skillAgent, skillAgent.id, agentName, _allSkillsCache.length, true);
     }
 
     function cancelCardEdit(agentName) {
