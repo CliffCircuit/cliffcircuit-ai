@@ -331,41 +331,151 @@
       toggle.innerHTML = hidden ? '&#9660; hide' : '&#9658; show';
     }
 
+    // ─── SKILL PICKER STATE ───────────────────────────────────────────────────
+    // Per-agent: null = inherit all, Set of lowercase names = explicit list
+    const _skillState = {}; // agentId → { isAllMode: bool, activeSet: Set<string> }
+    let _allSkillsCache = []; // full skills list from last data load
+
     function renderSkills(d) {
-      const allSkills = (d.skills || []).filter(s => s.status === 'ready');
+      _allSkillsCache = (d.skills || []).filter(s => s.status === 'ready');
+      const totalCount = _allSkillsCache.length;
+
       AGENTS.forEach(agent => {
         const n = agent.name.toLowerCase();
-        const cfg = (d.agentConfigs || {})[n] || {};
-        // Per-agent filtering: if agent has skills array, only show those; otherwise all
-        let skills = allSkills;
-        if (Array.isArray(cfg.skills) && cfg.skills.length > 0) {
-          const allowed = new Set(cfg.skills.map(s => s.toLowerCase()));
-          skills = allSkills.filter(s => allowed.has(s.name.toLowerCase()));
+        const agentId = agent.id;
+        const cfg = (d.agentConfigs || {})[agentId] || (d.agentConfigs || {})[n] || {};
+        const agentSkillsCfg = cfg.skills; // null/undefined = all, array = explicit list
+
+        // Only init state if not already tracked (don't overwrite live user changes)
+        if (!_skillState[agentId]) {
+          const isAllMode = agentSkillsCfg === null || agentSkillsCfg === undefined;
+          const activeSet = isAllMode
+            ? new Set(_allSkillsCache.map(s => s.name.toLowerCase()))
+            : new Set((agentSkillsCfg || []).map(s => s.toLowerCase()));
+          _skillState[agentId] = { isAllMode, activeSet };
         }
-        const countEl = document.getElementById(`${n}-skills-count`);
-        if (countEl) countEl.textContent = `(${skills.length})`;
-        const grid = document.getElementById(`${n}-skills-grid`);
-        if (!grid) return;
-        // Group by category
-        const cats = {};
-        skills.forEach(s => {
-          const cat = s.category || 'Other';
-          if (!cats[cat]) cats[cat] = [];
-          cats[cat].push(s);
-        });
-        const catOrder = Object.keys(cats).sort();
-        grid.className = 'space-y-1.5';
-        grid.innerHTML = catOrder.map(cat => {
-          const items = cats[cat].sort((a, b) => a.name.localeCompare(b.name));
-          return `<div class="flex flex-wrap items-center gap-1.5">
-            <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold shrink-0">${cat}:</span>
-            ${items.map(s => {
-              const emoji = s.emoji || '📦';
-              return `<span class="inline-flex items-center gap-1 bg-gray-900 hover:bg-gray-800 text-xs text-gray-300 rounded-full px-2 py-0.5 transition-colors cursor-default" title="${(s.description || '').replace(/"/g, '&quot;')}"><span>${emoji}</span><span>${s.name}</span></span>`;
-            }).join('')}
-          </div>`;
-        }).join('');
+
+        _renderSkillsForAgent(agent, agentId, n, totalCount);
       });
+    }
+
+    function _renderSkillsForAgent(agent, agentId, n, totalCount) {
+      const state = _skillState[agentId];
+      if (!state) return;
+      const { isAllMode, activeSet } = state;
+      const activeCount = activeSet.size;
+
+      // Update collapsed count label
+      const countEl = document.getElementById(`${n}-skills-count`);
+      if (countEl) countEl.textContent = isAllMode ? '(all)' : `(${activeCount}/${totalCount || _allSkillsCache.length})`;
+
+      const grid = document.getElementById(`${n}-skills-grid`);
+      if (!grid) return;
+
+      const allSkills = _allSkillsCache;
+      const total = allSkills.length;
+
+      // Group by category
+      const cats = {};
+      allSkills.forEach(s => {
+        const cat = s.category || 'Other';
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push(s);
+      });
+      const catOrder = Object.keys(cats).sort();
+
+      // Select All / Clear All header
+      const btnRow = `<div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-800">
+        <button onclick="selectAllSkills('${agentId}','${n}')" class="text-xs px-2.5 py-0.5 rounded border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 transition-colors">Select All</button>
+        <button onclick="clearAllSkills('${agentId}','${n}')" class="text-xs px-2.5 py-0.5 rounded border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 transition-colors">Clear All</button>
+        <span class="text-xs text-gray-600 ml-1">${isAllMode ? 'all' : activeCount}/${total} active</span>
+      </div>`;
+
+      const groupsHtml = catOrder.map(cat => {
+        const items = cats[cat].sort((a, b) => a.name.localeCompare(b.name));
+        return `<div class="mb-2.5">
+          <div class="text-gray-600 uppercase tracking-widest mb-1.5" style="font-size:0.55rem;font-weight:700;letter-spacing:0.12em;">${esc(cat)}</div>
+          <div class="flex flex-wrap gap-1.5">
+            ${items.map(s => {
+              const active = activeSet.has(s.name.toLowerCase());
+              const desc = (s.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              // Active pills: solid, matching agent accent. Inactive: outlined/dimmed.
+              const pillCls = active
+                ? `pill ${agent.pillClass} cursor-pointer hover:opacity-80 transition-opacity`
+                : 'cursor-pointer transition-all inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border border-gray-700 text-gray-600 hover:border-gray-500 hover:text-gray-400 bg-transparent';
+              return `<button class="${pillCls}" style="font-size:0.7rem;" title="${desc}" onclick="toggleSkillPill('${agentId}','${n}','${s.name.replace(/'/g,"\\'")}')">
+                ${esc(s.name)}
+              </button>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('');
+
+      grid.className = '';
+      grid.innerHTML = btnRow + groupsHtml;
+    }
+
+    async function toggleSkillPill(agentId, agentName, skillName) {
+      const state = _skillState[agentId];
+      if (!state) return;
+      const key = skillName.toLowerCase();
+
+      if (state.isAllMode) {
+        // First toggle off — convert to explicit array of everything minus this one
+        state.isAllMode = false;
+        state.activeSet = new Set(_allSkillsCache.map(s => s.name.toLowerCase()));
+        state.activeSet.delete(key);
+      } else {
+        if (state.activeSet.has(key)) {
+          state.activeSet.delete(key);
+        } else {
+          state.activeSet.add(key);
+        }
+      }
+
+      const agent = AGENTS.find(a => a.id === agentId);
+      const n = agentName;
+      _renderSkillsForAgent(agent, agentId, n, _allSkillsCache.length);
+      await _saveAgentSkills(agentId, state);
+    }
+
+    async function selectAllSkills(agentId, agentName) {
+      const state = _skillState[agentId];
+      if (!state) return;
+      // null = inherit all (most permissive)
+      state.isAllMode = true;
+      state.activeSet = new Set(_allSkillsCache.map(s => s.name.toLowerCase()));
+      const agent = AGENTS.find(a => a.id === agentId);
+      _renderSkillsForAgent(agent, agentId, agentName, _allSkillsCache.length);
+      await _saveAgentSkills(agentId, state);
+    }
+
+    async function clearAllSkills(agentId, agentName) {
+      const state = _skillState[agentId];
+      if (!state) return;
+      state.isAllMode = false;
+      state.activeSet = new Set();
+      const agent = AGENTS.find(a => a.id === agentId);
+      _renderSkillsForAgent(agent, agentId, agentName, _allSkillsCache.length);
+      await _saveAgentSkills(agentId, state);
+    }
+
+    async function _saveAgentSkills(agentId, state) {
+      // null = inherit all, [] = no skills, [...] = explicit list
+      const skills = state.isAllMode ? null : Array.from(state.activeSet);
+      try {
+        const res = await fetch('https://api.cliffcircuit.ai/api/set-agent-skills', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId, skills })
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          console.warn('[skills] set-agent-skills failed:', txt);
+        }
+      } catch (e) {
+        console.warn('[skills] set-agent-skills error:', e.message);
+      }
     }
 
     function openJobDetail(name) {
