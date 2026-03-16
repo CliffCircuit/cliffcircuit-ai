@@ -686,9 +686,12 @@
           ? _pendingDefaultModels[agent.id]
           : (cfgModelStr || AGENT_DEFAULT_MODELS[agent.id] || '');
 
-        // Best current session — ONLY use direct/messaging sessions, never cron/run
+        // Best current session — prefer direct/messaging sessions; fall back to most-recent any-type session
         const agentSessions = sessions.filter(s => s.agentId === agent.id);
-        const bestSession = agentSessions.find(s => (s.label || '').includes('direct')) || null;
+        const directSession = agentSessions.find(s => (s.label || '').includes('direct')) || null;
+        // Sort by lastActiveAt descending and pick most recent if no direct session
+        const sortedSessions = agentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0));
+        const bestSession = directSession || sortedSessions[0] || null;
 
         // Determine active model: check overrides first, then session, then default
         let activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
