@@ -579,6 +579,7 @@ async function loadData() {
         DATA.sessions = live.sessions;
         DATA._liveGeneratedAt = live.generatedAt || DATA._liveGeneratedAt;
         if (live.agentConfigs) Object.assign(DATA.agentConfigs, live.agentConfigs);
+        if (live.skills) DATA.skills = live.skills;
         if (live.crons && live.crons.length) { DATA.crons = live.crons; window._cronList = live.crons; }
         updateNavDots(DATA);
         updateAgentStatusDots(live.sessions);
