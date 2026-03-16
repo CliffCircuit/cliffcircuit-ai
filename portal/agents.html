@@ -305,7 +305,7 @@
           <span id="${n}-skills-toggle" class="text-gray-600 text-xs">&#9658; show</span>
         </div>
         <div id="${n}-skills-list" class="hidden border-t border-gray-900 px-6 py-3">
-          <div id="${n}-skills-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2"></div>
+          <div id="${n}-skills-grid" class="space-y-1.5"></div>
         </div>
       </div>`;
     }
@@ -354,24 +354,15 @@
           cats[cat].push(s);
         });
         const catOrder = Object.keys(cats).sort();
-        grid.className = 'space-y-3';
+        grid.className = 'space-y-1.5';
         grid.innerHTML = catOrder.map(cat => {
           const items = cats[cat].sort((a, b) => a.name.localeCompare(b.name));
-          return `<div>
-            <div class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1.5">${cat}</div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
-              ${items.map(s => {
-                const emoji = s.emoji || '📦';
-                const desc = s.description ? s.description.split('.')[0] : '';
-                return `<div class="flex items-start gap-2 bg-gray-900 rounded-lg px-3 py-2 hover:bg-gray-800 transition-colors" title="${(s.description || '').replace(/"/g, '&quot;')}">
-                  <span class="text-sm flex-shrink-0">${emoji}</span>
-                  <div class="min-w-0">
-                    <div class="text-xs font-medium text-white truncate">${s.name}</div>
-                    <div class="text-xs text-gray-500 truncate">${desc}</div>
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>
+          return `<div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold shrink-0">${cat}:</span>
+            ${items.map(s => {
+              const emoji = s.emoji || '📦';
+              return `<span class="inline-flex items-center gap-1 bg-gray-900 hover:bg-gray-800 text-xs text-gray-300 rounded-full px-2 py-0.5 transition-colors cursor-default" title="${(s.description || '').replace(/"/g, '&quot;')}"><span>${emoji}</span><span>${s.name}</span></span>`;
+            }).join('')}
           </div>`;
         }).join('');
       });
