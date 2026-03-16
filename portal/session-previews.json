@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-16T21:52:45.195Z",
+  "generatedAt": "2026-03-16T22:07:45.956Z",
   "count": 189,
   "previews": {
     "agent:main:cron:fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5": {
@@ -814,12 +814,12 @@
     },
     "agent:samantha:telegram:direct:8386624734": {
       "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Sunday, March 15th, 2026 — 4:45 PM (America/Los_Angeles) / 2026-03-15 23:45 UTC",
-      "response": "OK, here's the full picture:\n\n**Root cause:** The portal was only looking at `direct/...` sessions for \"Current model.\" Cora has no direct session — she only has cron/run sessions. So the portal fell back to her config primary (Opus 4.6), even though all her actual running sessions are on GPT-5.4 (her fallback model).\n\n**Fix:** The portal now prefers direct sessions (correct for interactive agents like me and Cliff), but falls back to the most recently active session of any type when no direct session exists. Fixed in three places — the main read-only view, the edit mode dropdown init, and the condensed card view.\n\n**Gateway restart:** Not needed for this display fix. However — the reason Cora is on GPT-5.4 instead of Opus is likely that her sessions were started when her config was different, or Opus wasn't available and she fell back. Existing running sessions don't pick up config changes mid-flight. If you want her *new* sessions to start on Opus, a gateway restart would force re-initialization. That's probably worth confirming once you hard-refresh the portal and see the corrected display.",
+      "response": "So here's what's happening — Cora's iMessage chat with Mary is showing as `cora/main`, not `direct/...`. The session label format for iMessage sessions appears to be `agentname/main` rather than `direct/someid`. That's why the portal's `direct` filter was missing it.\n\nThe `cora/main` session IS her direct chat session (32K context, active today), but the label just doesn't contain the word \"direct.\" Our fix already handles this correctly now since it falls back to the most recent session of any type.\n\nAs for the model — yes, all her sessions are on GPT-5.4 with 272K limit, meaning they were initialized before her config was changed to Opus. A gateway restart would create fresh sessions that pick up her current Opus config.\n\n**Yes, go ahead and do a gateway restart.** After that, her new sessions should start on Opus 4.6 with the full 1M context window. Then we can verify the portal shows the correct model and context limit.",
       "sessionId": "95339b74-22cb-435f-a9c7-4fc0607e8a26"
     },
     "95339b74-22cb-435f-a9c7-4fc0607e8a26": {
       "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Sunday, March 15th, 2026 — 4:45 PM (America/Los_Angeles) / 2026-03-15 23:45 UTC",
-      "response": "OK, here's the full picture:\n\n**Root cause:** The portal was only looking at `direct/...` sessions for \"Current model.\" Cora has no direct session — she only has cron/run sessions. So the portal fell back to her config primary (Opus 4.6), even though all her actual running sessions are on GPT-5.4 (her fallback model).\n\n**Fix:** The portal now prefers direct sessions (correct for interactive agents like me and Cliff), but falls back to the most recently active session of any type when no direct session exists. Fixed in three places — the main read-only view, the edit mode dropdown init, and the condensed card view.\n\n**Gateway restart:** Not needed for this display fix. However — the reason Cora is on GPT-5.4 instead of Opus is likely that her sessions were started when her config was different, or Opus wasn't available and she fell back. Existing running sessions don't pick up config changes mid-flight. If you want her *new* sessions to start on Opus, a gateway restart would force re-initialization. That's probably worth confirming once you hard-refresh the portal and see the corrected display.",
+      "response": "So here's what's happening — Cora's iMessage chat with Mary is showing as `cora/main`, not `direct/...`. The session label format for iMessage sessions appears to be `agentname/main` rather than `direct/someid`. That's why the portal's `direct` filter was missing it.\n\nThe `cora/main` session IS her direct chat session (32K context, active today), but the label just doesn't contain the word \"direct.\" Our fix already handles this correctly now since it falls back to the most recent session of any type.\n\nAs for the model — yes, all her sessions are on GPT-5.4 with 272K limit, meaning they were initialized before her config was changed to Opus. A gateway restart would create fresh sessions that pick up her current Opus config.\n\n**Yes, go ahead and do a gateway restart.** After that, her new sessions should start on Opus 4.6 with the full 1M context window. Then we can verify the portal shows the correct model and context limit.",
       "sessionId": "95339b74-22cb-435f-a9c7-4fc0607e8a26"
     },
     "agent:samantha:main": {
@@ -948,24 +948,14 @@
       "sessionId": "8f1985a7-57ac-4d0e-ae9b-f1cb0169155e"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 2:47 PM (America/Los_Angeles) / 2026-03-16 21:47 UTC",
-      "response": "✅ **Scout heartbeat at 2:47 PM PT — All clear.**\n\n- Inbox empty. No tasks queued.\n- No new messages from Cliff.\n- Last check: 14:32 PT.\n\nStanding by.",
-      "sessionId": "0f8bdfcd-2b25-467d-ac25-a87bbf136a8f"
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 3:02 PM (America/Los_Angeles) / 2026-03-16 22:02 UTC",
+      "response": "🔍 Scout ready for next task.",
+      "sessionId": "fd43d0fa-23e3-48e5-95da-94c3600076aa"
     },
-    "0f8bdfcd-2b25-467d-ac25-a87bbf136a8f": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 2:47 PM (America/Los_Angeles) / 2026-03-16 21:47 UTC",
-      "response": "✅ **Scout heartbeat at 2:47 PM PT — All clear.**\n\n- Inbox empty. No tasks queued.\n- No new messages from Cliff.\n- Last check: 14:32 PT.\n\nStanding by.",
-      "sessionId": "0f8bdfcd-2b25-467d-ac25-a87bbf136a8f"
-    },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:63ca8d37-579e-4a27-862c-c9d77506d841": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 2:54 PM (America/Los_Angeles) / 2026-03-15 21:54 UTC",
-      "response": "Ready for the next task, Cliff. 🔍",
-      "sessionId": "63ca8d37-579e-4a27-862c-c9d77506d841"
-    },
-    "63ca8d37-579e-4a27-862c-c9d77506d841": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 2:54 PM (America/Los_Angeles) / 2026-03-15 21:54 UTC",
-      "response": "Ready for the next task, Cliff. 🔍",
-      "sessionId": "63ca8d37-579e-4a27-862c-c9d77506d841"
+    "fd43d0fa-23e3-48e5-95da-94c3600076aa": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 3:02 PM (America/Los_Angeles) / 2026-03-16 22:02 UTC",
+      "response": "🔍 Scout ready for next task.",
+      "sessionId": "fd43d0fa-23e3-48e5-95da-94c3600076aa"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:33a0cfff-b635-4aae-bd33-dcd6f234d795": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Sunday, March 15th, 2026 — 3:09 PM (America/Los_Angeles) / 2026-03-15 22:09 UTC",
@@ -1891,6 +1881,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 2:47 PM (America/Los_Angeles) / 2026-03-16 21:47 UTC",
       "response": "✅ **Scout heartbeat at 2:47 PM PT — All clear.**\n\n- Inbox empty. No tasks queued.\n- No new messages from Cliff.\n- Last check: 14:32 PT.\n\nStanding by.",
       "sessionId": "0f8bdfcd-2b25-467d-ac25-a87bbf136a8f"
+    },
+    "0f8bdfcd-2b25-467d-ac25-a87bbf136a8f": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 2:47 PM (America/Los_Angeles) / 2026-03-16 21:47 UTC",
+      "response": "✅ **Scout heartbeat at 2:47 PM PT — All clear.**\n\n- Inbox empty. No tasks queued.\n- No new messages from Cliff.\n- Last check: 14:32 PT.\n\nStanding by.",
+      "sessionId": "0f8bdfcd-2b25-467d-ac25-a87bbf136a8f"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:fd43d0fa-23e3-48e5-95da-94c3600076aa": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, March 16th, 2026 — 3:02 PM (America/Los_Angeles) / 2026-03-16 22:02 UTC",
+      "response": "🔍 Scout ready for next task.",
+      "sessionId": "fd43d0fa-23e3-48e5-95da-94c3600076aa"
     }
   }
 }
