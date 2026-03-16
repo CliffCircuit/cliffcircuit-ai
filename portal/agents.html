@@ -651,9 +651,13 @@
       AGENTS.forEach(agent => {
         const n = agent.name.toLowerCase();
         const cfg = ac[agent.id] || ac[n] || {};
+        // cfg.model can be a string or {primary, fallbacks} object
+        const rawModel = cfg.model;
+        const cfgModelStr = (rawModel && typeof rawModel === 'object') ? (rawModel.primary || '') : (rawModel || '');
+        const cfgFallbacks = (rawModel && typeof rawModel === 'object' && Array.isArray(rawModel.fallbacks)) ? rawModel.fallbacks : (cfg.fallbacks || []);
         const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
           ? _pendingDefaultModels[agent.id]
-          : (cfg.model || AGENT_DEFAULT_MODELS[agent.id] || '');
+          : (cfgModelStr || AGENT_DEFAULT_MODELS[agent.id] || '');
 
         // Best current session — ONLY use direct/messaging sessions, never cron/run
         const agentSessions = sessions.filter(s => s.agentId === agent.id);
@@ -677,8 +681,8 @@
           ? ((typeof friendlyModel === 'function') ? friendlyModel(defaultModel) : defaultModel)
           : 'Inherit global';
 
-        // Read-only display: Fallback model (global, first entry in fallbacks array)
-        const fallbackModel = (cfg.fallbacks || [])[0] || '';
+        // Read-only display: Fallback model (per-agent from model object, or legacy cfg.fallbacks)
+        const fallbackModel = cfgFallbacks[0] || '';
         const fallbackNameEl = document.getElementById(`${n}-model-fallback-name`);
         if (fallbackNameEl) fallbackNameEl.textContent = fallbackModel
           ? ((typeof friendlyModel === 'function') ? friendlyModel(fallbackModel) : fallbackModel)
@@ -745,10 +749,13 @@
           
           console.log(`[enterCardEditMode] cfg=`, cfg, `sessions.length=${sessions.length}`);
           
-          // Recalculate current values
+          // Recalculate current values — handle model as string or {primary, fallbacks}
+          const editRawModel = cfg.model;
+          const editCfgModelStr = (editRawModel && typeof editRawModel === 'object') ? (editRawModel.primary || '') : (editRawModel || '');
+          const editCfgFallbacks = (editRawModel && typeof editRawModel === 'object' && Array.isArray(editRawModel.fallbacks)) ? editRawModel.fallbacks : (cfg.fallbacks || []);
           const defaultModel = Object.prototype.hasOwnProperty.call(_pendingDefaultModels, agent.id)
             ? _pendingDefaultModels[agent.id]
-            : (cfg.model || AGENT_DEFAULT_MODELS[agent.id] || '');
+            : (editCfgModelStr || AGENT_DEFAULT_MODELS[agent.id] || '');
           
           const editAgentSessions = sessions.filter(s => s.agentId === agent.id);
           const bestSession = editAgentSessions.find(s => (s.label || '').includes('direct')) || null;
@@ -763,7 +770,7 @@
           const currentDropdown = document.getElementById(`${agentName}-current-dropdown`);
           const defaultDropdown = document.getElementById(`${agentName}-default-dropdown`);
           const fallbackDropdown = document.getElementById(`${agentName}-fallback-dropdown`);
-          const fallbackModel = (cfg.fallbacks || [])[0] || '';
+          const fallbackModel = editCfgFallbacks[0] || '';
           if (currentDropdown) {
             currentDropdown.innerHTML = buildCurrentOptions(activeModel, agent.id);
             console.log(`[enterCardEditMode] rebuilt currentDropdown for activeModel=${activeModel}`);
@@ -809,13 +816,9 @@
         // Apply session override
         await changeAgentModel(agentId, newCurrent, agentName);
 
-        // Apply persistent per-agent default (or clear it)
-        await setAgentDefaultModel(agentId, newDefault);
-
-        // Apply global fallback model (if changed)
-        if (newFallback !== null) {
-          await setFallbackModel(newFallback);
-        }
+        // Apply persistent per-agent default (with per-agent fallback)
+        const fallbacksArr = (newFallback !== null && newFallback) ? [newFallback] : [];
+        await setAgentDefaultModel(agentId, newDefault, fallbacksArr);
 
         _pendingSessionModels[agentId] = newCurrent;
         _pendingDefaultModels[agentId] = newDefault;
@@ -867,13 +870,15 @@
     // Persistent per-agent default — writes to OpenClaw agent config (agents.list[].model)
     // '' / null clears the per-agent default so the agent inherits the global default
     // Proxied through https://api.cliffcircuit.ai (Cloudflare tunnel)
-    async function setAgentDefaultModel(agentId, newModel) {
+    async function setAgentDefaultModel(agentId, newModel, fallbacks) {
       try {
-        console.log(`[setAgentDefaultModel] Sending to /api/set-agent-default-model: agentId=${agentId}, model=${newModel}`);
+        console.log(`[setAgentDefaultModel] Sending to /api/set-agent-default-model: agentId=${agentId}, model=${newModel}, fallbacks=${JSON.stringify(fallbacks)}`);
+        const payload = { agentId, model: newModel || null };
+        if (Array.isArray(fallbacks) && fallbacks.length > 0) payload.fallbacks = fallbacks;
         const response = await fetch('https://api.cliffcircuit.ai/api/set-agent-default-model', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agentId, model: newModel || null })
+          body: JSON.stringify(payload)
         });
         if (!response.ok) {
           const text = await response.text();
