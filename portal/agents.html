@@ -796,7 +796,9 @@
             : (editCfgModelStr || AGENT_DEFAULT_MODELS[agent.id] || '');
           
           const editAgentSessions = sessions.filter(s => s.agentId === agent.id);
-          const bestSession = editAgentSessions.find(s => (s.label || '').includes('direct')) || null;
+          const editDirectSession = editAgentSessions.find(s => (s.label || '').includes('direct')) || null;
+          const editSortedSessions = editAgentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0));
+          const bestSession = editDirectSession || editSortedSessions[0] || null;
           
           const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
             ? _pendingSessionModels[agent.id]
@@ -1265,8 +1267,9 @@
         const info = agentJobMap[agentId]||{jobs:[],errors:0};
         const cfg = (d.agentConfigs||{})[agentId]||{};
 
-        // Model — prefer direct/interactive session over cron/run
-        const bestSession = agentSessions.find(s => (s.label || '').includes('direct')) || null;
+        // Model — prefer direct/interactive session, fall back to most-recent any-type
+        const condensedDirect = agentSessions.find(s => (s.label || '').includes('direct')) || null;
+        const bestSession = condensedDirect || agentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
         const cfgModelRaw3 = cfg.model;
         const cfgModelStr3 = (cfgModelRaw3 && typeof cfgModelRaw3 === 'object') ? (cfgModelRaw3.primary || '') : (cfgModelRaw3 || '');
         const model = bestSession?.model||cfgModelStr3||'—';
