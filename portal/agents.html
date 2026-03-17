@@ -565,6 +565,12 @@
       const connectedFromHealth = Object.values(_modelsHealthData)
         .filter(m => m.status === 'connected')
         .map(m => m.key);
+      // Sort by provider prefix so models are grouped (anthropic → google → openai)
+      connectedFromHealth.sort((a, b) => {
+        const pa = a.split('/')[0], pb = b.split('/')[0];
+        if (pa !== pb) return pa.localeCompare(pb);
+        return a.localeCompare(b);
+      });
       return connectedFromHealth.length > 0 ? connectedFromHealth : ALL_KNOWN_MODELS;
     }
 
