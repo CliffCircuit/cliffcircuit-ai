@@ -559,17 +559,12 @@
     function pickBestSession(agentSessions) {
       if (!agentSessions || !agentSessions.length) return null;
       const sorted = agentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0));
-      // 1. Direct/messaging session (interactive chat)
+      // Only return a session that represents real interactive/messaging usage.
+      // "direct" in the label = user-facing chat session (e.g. agent:X:telegram:direct:123)
       const direct = sorted.find(s => (s.label || '').includes('direct'));
       if (direct) return direct;
-      // 2. Any session that is NOT cron/run/heartbeat — e.g. agent:X/main with real interactive usage
-      const interactive = sorted.find(s => {
-        const lbl = (s.label || s.sessionKey || '').toLowerCase();
-        return !lbl.includes('cron') && !lbl.startsWith('run/') && !lbl.includes(':run/') && !lbl.includes('heartbeat');
-      });
-      if (interactive) return interactive;
-      // 3. Return null — do NOT fall back to cron/heartbeat sessions.
-      // Callers should use config model when no interactive session exists.
+      // Everything else (cron/*, run/*, agent/main from heartbeat) is background noise.
+      // Return null so callers fall back to the configured model display.
       return null;
     }
 
