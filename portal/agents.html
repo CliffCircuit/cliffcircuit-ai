@@ -562,14 +562,15 @@
       // 1. Direct/messaging session (interactive chat)
       const direct = sorted.find(s => (s.label || '').includes('direct'));
       if (direct) return direct;
-      // 2. Any session that is NOT cron/run/heartbeat
+      // 2. Any session that is NOT cron/run/heartbeat — e.g. agent:X/main with real interactive usage
       const interactive = sorted.find(s => {
         const lbl = (s.label || s.sessionKey || '').toLowerCase();
-        return !lbl.includes('cron') && !lbl.includes('run:') && !lbl.includes('heartbeat');
+        return !lbl.includes('cron') && !lbl.startsWith('run/') && !lbl.includes(':run/') && !lbl.includes('heartbeat');
       });
       if (interactive) return interactive;
-      // 3. Fall back to most recent (cron/heartbeat) only if nothing else
-      return sorted[0];
+      // 3. Return null — do NOT fall back to cron/heartbeat sessions.
+      // Callers should use config model when no interactive session exists.
+      return null;
     }
 
     // Health data from /api/models-health — keyed by model key
@@ -1386,9 +1387,8 @@
         const info = agentJobMap[agentId]||{jobs:[],errors:0};
         const cfg = (d.agentConfigs||{})[agentId]||{};
 
-        // Model — prefer direct/interactive session, fall back to most-recent any-type
-        const condensedDirect = agentSessions.find(s => (s.label || '').includes('direct')) || null;
-        const bestSession = condensedDirect || agentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0))[0] || null;
+        // Model — prefer interactive session, exclude heartbeat/cron
+        const bestSession = pickBestSession(agentSessions);
         const cfgModelRaw3 = cfg.model;
         const cfgModelStr3 = (cfgModelRaw3 && typeof cfgModelRaw3 === 'object') ? (cfgModelRaw3.primary || '') : (cfgModelRaw3 || '');
         const model = bestSession?.model||cfgModelStr3||'—';
