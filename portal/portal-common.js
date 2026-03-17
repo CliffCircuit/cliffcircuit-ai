@@ -126,6 +126,7 @@ const CRON_DISPLAY = {
   'fernanda-wake':           'Wake',
   'cora-heartbeat':          'Heartbeat',
   'cora-wake':               'Wake',
+  'kendall-heartbeat':       'Heartbeat',
 };
 
 // ── Route cron jobs to agents by name prefix ────────────────────────────
@@ -135,6 +136,7 @@ function cronAgentFromName(name) {
   if (name.startsWith('atlas-')) return 'atlas';
   if (name.startsWith('fernanda-')) return 'fernanda';
   if (name.startsWith('cora-')) return 'cora';
+  if (name.startsWith('kendall-')) return 'kendall';
   if (name.startsWith('scout-') || name === 'portal-data-refresh') return 'scout';
   if (name.startsWith('cliff-')) return 'main';
   // Everything else (pipeline-health-check, morning-check-in, etc.) → main (Cliff)
@@ -151,6 +153,7 @@ const DIRECT_DISPLAY = {
   'atlas:telegram':    'Atlas (Telegram DM)',
   'atlas:main':        'Atlas (Web UI)',
   'cora:imessage':     'Mary (Msgs DM)',
+  'kendall:telegram':  'Richelle (Telegram DM)',
 };
 
 const AGENT_DISPLAY = {
@@ -160,6 +163,7 @@ const AGENT_DISPLAY = {
   'scout':      'Scout',
   'fernanda':   'Fernanda',
   'cora':       'Cora',
+  'kendall':    'Kendall',
   'claude-code':'Claude Code',
 };
 
@@ -379,25 +383,25 @@ function sessionKeyToFriendly(key, sessionId) {
     // Fallback for unresolved cron UUIDs — use agent's default task name
     const agentId = agentCronMatch[1];
     const agentDefaultTask = { atlas: 'Build', samantha: 'Article Writer', scout: 'Portal Refresh' };
-    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda' }[agentId] || agentId;
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', kendall: 'Kendall' }[agentId] || agentId;
     return agentDefaultTask[agentId] || (agentLabel + ' Task');
   }
   // Subagent sessions: agent:X:subagent:UUID
   const subagentMatch = key.match(/^agent:([^:]+):subagent:/);
   if (subagentMatch) {
-    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda' }[subagentMatch[1]] || subagentMatch[1];
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', kendall: 'Kendall' }[subagentMatch[1]] || subagentMatch[1];
     return agentLabel + ' (Subagent Run)';
   }
   // Group chat sessions: agent:X:telegram:group:CHAT_ID
   const groupMatch = key.match(/^agent:([^:]+):([^:]+):group:/);
   if (groupMatch) {
-    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda' }[groupMatch[1]] || groupMatch[1];
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', kendall: 'Kendall' }[groupMatch[1]] || groupMatch[1];
     return agentLabel + ' (Chat Hub)';
   }
   // Agent main sessions: agent:X:main
   const mainMatch = key.match(/^agent:([^:]+):main$/);
   if (mainMatch) {
-    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda' }[mainMatch[1]] || mainMatch[1];
+    const agentLabel = { main: 'Cliff', samantha: 'Samantha', scout: 'Scout', atlas: 'Atlas', fernanda: 'Fernanda', kendall: 'Kendall' }[mainMatch[1]] || mainMatch[1];
     if (mainMatch[1] === 'main') return 'Web UI (Heartbeat+Chat)';
     return agentLabel + ' (Web UI)';
   }
@@ -643,7 +647,7 @@ function updateAgentStatusDots(sessions) {
   const now = Date.now();
   const ONLINE_MS = 5 * 60 * 1000;
   const IDLE_MS   = 24 * 60 * 60 * 1000;
-  ['cliff', 'samantha', 'scout', 'fernanda', 'cora'].forEach(name => {
+  ['cliff', 'samantha', 'scout', 'fernanda', 'cora', 'kendall'].forEach(name => {
     const agentId = name === 'cliff' ? 'main' : name;
     const agentSessions = (sessions || []).filter(s => s.agentId === agentId && s.lastActiveAt);
     const mostRecent = agentSessions.reduce((best, s) => {
