@@ -554,6 +554,24 @@
       'google/gemini-2.5-pro',
     ];
 
+    // Pick the best session for display: prefer interactive (direct/main) sessions,
+    // exclude heartbeat/cron/run sessions unless nothing else exists.
+    function pickBestSession(agentSessions) {
+      if (!agentSessions || !agentSessions.length) return null;
+      const sorted = agentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0));
+      // 1. Direct/messaging session (interactive chat)
+      const direct = sorted.find(s => (s.label || '').includes('direct'));
+      if (direct) return direct;
+      // 2. Any session that is NOT cron/run/heartbeat
+      const interactive = sorted.find(s => {
+        const lbl = (s.label || s.sessionKey || '').toLowerCase();
+        return !lbl.includes('cron') && !lbl.includes('run:') && !lbl.includes('heartbeat');
+      });
+      if (interactive) return interactive;
+      // 3. Fall back to most recent (cron/heartbeat) only if nothing else
+      return sorted[0];
+    }
+
     // Health data from /api/models-health — keyed by model key
     let _modelsHealthData = {}; // key -> { status: 'connected'|'unreachable'|'missing', latencyMs }
     let _modelsHealthLoaded = false;
@@ -610,8 +628,7 @@
         const cfgModelStr = (rawModel && typeof rawModel === 'object') ? (rawModel.primary || '') : (rawModel || '');
         const sessions = _lastData.sessions || [];
         const agentSessions = sessions.filter(s => s.agentId === agent.id);
-        const sortedSessions = agentSessions.slice().sort((a,b) => new Date(b.lastActiveAt||0)-new Date(a.lastActiveAt||0));
-        const bestSession = agentSessions.find(s=>(s.label||'').includes('direct')) || sortedSessions[0] || null;
+        const bestSession = pickBestSession(agentSessions);
         const activeModel = _sessionModelOverrides[agent.id] || bestSession?.model || cfgModelStr;
 
         const h = activeModel ? _modelsHealthData[activeModel] : null;
@@ -796,10 +813,7 @@
 
         // Best current session — prefer direct/messaging sessions; fall back to most-recent any-type session
         const agentSessions = sessions.filter(s => s.agentId === agent.id);
-        const directSession = agentSessions.find(s => (s.label || '').includes('direct')) || null;
-        // Sort by lastActiveAt descending and pick most recent if no direct session
-        const sortedSessions = agentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0));
-        const bestSession = directSession || sortedSessions[0] || null;
+        const bestSession = pickBestSession(agentSessions);
 
         // Determine active model: check overrides first, then session, then default
         let activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
@@ -904,9 +918,7 @@
             : (editCfgModelStr || AGENT_DEFAULT_MODELS[agent.id] || '');
           
           const editAgentSessions = sessions.filter(s => s.agentId === agent.id);
-          const editDirectSession = editAgentSessions.find(s => (s.label || '').includes('direct')) || null;
-          const editSortedSessions = editAgentSessions.slice().sort((a, b) => new Date(b.lastActiveAt || 0) - new Date(a.lastActiveAt || 0));
-          const bestSession = editDirectSession || editSortedSessions[0] || null;
+          const bestSession = pickBestSession(editAgentSessions);
           
           const activeModel = Object.prototype.hasOwnProperty.call(_pendingSessionModels, agent.id)
             ? _pendingSessionModels[agent.id]
@@ -1176,8 +1188,7 @@
         const agentId = agent.id;
         const cfg = ac[agentId] || ac[n] || {};
         const agentSessions = (d.sessions || []).filter(s => s.agentId === agentId);
-        const directSession = agentSessions.find(s => (s.label || '').includes('direct') || (s.thinking && s.thinking !== 'off'));
-        const bestSession = directSession || agentSessions.sort((a,b) => new Date(b.lastActiveAt||0) - new Date(a.lastActiveAt||0))[0] || null;
+        const bestSession = pickBestSession(agentSessions);
         const liveModel = bestSession ? bestSession.model : null;
         const level = (bestSession?.thinking || cfg.thinking || 'off').toLowerCase();
         const cfgModelRaw = cfg.model;
