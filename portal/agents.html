@@ -554,9 +554,6 @@
       'google/gemini-2.0-flash',
       'google/gemini-2.5-flash',
       'google/gemini-2.5-pro',
-      'lmstudio/qwen3-coder-30b',
-      'lmstudio/qwen3.5-27b-claude-4.6-opus-distilled-mlx',
-      'lmstudio-laptop/unsloth_qwen3-coder-next-split',
     ];
 
     // Health data from /api/models-health — keyed by model key
@@ -566,11 +563,11 @@
     // Returns only models that are connected (healthy). Falls back to all known models if health data not loaded yet.
     function getDropdownModels() {
       if (!_modelsHealthLoaded) return ALL_KNOWN_MODELS;
-      return ALL_KNOWN_MODELS.filter(id => {
-        const h = _modelsHealthData[id];
-        // Include if connected, or if we have no health data for this model
-        return !h || h.status === 'connected';
-      });
+      // When health data is loaded, build list from health API — only connected models
+      const connectedFromHealth = Object.values(_modelsHealthData)
+        .filter(m => m.status === 'connected')
+        .map(m => m.key);
+      return connectedFromHealth.length > 0 ? connectedFromHealth : ALL_KNOWN_MODELS;
     }
 
     // Convenience alias kept for backward compat in places that reference DROPDOWN_MODELS directly
@@ -702,9 +699,20 @@
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (effectiveSelected === id) ? 'selected' : '';
         const h = _modelsHealthData[id];
-        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        const suffix = _modelHealthSuffix(id);
         return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
+    }
+
+    // Shared helper for model health suffix labels
+    function _modelHealthSuffix(id) {
+      if (!_modelsHealthLoaded) return '';
+      const h = _modelsHealthData[id];
+      if (!h) return ' (unavailable)';
+      if (h.status === 'connected') return '';
+      if (h.status === 'unreachable') return ' (unreachable)';
+      if (h.status === 'missing') return ' (unavailable)';
+      return ' (unavailable)';
     }
 
     // Card-level default model dropdown — '' = "Inherit global" (clears per-agent default)
@@ -716,8 +724,7 @@
       const opts = modelList.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (selectedModel === id) ? 'selected' : '';
-        const h = _modelsHealthData[id];
-        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        const suffix = _modelHealthSuffix(id);
         return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
       // Always show "Inherit global" as first option; select it only if selectedModel is truly empty
@@ -733,8 +740,7 @@
       const opts = modelList.map(id => {
         const label = (typeof friendlyModel === 'function') ? friendlyModel(id) : id.split('/').pop();
         const selected = (selectedModel === id) ? 'selected' : '';
-        const h = _modelsHealthData[id];
-        const suffix = (h && h.status === 'unreachable') ? ' (unreachable)' : (h && h.status === 'missing') ? ' (missing)' : '';
+        const suffix = _modelHealthSuffix(id);
         return `<option value="${id}" ${selected}>${label}${suffix}</option>`;
       }).join('');
       return `<option value="" ${!selectedModel ? 'selected' : ''}>None</option>` + opts;
