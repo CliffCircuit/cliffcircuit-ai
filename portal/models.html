@@ -289,7 +289,8 @@
         return `<span class="health-testing">testing...</span>`;
       }
       if (h.status === 'connected') {
-        return `<span class="health-connected">connected</span><span class="health-latency">${h.latencyMs}ms</span>`;
+        const latency = h.latencyMs != null ? `${h.latencyMs}ms` : '';
+        return `<span class="health-connected">connected</span>${latency ? `<span class="health-latency">${latency}</span>` : ''}`;
       }
       if (h.status === 'unreachable') {
         const errText = h.error ? `<span class="health-error" title="${escapeAttr(h.error)}">${escapeHtml(h.error.slice(0, 60))}${h.error.length > 60 ? '...' : ''}</span>` : '';
