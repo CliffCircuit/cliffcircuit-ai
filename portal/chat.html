@@ -1038,19 +1038,56 @@
           </div>
         </div>
       `;
-      // Only show session sub-list when agent has multiple sessions
-      if (isActive && agent.sessions.length > 1) {
-        html += '<div class="session-list">';
-        const sorted = [...agent.sessions].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
-        for (const s of sorted.slice(0, 8)) {
-          const sActive = activeSession === s.key;
-          const label = s.label || s.key?.split(':').pop()?.slice(0, 12) || 'session';
-          html += `<div class="session-item ${sActive ? 'active' : ''}" onclick="event.stopPropagation(); selectSession('${agent.id}', '${s.key}')" title="${s.key}">${label}</div>`;
+      // Only show session sub-list for chat-worthy sessions
+      if (isActive) {
+        const chatWorthy = agent.sessions.filter(isChatWorthy);
+        if (chatWorthy.length > 1) {
+          html += '<div class="session-list">';
+          const sorted = [...chatWorthy].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+          for (const s of sorted.slice(0, 8)) {
+            const sActive = activeSession === s.key;
+            const label = friendlySessionLabel(s);
+            const ts = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+            const safeKey = (s.key || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            html += `<div class="session-item ${sActive ? 'active' : ''}" onclick="event.stopPropagation(); selectSession('${agent.id}', '${safeKey}')" title="${escapeHtml(s.key || '')}">${label}${ts ? `<span class="session-time">${ts}</span>` : ''}</div>`;
+          }
+          html += '</div>';
         }
-        html += '</div>';
       }
     }
     container.innerHTML = html;
+  }
+
+  function isChatWorthy(s) {
+    const k = s.key || '';
+    const l = s.label || '';
+    if (k.includes(':cron:') || l.startsWith('Cron:')) return false;
+    if (k.includes('heartbeat')) return false;
+    if (k.startsWith('webchat:g-')) return false;
+    if (s.messageCount === 0 || s.total === 0) return false;
+    return true;
+  }
+
+  function friendlySessionLabel(s) {
+    const k = s.key || '';
+    const l = s.label || '';
+    // agent:X:platform:direct:id patterns
+    const m = k.match(/:(\w+):direct:/);
+    if (m) {
+      const platform = m[1];
+      const platformNames = { telegram: 'Telegram DM', imessage: 'iMessage DM', discord: 'Discord DM', whatsapp: 'WhatsApp DM', slack: 'Slack DM' };
+      const friendly = platformNames[platform] || (platform.charAt(0).toUpperCase() + platform.slice(1) + ' DM');
+      // Prefer session label if it looks like a contact name (not a raw key)
+      if (l && !l.includes(':') && !/^[0-9a-f-]{8,}$/i.test(l)) return l;
+      return friendly;
+    }
+    if (k.endsWith(':main')) return 'Main';
+    // Use label if it's clean
+    if (l && !l.includes(':') && !/^[0-9a-f-]{8,}$/i.test(l)) return l;
+    // Last resort: last segment, cleaned up, no raw UUIDs
+    const last = k.split(':').pop() || 'session';
+    if (/^[0-9a-f-]{8,}$/i.test(last)) return 'Session';
+    return last.slice(0, 20);
   }
 
   function shortModel(model) {
@@ -1291,8 +1328,9 @@
     const agent = agents.find(a => a.id === agentId);
     if (!agent) return;
 
-    // Auto-select most recent session
-    const sorted = [...agent.sessions].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    // Auto-select most recent chat-worthy session
+    const chatWorthy = agent.sessions.filter(isChatWorthy);
+    const sorted = [...(chatWorthy.length > 0 ? chatWorthy : agent.sessions)].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
     if (sorted.length > 0) {
       selectSession(agentId, sorted[0].key);
     }
