@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAVYN — Curated Packages</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    line-height: 1.5;
+  }
+  .site-header {
+    background: #fff;
+    border-bottom: 3px solid;
+    border-image: linear-gradient(90deg, #B8952A, #D4AF37, #B8952A) 1;
+    padding: 36px 24px 28px;
+    text-align: center;
+  }
+  .brand {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: 12px;
+    background: linear-gradient(135deg, #B8952A 0%, #D4AF37 50%, #B8952A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #8a8a8a;
+    margin-top: 8px;
+  }
+  .tagline {
+    font-size: 15px;
+    color: #666;
+    margin-top: 10px;
+    font-style: italic;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 16px 72px;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #B8952A;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #D4AF37, transparent);
+  }
+  .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 52px;
+  }
+  .pkg-card {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(184,149,42,0.08);
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .pkg-header {
+    background: linear-gradient(90deg, #B8952A, #D4AF37, #c9a42e);
+    padding: 18px 20px 16px;
+    position: relative;
+  }
+  .pkg-category {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.78);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .pkg-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    padding-right: 90px;
+  }
+  .pkg-price {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  }
+  .pkg-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1;
+  }
+  .block-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .included-title { color: #9a9a9a; }
+  .enhance-title { color: #B8952A; }
+  .included-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .included-item {
+    background: linear-gradient(135deg, #fdf8ed, #fff8e1);
+    border: 1px solid #ead48d;
+    color: #7a5d11;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .item-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #D4AF37;
+    flex-shrink: 0;
+  }
+  .card-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #ead48d, transparent);
+    margin: 0 -20px;
+  }
+  .addon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .addon-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .addon-plus {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #B8952A, #D4AF37);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .addon-detail { flex: 1; }
+  .addon-name-price {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .addon-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .addon-price {
+    font-size: 13px;
+    font-weight: 800;
+    color: #B8952A;
+    white-space: nowrap;
+  }
+  .addon-benefit {
+    font-size: 12px;
+    color: #777;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .signature-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-top: 16px;
+  }
+  .sig-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 16px;
+    padding: 26px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sig-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #B8952A, #D4AF37, #B8952A);
+  }
+  .sig-card-name {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #B8952A, #D4AF37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .sig-card-price {
+    font-size: 38px;
+    color: #fff;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+  .sig-card-desc {
+    color: #bdbdbd;
+    font-size: 13px;
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+  .sig-card-components {
+    border-top: 1px solid rgba(212,175,55,0.25);
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sig-comp {
+    color: #d4d4d4;
+    font-size: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .sig-comp::before {
+    content: '◆';
+    color: #D4AF37;
+    font-size: 8px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .cta-bar {
+    margin-top: 36px;
+    background: linear-gradient(135deg, #fffbef, #fff6d9);
+    border: 2px solid #D4AF37;
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+  .cta-bar p {
+    font-size: 18px;
+    font-style: italic;
+    color: #7a5d11;
+    font-weight: 600;
+  }
+  .cta-sub {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #999;
+  }
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: #b8b8b8;
+    border-top: 1px solid #efefef;
+  }
+  @media (max-width: 700px) {
+    .brand { font-size: 36px; letter-spacing: 8px; }
+    .pkg-name { font-size: 18px; padding-right: 72px; }
+    .pkg-price { font-size: 22px; right: 16px; }
+    .signature-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="brand">MAVYN</div>
+  <div class="subtitle">Curated Package Upsell Menu</div>
+  <div class="tagline">Precision protocols. Premium results.</div>
+</header>
+
+<div class="container">
+  <div class="section-label">Curated Packages</div>
+
+  <div class="packages-grid">
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Weight Loss</div>
+        <div class="pkg-name">Weight Loss Starter</div>
+        <div class="pkg-price">$64</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>Retatrutide 5mg</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Tirzepatide upgrade</span><span class="addon-price">+$44</span></div><div class="addon-benefit">Dual-action support for stronger appetite and fat-loss results</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">NAD+ 500mg energy</span><span class="addon-price">+$72</span></div><div class="addon-benefit">Boosts cellular energy and overall vitality</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">BPC-157 gut support</span><span class="addon-price">+$70</span></div><div class="addon-benefit">Adds GI comfort and recovery support during the protocol</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Weight Loss</div>
+        <div class="pkg-name">Weight Loss Premium</div>
+        <div class="pkg-price">$108</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>Retatrutide 10mg</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Tirzepatide 10mg stack</span><span class="addon-price">+$62</span></div><div class="addon-benefit">Amplifies weight-loss momentum with a powerful stack</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">NAD+ 1000mg</span><span class="addon-price">+$130</span></div><div class="addon-benefit">High-end energy, longevity, and recovery support</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">GHK-Cu skin</span><span class="addon-price">+$33</span></div><div class="addon-benefit">Supports skin quality and collagen while leaning out</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Healing & Recovery</div>
+        <div class="pkg-name">Healing &amp; Recovery</div>
+        <div class="pkg-price">$160</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>BPC-157 10mg</div>
+            <div class="included-item"><span class="item-dot"></span>TB-500 10mg combo</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">GHK-Cu 50mg</span><span class="addon-price">+$33</span></div><div class="addon-benefit">Improves tissue quality, collagen, and skin recovery</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">KPV gut healing</span><span class="addon-price">+$46</span></div><div class="addon-benefit">Targets gut inflammation and deeper digestive recovery</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Ipamorelin GH support</span><span class="addon-price">+$70</span></div><div class="addon-benefit">Supports growth-hormone pulses for enhanced repair</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Men's Performance</div>
+        <div class="pkg-name">Men's Peak Performance</div>
+        <div class="pkg-price">$197</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>Retatrutide 5mg</div>
+            <div class="included-item"><span class="item-dot"></span>Tirzepatide 5mg</div>
+            <div class="included-item"><span class="item-dot"></span>CJC+Ipa</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">PT-141</span><span class="addon-price">+$78</span></div><div class="addon-benefit">Adds a strong sexual-performance and confidence angle</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">MOTS-c</span><span class="addon-price">+$75</span></div><div class="addon-benefit">Supports mitochondrial energy and metabolic performance</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">NAD+ 500mg</span><span class="addon-price">+$72</span></div><div class="addon-benefit">Improves endurance, recovery, and overall energy</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Growth Hormone</div>
+        <div class="pkg-name">GH Optimizer</div>
+        <div class="pkg-price">$119</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>CJC-1295 + Ipamorelin combo</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">HGH Frag 176-191</span><span class="addon-price">+$44</span></div><div class="addon-benefit">Adds a fat-loss focused GH fragment to the stack</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Sermorelin</span><span class="addon-price">+$44</span></div><div class="addon-benefit">Supports a natural GH-release pathway</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Standalone Ipamorelin</span><span class="addon-price">+$70</span></div><div class="addon-benefit">Extends GH support for clients wanting a stronger protocol</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Beauty & Glow</div>
+        <div class="pkg-name">Glow &amp; Beauty</div>
+        <div class="pkg-price">$217</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>GLOW combo</div>
+            <div class="included-item"><span class="item-dot"></span>BPC + GHK-Cu + TB500</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Upgrade to KLOW</span><span class="addon-price">+$36</span></div><div class="addon-benefit">Premium upgrade for a more advanced beauty-and-repair stack</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Oxytocin</span><span class="addon-price">+$32</span></div><div class="addon-benefit">Adds mood, calm, and feel-good balance to the protocol</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Selank</span><span class="addon-price">+$44</span></div><div class="addon-benefit">Helps reduce stress and supports a calmer nervous system</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Cognitive & Longevity</div>
+        <div class="pkg-name">Cognitive &amp; Longevity</div>
+        <div class="pkg-price">$125</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>Semax 5mg</div>
+            <div class="included-item"><span class="item-dot"></span>Selank 5mg</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">NAD+ 500mg</span><span class="addon-price">+$72</span></div><div class="addon-benefit">Supports energy, recovery, and brain performance</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Epithalon</span><span class="addon-price">+$53</span></div><div class="addon-benefit">Longevity-focused add-on for anti-aging conversations</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">VIP 5mg</span><span class="addon-price">+$95</span></div><div class="addon-benefit">Premium neuro-inflammatory and immune support option</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-header">
+        <div class="pkg-category">Sexual Health</div>
+        <div class="pkg-name">Sexual Health</div>
+        <div class="pkg-price">$78</div>
+      </div>
+      <div class="pkg-body">
+        <div>
+          <div class="block-title included-title">What's Included</div>
+          <div class="included-items">
+            <div class="included-item"><span class="item-dot"></span>PT-141 10mg</div>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div>
+          <div class="block-title enhance-title">Enhance Your Results</div>
+          <div class="addon-list">
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Melanotan II</span><span class="addon-price">+$51</span></div><div class="addon-benefit">Adds tanning support plus a stronger arousal angle</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Oxytocin</span><span class="addon-price">+$32</span></div><div class="addon-benefit">Supports bonding, intimacy, and emotional connection</div></div></div>
+            <div class="addon-item"><div class="addon-plus">+</div><div class="addon-detail"><div class="addon-name-price"><span class="addon-name">Selank</span><span class="addon-price">+$44</span></div><div class="addon-benefit">Helps calm nerves and improve comfort around intimacy</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Signature Combo Vials</div>
+  <div class="signature-cards">
+    <div class="sig-card">
+      <div class="sig-card-name">GLOW</div>
+      <div class="sig-card-price">$217</div>
+      <div class="sig-card-desc">The signature beauty and recovery combination</div>
+      <div class="sig-card-components">
+        <div class="sig-comp">BPC-157 — supports tissue repair and gut recovery</div>
+        <div class="sig-comp">GHK-Cu — supports collagen, skin quality, and glow</div>
+        <div class="sig-comp">TB-500 — supports systemic recovery and inflammation balance</div>
+      </div>
+    </div>
+    <div class="sig-card">
+      <div class="sig-card-name">KLOW</div>
+      <div class="sig-card-price">$253</div>
+      <div class="sig-card-desc">A premium elevated beauty protocol for top-tier clients</div>
+      <div class="sig-card-components">
+        <div class="sig-comp">Advanced upgrade path from GLOW</div>
+        <div class="sig-comp">Premium positioning for clients wanting a higher-end stack</div>
+        <div class="sig-comp">Ideal for beauty, skin, recovery, and anti-aging conversations</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-bar">
+    <p>Ask your rep about custom stacking options</p>
+    <div class="cta-sub">Curated packages can be personalized based on goals, experience level, and desired outcomes.</div>
+  </div>
+</div>
+
+<footer>
+  MAVYN — Curated Package Menu &nbsp;|&nbsp; Updated March 16, 2026
+</footer>
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mavyn — Premium Peptide Solutions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            color: #2c2c2c;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 2px solid #D4AF37;
+            padding-bottom: 30px;
+        }
+
+        .logo-text {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #D4AF37 0%, #C0C0C0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            color: #666;
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c2c2c;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-left: 4px solid #D4AF37;
+            padding-left: 15px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: -20px;
+            margin-bottom: 20px;
+            padding-left: 15px;
+            font-style: italic;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #D4AF37 0%, #C0C0C0 100%);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tr:hover {
+            background: #fafafa;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #D4AF37;
+            font-size: 15px;
+        }
+
+        .strength {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .highlight-row {
+            background: #fdf8f0;
+        }
+
+        .highlight-row:hover {
+            background: #fce8d6;
+        }
+
+        .combo-badge {
+            display: inline-block;
+            background: #D4AF37;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .simple-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .simple-table th {
+            background: #f5f5f5;
+            border-bottom: 2px solid #D4AF37;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c2c2c;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .simple-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .simple-table tr:hover {
+            background: #fafafa;
+        }
+
+        .simple-table .price {
+            font-weight: 600;
+            color: #D4AF37;
+        }
+
+        .featured {
+            border-left: 3px solid #D4AF37;
+            padding-left: 12px !important;
+        }
+
+        .note {
+            background: #f9f9f9;
+            border-left: 3px solid #C0C0C0;
+            padding: 15px 20px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+            border-radius: 4px;
+        }
+
+        .note-title {
+            font-weight: 600;
+            color: #2c2c2c;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #D4AF37;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .footer-gold {
+            color: #D4AF37;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .logo-text {
+                font-size: 36px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 10px 12px;
+            }
+        }
+
+        .header-divider {
+            height: 1px;
+            background: linear-gradient(to right, #D4AF37, #C0C0C0, #D4AF37);
+            margin: 30px 0;
+        }
+
+        .intro {
+            text-align: center;
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+
+        .intro strong {
+            color: #2c2c2c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-text">MAVYN</div>
+            <div class="tagline">Premium Peptide Solutions</div>
+            <div class="subtitle">Clinical-Grade Performance & Longevity</div>
+        </header>
+
+        <div class="intro">
+            <strong>Welcome to Mavyn.</strong> We deliver pharmaceutical-grade peptide products sourced from trusted suppliers, with transparent pricing and comprehensive support. Each product below represents our commitment to quality, efficacy, and your results.
+        </div>
+
+        <div class="header-divider"></div>
+
+        <!-- CORE 8 PEPTIDES -->
+        <div class="section">
+            <div class="section-title">Core Performance Peptides</div>
+            <div class="section-subtitle">Our most-requested products. Starting point for transformation.</div>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Strength</th>
+                            <th style="text-align: right;">Price Per Vial</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="highlight-row">
+                            <td><strong>Semaglutide</strong></td>
+                            <td class="strength">2mg</td>
+                            <td class="price" style="text-align: right;">$26</td>
+                        </tr>
+                        <tr class="highlight-row">
+                            <td><strong>Semaglutide</strong></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$37</td>
+                        </tr>
+                        <tr class="highlight-row">
+                            <td><strong>Semaglutide</strong></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$48</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tirzepatide</strong></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$43</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tirzepatide</strong></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$62</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tirzepatide</strong></td>
+                            <td class="strength">20mg</td>
+                            <td class="price" style="text-align: right;">$99</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Retatrutide</strong> <span class="combo-badge">Triple Agonist</span></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$64</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Retatrutide</strong></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$108</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BPC-157</strong> <span class="combo-badge">Recovery</span></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$70</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BPC-157</strong></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$70</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TB-500</strong> <span class="combo-badge">Recovery</span></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$90</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TB-500</strong></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$90</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ipamorelin</strong> <span class="combo-badge">GH Axis</span></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$70</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ipamorelin</strong></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$70</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CJC-1295 (with DAC)</strong> <span class="combo-badge">GH Axis</span></td>
+                            <td class="strength">2mg</td>
+                            <td class="price" style="text-align: right;">$115</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CJC-1295 (with DAC)</strong></td>
+                            <td class="strength">5mg</td>
+                            <td class="price" style="text-align: right;">$187</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PT-141</strong> <span class="combo-badge">Sexual Health</span></td>
+                            <td class="strength">10mg</td>
+                            <td class="price" style="text-align: right;">$78</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note">
+                <div class="note-title">💡 Pro Tip: Stacking Savings</div>
+                <p>Combining complementary peptides creates synergistic results. Ask about our popular stacks: Fat Loss + Recovery, GH Axis + Performance, and Anti-Aging protocols.</p>
+            </div>
+        </div>
+
+        <!-- WEIGHT MANAGEMENT -->
+        <div class="section">
+            <div class="section-title">Weight Management Solutions</div>
+            <div class="section-subtitle">GLP-1 and next-gen metabolic options. Full dosage range.</div>
+            
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Semaglutide</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>2mg</td><td class="price" style="text-align: right;">$26</td></tr>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$37</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$48</td></tr>
+                            <tr><td>15mg</td><td class="price" style="text-align: right;">$60</td></tr>
+                            <tr><td>20mg</td><td class="price" style="text-align: right;">$74</td></tr>
+                            <tr><td>30mg</td><td class="price" style="text-align: right;">$128</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Tirzepatide</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$43</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$62</td></tr>
+                            <tr><td>15mg</td><td class="price" style="text-align: right;">$74</td></tr>
+                            <tr><td>20mg</td><td class="price" style="text-align: right;">$99</td></tr>
+                            <tr><td>30mg</td><td class="price" style="text-align: right;">$133</td></tr>
+                            <tr><td>40mg</td><td class="price" style="text-align: right;">$173</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Retatrutide (Next-Generation)</h4>
+                <table class="simple-table">
+                    <tbody>
+                        <tr><td>5mg</td><td class="price" style="text-align: right;">$64</td></tr>
+                        <tr><td>10mg</td><td class="price" style="text-align: right;">$108</td></tr>
+                        <tr><td>15mg</td><td class="price" style="text-align: right;">$146</td></tr>
+                        <tr><td>20mg</td><td class="price" style="text-align: right;">$159</td></tr>
+                        <tr><td>30mg</td><td class="price" style="text-align: right;">$197</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note">
+                <div class="note-title">🎯 Retatrutide Advantage</div>
+                <p>Triple agonist mechanism targets three pathways simultaneously. Clinical data shows superior fat loss and lean mass retention vs. GLP-1 alone. Premium choice for serious transformation.</p>
+            </div>
+        </div>
+
+        <!-- RECOVERY & HEALING -->
+        <div class="section">
+            <div class="section-title">Recovery & Healing</div>
+            <div class="section-subtitle">Joint, connective tissue, and performance recovery.</div>
+            
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">BPC-157</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>2mg</td><td class="price" style="text-align: right;">$70</td></tr>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$70</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$70</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">TB-500</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>2mg</td><td class="price" style="text-align: right;">$90</td></tr>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$90</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$90</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">GHK-Cu <span style="font-size:11px; color:#888;">(Skin, Hair & Healing)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>50mg</td><td class="price" style="text-align: right;">$33</td></tr>
+                            <tr><td>100mg</td><td class="price" style="text-align: right;">$50</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">MOTS-c <span style="font-size:11px; color:#888;">(Metabolic & Performance)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$75</td></tr>
+                            <tr><td>15mg</td><td class="price" style="text-align: right;">$121</td></tr>
+                            <tr><td>20mg</td><td class="price" style="text-align: right;">$242</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">✨ Signature Combo Vials</h4>
+                <table class="simple-table">
+                    <thead><tr><th>Product</th><th>Formula</th><th style="text-align:right;">Price / Vial</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GLOW</strong> <span class="combo-badge">Skin · Hair · Recovery</span></td>
+                            <td class="strength">BPC-157 10mg + GHK-Cu 50mg + TB-500 10mg</td>
+                            <td class="price" style="text-align:right;">$217</td>
+                        </tr>
+                        <tr>
+                            <td><strong>KLOW</strong> <span class="combo-badge">Full Repair</span></td>
+                            <td class="strength">BPC-157 10mg + GHK-Cu 50mg + TB-500 10mg + KPV 10mg</td>
+                            <td class="price" style="text-align:right;">$253</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note">
+                <div class="note-title">🏃 Pro Stacking Combo</div>
+                <p><strong>BPC-157 + TB-500</strong> = The ultimate recovery stack. BPC handles localized healing; TB-500 systemically enhances tissue repair. $160 for 10mg+10mg combo vial.</p>
+            </div>
+        </div>
+
+        <!-- GH AXIS -->
+        <div class="section">
+            <div class="section-title">Growth Hormone Axis</div>
+            <div class="section-subtitle">GH secretagogues and long-acting peptides. Natural, safe GH elevation.</div>
+            
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Ipamorelin</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>2mg</td><td class="price" style="text-align: right;">$70</td></tr>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$70</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$70</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">CJC-1295 (with DAC)</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>2mg</td><td class="price" style="text-align: right;">$115</td></tr>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$187</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">CJC-1295 (without DAC)</h4>
+                <table class="simple-table">
+                    <tbody>
+                        <tr><td>2mg</td><td class="price" style="text-align: right;">$53</td></tr>
+                        <tr><td>5mg</td><td class="price" style="text-align: right;">$83</td></tr>
+                        <tr><td>10mg</td><td class="price" style="text-align: right;">$105</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note">
+                <div class="note-title">📈 GH Axis Stack Option</div>
+                <p><strong>CJC-1295 (with DAC) + Ipamorelin</strong> = Premium combo. Long-acting baseline + short-acting pulse. Synergistic GH secretion. $119 per vial.</p>
+            </div>
+        </div>
+
+        <!-- PREMIUM & SPECIALTY -->
+        <div class="section">
+            <div class="section-title">Premium & Specialty</div>
+            <div class="section-subtitle">Advanced options for longevity, cognitive, and sexual performance.</div>
+            
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">NAD+ (Metabolic)</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>100mg</td><td class="price" style="text-align: right;">$33</td></tr>
+                            <tr><td>500mg</td><td class="price" style="text-align: right;">$72</td></tr>
+                            <tr><td>1000mg</td><td class="price" style="text-align: right;">$130</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">HCG</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>1000 IU</td><td class="price" style="text-align: right;">$99</td></tr>
+                            <tr><td>5000 IU</td><td class="price" style="text-align: right;">$165</td></tr>
+                            <tr><td>10000 IU</td><td class="price" style="text-align: right;">$77</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">PT-141 (Sexual)</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$78</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Oxytocin</h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>2mg</td><td class="price" style="text-align: right;">$32</td></tr>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$46</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$65</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Melanotan I <span style="font-size:11px; color:#888;">(Tan + Recovery)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$105</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Melanotan II <span style="font-size:11px; color:#888;">(Tan + Libido)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$51</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Semax <span style="font-size:11px; color:#888;">(Cognitive · Focus)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$44</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$56</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">Selank <span style="font-size:11px; color:#888;">(Anxiety · Calm Focus)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$44</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$66</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="two-column">
+                <div>
+                    <h4 style="margin-bottom: 15px; font-size: 16px; color: #2c2c2c; border-bottom: 1px solid #D4AF37; padding-bottom: 10px;">VIP <span style="font-size:11px; color:#888;">(Anti-inflammatory · Longevity)</span></h4>
+                    <table class="simple-table">
+                        <tbody>
+                            <tr><td>5mg</td><td class="price" style="text-align: right;">$95</td></tr>
+                            <tr><td>10mg</td><td class="price" style="text-align: right;">$174</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- HGH KIT -->
+        <div class="section">
+            <div class="section-title">Growth Hormone Kits</div>
+            <div class="section-subtitle">Complete, packaged solutions. Premium positioning.</div>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Format</th>
+                            <th style="text-align: right;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="highlight-row">
+                            <td><strong>HGH 10-Vial Kit</strong></td>
+                            <td class="strength">Package format only</td>
+                            <td class="price" style="text-align: right;">$450</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="note">
+                <div class="note-title">🎁 HGH Kit Premium Positioning</div>
+                <p>All-in-one package format. No individual vial sales. Designed for commitment-level clients seeking serious anti-aging, lean mass, and recovery enhancement. Complete 10-vial protocol.</p>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p style="margin-bottom: 15px;">
+                <span class="footer-gold">MAVYN</span> — Clinical-Grade Peptides | Transparent Pricing | Client Success
+            </p>
+            <p>
+                For personalized protocol recommendations, side effect management, or stacking guidance, please consult with your healthcare provider or our support team.
+            </p>
+            <p style="margin-top: 15px; font-size: 11px; color: #ccc;">
+                Menu updated March 16, 2026 | All prices reflect market retail | Subject to availability
+            </p>
+        </div>
+    </div>
+</body>
+</html>

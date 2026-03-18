@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mavyn — Peptide Protocol Stacks</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: white;
+    color: #2c2c2c;
+    padding: 40px 20px 60px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+    border-bottom: 2px solid #D4AF37;
+    padding-bottom: 30px;
+  }
+
+  .logo-text {
+    font-size: 48px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #D4AF37 0%, #C0C0C0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+  }
+
+  .tagline {
+    font-size: 16px;
+    color: #666;
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #999;
+    margin-top: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 28px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    border: 1px solid #e8e0cc;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(212, 175, 55, 0.08);
+    transition: box-shadow 0.2s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.18);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #D4AF37 0%, #C0C0C0 100%);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0e8d0;
+  }
+
+  .emoji {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .card-title h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: 0.3px;
+  }
+
+  .card-title .stack-subtitle {
+    font-size: 11px;
+    color: #B8952A;
+    margin-top: 3px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .products {
+    list-style: none;
+    margin-bottom: 20px;
+  }
+
+  .products li {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 9px 0;
+    border-bottom: 1px solid #f5f0e8;
+  }
+
+  .products li:last-child { border-bottom: none; }
+
+  .product-name {
+    color: #2c2c2c;
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .product-detail {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .product-price {
+    color: #B8952A;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    margin-left: 12px;
+    padding-top: 1px;
+  }
+
+  .total-bar {
+    background: linear-gradient(135deg, #fdfaf2 0%, #f8f3e6 100%);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #D4AF37;
+  }
+
+  .total-label {
+    font-size: 10px;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .total-price {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #D4AF37 0%, #B8952A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(192, 192, 192, 0.15);
+    color: #888;
+    border: 1px solid #ddd;
+    margin-left: 6px;
+    vertical-align: middle;
+    -webkit-text-fill-color: #888;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 52px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e0cc;
+    color: #aaa;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  footer span {
+    color: #B8952A;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-text">MAVYN</div>
+    <div class="tagline">Premium Peptide Solutions</div>
+    <div class="subtitle">Peptide Protocol Stacks · 2026</div>
+  </header>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">💅</div>
+        <div class="card-title">
+          <h2>The Glow Protocol</h2>
+          <div class="stack-subtitle">Beauty · Anti-Aging · Skin &amp; Hair</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">GLOW</div><div class="product-detail">BPC-157 + GHK-Cu + TB-500</div></div><div class="product-price">$139.00</div></li>
+        <li><div><div class="product-name">NAD+</div><div class="product-detail">500mg · Cellular Radiance</div></div><div class="product-price">$129.99</div></li>
+        <li><div><div class="product-name">Epithalon</div><div class="product-detail">Telomere Support · Deep Anti-Aging</div></div><div class="product-price">$59.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$328.98</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">💪</div>
+        <div class="card-title">
+          <h2>The Athlete Stack</h2>
+          <div class="stack-subtitle">Strength · Recovery · Muscle</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">BPC-157</div><div class="product-detail">5mg · Tendon &amp; Tissue Repair</div></div><div class="product-price">$69.99</div></li>
+        <li><div><div class="product-name">TB-500</div><div class="product-detail">5mg · Inflammation &amp; Healing</div></div><div class="product-price">$89.99</div></li>
+        <li><div><div class="product-name">IGF-1 LR3</div><div class="product-detail">Muscle Growth &amp; Protein Synthesis</div></div><div class="product-price">$119.99</div></li>
+        <li><div><div class="product-name">Ipamorelin</div><div class="product-detail">5mg · Overnight GH Recovery</div></div><div class="product-price">$69.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$349.96</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">👨</div>
+        <div class="card-title">
+          <h2>The Peak Protocol</h2>
+          <div class="stack-subtitle">Men's Vitality · Drive · Body Comp</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">CJC-1295 + Ipamorelin</div><div class="product-detail">Classic GH Stack · Sleep &amp; Body Comp</div></div><div class="product-price">TBD</div></li>
+        <li><div><div class="product-name">PT-141</div><div class="product-detail">Central Libido · Desire Not Mechanics</div></div><div class="product-price">TBD</div></li>
+        <li><div><div class="product-name">Melanotan II</div><div class="product-detail">Libido + Confidence + Tan</div></div><div class="product-price">$59.99</div></li>
+        <li><div><div class="product-name">MOTS-c</div><div class="product-detail">Metabolic · Exercise Mimetic</div></div><div class="product-price">$69.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">From $129.98 <span class="badge">+ pending</span></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">👩</div>
+        <div class="card-title">
+          <h2>The Wellness Protocol</h2>
+          <div class="stack-subtitle">Women's Health · Hormonal · Gut · Mood</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">KLOW</div><div class="product-detail">GLOW + KPV · Skin, Hair &amp; Inflammation</div></div><div class="product-price">$159.99</div></li>
+        <li><div><div class="product-name">Semax</div><div class="product-detail">Cognitive Clarity · Mood Support</div></div><div class="product-price">$69.99</div></li>
+        <li><div><div class="product-name">Selank</div><div class="product-detail">Anxiety Relief · Calm Focus</div></div><div class="product-price">$59.99</div></li>
+        <li><div><div class="product-name">NAD+</div><div class="product-detail">500mg · Cellular Energy &amp; Vitality</div></div><div class="product-price">$129.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$419.96</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">🔥</div>
+        <div class="card-title">
+          <h2>Body Recomp Stack</h2>
+          <div class="stack-subtitle">Fat Loss · Visceral Fat · Metabolism</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">Retatrutide</div><div class="product-detail">10mg · Triple Agonist · Max Fat Loss</div></div><div class="product-price">$108.00</div></li>
+        <li><div><div class="product-name">Tesamorelin</div><div class="product-detail">Visceral Fat · Proven &amp; Targeted</div></div><div class="product-price">$69.99</div></li>
+        <li><div><div class="product-name">5-Amino 1MQ</div><div class="product-detail">Metabolic Enzyme Inhibition</div></div><div class="product-price">$149.99</div></li>
+        <li><div><div class="product-name">MOTS-c</div><div class="product-detail">AMPK · Active on Rest Days</div></div><div class="product-price">$69.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$397.97</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">⚡</div>
+        <div class="card-title">
+          <h2>The Biohacker Protocol</h2>
+          <div class="stack-subtitle">Energy · Longevity · Cellular Health</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">NAD+</div><div class="product-detail">1000mg · Master Energy Coenzyme</div></div><div class="product-price">$129.99</div></li>
+        <li><div><div class="product-name">Epithalon</div><div class="product-detail">Telomere Support · Cellular Aging</div></div><div class="product-price">$59.99</div></li>
+        <li><div><div class="product-name">MOTS-c</div><div class="product-detail">Mitochondrial Function · Metabolic</div></div><div class="product-price">$69.99</div></li>
+        <li><div><div class="product-name">GHK-Cu</div><div class="product-detail">100mg · Collagen · Gene Expression</div></div><div class="product-price">$74.99</div></li>
+        <li><div><div class="product-name">BPC-157</div><div class="product-detail">5mg · System-Wide Protection</div></div><div class="product-price">$69.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$404.95</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">😴</div>
+        <div class="card-title">
+          <h2>The Deep Rest Stack</h2>
+          <div class="stack-subtitle">Sleep · Recovery · Stress Relief</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">Ipamorelin</div><div class="product-detail">5mg · GH Pulse at Sleep Onset</div></div><div class="product-price">$69.99</div></li>
+        <li><div><div class="product-name">DSIP</div><div class="product-detail">5mg · Delta-Wave Sleep Induction</div></div><div class="product-price">$55.99</div></li>
+        <li><div><div class="product-name">Selank</div><div class="product-detail">Pre-Sleep Anxiety Relief</div></div><div class="product-price">$59.99</div></li>
+        <li><div><div class="product-name">BPC-157</div><div class="product-detail">5mg · All-Night Tissue Repair</div></div><div class="product-price">$69.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$255.96</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="emoji">🧠</div>
+        <div class="card-title">
+          <h2>The Clarity Stack</h2>
+          <div class="stack-subtitle">Cognitive Edge · Focus · Memory</div>
+        </div>
+      </div>
+      <ul class="products">
+        <li><div><div class="product-name">Semax</div><div class="product-detail">Neuroprotection · BDNF · Focus</div></div><div class="product-price">$69.99</div></li>
+        <li><div><div class="product-name">Selank</div><div class="product-detail">Anxiety · Cognitive Calm</div></div><div class="product-price">$59.99</div></li>
+        <li><div><div class="product-name">NAD+</div><div class="product-detail">500mg · Brain Cell Energy</div></div><div class="product-price">$129.99</div></li>
+        <li><div><div class="product-name">VIP</div><div class="product-detail">Neural &amp; Immune Function</div></div><div class="product-price">$95.99</div></li>
+      </ul>
+      <div class="total-bar"><span class="total-label">Stack Total</span><span class="total-price">$355.96</span></div>
+    </div>
+
+  </div>
+
+  <footer>Mavyn Peptides · <span>Protocol Stacks</span> · Pricing subject to order volume</footer>
+
+</div>
+</body>
+</html>
