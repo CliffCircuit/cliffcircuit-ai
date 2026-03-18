@@ -47,7 +47,11 @@
     @keyframes badgePop { from { transform: scale(0); } 60% { transform: scale(1.2); } to { transform: scale(1); } }
 
     /* Session list under agent */
-    .session-list { padding: 0 0 0 48px; }
+    .session-list { padding: 0 0 0 48px; display: none; }
+    .session-list.expanded { display: block; }
+    .session-toggle { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 9px; color: #6b7280; cursor: pointer; transition: transform 0.15s; flex-shrink: 0; user-select: none; }
+    .session-toggle:hover { color: #9ca3af; }
+    .session-toggle.expanded { transform: rotate(90deg); }
     .session-item { padding: 8px 10px; font-size: 12px; color: #9ca3af; border-radius: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; }
     .session-item:hover { background: #1f2937; color: #e5e7eb; }
     .session-item.active { background: #312e81; color: #a5b4fc; }
@@ -57,7 +61,7 @@
     #chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     #chat-header { padding: 14px 20px; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 16px; background: linear-gradient(to bottom, #0f1419, #0a0f1a); }
     #chat-header .agent-avatar { width: 56px; height: 56px; font-size: 28px; }
-    #messages { flex: 1; overflow-y: auto; padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; animation: fadeIn 0.3s ease-in; min-height: 0; }
+    #messages { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; scroll-behavior: smooth; animation: fadeIn 0.3s ease-in; min-height: 0; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Messages */
@@ -77,7 +81,7 @@
     .msg-group.user .msg-meta .msg-sender { margin-right: auto; }
     .msg-tokens { font-size: 10px; color: #6b7280; font-family: 'SF Mono','Fira Code',monospace; cursor: default; display: none; }
     .msg-group:hover .msg-tokens { display: inline; }
-    .msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-break: break-word; overflow-wrap: break-word; overflow: hidden; }
+    .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: 14px; line-height: 1.45; word-break: break-word; overflow-wrap: break-word; overflow: hidden; }
     .msg-group.assistant .msg-bubble { width: 100%; background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; border-top-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     .msg-group.user .msg-bubble { width: auto; max-width: 100%; background: #312e81; color: #e0e7ff; border-top-right-radius: 4px; box-shadow: 0 2px 4px rgba(79,70,229,0.15); }
 
@@ -172,7 +176,7 @@
     .model-option .model-detail { font-size: 10px; color: #6b7280; }
 
     /* Markdown in messages */
-    .msg-bubble p { margin: 0 0 8px 0; }
+    .msg-bubble p { margin: 0 0 4px 0; }
     .msg-bubble p:last-child { margin-bottom: 0; }
     .msg-bubble code { background: #1a2332; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; color: #fbbf24; border: 1px solid #2a3444; }
     .msg-bubble pre { background: #1a2332; border: none; border-radius: 0; padding: 14px; margin: 0; overflow-x: auto; }
@@ -676,6 +680,7 @@
   const agentTyping = {};       // { agentId: bool }
   const userEngaged = {};       // { agentId: bool } — true once user sends a message to this agent
   let activeSession = null;     // session key
+  const expandedAgentSessions = {};  // { agentId: bool } — tracks which agents have session list expanded
   let isStreaming = false;
   let streamingBubble = null;   // DOM element being streamed into
   let streamBuffer = '';
@@ -1023,6 +1028,9 @@
         ? `<span class="typing-dots-inline"><span></span><span></span><span></span></span> typing...`
         : (lastMsg ? escapeHtml(lastMsg).slice(0, 120) : `<span style="color:#4b5563">No messages yet</span>`);
       const unread = unreadCounts[agent.id] || 0;
+      const chatWorthy = agent.sessions.filter(isChatWorthy);
+      const hasMultipleSessions = chatWorthy.length > 1;
+      const sessionsExpanded = expandedAgentSessions[agent.id] || false;
       html += `
         <div class="agent-item ${isActive ? 'active' : ''}" data-agent-id="${agent.id}" onclick="selectAgent('${agent.id}')" style="position:relative;">
           <div class="agent-avatar">${avatarImg(agent.id, 40)}</div>
@@ -1034,25 +1042,23 @@
             <div class="agent-bottom-row">
               <div class="agent-preview">${preview}</div>
               ${unread > 0 ? `<div class="agent-unread-badge">${unread > 9 ? '9+' : unread}</div>` : ''}
+              ${hasMultipleSessions ? `<span class="session-toggle ${sessionsExpanded ? 'expanded' : ''}" onclick="event.stopPropagation(); toggleAgentSessions('${agent.id}')" title="Show sessions">▶</span>` : ''}
             </div>
           </div>
         </div>
       `;
-      // Only show session sub-list for chat-worthy sessions
-      if (isActive) {
-        const chatWorthy = agent.sessions.filter(isChatWorthy);
-        if (chatWorthy.length > 1) {
-          html += '<div class="session-list">';
-          const sorted = [...chatWorthy].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
-          for (const s of sorted.slice(0, 8)) {
-            const sActive = activeSession === s.key;
-            const label = friendlySessionLabel(s);
-            const ts = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
-            const safeKey = (s.key || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            html += `<div class="session-item ${sActive ? 'active' : ''}" onclick="event.stopPropagation(); selectSession('${agent.id}', '${safeKey}')" title="${escapeHtml(s.key || '')}">${label}${ts ? `<span class="session-time">${ts}</span>` : ''}</div>`;
-          }
-          html += '</div>';
+      // Session sub-list — only rendered when multiple chat-worthy sessions exist, shown on toggle
+      if (hasMultipleSessions) {
+        html += `<div class="session-list ${sessionsExpanded ? 'expanded' : ''}">`;
+        const sorted = [...chatWorthy].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+        for (const s of sorted.slice(0, 8)) {
+          const sActive = activeSession === s.key;
+          const label = friendlySessionLabel(s);
+          const ts = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+          const safeKey = (s.key || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          html += `<div class="session-item ${sActive ? 'active' : ''}" onclick="event.stopPropagation(); selectSession('${agent.id}', '${safeKey}')" title="${escapeHtml(s.key || '')}">${label}${ts ? `<span class="session-time">${ts}</span>` : ''}</div>`;
         }
+        html += '</div>';
       }
     }
     container.innerHTML = html;
@@ -1319,6 +1325,11 @@
   }
 
   // ─── Select Agent / Session ──────────────────────────────────
+  function toggleAgentSessions(agentId) {
+    expandedAgentSessions[agentId] = !expandedAgentSessions[agentId];
+    renderAgentList();
+  }
+
   function selectAgent(agentId) {
     deselectChannel();
     activeAgent = agentId;
