@@ -452,14 +452,33 @@
       <!-- Mobile backdrop -->
       <div id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
+      <!-- Manage Agents Modal -->
+      <div id="manage-agents-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;" onclick="closeManageAgentsPanel(event)">
+        <div style="background:#111827;border:1px solid #374151;border-radius:12px;width:340px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);" onclick="event.stopPropagation()">
+          <div style="padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-weight:600;color:#e5e7eb;font-size:14px;">Manage Agents</span>
+            <button onclick="closeManageAgentsPanel()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:18px;padding:0;line-height:1;">×</button>
+          </div>
+          <div id="manage-agents-list" style="overflow-y:auto;padding:8px 0;flex:1;"></div>
+          <div style="padding:12px 16px;border-top:1px solid #1f2937;">
+            <p style="font-size:11px;color:#4b5563;margin:0;">Hidden agents won't appear in the sidebar. You can always show them again.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Sidebar -->
       <div id="sidebar">
         <div id="sidebar-header">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span class="text-sm font-semibold text-white">Agent Chat</span>
-            <button id="new-chat-btn" onclick="toggleNewChatDropdown()" title="New chat" style="background:none;border:none;color:#9ca3af;cursor:pointer;padding:4px;border-radius:6px;transition:all 0.15s;display:flex;align-items:center;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            </button>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <button id="manage-agents-btn" onclick="openManageAgentsPanel()" title="Manage agents" style="background:none;border:none;color:#9ca3af;cursor:pointer;padding:4px;border-radius:6px;transition:all 0.15s;display:flex;align-items:center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>
+              <button id="new-chat-btn" onclick="toggleNewChatDropdown()" title="New chat" style="background:none;border:none;color:#9ca3af;cursor:pointer;padding:4px;border-radius:6px;transition:all 0.15s;display:flex;align-items:center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+            </div>
           </div>
           <div id="new-chat-dropdown" style="display:none;position:absolute;top:40px;left:8px;right:8px;background:#111827;border:1px solid #374151;border-radius:8px;z-index:200;max-height:300px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
           <!-- Hidden connection status (kept for JS compatibility) -->
@@ -697,7 +716,9 @@
     samantha: '/portal/samantha-avatar.jpg',
     scout: '/portal/scout-avatar.jpg',
     atlas: '/portal/atlas-avatar.png',
-    fernanda: '/portal/fernanda-avatar.jpg'
+    fernanda: '/portal/fernanda-avatar.jpg',
+    cora: '/portal/cora-avatar.png',
+    kendall: '/portal/kendall-avatar.png'
   };
   const USER_AVATAR = '/portal/tim-avatar.jpg';
 
@@ -844,6 +865,74 @@
   ];
   const KNOWN_AGENT_IDS = new Set(KNOWN_AGENTS.map(a => a.id));
 
+  // ─── Agent Show/Hide Management ──────────────────────────────
+  const HIDDEN_AGENTS_KEY = 'chat_hidden_agents';
+
+  function getHiddenAgents() {
+    try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_AGENTS_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+
+  function setHiddenAgents(set) {
+    localStorage.setItem(HIDDEN_AGENTS_KEY, JSON.stringify([...set]));
+  }
+
+
+  function openManageAgentsPanel() {
+    const modal = document.getElementById('manage-agents-modal');
+    const list = document.getElementById('manage-agents-list');
+    const hidden = getHiddenAgents();
+    const sorted = [...agents].sort((a, b) => {
+      // Known agents first, then dynamic
+      const aKnown = KNOWN_AGENT_IDS.has(a.id) ? 0 : 1;
+      const bKnown = KNOWN_AGENT_IDS.has(b.id) ? 0 : 1;
+      if (aKnown !== bKnown) return aKnown - bKnown;
+      return a.name.localeCompare(b.name);
+    });
+    list.innerHTML = sorted.map(agent => {
+      const isHidden = hidden.has(agent.id);
+      const safeId = escapeHtml(agent.id);
+      const safeName = escapeHtml(agent.name);
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:8px;margin:2px 8px;transition:background 0.1s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">
+          <div style="flex-shrink:0;">${avatarImg(agent.id, 32)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:#e5e7eb;">${safeName}</div>
+            ${agent.model ? `<div style="font-size:11px;color:#4b5563;">${escapeHtml(agent.model)}</div>` : `<div style="font-size:11px;color:#4b5563;">dynamic</div>`}
+          </div>
+          <label style="position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;cursor:pointer;">
+            <input type="checkbox" ${!isHidden ? 'checked' : ''} data-agent-id="${safeId}"
+              style="opacity:0;width:0;height:0;position:absolute;" />
+            <span style="position:absolute;inset:0;border-radius:20px;transition:0.2s;background:${!isHidden ? '#4f46e5' : '#374151'};"></span>
+            <span style="position:absolute;top:3px;left:${!isHidden ? '19px' : '3px'};width:14px;height:14px;border-radius:50%;background:white;transition:0.2s;"></span>
+          </label>
+        </div>
+      `;
+    }).join('');
+    // Delegated event listener for toggle switches (avoids inline JS injection)
+    list.querySelectorAll('input[type="checkbox"][data-agent-id]').forEach(cb => {
+      cb.addEventListener('change', function() {
+        handleManageAgentToggle(this.dataset.agentId, this.checked);
+      });
+    });
+    modal.style.display = 'flex';
+  }
+
+  function handleManageAgentToggle(agentId, visible) {
+    const hidden = getHiddenAgents();
+    if (visible) hidden.delete(agentId);
+    else hidden.add(agentId);
+    setHiddenAgents(hidden);
+    openManageAgentsPanel();
+    renderAgentList();
+  }
+
+  function closeManageAgentsPanel(event) {
+    if (!event || event.target === document.getElementById('manage-agents-modal')) {
+      document.getElementById('manage-agents-modal').style.display = 'none';
+    }
+  }
+
   function normalizeTs(value, fallback = Date.now()) {
     if (value == null || value === '') return fallback;
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -884,11 +973,17 @@
   }
 
   function ensureAgent(agentId) {
-    if (!agentId || !KNOWN_AGENT_IDS.has(agentId)) return null;
+    if (!agentId) return null;
     let agent = agents.find(a => a.id === agentId);
     if (!agent) {
       const known = KNOWN_AGENTS.find(a => a.id === agentId);
-      agent = { ...known, sessions: [defaultSessionForAgent(agentId)] };
+      if (known) {
+        agent = { ...known, sessions: [defaultSessionForAgent(agentId)] };
+      } else {
+        // Dynamically discovered agent — capitalize the ID as name
+        const name = agentId.charAt(0).toUpperCase() + agentId.slice(1);
+        agent = { id: agentId, name, emoji: '', model: '', sessions: [defaultSessionForAgent(agentId)] };
+      }
       agents.push(agent);
     }
     if (!Array.isArray(agent.sessions)) agent.sessions = [defaultSessionForAgent(agentId)];
@@ -932,7 +1027,7 @@
       for (const record of list) {
         const sessionKey = getSessionKeyFromRecord(record);
         const agentId = getAgentIdFromSessionKey(sessionKey);
-        if (!agentId || !KNOWN_AGENT_IDS.has(agentId)) continue;
+        if (!agentId) continue;
         upsertAgentSession(agentId, { ...record, key: sessionKey });
       }
       return true;
@@ -994,10 +1089,19 @@
       return;
     }
 
-    // Sort by most recent activity (most recent first)
-    const sorted = [...agents].sort((a, b) => (agentLastSeen[b.id] || 0) - (agentLastSeen[a.id] || 0));
+    // Sort by most recent activity (most recent first), filter hidden agents
+    const hiddenAgents = getHiddenAgents();
+    const sorted = [...agents]
+      .filter(a => !hiddenAgents.has(a.id))
+      .sort((a, b) => (agentLastSeen[b.id] || 0) - (agentLastSeen[a.id] || 0));
 
     let html = '';
+
+    if (sorted.length === 0 && agents.length > 0) {
+      html = '<div style="padding:20px;text-align:center;color:#6b7280;font-size:13px;">All agents hidden.<br>Use the ⚙️ gear icon to show agents.</div>';
+      container.innerHTML = html;
+      return;
+    }
 
     // Render group chats first
     for (const group of groupChats) {
@@ -1725,11 +1829,14 @@
 
     const knownIds = new Set(agents.map(a => a.id));
 
-    // Standard OpenClaw session keys are usually agent:<agentId>:...
-    if (parts[0] === 'agent' && parts[1] && knownIds.has(parts[1])) return parts[1];
+    // Standard OpenClaw session keys: agent:<agentId>:...
+    if (parts[0] === 'agent' && parts[1]) {
+      // Always trust the explicit agent prefix — even for unknown/new agents
+      return parts[1];
+    }
 
     // Fallback: find the first segment that matches a known sidebar agent.
-    return parts.find(part => knownIds.has(part)) || (parts[0] === 'agent' ? parts[1] || null : null);
+    return parts.find(part => knownIds.has(part)) || null;
   }
 
   function extractChatText(content) {
@@ -1749,7 +1856,7 @@
     if (!payload) return;
     const sk = payload.sessionKey;
     const eventAgentId = getAgentIdFromSessionKey(sk) || activeAgent;
-    if (sk && eventAgentId && KNOWN_AGENT_IDS.has(eventAgentId)) {
+    if (sk && eventAgentId) {
       upsertAgentSession(eventAgentId, {
         key: sk,
         label: payload.label || payload.sessionLabel || payload.message?.label || payload.message?.sessionLabel,
