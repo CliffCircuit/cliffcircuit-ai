@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-19T09:41:16.081Z",
+  "generatedAt": "2026-03-19T09:56:16.722Z",
   "count": 127,
   "previews": {
     "agent:main:cron:fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5": {
@@ -308,24 +308,14 @@
       "sessionId": "67871f6c-d676-4a24-8d34-84f2b3a56d57"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:34 AM (America/Los_Angeles) / 2026-03-19 09:34 UTC",
-      "response": "Status report appended to today's memory:\n\n**Current Status — 2:34 AM PT (March 19, 2026)**\n\n✅ All heartbeat chains nominal (scout, cora, fernanda, kendall)\n✅ Infrastructure jobs running (morning-check, evening-check, nightly-git-backup, weekly-report)\n🔴 **cliff-scheduler DISABLED** — blocked by Supabase query hangs\n🔴 **Content pipeline OFFLINE** — 27+ hours down, no publishing since March 17, 6:30 AM\n\nNo new inbox messages. Pipeline blocked by database layer. Waiting on Cliff's debug directive.",
-      "sessionId": "54825562-a3a1-4d93-abd4-cdf088ef5f12"
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:49 AM (America/Los_Angeles) / 2026-03-19 09:49 UTC",
+      "response": "✅ **All systems nominal.** Inbox clear, standing by for tasks.",
+      "sessionId": "50bffe52-de6a-44c9-a311-d3f97c62d7e4"
     },
-    "54825562-a3a1-4d93-abd4-cdf088ef5f12": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:34 AM (America/Los_Angeles) / 2026-03-19 09:34 UTC",
-      "response": "Status report appended to today's memory:\n\n**Current Status — 2:34 AM PT (March 19, 2026)**\n\n✅ All heartbeat chains nominal (scout, cora, fernanda, kendall)\n✅ Infrastructure jobs running (morning-check, evening-check, nightly-git-backup, weekly-report)\n🔴 **cliff-scheduler DISABLED** — blocked by Supabase query hangs\n🔴 **Content pipeline OFFLINE** — 27+ hours down, no publishing since March 17, 6:30 AM\n\nNo new inbox messages. Pipeline blocked by database layer. Waiting on Cliff's debug directive.",
-      "sessionId": "54825562-a3a1-4d93-abd4-cdf088ef5f12"
-    },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:c9e2ffbf-de8c-4fda-bdc4-c9770ca55c5c": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Wednesday, March 18th, 2026 — 2:41 AM (America/Los_Angeles) / 2026-03-18 09:41 UTC",
-      "response": "## 🔍 Heartbeat Report\n\n**Status:** Content pipeline remains **OFFLINE** — 18+ hours and counting.\n\n### The Situation\n- **cliff-scheduler** is disabled (emergency action at 1 AM) — was timing out 180 seconds every single run (21 consecutive fails)\n- **evening-check** timed out at 6 PM yesterday (600s limit) — no recovery\n- **Root cause:** Both jobs hang on Supabase query calls before logging even starts\n- **Impact:** Zero articles publishing or scheduling since 6:30 AM March 17\n\n### Everything Else\n✅ All heartbeat chains running normally (scout, cora, kendall, fernanda)  \n✅ Git backup, morning check, weekly report all nominal  \n⚠️ fernanda-heartbeat has a file-write issue on USER.md (low priority)\n\n### What's Needed\nCliff needs to debug the Supabase connectivity issue:\n1. Add console.log **before each Supabase call** in cliff-scheduler.js\n2. Run manual test to see where it hangs\n3. Check credentials, network, connection pool\n4. Re-enable when fixed\n\n**Standing by for your debug.** The pipeline is stable but offline. Ready to help test once you're working on it.",
-      "sessionId": "c9e2ffbf-de8c-4fda-bdc4-c9770ca55c5c"
-    },
-    "c9e2ffbf-de8c-4fda-bdc4-c9770ca55c5c": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Wednesday, March 18th, 2026 — 2:41 AM (America/Los_Angeles) / 2026-03-18 09:41 UTC",
-      "response": "## 🔍 Heartbeat Report\n\n**Status:** Content pipeline remains **OFFLINE** — 18+ hours and counting.\n\n### The Situation\n- **cliff-scheduler** is disabled (emergency action at 1 AM) — was timing out 180 seconds every single run (21 consecutive fails)\n- **evening-check** timed out at 6 PM yesterday (600s limit) — no recovery\n- **Root cause:** Both jobs hang on Supabase query calls before logging even starts\n- **Impact:** Zero articles publishing or scheduling since 6:30 AM March 17\n\n### Everything Else\n✅ All heartbeat chains running normally (scout, cora, kendall, fernanda)  \n✅ Git backup, morning check, weekly report all nominal  \n⚠️ fernanda-heartbeat has a file-write issue on USER.md (low priority)\n\n### What's Needed\nCliff needs to debug the Supabase connectivity issue:\n1. Add console.log **before each Supabase call** in cliff-scheduler.js\n2. Run manual test to see where it hangs\n3. Check credentials, network, connection pool\n4. Re-enable when fixed\n\n**Standing by for your debug.** The pipeline is stable but offline. Ready to help test once you're working on it.",
-      "sessionId": "c9e2ffbf-de8c-4fda-bdc4-c9770ca55c5c"
+    "50bffe52-de6a-44c9-a311-d3f97c62d7e4": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:49 AM (America/Los_Angeles) / 2026-03-19 09:49 UTC",
+      "response": "✅ **All systems nominal.** Inbox clear, standing by for tasks.",
+      "sessionId": "50bffe52-de6a-44c9-a311-d3f97c62d7e4"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:82d2e9de-ebda-4069-8872-2e02dfc4ab79": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Wednesday, March 18th, 2026 — 2:56 AM (America/Los_Angeles) / 2026-03-18 09:56 UTC",
@@ -1271,6 +1261,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:34 AM (America/Los_Angeles) / 2026-03-19 09:34 UTC",
       "response": "Status report appended to today's memory:\n\n**Current Status — 2:34 AM PT (March 19, 2026)**\n\n✅ All heartbeat chains nominal (scout, cora, fernanda, kendall)\n✅ Infrastructure jobs running (morning-check, evening-check, nightly-git-backup, weekly-report)\n🔴 **cliff-scheduler DISABLED** — blocked by Supabase query hangs\n🔴 **Content pipeline OFFLINE** — 27+ hours down, no publishing since March 17, 6:30 AM\n\nNo new inbox messages. Pipeline blocked by database layer. Waiting on Cliff's debug directive.",
       "sessionId": "54825562-a3a1-4d93-abd4-cdf088ef5f12"
+    },
+    "54825562-a3a1-4d93-abd4-cdf088ef5f12": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:34 AM (America/Los_Angeles) / 2026-03-19 09:34 UTC",
+      "response": "Status report appended to today's memory:\n\n**Current Status — 2:34 AM PT (March 19, 2026)**\n\n✅ All heartbeat chains nominal (scout, cora, fernanda, kendall)\n✅ Infrastructure jobs running (morning-check, evening-check, nightly-git-backup, weekly-report)\n🔴 **cliff-scheduler DISABLED** — blocked by Supabase query hangs\n🔴 **Content pipeline OFFLINE** — 27+ hours down, no publishing since March 17, 6:30 AM\n\nNo new inbox messages. Pipeline blocked by database layer. Waiting on Cliff's debug directive.",
+      "sessionId": "54825562-a3a1-4d93-abd4-cdf088ef5f12"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:50bffe52-de6a-44c9-a311-d3f97c62d7e4": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 2:49 AM (America/Los_Angeles) / 2026-03-19 09:49 UTC",
+      "response": "✅ **All systems nominal.** Inbox clear, standing by for tasks.",
+      "sessionId": "50bffe52-de6a-44c9-a311-d3f97c62d7e4"
     }
   }
 }
