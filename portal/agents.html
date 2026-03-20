@@ -422,24 +422,24 @@
 
       // Group by category — auto-categorize uncategorized skills
       function inferSkillCategory(skill) {
-        if (skill.category) return skill.category;
+        if (skill.category && skill.category !== 'Other') return skill.category;
         const n = (skill.name || '').toLowerCase();
         const d = (skill.description || '').toLowerCase();
         const text = n + ' ' + d;
         // Order matters: more specific patterns first
         if (/browser|headless|playwright|puppeteer|selenium|stagehand|web.?autom/.test(text)) return 'Web & Browser';
-        if (/discord|slack|telegram|imsg|imessage|sms|email|gmail|imap|smtp|chat|messag/.test(text)) return 'Communication';
-        if (/code|coding|github|git|pr|pull.?request|review|develop|refactor/.test(text)) return 'Development';
+        if (/twitter|tweet|x\.com|xurl|blue.?bubble|discord|slack|telegram|imsg|imessage|sms|email|gmail|imap|smtp|chat|messag/.test(text)) return 'Communication';
+        if (/code|coding|github|gh-|git\b|pull.?request|review|develop|refactor/.test(text)) return 'Development';
         if (/note|obsidian|notion|bear|apple.?note|docs|document|markdown|wiki/.test(text)) return 'Notes & Docs';
-        if (/remind|todo|task|things|trello|calendar|schedule/.test(text)) return 'Tasks & Reminders';
-        if (/image|video|audio|media|photo|pdf|diagram|draw|whisper|tts|voice|excalidraw/.test(text)) return 'Media';
-        if (/ai|model|llm|gpt|claude|gemini|summariz/.test(text)) return 'AI & Models';
-        if (/automat|peekaboo|tmux|cron|script|workflow|scrape/.test(text)) return 'Automation';
+        if (/remind|todo|task|things|trello|calendar|schedule|order.?track|ordercli/.test(text)) return 'Tasks & Reminders';
+        if (/gif|cam|snap|screenshot|capture|image|video|audio|media|photo|pdf|diagram|draw|whisper|tts|voice|excalidraw|elevenlabs|sag\b|sherpa/.test(text)) return 'Media';
+        if (/oracle|predict|ai|model|llm|gpt|claude|gemini|summariz/.test(text)) return 'AI & Models';
+        if (/hue|smart.?light|eightctl|eight.?sleep|iot|homekit|automat|peekaboo|tmux|cron|script|workflow|scrape/.test(text)) return 'Automation';
         if (/security|password|1password|auth|encrypt|health|firewall/.test(text)) return 'Security & Ops';
-        if (/weather|forecast|temperature/.test(text)) return 'Info & Lookup';
-        if (/skill|tool|plugin|clawhub|mcp/.test(text)) return 'Skills & Tools';
+        if (/blog|rss|feed|watcher|monitor|weather|forecast|temperature|lookup|search/.test(text)) return 'Info & Lookup';
+        if (/blucli|bluos|song|shazam|recogni|spotify|music|sonos|sound|speaker/.test(text)) return 'Music & Audio';
         if (/flight|travel|hotel|book|duffel|airline/.test(text)) return 'Travel';
-        if (/spotify|music|sonos|sound|speaker/.test(text)) return 'Music & Audio';
+        if (/session.?log|log.?viewer|skill|tool|plugin|clawhub|mcp/.test(text)) return 'Skills & Tools';
         return 'Other';
       }
       const cats = {};
