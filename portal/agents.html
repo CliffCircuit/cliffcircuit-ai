@@ -420,13 +420,31 @@
       const allSkills = _allSkillsCache;
       const total = allSkills.length;
 
-      // Group by category
+      // Group by category — auto-categorize uncategorized skills
+      function inferSkillCategory(skill) {
+        if (skill.category) return skill.category;
+        const n = (skill.name || '').toLowerCase();
+        const d = (skill.description || '').toLowerCase();
+        const text = n + ' ' + d;
+        // Order matters: more specific patterns first
+        if (/browser|headless|playwright|puppeteer|selenium|stagehand|web.?autom/.test(text)) return 'Web & Browser';
+        if (/discord|slack|telegram|imsg|imessage|sms|email|gmail|imap|smtp|chat|messag/.test(text)) return 'Communication';
+        if (/code|coding|github|git|pr|pull.?request|review|develop|refactor/.test(text)) return 'Development';
+        if (/note|obsidian|notion|bear|apple.?note|docs|document|markdown|wiki/.test(text)) return 'Notes & Docs';
+        if (/remind|todo|task|things|trello|calendar|schedule/.test(text)) return 'Tasks & Reminders';
+        if (/image|video|audio|media|photo|pdf|diagram|draw|whisper|tts|voice|excalidraw/.test(text)) return 'Media';
+        if (/ai|model|llm|gpt|claude|gemini|summariz/.test(text)) return 'AI & Models';
+        if (/automat|peekaboo|tmux|cron|script|workflow|scrape/.test(text)) return 'Automation';
+        if (/security|password|1password|auth|encrypt|health|firewall/.test(text)) return 'Security & Ops';
+        if (/weather|forecast|temperature/.test(text)) return 'Info & Lookup';
+        if (/skill|tool|plugin|clawhub|mcp/.test(text)) return 'Skills & Tools';
+        if (/flight|travel|hotel|book|duffel|airline/.test(text)) return 'Travel';
+        if (/spotify|music|sonos|sound|speaker/.test(text)) return 'Music & Audio';
+        return 'Other';
+      }
       const cats = {};
       allSkills.forEach(s => {
-        const SKILL_CATEGORY_OVERRIDES = {
-          'agent-browser': 'Web & Browser',
-        };
-        const cat = SKILL_CATEGORY_OVERRIDES[s.name] || s.category || 'Other';
+        const cat = inferSkillCategory(s);
         if (!cats[cat]) cats[cat] = [];
         cats[cat].push(s);
       });
