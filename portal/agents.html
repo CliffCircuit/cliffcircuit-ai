@@ -423,7 +423,10 @@
       // Group by category
       const cats = {};
       allSkills.forEach(s => {
-        const cat = s.category || 'Other';
+        const SKILL_CATEGORY_OVERRIDES = {
+          'agent-browser': 'Web & Browser',
+        };
+        const cat = SKILL_CATEGORY_OVERRIDES[s.name] || s.category || 'Other';
         if (!cats[cat]) cats[cat] = [];
         cats[cat].push(s);
       });
