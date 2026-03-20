@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T20:12:59.801Z",
+  "generatedAt": "2026-03-20T20:28:00.442Z",
   "count": 124,
   "previews": {
     "agent:main:cron:fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5": {
@@ -54,12 +54,12 @@
     },
     "agent:main:telegram:direct:8386624734": {
       "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Monday, March 16th, 2026 — 11:24 AM (America/Los_Angeles) / 2026-03-16 18:24 UTC",
-      "response": "Can't easily hit the API directly. The category change is in the SKILL.md frontmatter — it'll take effect next time the skills are scanned (gateway reload or restart). Since I'm not supposed to restart the gateway myself, here's where we stand:\n\n**What I did:**\n- Added `category: Web & Browser` to the Agent Browser skill's SKILL.md\n\n**What needs to happen for it to show up:**\n- The gateway needs to rescan skills. This happens on restart, or you can trigger it from the portal's Skills page (refresh button). Try reloading the Agents page after that.\n\n**Re: other skills that might fit better in \"Web & Browser\":**\nThe built-in skills (like `summarize` and `web_fetch`) live in the system npm directory, so I can't edit their metadata without them getting overwritten on the next OpenClaw update. If you want to recategorize those too, that'd be a feature request for OpenClaw itself — a config-level category override per skill.\n\nFor now, Agent Browser should move out of \"Other\" and into \"Web & Browser\" once the skills rescan. Want to try a refresh from the portal?",
+      "response": "Now I have the full picture. The gateway already assigns categories — skills in \"Other\" legitimately landed there because the gateway scanner couldn't classify them, not because `category` is missing. My fix just needs to override `\"Other\"` specifically (treat it as unclassified), not skip inference when category exists.",
       "sessionId": "10e938e9-b33e-4e56-b7e4-a6814e1022fc"
     },
     "10e938e9-b33e-4e56-b7e4-a6814e1022fc": {
       "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Monday, March 16th, 2026 — 11:24 AM (America/Los_Angeles) / 2026-03-16 18:24 UTC",
-      "response": "Can't easily hit the API directly. The category change is in the SKILL.md frontmatter — it'll take effect next time the skills are scanned (gateway reload or restart). Since I'm not supposed to restart the gateway myself, here's where we stand:\n\n**What I did:**\n- Added `category: Web & Browser` to the Agent Browser skill's SKILL.md\n\n**What needs to happen for it to show up:**\n- The gateway needs to rescan skills. This happens on restart, or you can trigger it from the portal's Skills page (refresh button). Try reloading the Agents page after that.\n\n**Re: other skills that might fit better in \"Web & Browser\":**\nThe built-in skills (like `summarize` and `web_fetch`) live in the system npm directory, so I can't edit their metadata without them getting overwritten on the next OpenClaw update. If you want to recategorize those too, that'd be a feature request for OpenClaw itself — a config-level category override per skill.\n\nFor now, Agent Browser should move out of \"Other\" and into \"Web & Browser\" once the skills rescan. Want to try a refresh from the portal?",
+      "response": "Now I have the full picture. The gateway already assigns categories — skills in \"Other\" legitimately landed there because the gateway scanner couldn't classify them, not because `category` is missing. My fix just needs to override `\"Other\"` specifically (treat it as unclassified), not skip inference when category exists.",
       "sessionId": "10e938e9-b33e-4e56-b7e4-a6814e1022fc"
     },
     "agent:main:cron:087d28b7-261a-4261-926a-cb0b4e7a2825": {
@@ -278,24 +278,14 @@
       "sessionId": "97f47d15-1dc1-4dd4-89d3-c032a92e702c"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:09 PM (America/Los_Angeles) / 2026-03-20 20:09 UTC",
-      "response": "**Status: All clear.** No pending tasks, no unread messages. Standing by for next job.",
-      "sessionId": "179f30b2-6331-4e11-bc56-90fd4af407ba"
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:24 PM (America/Los_Angeles) / 2026-03-20 20:24 UTC",
+      "response": "All clear, standing by. 🔍",
+      "sessionId": "66b56738-ed3c-4162-80d9-f34414ddd0c7"
     },
-    "179f30b2-6331-4e11-bc56-90fd4af407ba": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:09 PM (America/Los_Angeles) / 2026-03-20 20:09 UTC",
-      "response": "**Status: All clear.** No pending tasks, no unread messages. Standing by for next job.",
-      "sessionId": "179f30b2-6331-4e11-bc56-90fd4af407ba"
-    },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:d10dea06-77a6-4aa6-acca-d3cc2f37f779": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 1:24 PM (America/Los_Angeles) / 2026-03-19 20:24 UTC",
-      "response": "✅ **Heartbeat (1:24 PM PT):** All nominal. Standing by.",
-      "sessionId": "d10dea06-77a6-4aa6-acca-d3cc2f37f779"
-    },
-    "d10dea06-77a6-4aa6-acca-d3cc2f37f779": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 1:24 PM (America/Los_Angeles) / 2026-03-19 20:24 UTC",
-      "response": "✅ **Heartbeat (1:24 PM PT):** All nominal. Standing by.",
-      "sessionId": "d10dea06-77a6-4aa6-acca-d3cc2f37f779"
+    "66b56738-ed3c-4162-80d9-f34414ddd0c7": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:24 PM (America/Los_Angeles) / 2026-03-20 20:24 UTC",
+      "response": "All clear, standing by. 🔍",
+      "sessionId": "66b56738-ed3c-4162-80d9-f34414ddd0c7"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:c8e71db4-594a-4295-b44b-794cd1b728bf": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Thursday, March 19th, 2026 — 1:39 PM (America/Los_Angeles) / 2026-03-19 20:39 UTC",
@@ -1241,6 +1231,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:09 PM (America/Los_Angeles) / 2026-03-20 20:09 UTC",
       "response": "**Status: All clear.** No pending tasks, no unread messages. Standing by for next job.",
       "sessionId": "179f30b2-6331-4e11-bc56-90fd4af407ba"
+    },
+    "179f30b2-6331-4e11-bc56-90fd4af407ba": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:09 PM (America/Los_Angeles) / 2026-03-20 20:09 UTC",
+      "response": "**Status: All clear.** No pending tasks, no unread messages. Standing by for next job.",
+      "sessionId": "179f30b2-6331-4e11-bc56-90fd4af407ba"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:66b56738-ed3c-4162-80d9-f34414ddd0c7": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 1:24 PM (America/Los_Angeles) / 2026-03-20 20:24 UTC",
+      "response": "All clear, standing by. 🔍",
+      "sessionId": "66b56738-ed3c-4162-80d9-f34414ddd0c7"
     }
   }
 }
