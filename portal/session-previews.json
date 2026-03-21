@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-21T21:44:11.689Z",
+  "generatedAt": "2026-03-21T21:59:12.346Z",
   "count": 122,
   "previews": {
     "agent:main:cron:fcf70c5a-2ce0-4da0-acb3-f02bdbb9d4b5": {
@@ -54,12 +54,12 @@
     },
     "agent:main:telegram:direct:8386624734": {
       "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Monday, March 16th, 2026 — 11:24 AM (America/Los_Angeles) / 2026-03-16 18:24 UTC",
-      "response": "\n\nYes, exactly. For all other agents:\n\n- **Real files** live in Dropbox → you see them in Obsidian\n- **Symlinks** in runtime point to Dropbox → agents read/write through them seamlessly\n\nWrites go through the symlink to the real file in Dropbox, so there's always one source of truth. No copies, no drift.\n\nCliff is the only exception — real files stay in runtime, Dropbox gets symlinks (which Obsidian can't follow, so those will stay invisible). That's the tradeoff to keep OpenClaw stable.",
+      "response": "The API key should be at **app.supermemory.ai** → look for an \"Integrations\" tab or \"API Keys\" section. The direct link from their docs is:\n\n**https://app.supermemory.ai/?view=integrations**\n\nTry that — it should take you right to where the key is. It'll start with `sm_`.\n\nThe free tier (1M tokens, 10K queries) is fine to start with. We can see how fast we burn through it and upgrade later. If the Pro upgrade button is broken, might just be a temporary UI issue on their end.",
       "sessionId": "10e938e9-b33e-4e56-b7e4-a6814e1022fc"
     },
     "10e938e9-b33e-4e56-b7e4-a6814e1022fc": {
       "task": "A new session was started via /new or /reset. Run your Session Startup sequence - read the required files before responding to the user. Then greet the user in your configured persona, if one is provided. Be yourself - use your defined voice, mannerisms, and mood. Keep it to 1-3 sentences and ask what they want to do. If the runtime model differs from default_model in the system prompt, mention the default model. Do not mention internal steps, files, tools, or reasoning.\nCurrent time: Monday, March 16th, 2026 — 11:24 AM (America/Los_Angeles) / 2026-03-16 18:24 UTC",
-      "response": "\n\nYes, exactly. For all other agents:\n\n- **Real files** live in Dropbox → you see them in Obsidian\n- **Symlinks** in runtime point to Dropbox → agents read/write through them seamlessly\n\nWrites go through the symlink to the real file in Dropbox, so there's always one source of truth. No copies, no drift.\n\nCliff is the only exception — real files stay in runtime, Dropbox gets symlinks (which Obsidian can't follow, so those will stay invisible). That's the tradeoff to keep OpenClaw stable.",
+      "response": "The API key should be at **app.supermemory.ai** → look for an \"Integrations\" tab or \"API Keys\" section. The direct link from their docs is:\n\n**https://app.supermemory.ai/?view=integrations**\n\nTry that — it should take you right to where the key is. It'll start with `sm_`.\n\nThe free tier (1M tokens, 10K queries) is fine to start with. We can see how fast we burn through it and upgrade later. If the Pro upgrade button is broken, might just be a temporary UI issue on their end.",
       "sessionId": "10e938e9-b33e-4e56-b7e4-a6814e1022fc"
     },
     "agent:main:cron:087d28b7-261a-4261-926a-cb0b4e7a2825": {
@@ -258,24 +258,14 @@
       "sessionId": "97f47d15-1dc1-4dd4-89d3-c032a92e702c"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:37 PM (America/Los_Angeles) / 2026-03-21 21:37 UTC",
-      "response": "✅ **Heartbeat #10 complete.** All clear — standing by.",
-      "sessionId": "3afc4cf4-ef67-4f91-802d-1085cd83cf34"
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:52 PM (America/Los_Angeles) / 2026-03-21 21:52 UTC",
+      "response": "Heartbeat received. All systems nominal. Ready for tasks.",
+      "sessionId": "2ec0ba1d-d284-489e-80c4-0f0b4454b2a2"
     },
-    "3afc4cf4-ef67-4f91-802d-1085cd83cf34": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:37 PM (America/Los_Angeles) / 2026-03-21 21:37 UTC",
-      "response": "✅ **Heartbeat #10 complete.** All clear — standing by.",
-      "sessionId": "3afc4cf4-ef67-4f91-802d-1085cd83cf34"
-    },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:53572598-7ce3-4f99-b831-b7775eb840e3": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 2:54 PM (America/Los_Angeles) / 2026-03-20 21:54 UTC",
-      "response": "**Heartbeat complete.** ✅\n\n**Quick summary for Cliff:**\n- All heartbeat chains nominal\n- **cliff-scheduler still missing from cron list** (recovery job not showing as active)\n- **Content pipeline offline 4+ days** — no cliff-scheduler, no publishing\n- **evening-check due at 6 PM today** — will verify if it runs\n\nReady to investigate further when you're available. The recovery message said a new cliff-scheduler was created, but I don't see it in the active cron list.",
-      "sessionId": "53572598-7ce3-4f99-b831-b7775eb840e3"
-    },
-    "53572598-7ce3-4f99-b831-b7775eb840e3": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 2:54 PM (America/Los_Angeles) / 2026-03-20 21:54 UTC",
-      "response": "**Heartbeat complete.** ✅\n\n**Quick summary for Cliff:**\n- All heartbeat chains nominal\n- **cliff-scheduler still missing from cron list** (recovery job not showing as active)\n- **Content pipeline offline 4+ days** — no cliff-scheduler, no publishing\n- **evening-check due at 6 PM today** — will verify if it runs\n\nReady to investigate further when you're available. The recovery message said a new cliff-scheduler was created, but I don't see it in the active cron list.",
-      "sessionId": "53572598-7ce3-4f99-b831-b7775eb840e3"
+    "2ec0ba1d-d284-489e-80c4-0f0b4454b2a2": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:52 PM (America/Los_Angeles) / 2026-03-21 21:52 UTC",
+      "response": "Heartbeat received. All systems nominal. Ready for tasks.",
+      "sessionId": "2ec0ba1d-d284-489e-80c4-0f0b4454b2a2"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:8b3fbd1a-a528-4162-9113-3d24e2a31c22": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Friday, March 20th, 2026 — 3:09 PM (America/Los_Angeles) / 2026-03-20 22:09 UTC",
@@ -1221,6 +1211,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:37 PM (America/Los_Angeles) / 2026-03-21 21:37 UTC",
       "response": "✅ **Heartbeat #10 complete.** All clear — standing by.",
       "sessionId": "3afc4cf4-ef67-4f91-802d-1085cd83cf34"
+    },
+    "3afc4cf4-ef67-4f91-802d-1085cd83cf34": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:37 PM (America/Los_Angeles) / 2026-03-21 21:37 UTC",
+      "response": "✅ **Heartbeat #10 complete.** All clear — standing by.",
+      "sessionId": "3afc4cf4-ef67-4f91-802d-1085cd83cf34"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:2ec0ba1d-d284-489e-80c4-0f0b4454b2a2": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Saturday, March 21st, 2026 — 2:52 PM (America/Los_Angeles) / 2026-03-21 21:52 UTC",
+      "response": "Heartbeat received. All systems nominal. Ready for tasks.",
+      "sessionId": "2ec0ba1d-d284-489e-80c4-0f0b4454b2a2"
     }
   }
 }
