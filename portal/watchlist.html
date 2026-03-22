@@ -310,7 +310,7 @@
         const dot = sentimentDot(n.sentiment);
         return `<div class="news-item${hidden ? ' hidden' : ''}">
           <div style="display:flex;align-items:flex-start">${dot}<div style="flex:1">${titleEl}
-          <div class="text-xs text-gray-500">${esc(n.source || '')} ${n.date ? '· ' + n.date : ''}</div></div></div>
+          <div class="text-xs text-gray-500">${esc(n.source || '')} ${n.date ? '· ' + n.date : ''}${n.sentiment ? ' · <span style="color:' + (n.sentiment==='positive'?'#22c55e':n.sentiment==='negative'?'#ef4444':'#9ca3af') + '">' + n.sentiment + '</span>' : ''}</div></div></div>
         </div>`;
       }).join('');
       const news = allNews.length
