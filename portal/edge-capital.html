@@ -335,56 +335,83 @@
       </div>`;
     }
 
+    function sentimentDot(sent) {
+      if (!sent) return '';
+      const colors = { positive: '#22c55e', negative: '#ef4444', neutral: '#9ca3af' };
+      const c = colors[sent] || '#9ca3af';
+      return `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin-right:4px;vertical-align:middle"></span>`;
+    }
+
     function renderNewsLayer(n) {
       const headlines = (n.headlines || []).map(h =>
-        `<div class="headline">${h.url ? `<a href="${escHtml(h.url)}" target="_blank">${escHtml(h.title)}</a>` : escHtml(h.title)}
-         <span style="color:#6b7280;font-size:10px;margin-left:6px">${escHtml(h.source || '')} ${escHtml(h.date || '')}</span></div>`
+        `<div class="headline" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #1f2937">
+          ${sentimentDot(h.sentiment)}
+          ${h.url ? `<a href="${escHtml(h.url)}" target="_blank" style="color:#e2e8f0;text-decoration:none;font-size:12px;line-height:1.4">${escHtml(h.title)}</a>` : `<span style="color:#e2e8f0;font-size:12px">${escHtml(h.title)}</span>`}
+          <div style="color:#6b7280;font-size:10px;margin-top:2px">${escHtml(h.source || '')}${h.source && h.date ? ' · ' : ''}${escHtml(h.date || '')}${h.sentiment ? ' · <span style="color:' + (h.sentiment==='positive'?'#22c55e':h.sentiment==='negative'?'#ef4444':'#9ca3af') + '">' + h.sentiment + '</span>' : ''}</div>
+        </div>`
       ).join('');
+      const sentLabel = n.sentiment_raw !== null && n.sentiment_raw !== undefined
+        ? `<div style="margin-bottom:10px">${metric('Avg Sentiment', n.sentiment_raw, 'num')}</div>`
+        : '';
       return `<div class="layer">
         <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
           <h4>📰 News ${n.score !== null && n.score !== undefined ? '— ' + Number(n.score).toFixed(0) + '/100' : ''}</h4>
           <span style="color:#6b7280;font-size:11px">▾</span>
         </div>
         <div class="layer-body">
-          ${metric('Sentiment', n.sentiment_raw, 'num')}
+          ${sentLabel}
           ${headlines || '<div style="color:#6b7280;font-size:11px">No recent headlines</div>'}
         </div>
       </div>`;
     }
 
     function renderFundamentalsLayer(f) {
+      const dcfUpside = (f.dcf_value && f.current_price)
+        ? ((f.dcf_value / f.current_price - 1) * 100).toFixed(1) + '% upside'
+        : null;
       return `<div class="layer">
         <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
           <h4>📈 Fundamentals ${f.score !== null && f.score !== undefined ? '— ' + Number(f.score).toFixed(0) + '/100' : ''}</h4>
           <span style="color:#6b7280;font-size:11px">▾</span>
         </div>
         <div class="layer-body">
-          ${metric('P/E', f.pe_ratio, 'num')}
-          ${metric('PEG', f.peg_ratio, 'num')}
-          ${metric('Rev Growth YoY', f.revenue_growth_yoy, 'pct_raw')}
-          ${metric('Gross Margin', f.gross_margin, 'pct')}
-          ${metric('Net Margin', f.net_margin, 'pct')}
-          ${metric('D/E', f.debt_to_equity, 'num')}
-          ${metric('DCF Value', f.dcf_value, '$')}
-          ${metric('Insider Signal', f.insider_net_sentiment, 'num')}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px">
+            ${metric('P/E Ratio', f.pe_ratio, 'num')}
+            ${metric('PEG Ratio', f.peg_ratio, 'num')}
+            ${metric('Rev Growth YoY', f.revenue_growth_yoy !== null && f.revenue_growth_yoy !== undefined ? f.revenue_growth_yoy.toFixed(1) + '%' : null)}
+            ${metric('Gross Margin', f.gross_margin, 'pct')}
+            ${metric('Net Margin', f.net_margin, 'pct')}
+            ${metric('Debt/Equity', f.debt_to_equity, 'num')}
+            ${metric('DCF Fair Value', f.dcf_value, '$')}
+            ${dcfUpside ? metric('DCF Upside', dcfUpside) : ''}
+            ${metric('Insider Signal', f.insider_net_sentiment !== null && f.insider_net_sentiment !== undefined
+              ? (f.insider_net_sentiment > 0.1 ? '🟢 Buying' : f.insider_net_sentiment < -0.1 ? '🔴 Selling' : '⚪ Neutral')
+              : null)}
+          </div>
         </div>
       </div>`;
     }
 
     function renderSocialLayer(s) {
+      const buzzColor = s.buzz_level === 'high' ? '#22c55e' : s.buzz_level === 'medium' ? '#eab308' : '#6b7280';
+      const stBullPct = s.stocktwits_bullish_pct !== null && s.stocktwits_bullish_pct !== undefined
+        ? (s.stocktwits_bullish_pct * 100).toFixed(0) + '% bullish'
+        : null;
       return `<div class="layer">
         <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
           <h4>💬 Social ${s.score !== null && s.score !== undefined ? '— ' + Number(s.score).toFixed(0) + '/100' : ''}</h4>
           <span style="color:#6b7280;font-size:11px">▾</span>
         </div>
         <div class="layer-body">
-          ${metric('Buzz Level', s.buzz_level)}
-          ${metric('StockTwits Bullish', s.stocktwits_bullish_pct, 'pct')}
-          ${metric('StockTwits Messages', s.stocktwits_messages)}
-          ${metric('Reddit Mentions (7d)', s.reddit_mentions_7d)}
-          ${metric('Reddit Avg Upvotes', s.reddit_avg_upvotes)}
-          ${metric('Twitter Tweets (24h)', s.twitter_tweets_24h)}
-          ${metric('Twitter Engagement', s.twitter_avg_engagement, 'num')}
+          ${s.buzz_level ? `<div style="margin-bottom:10px"><span style="font-size:11px;color:#9ca3af">Buzz Level</span> <span style="font-weight:600;color:${buzzColor};margin-left:8px;text-transform:uppercase;font-size:12px">${escHtml(s.buzz_level)}</span></div>` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px">
+            ${stBullPct ? metric('StockTwits', stBullPct) : ''}
+            ${s.stocktwits_messages ? metric('ST Messages', s.stocktwits_messages) : ''}
+            ${metric('Reddit Mentions (7d)', s.reddit_mentions_7d)}
+            ${metric('Reddit Avg Upvotes', s.reddit_avg_upvotes)}
+            ${s.twitter_tweets_24h ? metric('Twitter Tweets (24h)', s.twitter_tweets_24h) : ''}
+            ${s.twitter_avg_engagement ? metric('Twitter Engagement', s.twitter_avg_engagement, 'num') : ''}
+          </div>
         </div>
       </div>`;
     }
