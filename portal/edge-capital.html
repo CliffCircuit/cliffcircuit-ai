@@ -177,6 +177,8 @@
                 <th>1D Change</th>
                 <th>Score</th>
                 <th>Technical</th>
+                <th>Trend</th>
+                <th>Momentum</th>
                 <th>News</th>
                 <th>Fundamentals</th>
                 <th>Social</th>
@@ -341,6 +343,39 @@
       const colors = { positive: '#22c55e', negative: '#ef4444', neutral: '#9ca3af' };
       const c = colors[sent] || '#9ca3af';
       return `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin-right:4px;vertical-align:middle"></span>`;
+    }
+
+    function renderTrendLayer(t) {
+      const smaDir = t.sma_cross === 'bullish' ? '📈 Bullish cross' : t.sma_cross === 'bearish' ? '📉 Bearish cross' : (t.sma_cross || '—');
+      return `<div class="layer">
+        <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+          <h4>📐 Trend ${t.score !== null && t.score !== undefined ? '— ' + Number(t.score).toFixed(0) + '/100' : ''}</h4>
+          <span style="color:#6b7280;font-size:11px">▾</span>
+        </div>
+        <div class="layer-body">
+          ${metric('ADX', t.adx, 'num')}
+          ${metric('ADX Trend', t.adx_trend)}
+          ${metric('SMA Cross', smaDir)}
+          ${metric('SMA 20', t.sma_20, 'num')}
+          ${metric('SMA 50', t.sma_50, 'num')}
+        </div>
+      </div>`;
+    }
+
+    function renderMomentumLayer(m) {
+      const rsVal = m.rs_vs_spy !== null && m.rs_vs_spy !== undefined
+        ? (((m.rs_vs_spy - 1) * 100).toFixed(1) + '% vs SPY')
+        : '—';
+      return `<div class="layer">
+        <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+          <h4>🚀 Momentum ${m.score !== null && m.score !== undefined ? '— ' + Number(m.score).toFixed(0) + '/100' : ''}</h4>
+          <span style="color:#6b7280;font-size:11px">▾</span>
+        </div>
+        <div class="layer-body">
+          ${metric('RS vs SPY (20d)', rsVal)}
+          ${metric('Momentum Score', m.momentum_score_raw, 'num')}
+        </div>
+      </div>`;
     }
 
     function renderNewsLayer(n) {
@@ -515,6 +550,8 @@
           const news = ss.news || {};
           const fund = ss.fundamentals || {};
           const soc = ss.social || {};
+          const trend = ss.trend || {};
+          const mom = ss.momentum || {};
           return `
           <tr class="data-row" onclick="toggleSignalDetail(${i})">
             <td class="text-gray-500">#${i + 1}</td>
@@ -522,6 +559,8 @@
             <td>${pk.price_current != null ? '<span class="text-white">$' + pk.price_current.toFixed(2) + '</span>' + (pk.price_change_1d != null ? ' <span class="' + (pk.price_change_1d >= 0 ? 'text-green-400' : 'text-red-400') + ' text-xs">(' + (pk.price_change_1d >= 0 ? '+' : '') + pk.price_change_1d.toFixed(2) + '%)</span>' : '') : '—'}</td>
             <td class="font-semibold">${pk.score ?? '—'}</td>
             <td>${scorePill(tech.score)}</td>
+            <td>${scorePill(trend.score)}</td>
+            <td>${scorePill(mom.score)}</td>
             <td>${scorePill(news.score)}</td>
             <td>${scorePill(fund.score)}</td>
             <td>${scorePill(soc.score)}</td>
@@ -529,9 +568,11 @@
             <td><span class="expand-btn" id="expand-btn-${i}">▶</span></td>
           </tr>
           <tr class="signal-detail-row" id="signal-detail-${i}" style="display:none;">
-            <td colspan="10">
+            <td colspan="12">
               <div class="signal-detail">
                 ${renderTechnicalLayer(tech)}
+                ${renderTrendLayer(trend)}
+                ${renderMomentumLayer(mom)}
                 ${renderNewsLayer(news)}
                 ${renderFundamentalsLayer(fund)}
                 ${renderSocialLayer(soc)}
