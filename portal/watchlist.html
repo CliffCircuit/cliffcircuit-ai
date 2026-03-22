@@ -297,7 +297,7 @@
         c.forward_pe ? `Fwd P/E: ${c.forward_pe}x` : null,
         c.analyst_consensus ? `Consensus: ${c.analyst_consensus}` : null,
         c.price_target_avg ? `PT Avg: ${c.price_target_avg}` : null,
-      ].filter(Boolean).map(m => `<span class="inline-block bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded mr-2 mb-1">${m}</span>`).join('');
+      ].filter(Boolean).map(m => `<span class="inline-block bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded mr-2">${m}</span>`).join('');
 
       const allNews = c.latest_news || [];
       const showMore = allNews.length > 3;
@@ -321,19 +321,19 @@
             : '')
         : '<div class="text-gray-600 text-sm">No recent news</div>';
 
-      const nameAndPrice = `<div class="flex items-baseline justify-between mb-3">
+      const nameAndPrice = `<div class="flex items-baseline justify-between mb-3" style="grid-column:1/-1">
           <div>
             <span class="text-white text-base font-semibold">${esc(c.company || c.name || c.ticker)}</span>
             <span class="text-gray-500 text-sm ml-2">${esc(c.ticker)}</span>
           </div>
-          ${c.price_current != null ? `<div class="text-white text-lg font-bold">$${c.price_current.toFixed(2)}${c.price_change_1d != null ? ` <span class="${c.price_change_1d >= 0 ? 'price-pos' : 'price-neg'} text-sm">${c.price_change_1d >= 0 ? '+' : ''}${c.price_change_1d.toFixed(2)}%</span>` : ''}</div>` : ''}
+          ${c.price_current != null ? `<div class="text-white text-lg font-bold text-right">$${c.price_current.toFixed(2)}${c.price_change_1d != null ? ` <span class="${c.price_change_1d >= 0 ? 'price-pos' : 'price-neg'} text-sm">${c.price_change_1d >= 0 ? '+' : ''}${c.price_change_1d.toFixed(2)}%</span>` : ''}</div>` : ''}
         </div>`;
 
       return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${nameAndPrice}
           <div>
-            ${nameAndPrice}
-            <div class="mb-3">${metrics}</div>
+            <div class="mb-3" style="white-space:nowrap;overflow-x:auto">${metrics}</div>
             <div class="case-card mb-3">
               <div class="text-cyan-400 text-xs uppercase font-semibold mb-1">Moat</div>
               <div class="text-gray-300 text-sm">${esc(c.moat_summary || '—')}</div>
