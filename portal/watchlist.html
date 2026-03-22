@@ -335,6 +335,10 @@
             ${nameAndPrice}
             <div class="mb-3">${metrics}</div>
             <div class="case-card mb-3">
+              <div class="text-cyan-400 text-xs uppercase font-semibold mb-1">Moat</div>
+              <div class="text-gray-300 text-sm">${esc(c.moat_summary || '—')}</div>
+            </div>
+            <div class="case-card mb-3">
               <div class="text-green-400 text-xs uppercase font-semibold mb-1">🐂 Bull Case</div>
               <div class="text-gray-300 text-sm">${esc(c.bull_case || '—')}</div>
             </div>
@@ -343,13 +347,9 @@
               <div class="text-gray-300 text-sm">${esc(c.bear_case || '—')}</div>
             </div>
           </div>
-          <div>
+          <div style="padding-top:100px">
             <div class="text-gray-500 text-xs uppercase font-semibold mb-2" style="padding-left:12px">Latest News</div>
             ${news}
-            <div class="case-card mt-3">
-              <div class="text-cyan-400 text-xs uppercase font-semibold mb-1">Moat</div>
-              <div class="text-gray-300 text-sm">${esc(c.moat_summary || '—')}</div>
-            </div>
             ${renderScores(c)}
           </div>
         </div>`;
