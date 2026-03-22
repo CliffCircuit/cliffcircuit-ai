@@ -188,42 +188,97 @@
 
     function renderScores(c) {
       const s = c.scores || {};
-      const techMap = {
-        'strong buy': ['text-green-300', '⬆⬆ Strong Buy'],
-        'buy': ['text-green-400', '⬆ Buy'],
-        'hold': ['text-yellow-400', '➡ Hold'],
-        'sell': ['text-red-400', '⬇ Sell'],
-        'neutral': ['text-gray-400', '— Neutral'],
+
+      // ── Technical ──
+      const techVerdictMap = {
+        'strong buy': ['text-green-300', '⬆⬆', 'Strong Buy'],
+        'buy':        ['text-green-400', '⬆',  'Buy'],
+        'hold':       ['text-yellow-400','➡',  'Hold'],
+        'sell':       ['text-red-400',   '⬇',  'Sell'],
+        'strong sell':['text-red-300',   '⬇⬇', 'Strong Sell'],
+        'neutral':    ['text-gray-400',  '—',  'Neutral'],
       };
-      const sentMap = {
-        'positive': ['text-green-400', '😊 Positive'],
-        'negative': ['text-red-400', '😟 Negative'],
-        'neutral': ['text-gray-400', '😐 Neutral'],
+      const [techCls, techIcon, techLabel] = techVerdictMap[s.technical] || techVerdictMap['neutral'];
+      const rsi   = s.rsi   != null ? `RSI ${s.rsi}` : null;
+      const macd  = s.macd_direction  ? `MACD ${s.macd_direction}` : null;
+      const smaCross = s.sma_cross    ? `SMA ${s.sma_cross}` : null;
+
+      // ── News Sentiment ──
+      const sentVerdictMap = {
+        'positive': ['text-green-400', '😊', 'Positive'],
+        'negative': ['text-red-400',   '😟', 'Negative'],
+        'neutral':  ['text-gray-400',  '😐', 'Neutral'],
       };
-      const buzzMap = {
-        'high': ['text-cyan-300', '🔥 High'],
-        'medium': ['text-yellow-400', '💬 Medium'],
-        'low': ['text-gray-500', '🔇 Low'],
+      const [sentCls, sentIcon, sentLabel] = sentVerdictMap[s.news_sentiment] || sentVerdictMap['neutral'];
+      // Count article sentiments from latest_news
+      const newsItems = c.latest_news || [];
+      const sentCounts = {positive: 0, negative: 0, neutral: 0};
+      newsItems.forEach(n => { const k = (n.sentiment||'neutral').toLowerCase(); sentCounts[k] = (sentCounts[k]||0)+1; });
+      const sentCountsLine = newsItems.length
+        ? `<span class="text-green-500">+${sentCounts.positive}</span> / <span class="text-gray-500">${sentCounts.neutral}</span> / <span class="text-red-500">-${sentCounts.negative}</span> articles`
+        : 'No articles';
+
+      // ── Social Scoring ──
+      const buzz = (s.social_buzz || 'low').toLowerCase();
+      // Derive social verdict from buzz level (no numeric pct available for ST/Twitter)
+      const socialVerdictMap = {
+        'high':   ['text-green-400', '🚀', 'Bullish'],
+        'medium': ['text-yellow-400','⚡',  'Neutral'],
+        'low':    ['text-red-400',   '📉', 'Bearish'],
       };
-      const [techCls, techLabel] = techMap[s.technical] || techMap['neutral'];
-      const [sentCls, sentLabel] = sentMap[s.news_sentiment] || sentMap['neutral'];
-      const [buzzCls, buzzLabel] = buzzMap[s.social_buzz] || buzzMap['low'];
-      const redditMentions = s.reddit_mentions_7d != null ? `${s.reddit_mentions_7d} mentions / 7d` : '';
+      const [socialCls, socialIcon, socialLabel] = socialVerdictMap[buzz] || socialVerdictMap['low'];
+
+      const redditMentions = s.reddit_mentions_7d != null ? s.reddit_mentions_7d : null;
+      const redditUpvotes  = s.reddit_avg_upvotes  != null ? s.reddit_avg_upvotes  : null;
+      const redditLine = redditMentions !== null
+        ? `${redditMentions} mentions · ~${redditUpvotes} avg ↑`
+        : 'No data';
+      // StockTwits / Twitter — not in data yet
+      const stLine  = s.stocktwits_bullish_pct != null
+        ? `${s.stocktwits_bullish_pct}% bull · ${s.stocktwits_messages||'?'} msgs`
+        : 'No data';
+      const twLine  = s.twitter_tweet_count != null
+        ? `${s.twitter_tweet_count} tweets · ${s.twitter_engagement||'?'} eng`
+        : 'No data';
+
       return `<div class="case-card mt-3">
         <div class="text-purple-400 text-xs uppercase font-semibold mb-2">📊 Scoring</div>
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <div class="text-gray-500 text-xs mb-1">Technical</div>
-            <div class="${techCls} text-sm font-semibold">${techLabel}</div>
+        <div class="grid grid-cols-3 gap-3">
+          <!-- Technical -->
+          <div class="bg-gray-900 rounded-lg p-3 text-center">
+            <div class="text-gray-500 text-xs uppercase tracking-wide mb-2">Technical</div>
+            <div class="${techCls} text-lg font-bold mb-1">${techIcon} ${techLabel}</div>
+            <div class="space-y-1 mt-2">
+              ${rsi      ? `<div class="text-gray-400 text-xs">${rsi}</div>` : ''}
+              ${macd     ? `<div class="text-gray-400 text-xs">${macd}</div>` : ''}
+              ${smaCross ? `<div class="text-gray-400 text-xs">${smaCross}</div>` : ''}
+              ${!rsi && !macd && !smaCross ? '<div class="text-gray-600 text-xs">No sub-details</div>' : ''}
+            </div>
           </div>
-          <div>
-            <div class="text-gray-500 text-xs mb-1">News Sentiment</div>
-            <div class="${sentCls} text-sm font-semibold">${sentLabel}</div>
+          <!-- News Sentiment -->
+          <div class="bg-gray-900 rounded-lg p-3 text-center">
+            <div class="text-gray-500 text-xs uppercase tracking-wide mb-2">News Sentiment</div>
+            <div class="${sentCls} text-lg font-bold mb-1">${sentIcon} ${sentLabel}</div>
+            <div class="text-xs text-gray-400 mt-2">${sentCountsLine}</div>
           </div>
-          <div>
-            <div class="text-gray-500 text-xs mb-1">Reddit Buzz</div>
-            <div class="${buzzCls} text-sm font-semibold">${buzzLabel}</div>
-            ${redditMentions ? `<div class="text-gray-600 text-xs">${redditMentions}</div>` : ''}
+          <!-- Social Scoring -->
+          <div class="bg-gray-900 rounded-lg p-3 text-center">
+            <div class="text-gray-500 text-xs uppercase tracking-wide mb-2">Social Scoring</div>
+            <div class="${socialCls} text-lg font-bold mb-2">${socialIcon} ${socialLabel}</div>
+            <div class="space-y-1 text-left">
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Reddit</span>
+                <span class="text-gray-300">${redditLine}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">StockTwits</span>
+                <span class="text-gray-${stLine === 'No data' ? '600' : '300'}">${stLine}</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Twitter/X</span>
+                <span class="text-gray-${twLine === 'No data' ? '600' : '300'}">${twLine}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>`;
