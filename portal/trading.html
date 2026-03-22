@@ -84,7 +84,7 @@
             <div class="flex items-center gap-2 mb-4">
               <div class="text-lg font-semibold text-white">Kalshi</div>
               <span class="paper-badge">PAPER</span>
-              <span class="text-xs text-gray-500 ml-auto">Real balance: $500</span>
+              <span class="text-xs text-gray-500 ml-auto" id="kalshi-real-bal">Real balance: ...</span>
             </div>
             <div class="grid grid-cols-3 gap-4">
               <div>
@@ -105,7 +105,7 @@
             <div class="flex items-center gap-2 mb-4">
               <div class="text-lg font-semibold text-white">Polymarket</div>
               <span class="paper-badge">PAPER</span>
-              <span class="text-xs text-gray-500 ml-auto">Real balance: $520</span>
+              <span class="text-xs text-gray-500 ml-auto" id="poly-real-bal">Real balance: ...</span>
             </div>
             <div class="grid grid-cols-3 gap-4">
               <div>
@@ -131,7 +131,7 @@
             <table class="trade-table">
               <thead>
                 <tr>
-                  <th>Ticker</th>
+                  <th>Description</th>
                   <th>Platform</th>
                   <th>Side</th>
                   <th>Entry Price</th>
@@ -280,6 +280,33 @@
       return `<span class="pill bg-gray-800 text-gray-400">${r}</span>`;
     }
 
+    // ── Ticker Description Parser ─────────────────────────────────────
+    const CITY_CODES = {
+      CHI:'Chicago',NYC:'New York',HOU:'Houston',SFO:'San Francisco',DC:'Washington DC',
+      LAX:'Los Angeles',DEN:'Denver',ATL:'Atlanta',MIA:'Miami',SEA:'Seattle',
+      PHX:'Phoenix',DFW:'Dallas',BOS:'Boston',MSP:'Minneapolis',DTW:'Detroit',
+      STL:'St. Louis',PHL:'Philadelphia',CLT:'Charlotte',ORD:'Chicago'
+    };
+    function parseTickerDescription(ticker) {
+      if (!ticker) return null;
+      // Kalshi weather: KXLOWTCHI-26MAR22-B34.5 or KXHIGHTDC-26MAR22-T85
+      const m = ticker.match(/^KX(LOWT|HIGHT)([A-Z]{2,4})-(\d{2})([A-Z]{3})(\d{2})-(B|T)([\d.]+)$/);
+      if (m) {
+        const type = m[1] === 'LOWT' ? 'Low' : 'High';
+        const city = CITY_CODES[m[2]] || m[2];
+        const day = parseInt(m[5]);
+        const mon = m[4].charAt(0) + m[4].slice(1).toLowerCase();
+        const op = m[6] === 'B' ? '<' : '>';
+        const temp = m[7];
+        return `${city} ${type} ${op} ${temp}°F — ${mon} ${day}`;
+      }
+      // Polymarket slugs: clean up dashes
+      if (ticker.includes('-')) {
+        return ticker.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+      return null;
+    }
+
     let dashboardData = null;
 
     async function fetchDashboardData() {
@@ -303,6 +330,9 @@
       document.getElementById('poly-trades').textContent = s.poly_paper_trades;
       document.getElementById('poly-balance').textContent = fmtMoney(s.poly_paper_bankroll);
       document.getElementById('poly-pnl').innerHTML = fmtPnl(s.poly_paper_pnl);
+      // Real balances with cents
+      if (s.kalshi_balance != null) document.getElementById('kalshi-real-bal').textContent = 'Real balance: ' + fmtMoney(s.kalshi_balance);
+      if (s.polymarket_balance != null) document.getElementById('poly-real-bal').textContent = 'Real balance: ' + fmtMoney(s.polymarket_balance);
     }
 
     function renderPositions(positions) {
@@ -313,9 +343,11 @@
         return;
       }
       // Show first 25
-      body.innerHTML = positions.slice(0, 25).map(p => `
+      body.innerHTML = positions.slice(0, 25).map(p => {
+        const desc = p.description || parseTickerDescription(p.ticker) || p.ticker;
+        return `
         <tr>
-          <td class="font-mono text-xs">${esc(p.ticker)}</td>
+          <td><span class="text-sm text-white">${esc(desc)}</span><br><span class="font-mono text-xs text-gray-500">${esc(p.ticker)}</span></td>
           <td><span class="text-xs ${p.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${p.platform}</span></td>
           <td><span class="${p.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${p.side}</span></td>
           <td>${Number(p.entry_price).toFixed(2)}¢</td>
@@ -324,7 +356,7 @@
           <td>${(Number(p.edge) * 100).toFixed(1)}%</td>
           <td class="text-gray-400 text-xs">${fmtTimestamp(p.entered_at)}</td>
         </tr>
-      `).join('');
+      `}).join('');
       if (positions.length > 25) {
         body.innerHTML += `<tr><td colspan="8" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
       }
