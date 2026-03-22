@@ -83,7 +83,7 @@
               </tr>
             </thead>
             <tbody id="watchlist-body">
-              <tr><td colspan="8" class="text-gray-600 text-center py-4 loading-pulse">Loading watchlist...</td></tr>
+              <tr><td colspan="11" class="text-gray-600 text-center py-4 loading-pulse">Loading watchlist...</td></tr>
             </tbody>
           </table>
         </div>
@@ -180,7 +180,7 @@
         </tr>`;
 
         if (expandedTicker === c.ticker) {
-          row += `<tr class="expand-row"><td colspan="8">${renderExpanded(c)}</td></tr>`;
+          row += `<tr class="expand-row"><td colspan="11">${renderExpanded(c)}</td></tr>`;
         }
         return row;
       }).join('');
@@ -399,7 +399,7 @@
         renderTable();
       } catch (e) {
         console.error('Watchlist error:', e);
-        document.getElementById('watchlist-body').innerHTML = '<tr><td colspan="8" class="text-red-400 text-center py-4">Error: ' + esc(e.message) + '</td></tr>';
+        document.getElementById('watchlist-body').innerHTML = '<tr><td colspan="11" class="text-red-400 text-center py-4">Error: ' + esc(e.message) + '</td></tr>';
       }
     }
 
