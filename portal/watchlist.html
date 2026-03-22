@@ -99,6 +99,12 @@
     let expandedTicker = null;
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function sentimentDot(sent) {
+      if (!sent) return '';
+      const colors = { positive: '#22c55e', negative: '#ef4444', neutral: '#9ca3af' };
+      const c = colors[(sent||'').toLowerCase()] || '#9ca3af';
+      return `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin-right:5px;margin-top:5px;flex-shrink:0"></span>`;
+    }
 
     function parseMktCap(s) {
       if (!s) return 0;
@@ -301,9 +307,10 @@
         const titleEl = n.url
           ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" class="text-sm text-white hover:text-cyan-400 underline decoration-dotted">${title}</a>`
           : `<div class="text-sm text-white">${title}</div>`;
+        const dot = sentimentDot(n.sentiment);
         return `<div class="news-item${hidden ? ' hidden' : ''}">
-          ${titleEl}
-          <div class="text-xs text-gray-500">${esc(n.source || '')} ${n.date ? '· ' + n.date : ''}</div>
+          <div style="display:flex;align-items:flex-start">${dot}<div style="flex:1">${titleEl}
+          <div class="text-xs text-gray-500">${esc(n.source || '')} ${n.date ? '· ' + n.date : ''}</div></div></div>
         </div>`;
       }).join('');
       const news = allNews.length
@@ -337,7 +344,7 @@
             </div>
           </div>
           <div>
-            <div class="text-gray-500 text-xs uppercase font-semibold mb-2">Latest News</div>
+            <div class="text-gray-500 text-xs uppercase font-semibold mb-2" style="padding-left:12px">Latest News</div>
             ${news}
             <div class="case-card mt-3">
               <div class="text-cyan-400 text-xs uppercase font-semibold mb-1">Moat</div>
