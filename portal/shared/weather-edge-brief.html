@@ -210,6 +210,16 @@
   <p>Here's why that matters: weather is one of the few prediction market categories where <strong>AI has a structural advantage</strong>. The data is public, the models are well-understood, and the edge comes from speed and statistical sophistication — exactly what automated systems are built for. Analysis shows that 14 of the 20 most profitable Polymarket wallets are bots. The humans are outgunned.</p>
   <p>And yet, the market is still young enough that a well-built system finds dozens of mispriced contracts on any given day. That window won't stay open forever, but right now, the opportunity is real.</p>
 
+  <h2>The Self-Improving Engine</h2>
+  <p>Most trading systems are static — you build them, deploy them, and hope your assumptions hold. Weather Edge is different. It improves itself.</p>
+  <p>The inspiration came from an unlikely place: <a href="https://github.com/karpathy/autoresearch" style="color:#818cf8;text-decoration:underline;text-underline-offset:3px;">Andrej Karpathy's autoresearch</a>, a framework that racked up 41,000+ GitHub stars in its first two weeks. The idea is simple but powerful — let an AI agent run experiments on its own system, keep what works, and throw away what doesn't. Shopify's CEO ran it overnight on a machine learning model and woke up to a 19% improvement, with a <em>smaller</em> model outperforming a larger manually-tuned one. The AI community lost its mind.</p>
+  <p>We took that concept and applied it to trading. Think of it like a chef who doesn't just follow a recipe, but quietly experiments with every meal — a pinch more salt here, a lower oven temperature there — and only keeps the changes that make the dish better.</p>
+  <p>Every two hours, Weather Edge runs an autonomous experiment. It might adjust how much weight to give different forecast models, tweak the minimum edge threshold for placing a trade, adjust timing windows, or apply city-specific corrections (Phoenix forecasts behave very differently from Seattle's). Each experiment gets evaluated against a composite score that balances profitability, prediction accuracy, and win rate.</p>
+  <p>If the experiment improves the score, it gets promoted to the live configuration. If it makes things worse, it gets rolled back — no harm done. The system literally gets smarter while we sleep.</p>
+  <p>Weather data is noisy, so we built in skepticism: if an experiment shows unusually strong results, the system re-verifies before accepting it. A fluke hot streak doesn't get mistaken for genuine improvement.</p>
+  <p>Every experiment is tracked in Git — what was changed, what the results were, whether it was kept or rejected. It's a full audit trail of the system's evolution, and we can rewind to any point in its history.</p>
+  <p>The result: a trading engine that doesn't just execute trades, but continuously improves <em>how</em> it trades. Most competitors are running the same static model they deployed on day one. Ours has run hundreds of experiments since then, and each one that stuck made it a little sharper.</p>
+
   <h2>Where We're Headed</h2>
   <p>We're currently focused on US temperature and rain markets across Kalshi and Polymarket. The roadmap includes:</p>
   <ul>
