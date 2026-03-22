@@ -1187,8 +1187,8 @@
       scout:         { alias: 'scout',      name: 'Scout',       avatar: '/portal/scout-avatar.jpg',     accentClass: 'text-green-400'  },
       atlas:         { alias: 'atlas',      name: 'Atlas',       avatar: '/portal/atlas-avatar.png',     accentClass: 'text-orange-400' },
       fernanda:      { alias: 'fernanda',  name: 'Fernanda',    avatar: '/portal/fernanda-avatar.jpg',  accentClass: 'text-emerald-400'},
-      cora:          { alias: 'cora',      name: 'Cora',        avatar: '/portal/cora-avatar.png',      accentClass: 'text-cyan-400' },
-      kendall:       { alias: 'kendall',   name: 'Kendall',     avatar: '/portal/kendall-avatar.png',   accentClass: 'text-violet-400' },
+      cora:          { alias: 'cora',      name: 'Cora',        avatar: '/portal/cora-avatar.jpg',      accentClass: 'text-cyan-400' },
+      kendall:       { alias: 'kendall',   name: 'Kendall',     avatar: '/portal/kendall-avatar.jpg',   accentClass: 'text-violet-400' },
       'claude-code': { alias: 'claude-code',name: 'Claude Code', avatar: '',                             accentClass: 'text-purple-400' },
     };
 
