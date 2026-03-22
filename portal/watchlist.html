@@ -225,26 +225,27 @@
         : 'No articles';
 
       // ── Social Sentiment ──
-      const buzz = (s.social_buzz || 'low').toLowerCase();
-      // Derive social verdict from buzz level (no numeric pct available for ST/Twitter)
+      const soc = c.social || {};
+      const buzz = (soc.social_buzz || s.social_buzz || 'low').toLowerCase();
+      // Derive social verdict from buzz level
       const socialVerdictMap = {
+        'viral':  ['text-green-300', '🔥', 'Viral'],
         'high':   ['text-green-400', '🚀', 'Bullish'],
         'medium': ['text-yellow-400','⚡',  'Neutral'],
         'low':    ['text-red-400',   '📉', 'Bearish'],
       };
       const [socialCls, socialIcon, socialLabel] = socialVerdictMap[buzz] || socialVerdictMap['low'];
 
-      const redditMentions = s.reddit_mentions_7d != null ? s.reddit_mentions_7d : null;
-      const redditUpvotes  = s.reddit_avg_upvotes  != null ? s.reddit_avg_upvotes  : null;
+      const redditMentions = soc.reddit_mentions_7d ?? s.reddit_mentions_7d ?? null;
+      const redditUpvotes  = soc.reddit_avg_upvotes ?? s.reddit_avg_upvotes ?? null;
       const redditLine = redditMentions !== null
         ? `${redditMentions} mentions · ~${redditUpvotes} avg ↑`
         : 'No data';
-      // StockTwits / Twitter — not in data yet
-      const stLine  = s.stocktwits_bullish_pct != null
-        ? `${s.stocktwits_bullish_pct}% bull · ${s.stocktwits_messages||'?'} msgs`
+      const stLine  = soc.stocktwits_bullish_pct != null
+        ? `${soc.stocktwits_bullish_pct}% bull · ${soc.stocktwits_messages||'?'} msgs`
         : 'No data';
-      const twLine  = s.twitter_tweet_count != null
-        ? `${s.twitter_tweet_count} tweets · ${s.twitter_engagement||'?'} eng`
+      const twLine  = soc.twitter_tweet_count != null
+        ? `${soc.twitter_tweet_count} tweets · ${soc.twitter_engagement||'?'} eng`
         : 'No data';
 
       return `<div class="case-card mt-3">
