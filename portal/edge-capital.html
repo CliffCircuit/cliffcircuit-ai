@@ -34,6 +34,26 @@
     @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
     .offline-banner { background: #1c1917; border: 1px solid #44403c; border-radius: 8px; padding: 24px; text-align: center; color: #a8a29e; }
     .paper-banner { background: #172554; border: 1px solid #1e3a5f; border-radius: 8px; padding: 10px 16px; color: #93c5fd; font-size: 14px; margin-bottom: 1rem; }
+    .signal-detail-row td { padding: 0 !important; border-bottom: 1px solid #1f2937; }
+    .signal-detail { background: #0d1117; padding: 16px 24px; }
+    .signal-detail .layer { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; }
+    .signal-detail .layer-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .signal-detail .layer-header h4 { font-size: 13px; font-weight: 600; color: #e5e7eb; margin: 0; }
+    .signal-detail .layer-body { margin-top: 10px; font-size: 12px; color: #9ca3af; }
+    .signal-detail .layer-body.collapsed { display: none; }
+    .signal-detail .metric { display: inline-block; background: #1f2937; border-radius: 6px; padding: 4px 10px; margin: 3px 4px 3px 0; font-size: 11px; }
+    .signal-detail .metric .label { color: #6b7280; }
+    .signal-detail .metric .value { color: #e5e7eb; font-weight: 600; margin-left: 4px; }
+    .signal-detail .headline { border-left: 2px solid #374151; padding: 4px 0 4px 10px; margin-bottom: 6px; font-size: 12px; color: #d1d5db; }
+    .signal-detail .headline a { color: #93c5fd; text-decoration: none; }
+    .signal-detail .headline a:hover { text-decoration: underline; }
+    .score-pill { display: inline-block; padding: 1px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; }
+    .score-pill.good { background: #14532d; color: #4ade80; }
+    .score-pill.neutral { background: #451a03; color: #fb923c; }
+    .score-pill.bad { background: #450a0a; color: #f87171; }
+    .score-pill.na { background: #1f2937; color: #6b7280; }
+    .expand-btn { cursor: pointer; color: #6b7280; font-size: 14px; transition: transform 0.2s; }
+    .expand-btn.open { transform: rotate(90deg); }
   </style>
 </head>
 <body class="min-h-screen">
@@ -155,7 +175,12 @@
                 <th>Rank</th>
                 <th>Ticker</th>
                 <th>Score</th>
-                <th>Recommendation</th>
+                <th>Technical</th>
+                <th>News</th>
+                <th>Fundamentals</th>
+                <th>Social</th>
+                <th>Rec</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="signals-body"></tbody>
@@ -270,6 +295,112 @@
       return `<span class="badge ${cls}">${escHtml(state.replace('_', ' '))}</span>`;
     }
 
+    function scorePill(v) {
+      if (v === null || v === undefined) return '<span class="score-pill na">—</span>';
+      const n = Number(v);
+      const cls = n >= 60 ? 'good' : n >= 40 ? 'neutral' : 'bad';
+      return `<span class="score-pill ${cls}">${n.toFixed(0)}</span>`;
+    }
+
+    function metric(label, value, fmt) {
+      if (value === null || value === undefined) return '';
+      let display = value;
+      if (fmt === 'pct') display = (Number(value) * 100).toFixed(1) + '%';
+      else if (fmt === 'pct_raw') display = Number(value).toFixed(1) + '%';
+      else if (fmt === '$') display = '$' + Number(value).toLocaleString('en-US', {maximumFractionDigits:2});
+      else if (fmt === 'num') display = Number(value).toFixed(2);
+      else display = String(value);
+      return `<span class="metric"><span class="label">${escHtml(label)}</span><span class="value">${escHtml(display)}</span></span>`;
+    }
+
+    function renderTechnicalLayer(t) {
+      return `<div class="layer">
+        <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+          <h4>📊 Technical ${t.score !== null && t.score !== undefined ? '— ' + Number(t.score).toFixed(0) + '/100' : ''}</h4>
+          <span style="color:#6b7280;font-size:11px">▾</span>
+        </div>
+        <div class="layer-body">
+          ${metric('RSI(14)', t.rsi, 'num')}
+          ${metric('MACD Hist', t.macd_histogram, 'num')}
+          ${metric('SMA Cross', t.sma_crossover)}
+          ${metric('SMA 20', t.sma_20, '$')}
+          ${metric('SMA 50', t.sma_50, '$')}
+          ${metric('ADX', t.adx, 'num')}
+          ${metric('ADX Trend', t.adx_trend)}
+          ${metric('Vol Ratio', t.volume_ratio, 'num')}
+          ${metric('Vol Anomaly', t.volume_anomaly ? 'YES' : 'no')}
+          ${metric('Momentum', t.momentum_score, 'num')}
+          ${metric('RS vs SPY', t.rs_vs_spy, 'num')}
+        </div>
+      </div>`;
+    }
+
+    function renderNewsLayer(n) {
+      const headlines = (n.headlines || []).map(h =>
+        `<div class="headline">${h.url ? `<a href="${escHtml(h.url)}" target="_blank">${escHtml(h.title)}</a>` : escHtml(h.title)}
+         <span style="color:#6b7280;font-size:10px;margin-left:6px">${escHtml(h.source || '')} ${escHtml(h.date || '')}</span></div>`
+      ).join('');
+      return `<div class="layer">
+        <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+          <h4>📰 News ${n.score !== null && n.score !== undefined ? '— ' + Number(n.score).toFixed(0) + '/100' : ''}</h4>
+          <span style="color:#6b7280;font-size:11px">▾</span>
+        </div>
+        <div class="layer-body">
+          ${metric('Sentiment', n.sentiment_raw, 'num')}
+          ${headlines || '<div style="color:#6b7280;font-size:11px">No recent headlines</div>'}
+        </div>
+      </div>`;
+    }
+
+    function renderFundamentalsLayer(f) {
+      return `<div class="layer">
+        <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+          <h4>📈 Fundamentals ${f.score !== null && f.score !== undefined ? '— ' + Number(f.score).toFixed(0) + '/100' : ''}</h4>
+          <span style="color:#6b7280;font-size:11px">▾</span>
+        </div>
+        <div class="layer-body">
+          ${metric('P/E', f.pe_ratio, 'num')}
+          ${metric('PEG', f.peg_ratio, 'num')}
+          ${metric('Rev Growth YoY', f.revenue_growth_yoy, 'pct_raw')}
+          ${metric('Gross Margin', f.gross_margin, 'pct')}
+          ${metric('Net Margin', f.net_margin, 'pct')}
+          ${metric('D/E', f.debt_to_equity, 'num')}
+          ${metric('DCF Value', f.dcf_value, '$')}
+          ${metric('Insider Signal', f.insider_net_sentiment, 'num')}
+        </div>
+      </div>`;
+    }
+
+    function renderSocialLayer(s) {
+      return `<div class="layer">
+        <div class="layer-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+          <h4>💬 Social ${s.score !== null && s.score !== undefined ? '— ' + Number(s.score).toFixed(0) + '/100' : ''}</h4>
+          <span style="color:#6b7280;font-size:11px">▾</span>
+        </div>
+        <div class="layer-body">
+          ${metric('Buzz Level', s.buzz_level)}
+          ${metric('StockTwits Bullish', s.stocktwits_bullish_pct, 'pct')}
+          ${metric('StockTwits Messages', s.stocktwits_messages)}
+          ${metric('Reddit Mentions (7d)', s.reddit_mentions_7d)}
+          ${metric('Reddit Avg Upvotes', s.reddit_avg_upvotes)}
+          ${metric('Twitter Tweets (24h)', s.twitter_tweets_24h)}
+          ${metric('Twitter Engagement', s.twitter_avg_engagement, 'num')}
+        </div>
+      </div>`;
+    }
+
+    function toggleSignalDetail(i) {
+      const row = document.getElementById('signal-detail-' + i);
+      const btn = document.getElementById('expand-btn-' + i);
+      if (row.style.display === 'none') {
+        row.style.display = '';
+        btn.classList.add('open');
+      } else {
+        row.style.display = 'none';
+        btn.classList.remove('open');
+      }
+    }
+
     async function loadDashboard() {
       try {
         const res = await fetch(DATA_URL + '?t=' + Date.now());
@@ -342,7 +473,7 @@
         `).join('');
       }
 
-      // Top signals
+      // Top signals with full signal stack
       const picks = s.top_picks || [];
       if (picks.length === 0) {
         document.getElementById('signals-empty').style.display = '';
@@ -350,14 +481,35 @@
       } else {
         document.getElementById('signals-empty').style.display = 'none';
         document.getElementById('signals-table').style.display = '';
-        document.getElementById('signals-body').innerHTML = picks.map((pk, i) => `
-          <tr>
+        document.getElementById('signals-body').innerHTML = picks.map((pk, i) => {
+          const ss = pk.signal_stack || {};
+          const tech = ss.technical || {};
+          const news = ss.news || {};
+          const fund = ss.fundamentals || {};
+          const soc = ss.social || {};
+          return `
+          <tr class="data-row" onclick="toggleSignalDetail(${i})">
             <td class="text-gray-500">#${i + 1}</td>
             <td class="font-semibold text-white">${escHtml(pk.ticker)}</td>
             <td class="font-semibold">${pk.score ?? '—'}</td>
+            <td>${scorePill(tech.score)}</td>
+            <td>${scorePill(news.score)}</td>
+            <td>${scorePill(fund.score)}</td>
+            <td>${scorePill(soc.score)}</td>
             <td>${recBadge(pk.rec)}</td>
+            <td><span class="expand-btn" id="expand-btn-${i}">▶</span></td>
           </tr>
-        `).join('');
+          <tr class="signal-detail-row" id="signal-detail-${i}" style="display:none;">
+            <td colspan="9">
+              <div class="signal-detail">
+                ${renderTechnicalLayer(tech)}
+                ${renderNewsLayer(news)}
+                ${renderFundamentalsLayer(fund)}
+                ${renderSocialLayer(soc)}
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
       }
 
       // Wheel positions
