@@ -224,7 +224,7 @@
         ? `<span class="text-green-500">+${sentCounts.positive}</span> / <span class="text-gray-500">${sentCounts.neutral}</span> / <span class="text-red-500">-${sentCounts.negative}</span> articles`
         : 'No articles';
 
-      // ── Social Scoring ──
+      // ── Social Sentiment ──
       const buzz = (s.social_buzz || 'low').toLowerCase();
       // Derive social verdict from buzz level (no numeric pct available for ST/Twitter)
       const socialVerdictMap = {
@@ -267,9 +267,9 @@
             <div class="${sentCls} text-lg font-bold mb-1">${sentIcon} ${sentLabel}</div>
             <div class="text-xs text-gray-400 mt-2">${sentCountsLine}</div>
           </div>
-          <!-- Social Scoring -->
+          <!-- Social Sentiment -->
           <div class="bg-gray-900 rounded-lg p-3 text-center">
-            <div class="text-gray-500 text-xs uppercase tracking-wide mb-2">Social Scoring</div>
+            <div class="text-gray-500 text-xs uppercase tracking-wide mb-2">Social Sentiment</div>
             <div class="${socialCls} text-lg font-bold mb-2">${socialIcon} ${socialLabel}</div>
             <div class="space-y-1 text-left">
               <div class="flex justify-between text-xs">
