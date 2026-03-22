@@ -269,16 +269,26 @@
         companies = data.companies;
         renderTable();
       } catch (e) {
-        document.getElementById('watchlist-body').innerHTML = '<tr><td colspan="8" class="text-gray-600 text-center py-4">Failed to load watchlist data</td></tr>';
+        console.error('Watchlist error:', e);
+        document.getElementById('watchlist-body').innerHTML = '<tr><td colspan="8" class="text-red-400 text-center py-4">Error: ' + esc(e.message) + '</td></tr>';
       }
     }
 
     (async () => {
-      // Load watchlist data immediately, don't wait for gateway
-      loadWatchlist();
+      // Check auth first (fast, sync localStorage check)
+      if (localStorage.getItem('cc_auth') !== '1') {
+        window.location.href = '/portal/';
+        return;
+      }
+      // Render nav immediately
+      if (typeof renderNav === 'function') renderNav('watchlist');
+      // Load watchlist data — don't wait for gateway health/sessions
+      try {
+        await loadWatchlist();
+      } catch(e) { console.error('Watchlist load error:', e); }
       setInterval(loadWatchlist, 300000);
-      // Init portal nav/auth in parallel
-      initPortal('watchlist');
+      // Init gateway polling in background (non-blocking)
+      initPortal('watchlist').catch(() => {});
     })();
   </script>
 </body>
