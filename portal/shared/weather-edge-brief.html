@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Edge — Beating Prediction Markets with Better Forecasts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #030712;
+    color: #d1d5db;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 3rem;
+  }
+  .header .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.25rem;
+  }
+  .header .tagline {
+    font-size: 1.05rem;
+    color: #9ca3af;
+    font-weight: 400;
+  }
+
+  /* Headings */
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #f9fafb;
+    margin: 2.75rem 0 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  h3, strong {
+    color: #e5e7eb;
+  }
+
+  /* Paragraphs */
+  p { margin-bottom: 1.15rem; }
+
+  /* Emphasis */
+  em { color: #a5b4fc; font-style: italic; }
+
+  /* Cards for the "three edges" and similar */
+  .card {
+    background: #111827;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin: 1.25rem 0;
+  }
+  .card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.6rem;
+  }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Lists */
+  ul, ol {
+    margin: 0.75rem 0 1.25rem 1.25rem;
+  }
+  li { margin-bottom: 0.5rem; }
+  li strong { color: #f9fafb; }
+
+  /* Ordered pipeline list */
+  ol { list-style: none; counter-reset: step; padding-left: 0; margin-left: 0; }
+  ol li {
+    counter-increment: step;
+    padding-left: 2.25rem;
+    position: relative;
+  }
+  ol li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0.15em;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Unordered lists — custom bullets */
+  ul { list-style: none; padding-left: 0; margin-left: 0; }
+  ul li {
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 6px;
+    height: 6px;
+    background: #6366f1;
+    border-radius: 50%;
+  }
+
+  /* Divider */
+  hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin: 3rem 0 1.5rem;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .page { padding: 2rem 1.25rem 3rem; }
+    .header h1 { font-size: 1.6rem; }
+    body { font-size: 16px; }
+    h2 { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="icon">⛅</div>
+    <h1>Weather Edge</h1>
+    <div class="tagline">Beating Prediction Markets with Better Forecasts</div>
+  </div>
+
+  <h2>The Idea</h2>
+  <p>Here's something most people don't know: you can bet on the weather. Real money, real markets, real payouts. Platforms like Kalshi and Polymarket let you trade contracts on questions like <em>"Will it be above 80°F in New York City tomorrow?"</em> — and the market is booming.</p>
+  <p>Here's what's even more interesting: most people trading these markets are looking at weather apps. We built a system that looks at the actual forecast models — the same raw data that meteorologists use — and gets there faster, with better probability estimates, than almost anyone else in the market. That's Weather Edge.</p>
+
+  <h2>What Are Prediction Markets?</h2>
+  <p>Think of it like a stock market, but instead of companies, you're trading on real-world events. A contract might say "NYC high temperature above 50°F on March 22nd." If you think that's likely, you buy. If the market is pricing it at 60 cents (implying 60% chance) but your models say it's actually 85% likely, you've found an edge.</p>
+  <p>The contract pays $1 if the event happens, $0 if it doesn't. Buy at 60¢, collect $1 — that's your profit. Simple as that.</p>
+
+  <h2>Our Three Edges</h2>
+
+  <div class="card">
+    <h3>1. Speed</h3>
+    <p>Weather forecast models update constantly — the HRRR model (high-resolution rapid refresh) updates <em>every hour</em>. When a new model run drops and shifts the temperature forecast by a couple degrees, the market takes 10–30 minutes to catch up. Our system ingests that data within minutes and reprices every contract automatically. By the time most traders notice, we've already moved.</p>
+    <p>It's like getting tomorrow's newspaper today — except it's tomorrow's weather forecast, and we get it 20 minutes before the crowd.</p>
+  </div>
+
+  <div class="card">
+    <h3>2. Better Models</h3>
+    <p>Most traders rely on a single weather app. We pull from multiple professional-grade forecast models — HRRR for high-resolution short-range, NBM (the National Weather Service's own blended model that combines 15+ inputs), and GFS with its 30-member ensemble for building probability distributions. By blending these, we get a more accurate probability estimate than any single source.</p>
+    <p>Think of it this way: if you asked one friend whether it'll rain, you might get a guess. Ask thirty meteorologists and average their answers — now you're getting somewhere.</p>
+  </div>
+
+  <div class="card">
+    <h3>3. Cross-Platform Pricing</h3>
+    <p>Kalshi and Polymarket often have contracts on the same weather event but at different prices. Different user bases, different fee structures, different levels of sophistication. Our system scans both platforms simultaneously and flags when the same bet is priced differently — sometimes dramatically so.</p>
+  </div>
+
+  <h2>How It Works in Practice</h2>
+  <p>The system Tim built runs 24/7 on a dedicated server. It monitors <strong>19 cities</strong> across <strong>400+ active contracts</strong>, scanning for opportunities every few minutes. When it finds a contract where our model-estimated probability diverges from the market price by more than 5%, it fires an alert.</p>
+  <p>The pipeline looks like this:</p>
+  <ol>
+    <li><strong>Ingest</strong> — Pull the latest forecast data from multiple weather models</li>
+    <li><strong>Price</strong> — Convert forecasts into probability estimates for every active contract</li>
+    <li><strong>Compare</strong> — Check those probabilities against current market prices on Kalshi and Polymarket</li>
+    <li><strong>Alert</strong> — Flag opportunities where our edge exceeds the threshold</li>
+    <li><strong>Execute</strong> — Place orders (with human oversight during early operation)</li>
+  </ol>
+
+  <h2>The Safety Net</h2>
+  <p>We're not cowboys. The system has multiple layers of risk management baked in:</p>
+  <ul>
+    <li><strong>Kelly criterion sizing</strong> — a mathematically optimal formula for bet sizing that prevents overexposure. We run it at half-Kelly (more conservative than optimal) to account for model uncertainty.</li>
+    <li><strong>Circuit breakers</strong> — automatic shutoffs if daily losses hit a threshold, or if too many positions are open at once.</li>
+    <li><strong>Dry-run mode</strong> — every strategy runs in paper-trading mode first, validated against real market data before a single real dollar is risked.</li>
+    <li><strong>Position caps</strong> — hard limits on trade size and total exposure, regardless of what the model recommends.</li>
+  </ul>
+
+  <h2>The Opportunity</h2>
+  <p>This market is young and growing fast. Polymarket alone has seen over $7 million in weather market volume, and it's accelerating. Kalshi's weather markets are among their most active categories.</p>
+  <p>Here's why that matters: weather is one of the few prediction market categories where <strong>AI has a structural advantage</strong>. The data is public, the models are well-understood, and the edge comes from speed and statistical sophistication — exactly what automated systems are built for. Analysis shows that 14 of the 20 most profitable Polymarket wallets are bots. The humans are outgunned.</p>
+  <p>And yet, the market is still young enough that a well-built system finds dozens of mispriced contracts on any given day. That window won't stay open forever, but right now, the opportunity is real.</p>
+
+  <h2>Where We're Headed</h2>
+  <p>We're currently focused on US temperature and rain markets across Kalshi and Polymarket. The roadmap includes:</p>
+  <ul>
+    <li><strong>More weather models</strong> — adding ECMWF (the gold standard for medium-range forecasting) and station-specific bias correction</li>
+    <li><strong>More markets</strong> — expanding to additional cities, international markets, and new contract types like snowfall and wind</li>
+    <li><strong>More categories</strong> — the same approach (faster data + better models + cross-platform scanning) applies to other prediction market categories beyond weather</li>
+    <li><strong>Full automation</strong> — moving from alert-and-confirm to autonomous execution as the system's track record builds confidence</li>
+  </ul>
+  <p>The thesis is straightforward: prediction markets are a new asset class, weather is the ideal proving ground for algorithmic trading, and we're building the infrastructure to capture that edge systematically.</p>
+
+  <hr>
+
+  <div class="footer">
+    <p><em>Built by Tim Harris, 2026. Questions welcome.</em></p>
+  </div>
+
+</div>
+</body>
+</html>
