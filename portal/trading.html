@@ -372,7 +372,7 @@
       body.innerHTML = trades.slice(0, 30).map(t => `
         <tr>
           <td class="text-gray-400 text-xs">${fmtTimestamp(t.entered_at)}</td>
-          <td class="font-mono text-xs">${esc(t.ticker)}</td>
+          <td><span class="text-sm text-white">${esc(t.description || parseTickerDescription(t.ticker) || t.ticker)}</span><br><span class="font-mono text-xs text-gray-500">${esc(t.ticker)}</span></td>
           <td><span class="text-xs ${t.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${t.platform}</span></td>
           <td><span class="${t.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${t.side}</span></td>
           <td>${Number(t.entry_price).toFixed(2)}¢</td>

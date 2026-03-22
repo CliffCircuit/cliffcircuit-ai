@@ -198,12 +198,26 @@
         c.price_target_avg ? `PT Avg: ${c.price_target_avg}` : null,
       ].filter(Boolean).map(m => `<span class="inline-block bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded mr-2 mb-1">${m}</span>`).join('');
 
-      const news = (c.latest_news || []).map(n =>
-        `<div class="news-item">
-          <div class="text-sm text-white">${esc(n.title || n.headline || '')}</div>
+      const allNews = c.latest_news || [];
+      const showMore = allNews.length > 3;
+      const newsId = `news-more-${esc(c.ticker)}`;
+      const newsHtml = (items, hidden) => items.map(n => {
+        const title = esc(n.title || n.headline || '');
+        const titleEl = n.url
+          ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" class="text-sm text-white hover:text-cyan-400 underline decoration-dotted">${title}</a>`
+          : `<div class="text-sm text-white">${title}</div>`;
+        return `<div class="news-item${hidden ? ' hidden' : ''}">
+          ${titleEl}
           <div class="text-xs text-gray-500">${esc(n.source || '')} ${n.date ? '· ' + n.date : ''}</div>
-        </div>`
-      ).join('') || '<div class="text-gray-600 text-sm">No recent news</div>';
+        </div>`;
+      }).join('');
+      const news = allNews.length
+        ? newsHtml(allNews.slice(0, 3), false) +
+          (showMore
+            ? `<div id="${newsId}" style="display:none">${newsHtml(allNews.slice(3), false)}</div>
+               <button onclick="var el=document.getElementById('${newsId}');var btn=this;if(el.style.display==='none'){el.style.display='';btn.textContent='Less ↑';}else{el.style.display='none';btn.textContent='More →';}" class="text-cyan-500 text-xs hover:text-cyan-300 mt-1">More →</button>`
+            : '')
+        : '<div class="text-gray-600 text-sm">No recent news</div>';
 
       return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
