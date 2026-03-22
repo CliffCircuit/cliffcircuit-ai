@@ -486,6 +486,7 @@ function renderNav(activePage) {
     { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
     { id: 'models', label: 'Models', href: '/portal/models.html' },
     { id: 'trading', label: 'Trading', href: '/portal/trading.html' },
+    { id: 'watchlist', label: 'Watchlist', href: '/portal/watchlist.html' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
     { id: 'chat', label: 'Chat', href: '/portal/chat.html' },
     { id: 'settings', label: 'Settings', href: '/portal/settings.html' },
