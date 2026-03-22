@@ -821,6 +821,14 @@
           }
         }
       }
+
+      // Channel updates — refresh sidebar when new channels/events appear
+      if (msg.type === 'event' && msg.event === 'channel-update') {
+        console.log('[chat] Channel update received, refreshing sidebar');
+        loadChannels();
+        // Don't load events here — the polling timer handles it to avoid duplicates
+        return;
+      }
     };
 
     ws.onclose = () => {
@@ -1198,6 +1206,12 @@
     const last = k.split(':').pop() || 'session';
     if (/^[0-9a-f-]{8,}$/i.test(last)) return 'Session';
     return last.slice(0, 20);
+  }
+
+  function shortChannelModel(model) {
+    if (!model) return '';
+    // "claude-opus-4-6" → "opus", "claude-sonnet-4-6" → "sonnet", etc.
+    return model.replace(/^anthropic\//, '').replace(/^claude-/, '').replace(/-[\d].*$/, '');
   }
 
   function shortModel(model) {
@@ -3644,6 +3658,7 @@
   let channelPollTimer = null;
   let channelLastEventId = null;
   let channelEventCount = 0;
+  let channelSeenEventIds = new Set();
 
   function getProxyHttpUrl() {
     return PROXY_URL.replace('wss://', 'https://');
@@ -3781,10 +3796,12 @@
         return;
       }
       const msgs = document.getElementById('messages');
-      if (full) msgs.innerHTML = '';
+      if (full) { msgs.innerHTML = ''; channelSeenEventIds.clear(); }
       const hadEvents = channelEventCount > 0;
       let appended = 0;
       for (const evt of events) {
+        if (evt.id && channelSeenEventIds.has(evt.id)) continue;
+        if (evt.id) channelSeenEventIds.add(evt.id);
         msgs.appendChild(renderChannelEvent(evt));
         channelLastEventId = evt.id;
         appended += 1;
@@ -3822,7 +3839,7 @@
       <div class="channel-event-icon" style="${matchedAgent ? 'background:none;' : ''}">${avatarHtml}</div>
       <div class="channel-event-content">
         <div class="channel-event-meta">
-          <span style="color:#e5e7eb;font-weight:500;">${esc(evt.speaker || '')}</span>
+          <span style="color:#e5e7eb;font-weight:500;">${esc(evt.speaker || '')}${evt.model ? `<span style="color:#6b7280;font-size:11px;font-weight:400;margin-left:5px;">(${esc(shortChannelModel(evt.model))})</span>` : ''}</span>
           <span>${ts}</span>
         </div>
         <div class="channel-event-bubble ${bubbleClass}">${renderedText}</div>
@@ -3862,6 +3879,7 @@
       if (statsEl) statsEl.textContent = '';
       channelLastEventId = null;
       channelEventCount = 0;
+      channelSeenEventIds.clear();
     }
   }
 

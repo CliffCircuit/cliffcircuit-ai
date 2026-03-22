@@ -572,6 +572,42 @@ server.listen(PORT, '127.0.0.1', () => {
   console.log(`[proxy] Gateway: ${GW_URL}`);
   console.log(`[proxy] Auth: Google OAuth (allowed: ${ALLOWED_EMAILS.join(', ')})`);
   connectGateway();
+
+  // ── Watch channels directories for changes → push to browsers ──
+  function broadcastChannelUpdate(reason) {
+    const payload = JSON.stringify({ type: 'event', event: 'channel-update', reason });
+    for (const bws of browsers) {
+      if (bws.readyState === WebSocket.OPEN) {
+        bws.send(payload);
+      }
+    }
+  }
+
+  // Debounce to avoid spamming on rapid file writes
+  let channelUpdateTimer = null;
+  function debouncedChannelUpdate(reason) {
+    if (channelUpdateTimer) clearTimeout(channelUpdateTimer);
+    channelUpdateTimer = setTimeout(() => {
+      console.log(`[proxy] Channel update: ${reason}`);
+      broadcastChannelUpdate(reason);
+      channelUpdateTimer = null;
+    }, 500);
+  }
+
+  // Watch both channels dirs
+  for (const dir of [CHANNELS_DIR, PROJECTS_DIR]) {
+    if (!fs.existsSync(dir)) { try { fs.mkdirSync(dir, { recursive: true }); } catch {} }
+    try {
+      fs.watch(dir, { recursive: true }, (eventType, filename) => {
+        if (filename && (filename.endsWith('channel.json') || filename.endsWith('events.jsonl'))) {
+          debouncedChannelUpdate(`${eventType} ${filename}`);
+        }
+      });
+      console.log(`[proxy] Watching for channel updates: ${dir}`);
+    } catch (err) {
+      console.warn(`[proxy] Could not watch ${dir}: ${err.message}`);
+    }
+  }
 });
 
 process.on('SIGTERM', () => {
