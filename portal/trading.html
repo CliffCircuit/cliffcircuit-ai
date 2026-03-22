@@ -151,6 +151,18 @@
         <!-- Recent Paper Trades -->
         <div class="card p-5 mb-6">
           <div class="section-title">📋 Recent Paper Trades <span class="text-gray-500 text-sm font-normal" id="trades-count"></span></div>
+          <!-- Filter Tabs -->
+          <div class="flex gap-2 mb-4 pb-4 border-b border-gray-700">
+            <button class="trade-filter-btn active" data-filter="settled" style="background: #2d3748; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+              Settled <span class="trade-filter-count" data-filter="settled">(0)</span>
+            </button>
+            <button class="trade-filter-btn" data-filter="open" style="background: #1a202c; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+              Open <span class="trade-filter-count" data-filter="open">(0)</span>
+            </button>
+            <button class="trade-filter-btn" data-filter="all" style="background: #1a202c; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+              All <span class="trade-filter-count" data-filter="all">(0)</span>
+            </button>
+          </div>
           <div class="overflow-x-auto">
             <table class="trade-table">
               <thead>
@@ -362,14 +374,63 @@
       }
     }
 
+    let allTrades = [];
+    let currentTradeFilter = 'settled';
+
+    function filterTradesByResult(trades, filter) {
+      if (filter === 'settled') {
+        return trades.filter(t => t.result === 'win' || t.result === 'loss');
+      } else if (filter === 'open') {
+        return trades.filter(t => !t.result || t.result === null || t.result === '');
+      }
+      return trades;
+    }
+
+    function sortTradesForDisplay(trades, filter) {
+      const filtered = filterTradesByResult(trades, filter);
+      // For settled view, sort by resolved_at descending
+      if (filter === 'settled') {
+        return filtered.sort((a, b) => {
+          const aTime = a.resolved_at ? new Date(a.resolved_at).getTime() : 0;
+          const bTime = b.resolved_at ? new Date(b.resolved_at).getTime() : 0;
+          return bTime - aTime;
+        });
+      }
+      // For open and all, sort by entered_at descending
+      return filtered.sort((a, b) => {
+        const aTime = a.entered_at ? new Date(a.entered_at).getTime() : 0;
+        const bTime = b.entered_at ? new Date(b.entered_at).getTime() : 0;
+        return bTime - aTime;
+      });
+    }
+
+    function updateTradeFilterCounts() {
+      const settled = filterTradesByResult(allTrades, 'settled').length;
+      const open = filterTradesByResult(allTrades, 'open').length;
+      const all = allTrades.length;
+      
+      document.querySelectorAll('.trade-filter-count[data-filter="settled"]').forEach(el => {
+        el.textContent = `(${settled})`;
+      });
+      document.querySelectorAll('.trade-filter-count[data-filter="open"]').forEach(el => {
+        el.textContent = `(${open})`;
+      });
+      document.querySelectorAll('.trade-filter-count[data-filter="all"]').forEach(el => {
+        el.textContent = `(${all})`;
+      });
+    }
+
     function renderTrades(trades) {
+      allTrades = trades;
+      updateTradeFilterCounts();
+      const filtered = sortTradesForDisplay(trades, currentTradeFilter);
       document.getElementById('trades-count').textContent = `(${trades.length} total)`;
       const body = document.getElementById('trades-body');
-      if (!trades.length) {
-        body.innerHTML = '<tr><td colspan="7" class="text-gray-600 text-center py-4">No trades yet</td></tr>';
+      if (!filtered.length) {
+        body.innerHTML = '<tr><td colspan="7" class="text-gray-600 text-center py-4">No trades match this filter</td></tr>';
         return;
       }
-      body.innerHTML = trades.slice(0, 30).map(t => `
+      body.innerHTML = filtered.slice(0, 30).map(t => `
         <tr>
           <td class="text-gray-400 text-xs">${fmtTimestamp(t.entered_at)}</td>
           <td><span class="text-sm text-white">${esc(t.description || parseTickerDescription(t.ticker) || t.ticker)}</span><br><span class="font-mono text-xs text-gray-500">${esc(t.ticker)}</span></td>
@@ -380,8 +441,8 @@
           <td>${resultPill(t.result)}</td>
         </tr>
       `).join('');
-      if (trades.length > 30) {
-        body.innerHTML += `<tr><td colspan="7" class="text-gray-500 text-center py-2 text-xs">+ ${trades.length - 30} more trades</td></tr>`;
+      if (filtered.length > 30) {
+        body.innerHTML += `<tr><td colspan="7" class="text-gray-500 text-center py-2 text-xs">+ ${filtered.length - 30} more trades</td></tr>`;
       }
     }
 
@@ -454,11 +515,31 @@
       }
     }
 
+    // ── Filter Button Handlers ──────────────────────────────────────
+    function attachFilterListeners() {
+      document.querySelectorAll('.trade-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Remove active state from all buttons
+          document.querySelectorAll('.trade-filter-btn').forEach(b => {
+            b.style.background = '#1a202c';
+            b.style.color = '#a0aec0';
+          });
+          // Set active state on clicked button
+          btn.style.background = '#2d3748';
+          btn.style.color = 'white';
+          // Update filter and re-render
+          currentTradeFilter = btn.dataset.filter;
+          renderTrades(allTrades);
+        });
+      });
+    }
+
     // ── Init ────────────────────────────────────────────────────────────
     (async () => {
       const ok = await initPortal('trading');
       if (!ok) return;
       await loadAll();
+      attachFilterListeners();
       setInterval(loadAll, 60000);
     })();
   </script>
