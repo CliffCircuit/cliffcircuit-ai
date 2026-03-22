@@ -485,7 +485,7 @@ function renderNav(activePage) {
     { id: 'agents', label: 'Agents', href: '/portal/agents.html' },
     { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
     { id: 'models', label: 'Models', href: '/portal/models.html' },
-    { id: 'trading', label: 'Trading', href: '/portal/trading.html' },
+    { id: 'trading', label: 'Weather Edge', href: '/portal/trading.html' },
     { id: 'edge-capital', label: 'Edge Capital', href: '/portal/edge-capital.html' },
     { id: 'watchlist', label: 'Watchlist', href: '/portal/watchlist.html' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
