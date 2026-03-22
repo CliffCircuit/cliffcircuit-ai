@@ -186,6 +186,49 @@
       });
     }
 
+    function renderScores(c) {
+      const s = c.scores || {};
+      const techMap = {
+        'strong buy': ['text-green-300', '⬆⬆ Strong Buy'],
+        'buy': ['text-green-400', '⬆ Buy'],
+        'hold': ['text-yellow-400', '➡ Hold'],
+        'sell': ['text-red-400', '⬇ Sell'],
+        'neutral': ['text-gray-400', '— Neutral'],
+      };
+      const sentMap = {
+        'positive': ['text-green-400', '😊 Positive'],
+        'negative': ['text-red-400', '😟 Negative'],
+        'neutral': ['text-gray-400', '😐 Neutral'],
+      };
+      const buzzMap = {
+        'high': ['text-cyan-300', '🔥 High'],
+        'medium': ['text-yellow-400', '💬 Medium'],
+        'low': ['text-gray-500', '🔇 Low'],
+      };
+      const [techCls, techLabel] = techMap[s.technical] || techMap['neutral'];
+      const [sentCls, sentLabel] = sentMap[s.news_sentiment] || sentMap['neutral'];
+      const [buzzCls, buzzLabel] = buzzMap[s.social_buzz] || buzzMap['low'];
+      const redditMentions = s.reddit_mentions_7d != null ? `${s.reddit_mentions_7d} mentions / 7d` : '';
+      return `<div class="case-card mt-3">
+        <div class="text-purple-400 text-xs uppercase font-semibold mb-2">📊 Scoring</div>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <div class="text-gray-500 text-xs mb-1">Technical</div>
+            <div class="${techCls} text-sm font-semibold">${techLabel}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs mb-1">News Sentiment</div>
+            <div class="${sentCls} text-sm font-semibold">${sentLabel}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs mb-1">Reddit Buzz</div>
+            <div class="${buzzCls} text-sm font-semibold">${buzzLabel}</div>
+            ${redditMentions ? `<div class="text-gray-600 text-xs">${redditMentions}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }
+
     function renderExpanded(c) {
       const metrics = [
         c.revenue_ttm ? `Revenue: ${c.revenue_ttm}` : null,
@@ -245,6 +288,7 @@
               <div class="text-cyan-400 text-xs uppercase font-semibold mb-1">Moat</div>
               <div class="text-gray-300 text-sm">${esc(c.moat_summary || '—')}</div>
             </div>
+            ${renderScores(c)}
           </div>
         </div>`;
     }
