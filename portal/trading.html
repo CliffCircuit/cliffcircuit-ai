@@ -300,23 +300,31 @@
 
     // ── Ticker Description Parser ─────────────────────────────────────
     const CITY_CODES = {
-      CHI:'Chicago',NYC:'New York',HOU:'Houston',SFO:'San Francisco',DC:'Washington DC',
-      LAX:'Los Angeles',DEN:'Denver',ATL:'Atlanta',MIA:'Miami',SEA:'Seattle',
-      PHX:'Phoenix',DFW:'Dallas',BOS:'Boston',MSP:'Minneapolis',DTW:'Detroit',
+      CHI:'Chicago',CHIM:'Chicago',NYC:'New York',NY:'New York',HOU:'Houston',HOUM:'Houston',
+      SFO:'San Francisco',DC:'Washington DC',LAX:'Los Angeles',DEN:'Denver',ATL:'Atlanta',
+      MIA:'Miami',SEA:'Seattle',PHX:'Phoenix',DFW:'Dallas',DAL:'Dallas',BOS:'Boston',
+      MSP:'Minneapolis',MIN:'Minneapolis',DTW:'Detroit',AUS:'Austin',
       STL:'St. Louis',PHL:'Philadelphia',CLT:'Charlotte',ORD:'Chicago'
     };
     function parseTickerDescription(ticker) {
       if (!ticker) return null;
-      // Kalshi weather: KXLOWTCHI-26MAR22-B34.5 or KXHIGHTDC-26MAR22-T85
-      const m = ticker.match(/^KX(LOWT|HIGHT)([A-Z]{2,4})-(\d{2})([A-Z]{3})(\d{2})-(B|T)([\d.]+)$/);
+      // Kalshi weather tickers: KXHIGHTDEN-26MAR21-B86.5, KXLOWTCHI-26MAR22-T34, KXRAINNYC-26MAR22-T0, KXHIGHNY-26MAR21-B90
+      const m = ticker.match(/^KX(LOWT|HIGHT|HIGH|LOW|RAIN)([A-Z]{2,5})-(\d{2})([A-Z]{3})(\d{2})-(B|T)([\d.]+)$/);
       if (m) {
-        const type = m[1] === 'LOWT' ? 'Low' : 'High';
+        const rawType = m[1];
+        const type = rawType.startsWith('RAIN') ? 'Rain' : rawType.includes('LOW') ? 'Low' : 'High';
         const city = CITY_CODES[m[2]] || m[2];
         const day = parseInt(m[5]);
         const mon = m[4].charAt(0) + m[4].slice(1).toLowerCase();
-        const op = m[6] === 'B' ? '<' : '>';
-        const temp = m[7];
-        return `${city} ${type} ${op} ${temp}°F — ${mon} ${day}`;
+        const thresh = m[7];
+        const op = m[6];
+        let desc;
+        if (type === 'Rain') {
+          desc = op === 'T' ? `${city} Rain ≥${thresh}" — ${mon} ${day}` : `${city} Rain ${thresh}" — ${mon} ${day}`;
+        } else {
+          desc = op === 'B' ? `${city} ${type} ${thresh}°F range — ${mon} ${day}` : `${city} ${type} >${thresh}°F — ${mon} ${day}`;
+        }
+        return desc;
       }
       // Polymarket slugs: clean up dashes
       if (ticker.includes('-')) {
@@ -362,7 +370,7 @@
       }
       // Show first 25
       body.innerHTML = positions.slice(0, 25).map(p => {
-        const desc = p.description || parseTickerDescription(p.ticker) || p.ticker;
+        const desc = parseTickerDescription(p.ticker) || p.description || p.ticker;
         return `
         <tr>
           <td><span class="text-sm text-white">${esc(desc)}</span><br><span class="font-mono text-xs text-gray-500">${esc(p.ticker)}</span></td>
@@ -451,7 +459,7 @@
       body.innerHTML = filtered.slice(0, 30).map(t => `
         <tr>
           <td class="text-gray-400 text-xs">${fmtTimestamp(t.entered_at)}</td>
-          <td><span class="text-sm text-white">${esc(t.description || parseTickerDescription(t.ticker) || t.ticker)}</span><br><span class="font-mono text-xs text-gray-500">${esc(t.ticker)}</span></td>
+          <td><span class="text-sm text-white">${esc(parseTickerDescription(t.ticker) || t.description || t.ticker)}</span><br><span class="font-mono text-xs text-gray-500">${esc(t.ticker)}</span></td>
           <td><span class="text-xs ${t.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${t.platform}</span></td>
           <td><span class="${t.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${t.side}</span></td>
           <td>${Number(t.entry_price).toFixed(2)}¢</td>
