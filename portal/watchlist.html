@@ -274,10 +274,11 @@
     }
 
     (async () => {
-      const ok = await initPortal('watchlist');
-      if (!ok) return;
-      await loadWatchlist();
+      // Load watchlist data immediately, don't wait for gateway
+      loadWatchlist();
       setInterval(loadWatchlist, 300000);
+      // Init portal nav/auth in parallel
+      initPortal('watchlist');
     })();
   </script>
 </body>
