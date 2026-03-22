@@ -321,7 +321,7 @@
         ? newsHtml(allNews.slice(0, 3), false) +
           (showMore
             ? `<div id="${newsId}" style="display:none">${newsHtml(allNews.slice(3), false)}</div>
-               <button onclick="var el=document.getElementById('${newsId}');var btn=this;if(el.style.display==='none'){el.style.display='';btn.textContent='Less ↑';}else{el.style.display='none';btn.textContent='More →';}" class="text-cyan-500 text-xs hover:text-cyan-300 mt-1" style="display:block">More →</button>`
+               <button onclick="var el=document.getElementById('${newsId}');var btn=this;if(el.style.display==='none'){el.style.display='';btn.textContent='Less ↑';}else{el.style.display='none';btn.textContent='More →';}" class="text-cyan-500 text-xs hover:text-cyan-300 mt-1" style="display:block;padding-left:12px">More →</button>`
             : '')
         : '<div class="text-gray-600 text-sm">No recent news</div>';
 
@@ -351,8 +351,8 @@
               <div class="text-gray-300 text-sm">${esc(c.bear_case || '—')}</div>
             </div>
           </div>
-          <div style="padding:0">
-            <div class="text-gray-500 text-xs uppercase font-semibold mb-2">Latest News</div>
+          <div>
+            <div class="text-gray-500 text-xs uppercase font-semibold mb-2" style="padding-left:12px">Latest News</div>
             ${news}
             ${renderScores(c)}
           </div>
