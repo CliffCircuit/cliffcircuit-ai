@@ -462,7 +462,7 @@
         document.getElementById('positions-table').style.display = '';
         document.getElementById('positions-body').innerHTML = positions.map(pos => `
           <tr>
-            <td class="font-semibold text-white">${escHtml(pos.ticker)}</td>
+            <td class="font-semibold text-white">${escHtml(pos.name || pos.ticker)}<span class="text-gray-500 text-xs ml-1">${escHtml(pos.ticker)}</span></td>
             <td>${pos.qty ?? '—'}</td>
             <td>${pos.entry_price ? '$' + Number(pos.entry_price).toFixed(2) : '—'}</td>
             <td>${pos.current_price ? '$' + Number(pos.current_price).toFixed(2) : '—'}</td>
@@ -490,7 +490,7 @@
           return `
           <tr class="data-row" onclick="toggleSignalDetail(${i})">
             <td class="text-gray-500">#${i + 1}</td>
-            <td class="font-semibold text-white">${escHtml(pk.ticker)}</td>
+            <td class="font-semibold text-white">${escHtml(pk.name || pk.ticker)}<span class="text-gray-500 text-xs ml-1">${escHtml(pk.ticker)}</span></td>
             <td class="font-semibold">${pk.score ?? '—'}</td>
             <td>${scorePill(tech.score)}</td>
             <td>${scorePill(news.score)}</td>
@@ -522,7 +522,7 @@
         document.getElementById('wheel-table').style.display = '';
         document.getElementById('wheel-body').innerHTML = wpos.map(wp => `
           <tr>
-            <td class="font-semibold text-white">${escHtml(wp.ticker)}</td>
+            <td class="font-semibold text-white">${escHtml(wp.name || wp.ticker)}<span class="text-gray-500 text-xs ml-1">${escHtml(wp.ticker)}</span></td>
             <td>${wheelStateBadge(wp.state)}</td>
             <td>${wp.strike ? '$' + Number(wp.strike).toFixed(2) : '—'}</td>
             <td class="pnl-pos">${fmt$(wp.premium_collected)}</td>
@@ -552,7 +552,7 @@
         document.getElementById('trades-table').style.display = '';
         document.getElementById('trades-body').innerHTML = recent.map(tr => `
           <tr>
-            <td class="font-semibold text-white">${escHtml(tr.symbol)}</td>
+            <td class="font-semibold text-white">${escHtml(tr.name || tr.symbol)}<span class="text-gray-500 text-xs ml-1">${escHtml(tr.symbol)}</span></td>
             <td><span class="badge ${tr.side === 'buy' ? 'badge-green' : 'badge-red'}">${escHtml((tr.side || '').toUpperCase())}</span></td>
             <td>${tr.qty ?? '—'}</td>
             <td>${tr.price ? '$' + Number(tr.price).toFixed(2) : '—'}</td>

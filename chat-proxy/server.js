@@ -30,7 +30,7 @@ const {
 
 // ─── Config ────────────────────────────────────────────────────────────────
 const PORT          = 3200;
-const GW_URL        = 'wss://gateway.cliffcircuit.ai';
+const GW_URL        = process.env.GW_URL || 'ws://127.0.0.1:18789';
 const GW_TOKEN      = '026ca07f72f19a61b9c297e03a282df7e38b987c0f0499bd';
 
 // ─── Channel discovery helpers ──────────────────────────────────────────────
