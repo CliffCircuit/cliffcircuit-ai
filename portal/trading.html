@@ -39,11 +39,14 @@
         📊 <strong>Paper Trading Mode</strong> — Tracking simulated trades. No real money at risk.
       </div>
 
-      <!-- API Offline Banner (hidden by default) -->
+      <!-- Data Unavailable Banner (hidden by default) -->
       <div id="api-offline-banner" class="api-offline" style="display:none;">
-        <div class="text-lg mb-1">⚡ Dashboard API Offline</div>
-        <div class="text-sm">Start the API server: <code class="bg-gray-800 px-2 py-0.5 rounded text-gray-300">python3 src/dashboard_api.py</code> in the weather-edge repo</div>
+        <div class="text-lg mb-1">📊 Dashboard Data Not Available</div>
+        <div class="text-sm">Data is exported after each pipeline run. It should appear shortly.</div>
       </div>
+
+      <!-- Last Updated -->
+      <div id="last-updated" class="text-xs text-gray-500 mb-3" style="display:none;"></div>
 
       <div id="dashboard-content">
         <div class="mb-6">
@@ -244,8 +247,6 @@
 
   <script src="/portal/portal-common.js"></script>
   <script>
-    const API_BASE = 'http://localhost:8099';
-
     // ── Helpers ─────────────────────────────────────────────────────────
     function fmtMoney(n) { return n == null ? '—' : '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
     function fmtPnl(n) {
@@ -258,7 +259,7 @@
 
     function relativeTime(ts) {
       if (!ts) return '—';
-      const d = new Date(ts.includes('T') ? ts : ts.replace(' ', 'T') + 'Z');
+      const d = new Date(ts);
       const diff = (Date.now() - d.getTime()) / 1000;
       if (diff < 60) return 'just now';
       if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
@@ -279,10 +280,13 @@
       return `<span class="pill bg-gray-800 text-gray-400">${r}</span>`;
     }
 
-    async function apiFetch(endpoint) {
-      const res = await fetch(API_BASE + endpoint + '?t=' + Date.now());
-      if (!res.ok) throw new Error('API error');
-      return res.json();
+    let dashboardData = null;
+
+    async function fetchDashboardData() {
+      const res = await fetch('trading-data.json?t=' + Date.now());
+      if (!res.ok) throw new Error('Data not available');
+      dashboardData = await res.json();
+      return dashboardData;
     }
 
     // ── Render Functions ────────────────────────────────────────────────
@@ -395,22 +399,23 @@
     // ── Data Loading ────────────────────────────────────────────────────
     async function loadAll() {
       try {
-        const [summary, trades, positions, health, experiments, alerts] = await Promise.all([
-          apiFetch('/api/summary'),
-          apiFetch('/api/paper-trades'),
-          apiFetch('/api/positions'),
-          apiFetch('/api/pipeline-health'),
-          apiFetch('/api/experiments'),
-          apiFetch('/api/alerts'),
-        ]);
+        const data = await fetchDashboardData();
         document.getElementById('api-offline-banner').style.display = 'none';
         document.getElementById('dashboard-content').style.display = 'block';
-        renderSummary(summary);
-        renderTrades(trades);
-        renderPositions(positions);
-        renderPipelineHealth(health);
-        renderExperiments(experiments);
-        renderAlerts(alerts);
+
+        // Show last updated
+        if (data.exported_at) {
+          const el = document.getElementById('last-updated');
+          el.style.display = 'block';
+          el.textContent = '🕐 Last updated: ' + relativeTime(data.exported_at);
+        }
+
+        renderSummary(data.summary);
+        renderTrades(data.paper_trades);
+        renderPositions(data.positions);
+        renderPipelineHealth(data.pipeline_health);
+        renderExperiments(data.experiments);
+        renderAlerts(data.alerts);
       } catch (e) {
         document.getElementById('api-offline-banner').style.display = 'block';
         document.getElementById('dashboard-content').style.display = 'none';
@@ -422,7 +427,7 @@
       const ok = await initPortal('trading');
       if (!ok) return;
       await loadAll();
-      setInterval(loadAll, 30000);
+      setInterval(loadAll, 60000);
     })();
   </script>
 </body>
