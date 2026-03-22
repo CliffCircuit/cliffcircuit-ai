@@ -76,6 +76,7 @@
                 <th data-sort="sector">Sector <span class="sort-arrow"></span></th>
                 <th data-sort="conviction">Conviction <span class="sort-arrow"></span></th>
                 <th data-sort="moat">Moat <span class="sort-arrow"></span></th>
+                <th data-sort="pe">PE <span class="sort-arrow"></span></th>
                 <th data-sort="price_change">1D Change <span class="sort-arrow"></span></th>
                 <th>News</th>
               </tr>
@@ -122,6 +123,7 @@
           case 'market_cap': va = parseMktCap(a.market_cap); vb = parseMktCap(b.market_cap); return sortAsc ? va - vb : vb - va;
           case 'sector': va = a.sector; vb = b.sector; break;
           case 'conviction': va = convictionOrder[a.conviction] ?? 9; vb = convictionOrder[b.conviction] ?? 9; return sortAsc ? va - vb : vb - va;
+          case 'pe': va = a.pe_ratio ?? 9999; vb = b.pe_ratio ?? 9999; return sortAsc ? va - vb : vb - va;
           case 'price_change': va = a.price_change_1d ?? -999; vb = b.price_change_1d ?? -999; return sortAsc ? vb - va : va - vb;
           default: va = a.ticker; vb = b.ticker;
         }
@@ -163,6 +165,7 @@
           <td class="text-gray-400 text-xs">${esc(truncate(c.sector, 30))}</td>
           <td><span class="${convCls}">${c.conviction.charAt(0).toUpperCase() + c.conviction.slice(1)}</span></td>
           <td class="text-gray-400 text-xs">${esc(truncate(c.moat_summary, 60))}</td>
+          <td class="text-gray-400">${c.pe_ratio != null ? c.pe_ratio.toFixed(1) : '—'}</td>
           <td>${priceChange}</td>
           <td>${newsCol}</td>
         </tr>`;
