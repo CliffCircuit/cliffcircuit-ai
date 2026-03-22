@@ -10,9 +10,12 @@ const _agentColors = {
   samantha:     '#14b8a6',
   scout:        '#22c55e',
   atlas:        '#f97316',
+  fernanda:     '#10b981',
+  cora:         '#06b6d4',
+  kendall:      '#8b5cf6',
   'claude-code':'#a855f7',
 };
-const _agentNames = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
+const _agentNames = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', cora:'Cora', kendall:'Kendall', 'claude-code':'Claude Code' };
 // Color palette for models (assigned dynamically, consistent per render)
 const _modelColorPalette = ['#6366f1','#14b8a6','#22c55e','#f97316','#a855f7','#ec4899','#eab308','#06b6d4','#f43f5e','#84cc16','#8b5cf6','#0ea5e9','#d946ef','#f59e0b','#10b981','#ef4444','#3b82f6','#78716c','#fb923c','#a3e635'];
 const _defaultSegmentColor = '#6b7280';

@@ -11,6 +11,8 @@
       scout:         { alias: 'scout',      name: 'Scout',       avatar: '/portal/scout-avatar.jpg',     accentClass: 'text-green-400'  },
       atlas:         { alias: 'atlas',      name: 'Atlas',       avatar: '/portal/atlas-avatar.png',     accentClass: 'text-orange-400' },
       fernanda:      { alias: 'fernanda',  name: 'Fernanda',    avatar: '/portal/fernanda-avatar.jpg',  accentClass: 'text-emerald-400'},
+      cora:          { alias: 'cora',      name: 'Cora',        avatar: '/portal/cora-avatar.jpg',      accentClass: 'text-cyan-400'   },
+      kendall:       { alias: 'kendall',   name: 'Kendall',     avatar: '/portal/kendall-avatar.jpg',   accentClass: 'text-violet-400' },
       'claude-code': { alias: 'claude-code',name: 'Claude Code', avatar: '',                             accentClass: 'text-purple-400' },
     };
 
@@ -44,7 +46,7 @@
       }
 
       // Sort: known agents first (cliff, samantha, scout, atlas), then alphabetical
-      const knownOrder = ['cliff','samantha','scout','atlas','fernanda'];
+      const knownOrder = ['cliff','samantha','scout','atlas','fernanda','cora','kendall'];
       agentIds.sort((a,b) => {
         const ai = knownOrder.indexOf(a), bi = knownOrder.indexOf(b);
         if (ai !== -1 && bi !== -1) return ai - bi;
@@ -213,7 +215,7 @@
       const taskF  = window._globalTask  || [];
       const provF  = window._globalProvider || [];
       const modelF = window._globalModel || [];
-      const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', 'claude-code':'Claude Code' };
+      const labels = { cliff:'Cliff', samantha:'Samantha', scout:'Scout', atlas:'Atlas', fernanda:'Fernanda', cora:'Cora', kendall:'Kendall', 'claude-code':'Claude Code' };
       const parts = [];
       if (!_isAll(agentF)) parts.push(agentF.map(a => labels[a] || a).join(', '));
       if (!_isAll(taskF))  parts.push(taskF.length === 1 ? taskF[0] : taskF.length + ' tasks');
