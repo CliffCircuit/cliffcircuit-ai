@@ -156,6 +156,12 @@
             <button class="trade-filter-btn active" data-filter="settled" style="background: #2d3748; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
               Settled <span class="trade-filter-count" data-filter="settled">(0)</span>
             </button>
+            <button class="trade-filter-btn" data-filter="wins" style="background: #1a202c; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+              Wins <span class="trade-filter-count" data-filter="wins">(0)</span>
+            </button>
+            <button class="trade-filter-btn" data-filter="losses" style="background: #1a202c; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+              Losses <span class="trade-filter-count" data-filter="losses">(0)</span>
+            </button>
             <button class="trade-filter-btn" data-filter="open" style="background: #1a202c; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
               Open <span class="trade-filter-count" data-filter="open">(0)</span>
             </button>
@@ -380,6 +386,10 @@
     function filterTradesByResult(trades, filter) {
       if (filter === 'settled') {
         return trades.filter(t => t.result === 'win' || t.result === 'loss');
+      } else if (filter === 'wins') {
+        return trades.filter(t => t.result === 'win');
+      } else if (filter === 'losses') {
+        return trades.filter(t => t.result === 'loss');
       } else if (filter === 'open') {
         return trades.filter(t => !t.result || t.result === null || t.result === '');
       }
@@ -406,11 +416,19 @@
 
     function updateTradeFilterCounts() {
       const settled = filterTradesByResult(allTrades, 'settled').length;
+      const wins = filterTradesByResult(allTrades, 'wins').length;
+      const losses = filterTradesByResult(allTrades, 'losses').length;
       const open = filterTradesByResult(allTrades, 'open').length;
       const all = allTrades.length;
       
       document.querySelectorAll('.trade-filter-count[data-filter="settled"]').forEach(el => {
         el.textContent = `(${settled})`;
+      });
+      document.querySelectorAll('.trade-filter-count[data-filter="wins"]').forEach(el => {
+        el.textContent = `(${wins})`;
+      });
+      document.querySelectorAll('.trade-filter-count[data-filter="losses"]').forEach(el => {
+        el.textContent = `(${losses})`;
       });
       document.querySelectorAll('.trade-filter-count[data-filter="open"]').forEach(el => {
         el.textContent = `(${open})`;
