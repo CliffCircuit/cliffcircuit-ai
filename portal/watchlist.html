@@ -187,12 +187,6 @@
     }
 
     function renderExpanded(c) {
-      const priceInfo = c.price_current != null
-        ? `<div class="text-white text-lg font-bold">$${c.price_current.toFixed(2)}
-            ${c.price_change_1d != null ? `<span class="${c.price_change_1d >= 0 ? 'price-pos' : 'price-neg'} text-sm ml-2">${c.price_change_1d >= 0 ? '+' : ''}${c.price_change_1d.toFixed(2)}%</span>` : ''}
-           </div>`
-        : '';
-
       const metrics = [
         c.revenue_ttm ? `Revenue: ${c.revenue_ttm}` : null,
         c.revenue_growth_yoy ? `Growth: ${c.revenue_growth_yoy}` : null,
@@ -222,17 +216,19 @@
             : '')
         : '<div class="text-gray-600 text-sm">No recent news</div>';
 
-      const companyHeader = `<div class="mb-3">
-          <div class="text-white text-base font-semibold">${esc(c.company || c.ticker)}</div>
-          ${c.description ? `<div class="text-gray-400 text-sm mt-1">${esc(c.description)}</div>` : ''}
+      const nameAndPrice = `<div class="flex items-baseline justify-between mb-3">
+          <div>
+            <span class="text-white text-base font-semibold">${esc(c.company || c.name || c.ticker)}</span>
+            <span class="text-gray-500 text-sm ml-2">${esc(c.ticker)}</span>
+          </div>
+          ${c.price_current != null ? `<div class="text-white text-lg font-bold">$${c.price_current.toFixed(2)}${c.price_change_1d != null ? ` <span class="${c.price_change_1d >= 0 ? 'price-pos' : 'price-neg'} text-sm">${c.price_change_1d >= 0 ? '+' : ''}${c.price_change_1d.toFixed(2)}%</span>` : ''}</div>` : ''}
         </div>`;
 
       return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            ${companyHeader}
-            ${priceInfo}
-            <div class="mt-2 mb-3">${metrics}</div>
+            ${nameAndPrice}
+            <div class="mb-3">${metrics}</div>
             <div class="case-card mb-3">
               <div class="text-green-400 text-xs uppercase font-semibold mb-1">🐂 Bull Case</div>
               <div class="text-gray-300 text-sm">${esc(c.bull_case || '—')}</div>
