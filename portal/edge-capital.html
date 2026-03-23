@@ -1166,6 +1166,7 @@
       document.getElementById('markov-capital-note').style.display = strategy === 'hmm_regime' ? 'block' : 'none';
       if (latestData) {
         renderDashboard(latestData, true);
+        renderActivity(latestData);
       }
     }
 
@@ -1974,7 +1975,24 @@
 
     // ─── Activity Feed ───
     function renderActivity(data) {
-      const feed = data.activity || [];
+      const allFeed = data.activity || [];
+      // Filter activity by selected strategy (dedicated sections are unaffected)
+      const feed = currentStrategy === 'all' ? allFeed : allFeed.filter(ev => {
+        // If the event has an explicit strategy field, use it
+        if (ev.strategy) return matchesStrategy(ev, currentStrategy);
+        // For order/fill events, infer: SPXL = hmm_regime, everything else = scanner
+        if (['order_placed', 'order_filled', 'order_failed'].includes(ev.type)) {
+          const sym = (ev.symbol || '').toUpperCase();
+          const isHmm = sym === 'SPXL';
+          return currentStrategy === 'hmm_regime' ? isHmm : !isHmm;
+        }
+        // scan_start/scan_complete are scanner events
+        if (['scan_start', 'scan_complete'].includes(ev.type)) {
+          return currentStrategy === 'scanner';
+        }
+        // Unknown events: show in all filters
+        return true;
+      });
       const el = document.getElementById('activity-feed');
       const empty = document.getElementById('activity-empty');
       if (feed.length === 0) {
