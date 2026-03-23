@@ -1500,11 +1500,12 @@
         displayCash = Math.max(0, MARKOV_ALLOC - markovMktVal);
         displayEquity = MARKOV_ALLOC;
       } else {
-        // Scanner: use position market values + proportional cash
+        // Scanner: $70K allocation — cash is allocation minus invested market value
+        const SCANNER_ALLOC = 70000;
         const scannerPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'scanner'));
         const scannerMktVal = scannerPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
-        displayCash = (p.cash || 0) * SCANNER_RATIO;
-        displayEquity = scannerMktVal + displayCash;
+        displayCash = Math.max(0, SCANNER_ALLOC - scannerMktVal);
+        displayEquity = SCANNER_ALLOC;
       }
       displayEquityInvested = displayEquity - displayCash;
 
