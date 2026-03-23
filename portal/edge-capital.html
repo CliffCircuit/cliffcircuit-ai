@@ -633,6 +633,87 @@
     .activity-feed::-webkit-scrollbar-track { background: transparent; }
     .activity-feed::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
 
+    /* Strategy filter buttons */
+    .strategy-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    .strategy-btn {
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.5);
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .strategy-btn:hover {
+      border-color: rgba(75, 85, 99, 0.8);
+      color: #d1d5db;
+    }
+    .strategy-btn.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
+    .markov-capital-note {
+      display: none;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 10px;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 12px;
+      color: #c4b5fd;
+    }
+
+    /* Load more button */
+    .load-more-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.5);
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .load-more-btn:hover {
+      border-color: rgba(75, 85, 81, 0.8);
+      color: #d1d5db;
+      background: rgba(31, 41, 55, 0.5);
+    }
+
+    /* Experiment summary bar */
+    .exp-summary-bar {
+      display: flex;
+      gap: 16px;
+      padding: 8px 14px;
+      background: rgba(17, 24, 39, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .exp-summary-bar .exp-stat {
+      font-weight: 600;
+    }
+    .exp-summary-bar .exp-stat.kept { color: var(--emerald); }
+    .exp-summary-bar .exp-stat.info { color: #eab308; }
+    .exp-summary-bar .exp-stat.rejected { color: var(--coral); }
+
     /* Mobile responsive */
     @media (max-width: 768px) {
       .hero-value { font-size: 2rem; }
@@ -731,6 +812,16 @@
             <div class="stat-value" id="win-rate"><span class="skeleton" style="display:inline-block;width:50px;height:24px"></span></div>
           </div>
         </div>
+      </div>
+
+      <!-- ========== STRATEGY FILTERS ========== -->
+      <div class="strategy-filters" id="strategy-filters">
+        <button class="strategy-btn active" data-strategy="all" onclick="setStrategyFilter('all')">All</button>
+        <button class="strategy-btn" data-strategy="scanner" onclick="setStrategyFilter('scanner')">Signal Scanner</button>
+        <button class="strategy-btn" data-strategy="hmm_regime" onclick="setStrategyFilter('hmm_regime')">Markov</button>
+      </div>
+      <div class="markov-capital-note" id="markov-capital-note">
+        🤖 <strong>Markov Strategy</strong> — Allocated capital: <strong>$20,000</strong> (20% of portfolio)
       </div>
 
       <!-- ========== MARKET REGIME + ACTIVITY ========== -->
@@ -976,6 +1067,15 @@
           <canvas id="exp-chart"></canvas>
           <div id="exp-chart-empty" class="text-gray-600 text-sm text-center pt-16" style="display:none;">No experiment data yet</div>
         </div>
+        <div class="exp-summary-bar" id="exp-summary-bar" style="display:none;">
+          <span id="exp-summary-total"></span>
+          <span>•</span>
+          <span class="exp-stat kept" id="exp-summary-kept"></span>
+          <span>•</span>
+          <span class="exp-stat info" id="exp-summary-info"></span>
+          <span>•</span>
+          <span class="exp-stat rejected" id="exp-summary-rejected"></span>
+        </div>
         <div class="overflow-x-auto">
           <table class="data-table" id="exp-table" style="display:none;">
             <thead>
@@ -984,6 +1084,7 @@
             <tbody id="exp-body"></tbody>
           </table>
           <div id="exp-table-empty" class="text-gray-600 text-sm">No experiments logged yet.</div>
+          <button class="load-more-btn" id="exp-load-more" style="display:none;" onclick="loadMoreExperiments()">Load More</button>
         </div>
       </div>
 
@@ -995,6 +1096,40 @@
     const DATA_URL = 'https://chat-proxy.cliffcircuit.ai/api/edge-capital/data';
     const REFRESH_MS = 30 * 1000;
     let previousData = null;
+    let currentStrategy = 'all';
+    let latestData = null;
+    let expShowCount = 10;
+    let allExperimentsSorted = [];
+
+    // Strategy mapping
+    function getStrategyLabel(s) {
+      if (!s) return 'Signal Scanner';
+      if (s === 'hmm_regime') return 'Markov';
+      return 'Signal Scanner'; // auto_trader, scanner, or missing = Signal Scanner
+    }
+    function matchesStrategy(item, filter) {
+      if (filter === 'all') return true;
+      const s = item.strategy || '';
+      if (filter === 'hmm_regime') return s === 'hmm_regime';
+      // scanner = everything that's NOT hmm_regime
+      return s !== 'hmm_regime';
+    }
+
+    function setStrategyFilter(strategy) {
+      currentStrategy = strategy;
+      document.querySelectorAll('.strategy-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.strategy === strategy);
+      });
+      document.getElementById('markov-capital-note').style.display = strategy === 'hmm_regime' ? 'block' : 'none';
+      if (latestData) {
+        renderDashboard(latestData, true);
+      }
+    }
+
+    function loadMoreExperiments() {
+      expShowCount += 10;
+      renderExperimentsTable();
+    }
 
     // ─── Formatters ───
     function fmt$(v) {
@@ -1193,6 +1328,7 @@
         const res = await fetch(DATA_URL + '?t=' + Date.now());
         if (!res.ok) throw new Error('not found');
         const d = await res.json();
+        latestData = d;
         renderDashboard(d, isRefresh);
         renderActivity(d);
         renderExperiments(d);
@@ -1229,14 +1365,17 @@
       const equityInvested = (p.equity || 0) - (p.cash || 0);
       document.getElementById('portfolio-equity-invested').textContent = fmt$(equityInvested);
 
-      // Positions count
-      document.getElementById('positions-count').textContent = (p.positions || []).length;
+      // Positions count & Unrealized P&L — filtered
+      const filteredPositions = (p.positions || []).filter(pos => matchesStrategy(pos, currentStrategy));
+      document.getElementById('positions-count').textContent = filteredPositions.length;
 
-      // Daily PnL
+      const filteredPnl = currentStrategy === 'all' ? p.total_pnl : filteredPositions.reduce((sum, pos) => sum + (pos.pnl || 0), 0);
+      const filteredPnlPct = currentStrategy === 'all' ? p.total_pnl_pct : (filteredPositions.length > 0 ? filteredPositions.reduce((sum, pos) => sum + (pos.pnl_pct || 0), 0) / filteredPositions.length : 0);
+
       const pnlEl = document.getElementById('total-pnl');
-      pnlEl.textContent = fmtPnl(p.total_pnl);
-      pnlEl.className = 'stat-value ' + pnlClass(p.total_pnl);
-      document.getElementById('total-pnl-pct').textContent = fmtPct(p.total_pnl_pct);
+      pnlEl.textContent = fmtPnl(filteredPnl);
+      pnlEl.className = 'stat-value ' + pnlClass(filteredPnl);
+      document.getElementById('total-pnl-pct').textContent = fmtPct(filteredPnlPct);
 
       const dpnl = document.getElementById('daily-pnl');
       if (p.total_pnl != null) {
@@ -1244,15 +1383,38 @@
         dpnl.className = 'text-sm font-semibold ' + pnlClass(p.total_pnl);
       }
 
-      // Trades summary
-      document.getElementById('total-trades').textContent = t.total_trades ?? '--';
-      const wrEl = document.getElementById('win-rate');
-      if (t.win_rate != null) {
-        wrEl.textContent = t.win_rate.toFixed(1) + '%';
-        wrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
+      // Trades summary — filtered by strategy
+      const allRecent = t.recent || [];
+      const filteredRecent = allRecent.filter(tr => matchesStrategy(tr, currentStrategy));
+      const allToday = t.today || [];
+      const filteredToday = allToday.filter(tr => matchesStrategy(tr, currentStrategy));
+
+      if (currentStrategy === 'all') {
+        document.getElementById('total-trades').textContent = t.total_trades ?? '--';
+        const wrEl = document.getElementById('win-rate');
+        if (t.win_rate != null) {
+          wrEl.textContent = t.win_rate.toFixed(1) + '%';
+          wrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
+        } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
+      } else if (currentStrategy === 'hmm_regime') {
+        const hmmS = (d.hmm_regime || {}).hmm_summary || {};
+        document.getElementById('total-trades').textContent = hmmS.num_trades ?? 0;
+        const wrEl = document.getElementById('win-rate');
+        if (hmmS.num_trades > 0) {
+          wrEl.textContent = (hmmS.win_rate || 0).toFixed(1) + '%';
+          wrEl.className = 'stat-value ' + ((hmmS.win_rate || 0) >= 50 ? 'pnl-pos' : 'pnl-neg');
+        } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       } else {
-        wrEl.textContent = '--';
-        wrEl.className = 'stat-value pnl-zero';
+        // Scanner: total minus HMM
+        const hmmTradeCount = ((d.hmm_regime || {}).hmm_summary || {}).num_trades || 0;
+        const scannerTotal = (t.total_trades || 0) - hmmTradeCount;
+        document.getElementById('total-trades').textContent = scannerTotal;
+        const wrEl = document.getElementById('win-rate');
+        // Use overall win rate for scanner (best we have without per-strategy breakdown)
+        if (t.win_rate != null) {
+          wrEl.textContent = t.win_rate.toFixed(1) + '%';
+          wrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
+        } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       }
 
       // HMM Regime
@@ -1418,8 +1580,9 @@
         `).join('');
       }
 
-      // Positions table
-      const positions = p.positions || [];
+      // Positions table — filtered by strategy
+      const allPositions = p.positions || [];
+      const positions = allPositions.filter(pos => matchesStrategy(pos, currentStrategy));
       if (positions.length === 0) {
         document.getElementById('positions-empty').style.display = '';
         document.getElementById('positions-table').style.display = 'none';
@@ -1534,8 +1697,8 @@
         }).join('');
       }
 
-      // Recent trades
-      const recent = t.recent || [];
+      // Recent trades — filtered by strategy
+      const recent = filteredRecent;
       if (recent.length === 0) {
         document.getElementById('trades-empty').style.display = '';
         document.getElementById('trades-table').style.display = 'none';
@@ -1718,32 +1881,64 @@
         });
       }
 
-      // Table
-      if (experiments.length === 0) {
+      // Summary bar
+      const summaryBar = document.getElementById('exp-summary-bar');
+      if (experiments.length > 0) {
+        summaryBar.style.display = 'flex';
+        const statusCounts = {};
+        experiments.forEach(e => { const s = (e.status || 'unknown').toLowerCase(); statusCounts[s] = (statusCounts[s] || 0) + 1; });
+        const kept = statusCounts['kept'] || 0;
+        const info = (statusCounts['informational'] || 0) + (statusCounts['info'] || 0);
+        const rejected = statusCounts['rejected'] || 0;
+        document.getElementById('exp-summary-total').textContent = experiments.length + ' experiments';
+        document.getElementById('exp-summary-kept').textContent = kept + ' KEPT';
+        document.getElementById('exp-summary-info').textContent = info + ' INFO';
+        document.getElementById('exp-summary-rejected').textContent = rejected + ' REJECTED';
+      } else {
+        summaryBar.style.display = 'none';
+      }
+
+      // Table with pagination
+      allExperimentsSorted = [...experiments].reverse();
+      expShowCount = 10; // reset on data refresh
+      renderExperimentsTable();
+    }
+
+    function renderExperimentsTable() {
+      if (allExperimentsSorted.length === 0) {
         document.getElementById('exp-table').style.display = 'none';
         document.getElementById('exp-table-empty').style.display = '';
-      } else {
-        document.getElementById('exp-table').style.display = '';
-        document.getElementById('exp-table-empty').style.display = 'none';
-        document.getElementById('exp-body').innerHTML = [...experiments].reverse().map(e => {
-          const delta = e.delta;
-          const deltaStr = delta != null ? (delta >= 0 ? '+' : '') + (delta * 100).toFixed(1) + '%' : '--';
-          const deltaClass = delta == null ? 'pnl-zero' : delta > 0 ? 'pnl-pos' : delta < 0 ? 'pnl-neg' : 'pnl-zero';
-          const statusBadge = { complete: 'badge-green', pending: 'badge-yellow', failed: 'badge-red', inconclusive: 'badge-gray' }[e.status] || 'badge-gray';
-          return `<tr>
-            <td class="text-white font-semibold">${escHtml(e.experiment_id)}</td>
-            <td class="text-gray-500 text-xs">${escHtml((e.created_at || '').slice(0, 16).replace('T', ' '))}</td>
-            <td class="text-gray-400 text-xs" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(e.hypothesis || '')}">${escHtml(e.hypothesis || '--')}</td>
-            <td class="text-gray-400 text-xs" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(e.change_description || '')}">${escHtml(e.change_description || '--')}</td>
-            <td>${e.baseline_value !== null ? (e.baseline_value * 100).toFixed(1) + '%' : '--'}</td>
-            <td>${e.new_value !== null ? (e.new_value * 100).toFixed(1) + '%' : '--'}</td>
-            <td class="${deltaClass} font-semibold">${deltaStr}</td>
-            <td>${e.trades_evaluated ?? '--'}</td>
-            <td class="${e.avg_pnl != null && e.avg_pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${e.avg_pnl != null ? (e.avg_pnl >= 0 ? '+' : '') + e.avg_pnl.toFixed(1) + '%' : '--'}</td>
-            <td><span class="badge ${statusBadge}">${escHtml(e.status || 'pending')}</span></td>
-          </tr>`;
-        }).join('');
+        document.getElementById('exp-load-more').style.display = 'none';
+        return;
       }
+      document.getElementById('exp-table').style.display = '';
+      document.getElementById('exp-table-empty').style.display = 'none';
+
+      const visible = allExperimentsSorted.slice(0, expShowCount);
+      document.getElementById('exp-body').innerHTML = visible.map(e => {
+        const delta = e.delta;
+        const deltaStr = delta != null ? (delta >= 0 ? '+' : '') + (delta * 100).toFixed(1) + '%' : '--';
+        const deltaClass = delta == null ? 'pnl-zero' : delta > 0 ? 'pnl-pos' : delta < 0 ? 'pnl-neg' : 'pnl-zero';
+        const statusMap = { complete: 'badge-green', kept: 'badge-green', pending: 'badge-yellow', informational: 'badge-yellow', info: 'badge-yellow', failed: 'badge-red', rejected: 'badge-red', inconclusive: 'badge-gray', skipped: 'badge-gray' };
+        const statusBadge = statusMap[e.status] || 'badge-gray';
+        return `<tr>
+          <td class="text-white font-semibold">${escHtml(e.experiment_id)}</td>
+          <td class="text-gray-500 text-xs">${escHtml((e.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+          <td class="text-gray-400 text-xs" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(e.hypothesis || '')}">${escHtml(e.hypothesis || '--')}</td>
+          <td class="text-gray-400 text-xs" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(e.change_description || '')}">${escHtml(e.change_description || '--')}</td>
+          <td>${e.baseline_value !== null ? (e.baseline_value * 100).toFixed(1) + '%' : '--'}</td>
+          <td>${e.new_value !== null ? (e.new_value * 100).toFixed(1) + '%' : '--'}</td>
+          <td class="${deltaClass} font-semibold">${deltaStr}</td>
+          <td>${e.trades_evaluated ?? '--'}</td>
+          <td class="${e.avg_pnl != null && e.avg_pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${e.avg_pnl != null ? (e.avg_pnl >= 0 ? '+' : '') + e.avg_pnl.toFixed(1) + '%' : '--'}</td>
+          <td><span class="badge ${statusBadge}">${escHtml(e.status || 'pending')}</span></td>
+        </tr>`;
+      }).join('');
+
+      // Show/hide load more
+      const loadMoreBtn = document.getElementById('exp-load-more');
+      loadMoreBtn.style.display = expShowCount < allExperimentsSorted.length ? 'block' : 'none';
+      loadMoreBtn.textContent = `Load More (${Math.min(expShowCount, allExperimentsSorted.length)} of ${allExperimentsSorted.length})`;
     }
 
     // ─── Init ───
