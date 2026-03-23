@@ -174,7 +174,7 @@
             <table class="trade-table">
               <thead>
                 <tr>
-                  <th>Timestamp</th>
+                  <th id="trades-time-header">Entered</th>
                   <th>Ticker</th>
                   <th>Platform</th>
                   <th>Side</th>
@@ -477,6 +477,9 @@
       allTrades = trades;
       updateTradeFilterCounts();
       const filtered = sortTradesForDisplay(trades, currentTradeFilter);
+      // Update column header based on filter
+      const timeHeader = document.getElementById('trades-time-header');
+      if (timeHeader) timeHeader.textContent = currentTradeFilter === 'settled' ? 'Settled' : 'Entered';
       document.getElementById('trades-count').textContent = `(${trades.length} total)`;
       const body = document.getElementById('trades-body');
       if (!filtered.length) {
