@@ -727,69 +727,70 @@
       <!-- ========== MARKET REGIME + ACTIVITY ========== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
 
-        <!-- Market Regime (HMM) -->
+        <!-- Market Regime (Dual: HMM + RSI) -->
         <div class="section-card fade-in stagger-3">
           <div class="section-title">
-            <span style="font-size:14px">🧠</span> HMM Market Regime
-            <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">hidden markov model</span>
+            <span style="font-size:14px">🧠</span> Market Regime
+            <span id="regime-alignment-badge" style="margin-left:auto;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase">--</span>
           </div>
 
-          <!-- Top row: confidence ring + stats -->
-          <div class="flex items-center gap-5 mb-4">
-            <!-- Confidence ring -->
-            <div class="hmm-confidence-ring" id="hmm-ring">
-              <svg viewBox="0 0 100 100">
-                <circle class="ring-bg" cx="50" cy="50" r="42"/>
-                <circle class="ring-fill" id="hmm-ring-fill" cx="50" cy="50" r="42"
-                  stroke="#eab308"
-                  stroke-dasharray="263.9"
-                  stroke-dashoffset="263.9"/>
-              </svg>
-              <div class="ring-inner">
-                <div class="regime-name" id="hmm-regime-name" style="color:#eab308">--</div>
-                <div class="confidence-pct" id="hmm-confidence-pct">--%</div>
-              </div>
-            </div>
+          <!-- Dual regime row -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
 
-            <!-- Stats column -->
-            <div class="flex-1 space-y-2">
-              <div>
-                <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Recommendation</div>
-                <span class="regime-rec-badge" id="hmm-recommendation">--</span>
+            <!-- LEFT: HMM Regime -->
+            <div style="text-align:center">
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-2" style="font-size:9px;letter-spacing:1px">HMM Model</div>
+              <div class="hmm-confidence-ring" id="hmm-ring" style="margin:0 auto 8px">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                  <circle class="ring-fill" id="hmm-ring-fill" cx="50" cy="50" r="42"
+                    stroke="#eab308"
+                    stroke-dasharray="263.9"
+                    stroke-dashoffset="263.9"/>
+                </svg>
+                <div class="ring-inner">
+                  <div class="regime-name" id="hmm-regime-name" style="color:#eab308">--</div>
+                  <div class="confidence-pct" id="hmm-confidence-pct">--%</div>
+                </div>
               </div>
-              <div class="grid grid-cols-2 gap-3 mt-2">
+              <span class="regime-rec-badge" id="hmm-recommendation" style="font-size:9px">--</span>
+              <div class="grid grid-cols-2 gap-2 mt-2" style="font-size:10px">
                 <div>
-                  <div class="text-xs text-gray-500 uppercase" style="font-size:9px">Mean Return</div>
-                  <div class="text-sm font-bold font-mono text-white" id="hmm-mean-return">--</div>
+                  <div class="text-gray-500" style="font-size:8px">μ Return</div>
+                  <div class="font-bold font-mono text-white" id="hmm-mean-return">--</div>
                 </div>
                 <div>
-                  <div class="text-xs text-gray-500 uppercase" style="font-size:9px">Volatility</div>
-                  <div class="text-sm font-bold font-mono text-white" id="hmm-volatility">--</div>
+                  <div class="text-gray-500" style="font-size:8px">Volatility</div>
+                  <div class="font-bold font-mono text-white" id="hmm-volatility">--</div>
                 </div>
               </div>
             </div>
-          </div>
+
+            <!-- RIGHT: RSI Regime -->
+            <div style="text-align:center">
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-2" style="font-size:9px;letter-spacing:1px">RSI Regime</div>
+              <div id="rsi-regime-ring" style="width:100px;height:100px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(255,255,255,0.03);border:3px solid #6b7280;position:relative">
+                <div id="rsi-regime-name" style="font-size:14px;font-weight:700;text-transform:uppercase;color:#6b7280">--</div>
+                <div style="font-size:10px;color:#9ca3af">RSI <span id="spy-rsi" class="font-mono font-bold text-white">--</span></div>
+              </div>
+              <div style="margin-top:4px">
+                <div class="rsi-gauge-track" style="height:6px">
+                  <div class="rsi-needle" id="rsi-needle" style="left:50%"></div>
+                </div>
+                <div class="flex justify-between text-xs mt-1" style="color:#4b5563;font-size:8px">
+                  <span>Oversold</span>
+                  <span>Neutral</span>
+                  <span>Overbought</span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /dual regime grid -->
 
           <!-- Regime history timeline -->
-          <div class="mb-4">
+          <div class="mb-3">
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-2" style="font-size:9px">Regime History</div>
             <div class="regime-timeline" id="hmm-timeline"></div>
-          </div>
-
-          <!-- SPY RSI Gauge (kept) -->
-          <div class="pt-3" style="border-top:1px solid rgba(55,65,81,0.3);">
-            <div class="flex items-baseline justify-between mb-2">
-              <span class="text-xs text-gray-500 uppercase tracking-wide">SPY RSI (14)</span>
-              <span class="text-lg font-bold text-white font-mono" id="spy-rsi">--</span>
-            </div>
-            <div class="rsi-gauge-track">
-              <div class="rsi-needle" id="rsi-needle" style="left:50%"></div>
-            </div>
-            <div class="flex justify-between text-xs mt-1.5" style="color:#4b5563">
-              <span>Oversold</span>
-              <span>Neutral</span>
-              <span>Overbought</span>
-            </div>
           </div>
 
           <!-- Backtest badge -->
@@ -1338,15 +1339,36 @@
         `).join('');
       }
 
-      // Legacy macro regime (fallback for regime indicator if no HMM)
-      const regime = hmmRegime || s.macro_regime || 'neutral';
-
-      // RSI gauge
+      // RSI Regime indicator (right column)
       const rsi = s.spy_rsi;
-      document.getElementById('spy-rsi').textContent = rsi != null ? rsi.toFixed(2) : '--';
+      const macroRegime = (s.macro_regime || 'neutral').toLowerCase();
+      document.getElementById('spy-rsi').textContent = rsi != null ? rsi.toFixed(1) : '--';
       if (rsi != null) {
         const pct = Math.min(100, Math.max(0, rsi));
         document.getElementById('rsi-needle').style.left = pct + '%';
+      }
+      const rsiRegimeColors = { 'risk-on': '#10b981', 'risk-off': '#f87171', 'neutral': '#eab308', 'bull': '#10b981', 'bear': '#f87171', 'sideways': '#eab308' };
+      const rsiColor = rsiRegimeColors[macroRegime] || '#6b7280';
+      const rsiRing = document.getElementById('rsi-regime-ring');
+      rsiRing.style.borderColor = rsiColor;
+      const rsiNameEl = document.getElementById('rsi-regime-name');
+      rsiNameEl.textContent = macroRegime.replace(/-/g, ' ');
+      rsiNameEl.style.color = rsiColor;
+
+      // Alignment badge (HMM vs RSI agreement)
+      const normalizeRegime = r => { const m = {'risk-on':'bull','risk-off':'bear','neutral':'sideways'}; return m[r] || r; };
+      const hmmNorm = normalizeRegime(hmmRegime);
+      const rsiNorm = normalizeRegime(macroRegime);
+      const aligned = hmmNorm === rsiNorm;
+      const badge = document.getElementById('regime-alignment-badge');
+      if (aligned) {
+        badge.textContent = '✓ ALIGNED';
+        badge.style.background = 'rgba(16,185,129,0.15)';
+        badge.style.color = '#10b981';
+      } else {
+        badge.textContent = '⚠ DIVERGENT';
+        badge.style.background = 'rgba(234,179,8,0.15)';
+        badge.style.color = '#eab308';
       }
 
       // Backtest
