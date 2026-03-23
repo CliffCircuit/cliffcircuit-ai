@@ -294,6 +294,29 @@
       return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' });
     }
 
+    function fmtMaturation(closeTime) {
+      if (!closeTime) return '<span class="text-gray-600">—</span>';
+      const now = Date.now();
+      const close = new Date(closeTime).getTime();
+      if (isNaN(close)) return '<span class="text-gray-600">—</span>';
+      const diff = close - now;
+      if (diff <= 0) return '<span class="text-yellow-500">Settled</span>';
+      const mins = Math.floor(diff / 60000);
+      const hrs = Math.floor(mins / 60);
+      const days = Math.floor(hrs / 24);
+      if (days > 0) return `<span class="text-cyan-400">${days}d ${hrs % 24}h</span>`;
+      if (hrs > 0) return `<span class="text-cyan-400">${hrs}h ${mins % 60}m</span>`;
+      return `<span class="text-orange-400">${mins}m</span>`;
+    }
+
+    // Refresh maturation countdowns every 60 seconds
+    setInterval(() => {
+      document.querySelectorAll('.maturation-cell[data-close-time]').forEach(cell => {
+        const ct = cell.getAttribute('data-close-time');
+        if (ct) cell.innerHTML = fmtMaturation(ct);
+      });
+    }, 60000);
+
     function resultPill(r) {
       if (!r) return '<span class="pill bg-cyan-900 text-cyan-300">Open</span>';
       if (r === 'win') return '<span class="pill status-published">Won</span>';
@@ -384,10 +407,11 @@
           <td>${(Number(p.model_prob) * 100).toFixed(1)}%</td>
           <td>${(Number(p.edge) * 100).toFixed(1)}%</td>
           <td class="text-gray-400 text-xs">${fmtTimestamp(p.entered_at)}</td>
+          <td class="text-xs maturation-cell" data-close-time="${esc(p.close_time || '')}">${fmtMaturation(p.close_time)}</td>
         </tr>
       `}).join('');
       if (positions.length > 25) {
-        body.innerHTML += `<tr><td colspan="9" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
+        body.innerHTML += `<tr><td colspan="10" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
       }
     }
 
