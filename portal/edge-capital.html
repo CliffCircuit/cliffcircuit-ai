@@ -2082,10 +2082,12 @@
       const feed = currentStrategy === 'all' ? allFeed : allFeed.filter(ev => {
         // If the event has an explicit strategy field, use it
         if (ev.strategy) return matchesStrategy(ev, currentStrategy);
-        // For order/fill events, infer: SPXL = hmm_regime, everything else = scanner
+        // regime_detect events are always hmm_regime
+        if (ev.type === 'regime_detect') return currentStrategy === 'hmm_regime';
+        // For order/fill events, infer: SPXL/SH = hmm_regime, everything else = scanner
         if (['order_placed', 'order_filled', 'order_failed'].includes(ev.type)) {
           const sym = (ev.symbol || '').toUpperCase();
-          const isHmm = sym === 'SPXL';
+          const isHmm = ['SPXL', 'SH'].includes(sym);
           return currentStrategy === 'hmm_regime' ? isHmm : !isHmm;
         }
         // scan_start/scan_complete are scanner events
@@ -2117,6 +2119,10 @@
             typeClass = 'type-scan'; typeLabel = 'SCAN';
             const tops = (ev.top_picks || []).map(p => `<span class="text-white font-medium">${escHtml(p.symbol)}</span> <span class="text-gray-500">(${p.score})</span>`).join(', ');
             msg = `Scanner complete -- ${ev.candidates_found || 0} candidates${tops ? '. Top: ' + tops : ''}`;
+            break;
+          case 'regime_detect':
+            typeClass = 'type-scan'; typeLabel = 'REGIME';
+            msg = `${escHtml(ev.symbol || 'SPY')} → <span class="font-semibold text-white">${escHtml((ev.regime || '').toUpperCase())}</span> (${(ev.confidence * 100).toFixed(0)}%) — ${escHtml(ev.recommendation || '')}`;
             break;
           case 'order_placed':
             typeClass = 'type-order'; typeLabel = 'ORDER';
