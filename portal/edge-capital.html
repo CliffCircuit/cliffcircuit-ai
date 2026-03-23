@@ -6,6 +6,7 @@
   <title>Edge Capital — CliffCircuit Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="/portal/portal-common.css">
   <style>
     .pnl-pos { color: #4ade80; }
@@ -253,6 +254,59 @@
           </div>
         </div>
 
+        <!-- Experiments Dashboard -->
+        <div class="section-card">
+          <div class="section-title">🧪 Experiments Dashboard</div>
+
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div class="stat-card">
+              <div class="text-gray-500 text-xs uppercase mb-1">Total Experiments</div>
+              <div class="text-white text-xl font-semibold" id="exp-total">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-gray-500 text-xs uppercase mb-1">Current Win Rate</div>
+              <div class="text-xl font-semibold" id="exp-win-rate">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-gray-500 text-xs uppercase mb-1">Avg P&amp;L</div>
+              <div class="text-xl font-semibold" id="exp-avg-pnl">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="text-gray-500 text-xs uppercase mb-1">Best Ticker</div>
+              <div class="text-white text-xl font-semibold" id="exp-best-ticker">—</div>
+            </div>
+          </div>
+
+          <!-- Win Rate Chart -->
+          <div style="position:relative; height:200px; margin-bottom:1.5rem;">
+            <canvas id="exp-chart"></canvas>
+            <div id="exp-chart-empty" class="text-gray-600 text-sm text-center pt-16" style="display:none;">No experiment data yet</div>
+          </div>
+
+          <!-- Experiments Table -->
+          <div class="overflow-x-auto">
+            <table class="data-table" id="exp-table" style="display:none;">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Timestamp</th>
+                  <th>Hypothesis</th>
+                  <th>Change</th>
+                  <th>Baseline</th>
+                  <th>New</th>
+                  <th>Delta</th>
+                  <th>Trades</th>
+                  <th>Avg P&amp;L</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="exp-body"></tbody>
+            </table>
+            <div id="exp-table-empty" class="text-gray-600 text-sm">No experiments logged yet. Run <code class="text-blue-400">python src/experiment_logger.py</code> to get started.</div>
+          </div>
+        </div>
+
       </div><!-- end #dashboard-content -->
     </div>
   </div>
@@ -470,6 +524,7 @@
         if (!res.ok) throw new Error('not found');
         const d = await res.json();
         renderDashboard(d);
+        renderExperiments(d);
         document.getElementById('offline-banner').style.display = 'none';
         const lu = document.getElementById('last-updated');
         lu.style.display = '';
@@ -658,6 +713,124 @@
             </tbody>
           </table>
         `;
+      }
+    }
+
+    // Experiments
+    let expChartInstance = null;
+
+    function renderExperiments(data) {
+      const experiments = data.experiments || [];
+      const summary = data.experiments_summary || {};
+
+      // Summary cards
+      document.getElementById('exp-total').textContent = summary.total_experiments ?? experiments.length;
+      const wr = summary.current_win_rate;
+      const wrEl = document.getElementById('exp-win-rate');
+      if (wr !== null && wr !== undefined) {
+        wrEl.textContent = (wr * 100).toFixed(1) + '%';
+        wrEl.className = 'text-xl font-semibold ' + (wr >= 0.5 ? 'pnl-pos' : 'pnl-neg');
+      } else {
+        wrEl.textContent = '—';
+        wrEl.className = 'text-xl font-semibold pnl-zero';
+      }
+      const pnlEl = document.getElementById('exp-avg-pnl');
+      if (summary.avg_pnl !== null && summary.avg_pnl !== undefined) {
+        pnlEl.textContent = (summary.avg_pnl >= 0 ? '+' : '') + summary.avg_pnl.toFixed(1) + '%';
+        pnlEl.className = 'text-xl font-semibold ' + (summary.avg_pnl >= 0 ? 'pnl-pos' : 'pnl-neg');
+      } else {
+        pnlEl.textContent = '—';
+        pnlEl.className = 'text-xl font-semibold pnl-zero';
+      }
+      document.getElementById('exp-best-ticker').textContent = summary.best_ticker || '—';
+
+      // Chart
+      const canvas = document.getElementById('exp-chart');
+      const chartEmpty = document.getElementById('exp-chart-empty');
+      if (experiments.length === 0) {
+        canvas.style.display = 'none';
+        chartEmpty.style.display = '';
+      } else {
+        canvas.style.display = '';
+        chartEmpty.style.display = 'none';
+
+        const labels = experiments.map(e => e.experiment_id);
+        const values = experiments.map(e => e.new_value !== null ? +(e.new_value * 100).toFixed(2) : null);
+        const baseline = experiments.length > 0 && experiments[0].baseline_value !== null
+          ? +(experiments[0].baseline_value * 100).toFixed(2) : null;
+
+        if (expChartInstance) expChartInstance.destroy();
+        expChartInstance = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Win Rate %',
+                data: values,
+                borderColor: '#22d3ee',
+                backgroundColor: 'rgba(34,211,238,0.08)',
+                pointBackgroundColor: '#22d3ee',
+                tension: 0.3,
+                fill: true,
+              },
+              baseline !== null ? {
+                label: 'Baseline',
+                data: new Array(labels.length).fill(baseline),
+                borderColor: '#6b7280',
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+              } : null,
+            ].filter(Boolean),
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#9ca3af', font: { size: 11 } } },
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%' } },
+            },
+            scales: {
+              x: { ticks: { color: '#6b7280', font: { size: 11 } }, grid: { color: '#1f2937' } },
+              y: {
+                ticks: { color: '#6b7280', font: { size: 11 }, callback: v => v + '%' },
+                grid: { color: '#1f2937' },
+              },
+            },
+          },
+        });
+      }
+
+      // Table
+      if (experiments.length === 0) {
+        document.getElementById('exp-table').style.display = 'none';
+        document.getElementById('exp-table-empty').style.display = '';
+      } else {
+        document.getElementById('exp-table').style.display = '';
+        document.getElementById('exp-table-empty').style.display = 'none';
+        document.getElementById('exp-body').innerHTML = [...experiments].reverse().map(e => {
+          const delta = e.delta;
+          const deltaStr = delta !== null && delta !== undefined
+            ? (delta >= 0 ? '+' : '') + (delta * 100).toFixed(1) + '%'
+            : '—';
+          const deltaClass = delta === null || delta === undefined ? 'pnl-zero' : delta > 0 ? 'pnl-pos' : delta < 0 ? 'pnl-neg' : 'pnl-zero';
+          const statusBadge = {
+            complete: 'badge-green', pending: 'badge-yellow', failed: 'badge-red', inconclusive: 'badge-gray'
+          }[e.status] || 'badge-gray';
+          return `<tr>
+            <td class="text-white font-semibold">${escHtml(e.experiment_id)}</td>
+            <td class="text-gray-500 text-xs">${escHtml((e.created_at || '').slice(0, 16).replace('T', ' '))}</td>
+            <td class="text-gray-300 text-xs" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHtml(e.hypothesis || '')}">${escHtml(e.hypothesis || '—')}</td>
+            <td class="text-gray-300 text-xs" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHtml(e.change_description || '')}">${escHtml(e.change_description || '—')}</td>
+            <td>${e.baseline_value !== null ? (e.baseline_value * 100).toFixed(1) + '%' : '—'}</td>
+            <td>${e.new_value !== null ? (e.new_value * 100).toFixed(1) + '%' : '—'}</td>
+            <td class="${deltaClass} font-semibold">${deltaStr}</td>
+            <td>${e.trades_evaluated ?? '—'}</td>
+            <td class="${e.avg_pnl !== null && e.avg_pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${e.avg_pnl !== null && e.avg_pnl !== undefined ? (e.avg_pnl >= 0 ? '+' : '') + e.avg_pnl.toFixed(1) + '%' : '—'}</td>
+            <td><span class="badge ${statusBadge}">${escHtml(e.status || 'pending')}</span></td>
+          </tr>`;
+        }).join('');
       }
     }
 
