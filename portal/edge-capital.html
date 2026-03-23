@@ -959,6 +959,9 @@
         const lu = document.getElementById('last-updated');
         lu.style.display = '';
         document.getElementById('last-updated-text').textContent = 'Updated ' + new Date(d.updated_at).toLocaleTimeString();
+        if (d.positions_updated_at) {
+          document.getElementById('last-updated-text').textContent += ' · Positions ' + new Date(d.positions_updated_at).toLocaleTimeString();
+        }
       } catch (e) {
         document.getElementById('offline-banner').style.display = '';
         document.getElementById('last-updated').style.display = 'none';
