@@ -308,6 +308,27 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // --- Edge Capital live data (no auth — public dashboard) ---
+  if (req.method === 'GET' && req.url.startsWith('/api/edge-capital/data')) {
+    const DASHBOARD_PATH = path.join(
+      process.env.HOME || '/Users/openclaw',
+      'workspace/repos/edge-capital/data/dashboard.json'
+    );
+    try {
+      const raw = fs.readFileSync(DASHBOARD_PATH, 'utf8');
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(raw);
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   if (req.method === 'POST' && req.url === '/api/send-to-agent') {
     let body = '';
     req.on('data', chunk => {
