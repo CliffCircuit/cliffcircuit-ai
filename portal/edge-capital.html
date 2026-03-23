@@ -814,15 +814,7 @@
         </div>
       </div>
 
-      <!-- ========== STRATEGY FILTERS ========== -->
-      <div class="strategy-filters" id="strategy-filters">
-        <button class="strategy-btn active" data-strategy="all" onclick="setStrategyFilter('all')">All</button>
-        <button class="strategy-btn" data-strategy="scanner" onclick="setStrategyFilter('scanner')">Signal Scanner</button>
-        <button class="strategy-btn" data-strategy="hmm_regime" onclick="setStrategyFilter('hmm_regime')">Markov</button>
-      </div>
-      <div class="markov-capital-note" id="markov-capital-note">
-        🤖 <strong>Markov Strategy</strong> — Allocated capital: <strong>$20,000</strong> (20% of portfolio)
-      </div>
+      <!-- Strategy filters removed — both sections shown independently -->
 
       <!-- ========== MARKET REGIME + ACTIVITY ========== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
@@ -942,10 +934,51 @@
         </div>
       </div>
 
-      <!-- ========== HMM REGIME STRATEGY ========== -->
+      <!-- ========== SIGNAL SCANNER STRATEGY ========== -->
+      <div class="section-card fade-in stagger-5" style="animation-delay:0.26s">
+        <div class="section-title">
+          <span style="font-size:14px">📡</span> Signal Scanner Strategy
+          <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">multi-factor momentum scoring</span>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Total P&L</div>
+            <div class="stat-value" style="font-size:1.2rem" id="scanner-total-pnl">$0.00</div>
+          </div>
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Trades</div>
+            <div class="stat-value" style="font-size:1.2rem" id="scanner-num-trades">0</div>
+          </div>
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value" style="font-size:1.2rem" id="scanner-win-rate">--</div>
+          </div>
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Open Positions</div>
+            <div class="stat-value" style="font-size:1.2rem" id="scanner-open-positions">0</div>
+          </div>
+        </div>
+
+        <!-- Recent Scanner trades table -->
+        <div id="scanner-trades-section">
+          <div id="scanner-trades-empty" class="text-gray-600 text-sm">No scanner trades recorded yet.</div>
+          <div class="overflow-x-auto">
+            <table class="data-table" id="scanner-trades-table" style="display:none;">
+              <thead>
+                <tr><th>Date</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Score</th></tr>
+              </thead>
+              <tbody id="scanner-trades-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== MARKOV STRATEGY ========== -->
       <div class="section-card fade-in stagger-5" style="animation-delay:0.28s">
         <div class="section-title">
-          <span style="font-size:14px">🤖</span> HMM Regime Strategy
+          <span style="font-size:14px">🤖</span> Markov Strategy
           <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">automated regime-based trading</span>
         </div>
 
@@ -1096,7 +1129,7 @@
     const DATA_URL = 'https://chat-proxy.cliffcircuit.ai/api/edge-capital/data';
     const REFRESH_MS = 30 * 1000;
     let previousData = null;
-    let currentStrategy = 'all';
+    let currentStrategy = 'all'; // kept for backward compat with filtered views
     let latestData = null;
     let expShowCount = 10;
     let allExperimentsSorted = [];
@@ -1458,21 +1491,113 @@
           '<div class="regime-dot ' + r + '" title="' + escHtml(r) + ' @ ' + escHtml(ts) + ' (' + Math.round((h.confidence||0)*100) + '%)"></div>';
       }).join('');
 
-      // HMM Strategy stats
-      const hmmSum = hmm.hmm_summary || {};
+      // HMM/Markov Strategy stats — compute from actual trade data + positions
+      const hmmTrades_ = hmm.hmm_trades || [];
+      const hmmPositions = (p.positions || []).filter(pos => pos.ticker === 'SPXL'); // SPXL is the HMM instrument
+      const hmmOpenCount = hmmPositions.length;
+      const hmmTradeCount = hmmTrades_.length;
+
+      // Compute total P&L: closed trade P&L + open position P&L
+      let hmmTotalPnl = 0;
+      let hmmWins = 0;
+      let hmmClosed = 0;
+      hmmTrades_.forEach(tr => {
+        const entryP = tr.entry_price ?? tr.price;
+        if (tr.exit_price != null && entryP != null) {
+          const tradePnl = (tr.exit_price - entryP) * (tr.qty || 1) * (tr.side === 'buy' ? 1 : -1);
+          hmmTotalPnl += tradePnl;
+          hmmClosed++;
+          if (tradePnl > 0) hmmWins++;
+        } else if (tr.pnl != null) {
+          hmmTotalPnl += tr.pnl;
+          if (tr.exit_price != null) { hmmClosed++; if (tr.pnl > 0) hmmWins++; }
+        }
+      });
+      // Add open position P&L for HMM symbols
+      hmmPositions.forEach(pos => { hmmTotalPnl += (pos.pnl || 0); });
+
       const hmmPnlEl = document.getElementById('hmm-total-pnl');
-      hmmPnlEl.textContent = fmtPnl(hmmSum.total_pnl || 0);
-      hmmPnlEl.className = 'stat-value ' + pnlClass(hmmSum.total_pnl || 0);
-      document.getElementById('hmm-num-trades').textContent = hmmSum.num_trades ?? 0;
+      hmmPnlEl.textContent = fmtPnl(hmmTotalPnl);
+      hmmPnlEl.className = 'stat-value ' + pnlClass(hmmTotalPnl);
+      document.getElementById('hmm-num-trades').textContent = hmmTradeCount;
       const hmmWrEl = document.getElementById('hmm-win-rate');
-      if (hmmSum.num_trades > 0) {
-        hmmWrEl.textContent = (hmmSum.win_rate || 0).toFixed(1) + '%';
-        hmmWrEl.className = 'stat-value ' + ((hmmSum.win_rate || 0) >= 50 ? 'pnl-pos' : 'pnl-neg');
+      if (hmmClosed > 0) {
+        const wr = (hmmWins / hmmClosed * 100);
+        hmmWrEl.textContent = wr.toFixed(1) + '%';
+        hmmWrEl.className = 'stat-value ' + (wr >= 50 ? 'pnl-pos' : 'pnl-neg');
       } else {
         hmmWrEl.textContent = '--';
         hmmWrEl.className = 'stat-value pnl-zero';
       }
-      document.getElementById('hmm-open-positions').textContent = hmmSum.current_positions ?? 0;
+      document.getElementById('hmm-open-positions').textContent = hmmOpenCount;
+
+      // ─── Signal Scanner Strategy stats ───
+      const scannerPositions = (p.positions || []).filter(pos => pos.ticker !== 'SPXL');
+      const scannerTrades = (t.recent || []).filter(tr => (tr.strategy || '') !== 'hmm_regime');
+      const allTradeHistory = d.trade_history || [];
+      const scannerHistory = allTradeHistory.filter(tr => (tr.strategy || '') !== 'hmm_regime');
+      
+      let scannerTotalPnl = 0;
+      let scannerWins = 0;
+      let scannerClosed = 0;
+      scannerHistory.forEach(tr => {
+        if (tr.pnl != null) {
+          scannerTotalPnl += tr.pnl;
+          scannerClosed++;
+          if (tr.pnl > 0) scannerWins++;
+        }
+      });
+      // Also count from recent trades if trade_history is empty
+      if (scannerClosed === 0) {
+        scannerTrades.forEach(tr => {
+          if (tr.pnl != null) {
+            scannerTotalPnl += tr.pnl;
+            scannerClosed++;
+            if (tr.pnl > 0) scannerWins++;
+          }
+        });
+      }
+      scannerPositions.forEach(pos => { scannerTotalPnl += (pos.pnl || 0); });
+
+      const scannerPnlEl = document.getElementById('scanner-total-pnl');
+      scannerPnlEl.textContent = fmtPnl(scannerTotalPnl);
+      scannerPnlEl.className = 'stat-value ' + pnlClass(scannerTotalPnl);
+      document.getElementById('scanner-num-trades').textContent = (t.total_trades || 0) - hmmTradeCount;
+      const scannerWrEl = document.getElementById('scanner-win-rate');
+      if (scannerClosed > 0) {
+        const swr = (scannerWins / scannerClosed * 100);
+        scannerWrEl.textContent = swr.toFixed(1) + '%';
+        scannerWrEl.className = 'stat-value ' + (swr >= 50 ? 'pnl-pos' : 'pnl-neg');
+      } else if (t.win_rate != null) {
+        scannerWrEl.textContent = t.win_rate.toFixed(1) + '%';
+        scannerWrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
+      } else {
+        scannerWrEl.textContent = '--';
+        scannerWrEl.className = 'stat-value pnl-zero';
+      }
+      document.getElementById('scanner-open-positions').textContent = scannerPositions.length;
+
+      // Scanner trades table
+      const scannerRecentForTable = scannerTrades.slice(0, 20);
+      if (scannerRecentForTable.length === 0) {
+        document.getElementById('scanner-trades-empty').style.display = '';
+        document.getElementById('scanner-trades-table').style.display = 'none';
+      } else {
+        document.getElementById('scanner-trades-empty').style.display = 'none';
+        document.getElementById('scanner-trades-table').style.display = '';
+        document.getElementById('scanner-trades-body').innerHTML = scannerRecentForTable.map(tr => `
+          <tr>
+            <td>${escHtml(tr.entry_time ? tr.entry_time.slice(0, 16).replace('T', ' ') : '--')}</td>
+            <td class="font-semibold text-white">${escHtml(tr.symbol || '--')}</td>
+            <td><span class="badge ${tr.side === 'buy' ? 'badge-green' : 'badge-red'}">${escHtml((tr.side || '').toUpperCase())}</span></td>
+            <td>${tr.qty ?? '--'}</td>
+            <td>${tr.price ? '$' + Number(tr.price).toFixed(2) : '--'}</td>
+            <td>${tr.filled_price ? '$' + Number(tr.filled_price).toFixed(2) : '--'}</td>
+            <td class="${pnlClass(tr.pnl)} font-semibold">${tr.pnl != null ? fmtPnl(tr.pnl) : '--'}</td>
+            <td>${tr.signal_score != null ? Number(tr.signal_score).toFixed(1) : '--'}</td>
+          </tr>
+        `).join('');
+      }
 
       // Regime distribution bar
       const distData = hmm.regime_distribution || [];
@@ -1497,17 +1622,31 @@
       } else {
         document.getElementById('hmm-trades-empty').style.display = 'none';
         document.getElementById('hmm-trades-table').style.display = '';
-        document.getElementById('hmm-trades-body').innerHTML = hmmTrades.slice(0, 20).map(tr => `
-          <tr>
+        // Build a position lookup for open HMM trades
+        const posLookup = {};
+        (p.positions || []).forEach(pos => { posLookup[pos.ticker] = pos; });
+        
+        document.getElementById('hmm-trades-body').innerHTML = hmmTrades.slice(0, 20).map(tr => {
+          const entryP = tr.entry_price ?? tr.price;
+          const pos = posLookup[tr.symbol];
+          // For open trades (no exit), show current price and unrealized P&L from positions
+          const exitP = tr.exit_price != null ? tr.exit_price : (pos ? pos.current_price : null);
+          const exitLabel = tr.exit_price != null ? '$' + Number(tr.exit_price).toFixed(2) : (pos ? '<span class="text-yellow-500">$' + Number(pos.current_price).toFixed(2) + '</span> <span class="text-gray-600 text-xs">(open)</span>' : '--');
+          let tradePnl = tr.pnl;
+          if (tradePnl == null || tradePnl === 0) {
+            if (pos) tradePnl = pos.pnl;
+            else if (entryP != null && exitP != null) tradePnl = (exitP - entryP) * (tr.qty || 1) * (tr.side === 'buy' ? 1 : -1);
+          }
+          return `<tr>
             <td>${escHtml(tr.date || tr.ts || '--')}</td>
             <td class="font-semibold text-white">${escHtml(tr.symbol || '--')}</td>
             <td>${escHtml(tr.side || '--')}</td>
             <td><span class="regime-dot ${(tr.regime||'').toLowerCase()}" style="display:inline-block;width:8px;height:8px;vertical-align:middle;margin-right:4px"></span>${escHtml(tr.regime || '--')}</td>
-            <td>${tr.entry_price != null ? '$' + Number(tr.entry_price).toFixed(2) : '--'}</td>
-            <td>${tr.exit_price != null ? '$' + Number(tr.exit_price).toFixed(2) : '--'}</td>
-            <td class="${pnlClass(tr.pnl || 0)}">${fmtPnl(tr.pnl || 0)}</td>
-          </tr>
-        `).join('');
+            <td>${entryP != null ? '$' + Number(entryP).toFixed(2) : '--'}</td>
+            <td>${exitLabel}</td>
+            <td class="${pnlClass(tradePnl || 0)}">${fmtPnl(tradePnl || 0)}</td>
+          </tr>`;
+        }).join('');
       }
 
       // RSI Regime indicator (right column)
