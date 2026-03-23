@@ -55,6 +55,15 @@
     .score-pill.na { background: #1f2937; color: #6b7280; }
     .expand-btn { cursor: pointer; color: #6b7280; font-size: 14px; transition: transform 0.2s; }
     .expand-btn.open { transform: rotate(90deg); }
+    .activity-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #1f2937; font-size: 12px; }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-badge { flex-shrink: 0; border-radius: 9999px; padding: 2px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .activity-badge-scan { background: #172554; color: #93c5fd; }
+    .activity-badge-order { background: #451a03; color: #fb923c; }
+    .activity-badge-fill { background: #14532d; color: #4ade80; }
+    .activity-badge-error { background: #450a0a; color: #f87171; }
+    .activity-time { color: #6b7280; font-size: 11px; flex-shrink: 0; min-width: 130px; }
+    .activity-msg { color: #d1d5db; flex: 1; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -237,6 +246,13 @@
           </div>
         </div>
 
+        <!-- Activity Feed -->
+        <div class="section-card">
+          <div class="section-title">⚡ Activity Feed <span class="text-gray-500 text-xs font-normal">(live events)</span></div>
+          <div id="activity-empty" class="text-gray-600 text-sm" style="display:none;">No activity events yet.</div>
+          <div id="activity-feed" style="max-height:400px;overflow-y:auto;"></div>
+        </div>
+
         <!-- Auto-Research -->
         <div class="section-card">
           <div class="section-title">🔬 Auto-Research</div>
@@ -314,7 +330,7 @@
   <script src="/portal/portal-common.js"></script>
   <script>
     const DATA_URL = '/portal/shared/edge-capital-dashboard.json';
-    const REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+    const REFRESH_MS = 60 * 1000; // 60 seconds for live activity feed
 
     function fmt$(v) {
       if (v === null || v === undefined) return '—';
@@ -524,6 +540,7 @@
         if (!res.ok) throw new Error('not found');
         const d = await res.json();
         renderDashboard(d);
+        renderActivity(d);
         renderExperiments(d);
         document.getElementById('offline-banner').style.display = 'none';
         const lu = document.getElementById('last-updated');
@@ -714,6 +731,55 @@
           </table>
         `;
       }
+    }
+
+    // Activity Feed
+    function renderActivity(data) {
+      const feed = data.activity || [];
+      const el = document.getElementById('activity-feed');
+      const empty = document.getElementById('activity-empty');
+      if (feed.length === 0) {
+        empty.style.display = '';
+        el.innerHTML = '';
+        return;
+      }
+      empty.style.display = 'none';
+      el.innerHTML = feed.slice(0, 50).map(ev => {
+        let badge = '', msg = '';
+        const ts = ev.timestamp ? new Date(ev.timestamp).toLocaleString() : '';
+        switch (ev.type) {
+          case 'scan_start':
+            badge = '<span class="activity-badge activity-badge-scan">scan</span>';
+            msg = `Scanner started — ${ev.ticker_count || '?'} tickers, min score ${ev.min_score || '?'}`;
+            break;
+          case 'scan_complete':
+            badge = '<span class="activity-badge activity-badge-scan">scan</span>';
+            const picks = (ev.top_picks || []).map(p => `${escHtml(p.symbol)} (${p.score})`).join(', ');
+            msg = `Scanner complete — ${ev.candidates_found || 0} candidates${picks ? '. Top: ' + picks : ''}`;
+            break;
+          case 'order_placed':
+            badge = '<span class="activity-badge activity-badge-order">order</span>';
+            msg = `${(ev.side || '').toUpperCase()} ${escHtml(ev.symbol)} x${ev.qty} @ $${ev.price}`;
+            if (ev.order_id) msg += ` <span style="color:#6b7280">(${escHtml(ev.order_id.slice(0, 8))}…)</span>`;
+            break;
+          case 'order_failed':
+            badge = '<span class="activity-badge activity-badge-error">error</span>';
+            msg = `${(ev.side || '').toUpperCase()} ${escHtml(ev.symbol)} failed: ${escHtml(ev.error || 'unknown')}`;
+            break;
+          case 'order_filled':
+            badge = '<span class="activity-badge activity-badge-fill">filled</span>';
+            msg = `${(ev.side || '').toUpperCase()} ${escHtml(ev.symbol)} x${ev.qty} @ $${ev.fill_price}`;
+            break;
+          default:
+            badge = '<span class="activity-badge badge-gray">' + escHtml(ev.type || '?') + '</span>';
+            msg = JSON.stringify(ev);
+        }
+        return `<div class="activity-item">
+          <span class="activity-time">${escHtml(ts)}</span>
+          ${badge}
+          <span class="activity-msg">${msg}</span>
+        </div>`;
+      }).join('');
     }
 
     // Experiments
