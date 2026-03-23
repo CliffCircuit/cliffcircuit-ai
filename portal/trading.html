@@ -152,10 +152,8 @@
                   <th>Entry Price</th>
                   <th>Size</th>
                   <th>Ver</th>
-                  <th>Prev Prob</th>
-                  <th>Curr Prob</th>
-                  <th>Prev Edge</th>
-                  <th>Curr Edge</th>
+                  <th>Prob</th>
+                  <th>Edge</th>
                   <th>Win / Loss</th>
                   <th>Entered</th>
                   <th>Matures</th>
@@ -453,7 +451,7 @@
       document.getElementById('positions-count').textContent = `(${positions.length})`;
       const body = document.getElementById('positions-body');
       if (!positions.length) {
-        body.innerHTML = '<tr><td colspan="14" class="text-gray-600 text-center py-4">No open positions</td></tr>';
+        body.innerHTML = '<tr><td colspan="12" class="text-gray-600 text-center py-4">No open positions</td></tr>';
         return;
       }
       // Show first 25
@@ -467,17 +465,15 @@
           <td>${Number(p.entry_price).toFixed(2)}¢</td>
           <td>${p.contracts}</td>
           <td class="text-gray-400 text-xs font-mono">v${p.pipeline_version || '?'}</td>
-          <td>${(Number(p.model_prob) * 100).toFixed(1)}%</td>
-          <td class="${p.current_model_prob != null ? ((p.current_model_prob < p.model_prob) ? 'text-red-400' : 'text-green-400') : 'text-gray-500'}">${p.current_model_prob != null ? (p.current_model_prob * 100).toFixed(1) + '%' : '—'}</td>
-          <td>${(Number(p.edge) * 100).toFixed(1)}%</td>
-          <td class="${p.current_edge != null ? ((p.current_edge < 0) ? 'text-red-400' : 'text-green-400') : 'text-gray-500'}">${p.current_edge != null ? (p.current_edge * 100).toFixed(1) + '%' : '—'}</td>
+          <td>${p.current_model_prob != null ? `<span class="${p.current_model_prob < p.model_prob ? 'text-red-400' : 'text-green-400'}">${(p.current_model_prob * 100).toFixed(1)}%</span> <span class="text-gray-500 text-xs">(${(Number(p.model_prob) * 100).toFixed(1)}%)</span>` : `${(Number(p.model_prob) * 100).toFixed(1)}%`}</td>
+          <td>${p.current_edge != null ? `<span class="${p.current_edge < 0 ? 'text-red-400' : 'text-green-400'}">${(p.current_edge * 100).toFixed(1)}%</span> <span class="text-gray-500 text-xs">(${(Number(p.edge) * 100).toFixed(1)}%)</span>` : `${(Number(p.edge) * 100).toFixed(1)}%`}</td>
           <td class="text-xs">${fmtWinLoss(p.entry_price, p.contracts)}</td>
           <td class="text-gray-400 text-xs">${fmtTimestamp(p.entered_at)}</td>
           <td class="text-xs maturation-cell" data-close-time="${esc(p.close_time || '')}">${fmtMaturation(p.close_time)}</td>
         </tr>
       `}).join('');
       if (positions.length > 25) {
-        body.innerHTML += `<tr><td colspan="14" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
+        body.innerHTML += `<tr><td colspan="12" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
       }
     }
 
