@@ -1549,16 +1549,22 @@
           wrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
         } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       } else if (currentStrategy === 'hmm_regime') {
-        const hmmS = (d.hmm_regime || {}).hmm_summary || {};
-        document.getElementById('total-trades').textContent = hmmS.num_trades ?? 0;
+        // Compute from hmm_trades array (summary may be stale)
+        const hmmTradesArr = (d.hmm_regime || {}).hmm_trades || [];
+        const hmmTradeNum = hmmTradesArr.length;
+        document.getElementById('total-trades').textContent = hmmTradeNum;
         const wrEl = document.getElementById('win-rate');
-        if (hmmS.num_trades > 0) {
-          wrEl.textContent = (hmmS.win_rate || 0).toFixed(1) + '%';
-          wrEl.className = 'stat-value ' + ((hmmS.win_rate || 0) >= 50 ? 'pnl-pos' : 'pnl-neg');
+        // Compute win rate from closed trades only
+        const hmmClosedTrades = hmmTradesArr.filter(tr => tr.side === 'sell');
+        if (hmmClosedTrades.length > 0) {
+          const hmmWins = hmmClosedTrades.filter(tr => (tr.pnl || 0) > 0).length;
+          const wr = (hmmWins / hmmClosedTrades.length) * 100;
+          wrEl.textContent = wr.toFixed(1) + '%';
+          wrEl.className = 'stat-value ' + (wr >= 50 ? 'pnl-pos' : 'pnl-neg');
         } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       } else {
         // Scanner: total minus HMM
-        const hmmTradeCount = ((d.hmm_regime || {}).hmm_summary || {}).num_trades || 0;
+        const hmmTradeCount = ((d.hmm_regime || {}).hmm_trades || []).length;
         const scannerTotal = (t.total_trades || 0) - hmmTradeCount;
         document.getElementById('total-trades').textContent = scannerTotal;
         const wrEl = document.getElementById('win-rate');
