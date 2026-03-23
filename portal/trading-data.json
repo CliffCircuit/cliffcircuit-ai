@@ -2603,6 +2603,51 @@
   },
   "experiments": [
     {
+      "id": 12,
+      "experiment_id": "EXP-R3-009",
+      "created_at": "2026-03-23 03:50:40",
+      "hypothesis": "Edge/price ratio < 0.5 perfectly separates winning trades (5/8=62.5%) from losing trades (0/62=0%). This is more principled than absolute edge cap \u2014 it normalizes edge by market price, catching overconfident model signals at any price level.",
+      "change_description": "Added MAX_EDGE_RATIO=0.50 to strategy.py. Updated position_sizer.py to check both absolute edge cap AND ratio cap. Either cap triggers trade exclusion.",
+      "metric_name": "win_rate",
+      "baseline_value": 0.0714,
+      "new_value": 0.625,
+      "delta": null,
+      "status": "kept",
+      "details": "{\"finding\": \"edge/entry_price ratio < 0.5 perfectly separates winners from losers\", \"ratio_less_0.5\": {\"n\": 8, \"wins\": 5, \"win_rate\": 0.625}, \"ratio_0.5_to_1.0\": {\"n\": 2, \"wins\": 0, \"win_rate\": 0.0}, \"ratio_1_to_5\": {\"n\": 7, \"wins\": 0, \"win_rate\": 0.0}, \"ratio_5_plus\": {\"n\": 53, \"wins\": 0, \"win_rate\": 0.0}, \"interpretation\": \"When edge > 50% of market price, the model is predicting something the market has nearly priced out. This is almost always wrong. When edge < 50% of price, the model has a moderate, believable signal.\", \"implementation\": \"MAX_EDGE_RATIO = 0.50 added to strategy.py, enforced in position_sizer.py alongside absolute MAX_EDGE_TO_SIZE\"}",
+      "commit_hash": null,
+      "pipeline_version": 5
+    },
+    {
+      "id": 11,
+      "experiment_id": "EXP-R3-008",
+      "created_at": "2026-03-23 03:49:34",
+      "hypothesis": "MAX_EDGE_TO_SIZE=0.15 may be too restrictive for higher-priced contracts. Active $0.20+ trades have edge 14-42%, and only 1/8 would pass the 15% cap. Need to reconsider edge cap.",
+      "change_description": "Analysis of active trades vs new filters. Discovered edge cap conflicts with high-priced contract opportunities. No code change.",
+      "metric_name": "win_rate",
+      "baseline_value": 0.0714,
+      "new_value": 0.0714,
+      "delta": null,
+      "status": "informational",
+      "details": "{\"active_trade_KXHIGHTMIN_T48\": {\"entry_price\": 0.5, \"model_prob\": 0.79, \"raw_edge\": 0.29, \"bias_corrected_prob\": 0.853, \"bias_edge\": 0.353, \"would_pass_edge_cap\": false, \"note\": \"Edge 29-35% >> 15% cap\"}, \"active_trade_KXLOWTMIA_B63.5\": {\"entry_price\": 0.83, \"model_prob\": 0.97, \"raw_edge\": 0.14, \"note\": \"Edge 14% < 15% cap \\u2192 would pass both filters\"}, \"insight\": \"Most active $0.20+ trades have edge 14-42% \\u2014 only KXLOWTMIA-B63.5 (edge 13%) passes the MAX_EDGE_TO_SIZE=0.15 cap. This means the edge cap will severely restrict trading in near-term.\", \"consideration\": \"May need to raise edge cap for higher-priced contracts, or use relative edge (edge/entry_price ratio) instead of absolute edge.\", \"alternative_filter\": \"edge_pct_of_market_price: edge/entry_price < 0.50 rather than absolute edge < 0.15\"}",
+      "commit_hash": null,
+      "pipeline_version": 5
+    },
+    {
+      "id": 10,
+      "experiment_id": "EXP-R3-007",
+      "created_at": "2026-03-23 03:49:06",
+      "hypothesis": "HIGH_TEMP contracts may outperform LOW_TEMP. In filtered set, high temp shows 4/5 wins (80%). Low temp has 0/30 wins overall, suggesting model calibration is worse for nighttime low temperatures.",
+      "change_description": "Analysis only. No code change. Would need larger sample to confirm.",
+      "metric_name": "win_rate",
+      "baseline_value": 0.0714,
+      "new_value": 0.0714,
+      "delta": null,
+      "status": "informational",
+      "details": "{\"low_temp_trades\": 18, \"low_temp_wins\": 0, \"low_temp_win_rate\": 0.0, \"high_temp_trades\": 31, \"high_temp_wins\": 4, \"high_temp_win_rate\": 0.12903225806451613, \"filtered_high_temp\": {\"n\": 5, \"wins\": 4, \"win_rate\": 0.8}, \"filtered_low_temp\": {\"n\": 1, \"wins\": 0, \"win_rate\": 0.0}, \"insight\": \"In filtered set ($0.20+, edge<=15%), high temp contracts show 80% win rate. Low temp sample too small (1 trade). Overall low temp has very low win rate. Model may be better calibrated for high temp than low temp.\", \"note\": \"Sample too small for strong conclusions but warrants investigation\"}",
+      "commit_hash": null,
+      "pipeline_version": 5
+    },
+    {
       "id": 9,
       "experiment_id": "EXP-R3-006",
       "created_at": "2026-03-23 03:48:38",
@@ -2724,11 +2769,11 @@
     }
   ],
   "experiment_summary": {
-    "total": 8,
-    "kept": 3,
+    "total": 11,
+    "kept": 4,
     "rejected": 0,
     "best_improvement": null
   },
   "alerts": [],
-  "exported_at": "2026-03-23T03:48:43.638196+00:00"
+  "exported_at": "2026-03-23T03:50:45.867960+00:00"
 }
