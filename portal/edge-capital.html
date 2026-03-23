@@ -1493,19 +1493,21 @@
         displayEquity = p.equity || 0;
         displayCash = p.cash || 0;
       } else if (currentStrategy === 'hmm_regime') {
-        // Markov: $20K allocation — cash is allocation minus invested market value
+        // Markov: $30K allocation — portfolio value = allocation + unrealized P&L
         const MARKOV_ALLOC = 30000;
         const markovPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'hmm_regime'));
         const markovMktVal = markovPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
+        const markovUnrealizedPnl = markovPositions.reduce((sum, pos) => sum + (pos.pnl || 0), 0);
         displayCash = Math.max(0, MARKOV_ALLOC - markovMktVal);
-        displayEquity = MARKOV_ALLOC;
+        displayEquity = MARKOV_ALLOC + markovUnrealizedPnl;
       } else {
-        // Scanner: $70K allocation — cash is allocation minus invested market value
+        // Scanner: $70K allocation — portfolio value = allocation + unrealized P&L
         const SCANNER_ALLOC = 70000;
         const scannerPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'scanner'));
         const scannerMktVal = scannerPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
+        const scannerUnrealizedPnl = scannerPositions.reduce((sum, pos) => sum + (pos.pnl || 0), 0);
         displayCash = Math.max(0, SCANNER_ALLOC - scannerMktVal);
-        displayEquity = SCANNER_ALLOC;
+        displayEquity = SCANNER_ALLOC + scannerUnrealizedPnl;
       }
       displayEquityInvested = displayEquity - displayCash;
 
@@ -1530,8 +1532,16 @@
       document.getElementById('total-pnl-pct').textContent = fmtPct(filteredPnlPct);
 
       const dpnl = document.getElementById('daily-pnl');
-      const displayDailyPnl = currentStrategy === 'all' ? filteredPnl : filteredPnl;
-      const displayDailyPnlPct = currentStrategy === 'all' ? filteredPnlPct : filteredPnlPct;
+      // For strategy views, show unrealized P&L and % relative to allocation
+      let displayDailyPnl, displayDailyPnlPct;
+      if (currentStrategy === 'all') {
+        displayDailyPnl = filteredPnl;
+        displayDailyPnlPct = filteredPnlPct;
+      } else {
+        const stratAlloc = currentStrategy === 'hmm_regime' ? 30000 : 70000;
+        displayDailyPnl = filteredPnl;
+        displayDailyPnlPct = stratAlloc > 0 ? (filteredPnl / stratAlloc) * 100 : 0;
+      }
       if (displayDailyPnl != null) {
         dpnl.textContent = fmtPnl(displayDailyPnl) + ' (' + fmtPct(displayDailyPnlPct) + ')';
         dpnl.className = 'text-sm font-semibold ' + pnlClass(displayDailyPnl);
