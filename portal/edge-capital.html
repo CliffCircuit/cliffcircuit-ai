@@ -823,7 +823,7 @@
           <button class="strategy-btn" data-strategy="hmm_regime" onclick="setStrategyFilter('hmm_regime')">🤖 Markov</button>
         </div>
         <div class="markov-capital-note" id="markov-capital-note">
-          ⚠️ Markov strategy uses ~20% of portfolio capital (~$20K allocation)
+          ⚠️ Markov strategy uses ~30% of portfolio capital (~$30K allocation)
         </div>
 
         <!-- Stat cards row -->
@@ -1197,30 +1197,31 @@
     // HMM/Markov instruments — positions for these tickers are attributed to hmm_regime
     const HMM_TICKERS = new Set(['SPXL']);
 
+    function normalizeStrategy(item) {
+      // Normalize strategy field: 'hmm', 'hmm_regime' → 'hmm_regime'; everything else or missing → check symbol
+      let s = (item.strategy || '').toLowerCase();
+      if (s === 'hmm_regime' || s === 'hmm') return 'hmm_regime';
+      // Symbol-based fallback: SPXL (and other HMM-traded symbols) = Markov
+      const sym = (item.ticker || item.symbol || '').toUpperCase();
+      if (HMM_TICKERS.has(sym)) return 'hmm_regime';
+      return 'scanner';
+    }
     function matchesStrategy(item, filter) {
       if (filter === 'all') return true;
-      // Determine effective strategy: use explicit field, else infer from ticker/symbol
-      let s = item.strategy || '';
-      if (!s) {
-        const sym = (item.ticker || item.symbol || '').toUpperCase();
-        s = HMM_TICKERS.has(sym) ? 'hmm_regime' : 'scanner';
-      }
-      if (filter === 'hmm_regime') return s === 'hmm_regime';
-      // scanner = everything that's NOT hmm_regime
-      return s !== 'hmm_regime';
+      const effective = normalizeStrategy(item);
+      if (filter === 'hmm_regime') return effective === 'hmm_regime';
+      return effective !== 'hmm_regime';
     }
 
     function getStrategyPill(item) {
-      const s = item.strategy || '';
-      const isMarkov = s === 'hmm_regime';
+      const isMarkov = normalizeStrategy(item) === 'hmm_regime';
       const label = isMarkov ? 'Markov' : 'Signal Scanner';
       const cls = isMarkov ? 'markov' : 'scanner';
       return `<span class="strategy-pill ${cls}">${label}</span>`;
     }
     function getModelLabel(item) {
       if (item.model_name) return escHtml(item.model_name);
-      const s = item.strategy || '';
-      return s === 'hmm_regime' ? 'Markov v1' : 'Signal v1';
+      return normalizeStrategy(item) === 'hmm_regime' ? 'Markov v1' : 'Signal v1';
     }
     function getVersionLabel(item) {
       if (item.pipeline_version) return escHtml(item.pipeline_version);
@@ -1484,8 +1485,8 @@
 
       // Portfolio hero — strategy-aware
       // Compute strategy allocation ratios
-      const MARKOV_RATIO = 0.20;  // ~20% of portfolio
-      const SCANNER_RATIO = 0.80; // ~80% of portfolio
+      const MARKOV_RATIO = 0.30;  // ~30% of portfolio
+      const SCANNER_RATIO = 0.70; // ~70% of portfolio
       let displayEquity, displayCash, displayEquityInvested;
 
       if (currentStrategy === 'all') {
@@ -1493,7 +1494,7 @@
         displayCash = p.cash || 0;
       } else if (currentStrategy === 'hmm_regime') {
         // Markov: $20K allocation — cash is allocation minus invested market value
-        const MARKOV_ALLOC = 20000;
+        const MARKOV_ALLOC = 30000;
         const markovPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'hmm_regime'));
         const markovMktVal = markovPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
         displayCash = Math.max(0, MARKOV_ALLOC - markovMktVal);
@@ -1544,9 +1545,13 @@
       if (currentStrategy === 'all') {
         document.getElementById('total-trades').textContent = t.total_trades ?? '--';
         const wrEl = document.getElementById('win-rate');
-        if (t.win_rate != null) {
-          wrEl.textContent = t.win_rate.toFixed(1) + '%';
-          wrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
+        // Win rate only counts CLOSED trades (sells). If no sells, show "--"
+        const allClosedTrades = (t.recent || []).filter(tr => tr.side === 'sell');
+        if (allClosedTrades.length > 0) {
+          const wins = allClosedTrades.filter(tr => (tr.pnl || 0) > 0).length;
+          const wr = (wins / allClosedTrades.length) * 100;
+          wrEl.textContent = wr.toFixed(1) + '%';
+          wrEl.className = 'stat-value ' + (wr >= 50 ? 'pnl-pos' : 'pnl-neg');
         } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       } else if (currentStrategy === 'hmm_regime') {
         // Compute from hmm_trades array (summary may be stale)
@@ -1568,10 +1573,13 @@
         const scannerTotal = (t.total_trades || 0) - hmmTradeCount;
         document.getElementById('total-trades').textContent = scannerTotal;
         const wrEl = document.getElementById('win-rate');
-        // Use overall win rate for scanner (best we have without per-strategy breakdown)
-        if (t.win_rate != null) {
-          wrEl.textContent = t.win_rate.toFixed(1) + '%';
-          wrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
+        // Win rate only counts closed (sell) trades for scanner
+        const scannerClosedTrades = (t.recent || []).filter(tr => tr.side === 'sell' && normalizeStrategy(tr) !== 'hmm_regime');
+        if (scannerClosedTrades.length > 0) {
+          const wins = scannerClosedTrades.filter(tr => (tr.pnl || 0) > 0).length;
+          const wr = (wins / scannerClosedTrades.length) * 100;
+          wrEl.textContent = wr.toFixed(1) + '%';
+          wrEl.className = 'stat-value ' + (wr >= 50 ? 'pnl-pos' : 'pnl-neg');
         } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       }
 
@@ -1618,7 +1626,7 @@
 
       // HMM/Markov Strategy stats — compute from actual trade data + positions
       const hmmTrades_ = hmm.hmm_trades || [];
-      const hmmPositions = (p.positions || []).filter(pos => pos.ticker === 'SPXL'); // SPXL is the HMM instrument
+      const hmmPositions = (p.positions || []).filter(pos => normalizeStrategy(pos) === 'hmm_regime');
       const hmmOpenCount = hmmPositions.length;
       const hmmTradeCount = hmmTrades_.length;
 
@@ -1657,10 +1665,10 @@
       document.getElementById('hmm-open-positions').textContent = hmmOpenCount;
 
       // ─── Signal Scanner Strategy stats ───
-      const scannerPositions = (p.positions || []).filter(pos => pos.ticker !== 'SPXL');
-      const scannerTrades = (t.recent || []).filter(tr => (tr.strategy || '') !== 'hmm_regime');
+      const scannerPositions = (p.positions || []).filter(pos => normalizeStrategy(pos) !== 'hmm_regime');
+      const scannerTrades = (t.recent || []).filter(tr => normalizeStrategy(tr) !== 'hmm_regime');
       const allTradeHistory = d.trade_history || [];
-      const scannerHistory = allTradeHistory.filter(tr => (tr.strategy || '') !== 'hmm_regime');
+      const scannerHistory = allTradeHistory.filter(tr => normalizeStrategy(tr) !== 'hmm_regime');
       
       let scannerTotalPnl = 0;
       let scannerWins = 0;
@@ -1693,9 +1701,6 @@
         const swr = (scannerWins / scannerClosed * 100);
         scannerWrEl.textContent = swr.toFixed(1) + '%';
         scannerWrEl.className = 'stat-value ' + (swr >= 50 ? 'pnl-pos' : 'pnl-neg');
-      } else if (t.win_rate != null) {
-        scannerWrEl.textContent = t.win_rate.toFixed(1) + '%';
-        scannerWrEl.className = 'stat-value ' + (t.win_rate >= 50 ? 'pnl-pos' : 'pnl-neg');
       } else {
         scannerWrEl.textContent = '--';
         scannerWrEl.className = 'stat-value pnl-zero';
