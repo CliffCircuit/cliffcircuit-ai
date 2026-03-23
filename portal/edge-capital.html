@@ -661,6 +661,38 @@
       border-color: rgba(59, 130, 246, 0.4);
       color: #93c5fd;
     }
+    .strategy-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .strategy-pill.scanner { background: rgba(59,130,246,0.15); color: #93c5fd; }
+    .strategy-pill.markov  { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+    .inline-strategy-filters {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 0.75rem;
+    }
+    .inline-strategy-btn {
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.4);
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .inline-strategy-btn:hover { border-color: rgba(75,85,99,0.8); color: #d1d5db; }
+    .inline-strategy-btn.active { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
     .markov-capital-note {
       display: none;
       background: rgba(139, 92, 246, 0.1);
@@ -1043,11 +1075,16 @@
       <!-- ========== ACTIVE POSITIONS ========== -->
       <div class="section-card fade-in stagger-7">
         <div class="section-title">Active Positions</div>
+        <div class="inline-strategy-filters" id="positions-inline-filters">
+          <button class="inline-strategy-btn active" data-filter="all" onclick="setPositionsInlineFilter('all')">All</button>
+          <button class="inline-strategy-btn" data-filter="scanner" onclick="setPositionsInlineFilter('scanner')">Signal Scanner</button>
+          <button class="inline-strategy-btn" data-filter="hmm_regime" onclick="setPositionsInlineFilter('hmm_regime')">Markov</button>
+        </div>
         <div id="positions-empty" class="text-gray-600 text-sm" style="display:none;">No open positions.</div>
         <div class="overflow-x-auto">
           <table class="data-table" id="positions-table" style="display:none;">
             <thead>
-              <tr><th>Ticker</th><th>Qty</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th><th>P&L %</th><th>Exit Signal</th></tr>
+              <tr><th>Ticker</th><th>Strategy</th><th>Model</th><th>Ver</th><th>Qty</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th><th>P&L %</th><th>Exit Signal</th></tr>
             </thead>
             <tbody id="positions-body"></tbody>
           </table>
@@ -1057,11 +1094,16 @@
       <!-- ========== RECENT TRADES ========== -->
       <div class="section-card fade-in stagger-8">
         <div class="section-title">Recent Trades</div>
+        <div class="inline-strategy-filters" id="trades-inline-filters">
+          <button class="inline-strategy-btn active" data-filter="all" onclick="setTradesInlineFilter('all')">All</button>
+          <button class="inline-strategy-btn" data-filter="scanner" onclick="setTradesInlineFilter('scanner')">Signal Scanner</button>
+          <button class="inline-strategy-btn" data-filter="hmm_regime" onclick="setTradesInlineFilter('hmm_regime')">Markov</button>
+        </div>
         <div id="trades-empty" class="text-gray-600 text-sm" style="display:none;">No trades recorded yet.</div>
         <div class="overflow-x-auto">
           <table class="data-table" id="trades-table" style="display:none;">
             <thead>
-              <tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Score</th><th>Signal</th><th>Time</th></tr>
+              <tr><th>Symbol</th><th>Strategy</th><th>Model</th><th>Ver</th><th>Side</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Score</th><th>Signal</th><th>Time</th></tr>
             </thead>
             <tbody id="trades-body"></tbody>
           </table>
@@ -1140,6 +1182,8 @@
     const REFRESH_MS = 30 * 1000;
     let previousData = null;
     let currentStrategy = 'all'; // kept for backward compat with filtered views
+    let positionsInlineFilter = 'all';
+    let tradesInlineFilter = 'all';
     let latestData = null;
     let expShowCount = 10;
     let allExperimentsSorted = [];
@@ -1150,14 +1194,53 @@
       if (s === 'hmm_regime') return 'Markov';
       return 'Signal Scanner'; // auto_trader, scanner, or missing = Signal Scanner
     }
+    // HMM/Markov instruments — positions for these tickers are attributed to hmm_regime
+    const HMM_TICKERS = new Set(['SPXL']);
+
     function matchesStrategy(item, filter) {
       if (filter === 'all') return true;
-      const s = item.strategy || '';
+      // Determine effective strategy: use explicit field, else infer from ticker/symbol
+      let s = item.strategy || '';
+      if (!s) {
+        const sym = (item.ticker || item.symbol || '').toUpperCase();
+        s = HMM_TICKERS.has(sym) ? 'hmm_regime' : 'scanner';
+      }
       if (filter === 'hmm_regime') return s === 'hmm_regime';
       // scanner = everything that's NOT hmm_regime
       return s !== 'hmm_regime';
     }
 
+    function getStrategyPill(item) {
+      const s = item.strategy || '';
+      const isMarkov = s === 'hmm_regime';
+      const label = isMarkov ? 'Markov' : 'Signal Scanner';
+      const cls = isMarkov ? 'markov' : 'scanner';
+      return `<span class="strategy-pill ${cls}">${label}</span>`;
+    }
+    function getModelLabel(item) {
+      if (item.model_name) return escHtml(item.model_name);
+      const s = item.strategy || '';
+      return s === 'hmm_regime' ? 'Markov v1' : 'Signal v1';
+    }
+    function getVersionLabel(item) {
+      if (item.pipeline_version) return escHtml(item.pipeline_version);
+      if (item.experiment_id) return escHtml(item.experiment_id);
+      return 'v1';
+    }
+    function setPositionsInlineFilter(f) {
+      positionsInlineFilter = f;
+      document.querySelectorAll('#positions-inline-filters .inline-strategy-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === f);
+      });
+      if (latestData) renderDashboard(latestData, true);
+    }
+    function setTradesInlineFilter(f) {
+      tradesInlineFilter = f;
+      document.querySelectorAll('#trades-inline-filters .inline-strategy-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === f);
+      });
+      if (latestData) renderDashboard(latestData, true);
+    }
     function setStrategyFilter(strategy) {
       currentStrategy = strategy;
       document.querySelectorAll('.strategy-btn').forEach(b => {
@@ -1409,11 +1492,12 @@
         displayEquity = p.equity || 0;
         displayCash = p.cash || 0;
       } else if (currentStrategy === 'hmm_regime') {
-        // Markov: use position market values + proportional cash
+        // Markov: $20K allocation — cash is allocation minus invested market value
+        const MARKOV_ALLOC = 20000;
         const markovPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'hmm_regime'));
         const markovMktVal = markovPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
-        displayCash = (p.cash || 0) * MARKOV_RATIO;
-        displayEquity = markovMktVal + displayCash;
+        displayCash = Math.max(0, MARKOV_ALLOC - markovMktVal);
+        displayEquity = MARKOV_ALLOC;
       } else {
         // Scanner: use position market values + proportional cash
         const scannerPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'scanner'));
@@ -1754,9 +1838,9 @@
         `).join('');
       }
 
-      // Positions table — filtered by strategy
+      // Positions table — filtered by strategy (hero + inline)
       const allPositions = p.positions || [];
-      const positions = allPositions.filter(pos => matchesStrategy(pos, currentStrategy));
+      const positions = allPositions.filter(pos => matchesStrategy(pos, currentStrategy) && matchesStrategy(pos, positionsInlineFilter));
       if (positions.length === 0) {
         document.getElementById('positions-empty').style.display = '';
         document.getElementById('positions-table').style.display = 'none';
@@ -1790,6 +1874,9 @@
           }
           return `<tr>
             <td class="font-semibold text-white">${escHtml(pos.name || pos.ticker)} <span class="text-gray-600 text-xs">${escHtml(pos.ticker)}</span></td>
+            <td>${getStrategyPill(pos)}</td>
+            <td class="text-gray-400 text-xs">${getModelLabel(pos)}</td>
+            <td class="text-gray-500 text-xs">${getVersionLabel(pos)}</td>
             <td>${pos.qty ?? '--'}</td>
             <td>${pos.entry_price ? '$' + Number(pos.entry_price).toFixed(2) : '--'}</td>
             <td>${pos.current_price ? '$' + Number(pos.current_price).toFixed(2) : '--'}</td>
@@ -1871,8 +1958,8 @@
         }).join('');
       }
 
-      // Recent trades — filtered by strategy
-      const recent = filteredRecent;
+      // Recent trades — filtered by strategy (hero + inline)
+      const recent = filteredRecent.filter(tr => matchesStrategy(tr, tradesInlineFilter));
       if (recent.length === 0) {
         document.getElementById('trades-empty').style.display = '';
         document.getElementById('trades-table').style.display = 'none';
@@ -1883,6 +1970,9 @@
           const pnlBg = tr.pnl != null ? (Number(tr.pnl) >= 0 ? 'pnl-pos-bg' : 'pnl-neg-bg') : '';
           return `<tr class="${pnlBg}">
             <td class="font-semibold text-white">${escHtml(tr.name || tr.symbol)} <span class="text-gray-600 text-xs">${escHtml(tr.symbol)}</span></td>
+            <td>${getStrategyPill(tr)}</td>
+            <td class="text-gray-400 text-xs">${getModelLabel(tr)}</td>
+            <td class="text-gray-500 text-xs">${getVersionLabel(tr)}</td>
             <td><span class="badge ${tr.side === 'buy' ? 'badge-green' : 'badge-red'}">${escHtml((tr.side || '').toUpperCase())}</span></td>
             <td>${tr.qty ?? '--'}</td>
             <td>${tr.price ? '$' + Number(tr.price).toFixed(2) : '--'}</td>
