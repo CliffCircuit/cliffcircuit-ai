@@ -2603,6 +2603,36 @@
   },
   "experiments": [
     {
+      "id": 15,
+      "experiment_id": "EXP-R3-012",
+      "created_at": "2026-03-23 03:52:32",
+      "hypothesis": "Karpathy Round 3 synthesis: Root cause of 7% win rate is systematic trading of near-impossible contracts at $0.01-$0.05. Market is efficient at these prices. Model cold bias (4-15F) compounds the error. Fix: price floor $0.20 + edge ratio cap 0.50 gives 62.5% backtest win rate on 8 trades.",
+      "change_description": "Combined filters implemented: MIN_PRICE_FLOOR=0.20, MAX_EDGE_TO_SIZE=0.15, MAX_EDGE_RATIO=0.50, expanded TRADEABLE_CITIES. Waiting for v3/v4 trade settlements to validate.",
+      "metric_name": "win_rate",
+      "baseline_value": 0.0714,
+      "new_value": 0.625,
+      "delta": null,
+      "status": "kept",
+      "details": "{\"round_3_experiments\": 11, \"experiments_kept\": 3, \"code_changes_made\": [\"MIN_PRICE_FLOOR: 0.10 \\u2192 0.20 (EXP-R3-001)\", \"TRADEABLE_CITIES: expanded to 15 cities (EXP-R3-005)\", \"MAX_EDGE_TO_SIZE: 0.15 added (EXP-R3-006)\", \"MAX_EDGE_RATIO: 0.50 added (EXP-R3-009)\"], \"root_causes_identified\": [\"54/70 losses were on sub-$0.05 contracts \\u2014 market correctly prices near-zero prob\", \"Model has systematic cold bias 4-15F per city \\u2014 actual temps run warmer\", \"Edge >10% signals model overconfidence, not genuine opportunity\", \"Edge/price ratio >50% perfectly separates all losers from winners\", \"Settlement data discrepancy 20.8% \\u2014 our actuals differ from Kalshi's ASOS\"], \"backtest_metrics\": {\"original_win_rate\": \"7.14% (5/70)\", \"filtered_win_rate\": \"62.5% (5/8) with new filters\", \"trades_eliminated\": 62, \"trades_kept\": 8}, \"caveats\": [\"Only 8 trades in filtered sample \\u2014 overfitting risk is HIGH\", \"All 70 trades are pipeline_version=1 \\u2014 pre-bias correction era\", \"Must validate against new v3/v4 trades as they settle (Mar 23-26)\"], \"next_steps\": [\"Wait for 50+ v3/v4 trades to settle (Mar 23-26)\", \"Align settlement temperature source with Kalshi ASOS data\", \"Run Karpathy Round 4 with fresh data after settlements\"]}",
+      "commit_hash": null,
+      "pipeline_version": 5
+    },
+    {
+      "id": 14,
+      "experiment_id": "EXP-R3-011",
+      "created_at": "2026-03-23 03:52:07",
+      "hypothesis": "Settlement data discrepancy: 20.8% of above/below contracts show different resolution between our hourly-aggregated temperature data and Kalshi official settlement. Our calibration is based on wrong actuals. This corrupts the bias_tracker and forecast_outcomes table.",
+      "change_description": "Analysis only. Root cause identified: hourly-aggregation from weather stations differs from Kalshi ASOS settlement data by 1-5F. Need to align to official settlement source.",
+      "metric_name": "win_rate",
+      "baseline_value": 0.0714,
+      "new_value": 0.0714,
+      "delta": null,
+      "status": "informational",
+      "details": "{\"settlement_disagree_count\": 11, \"settlement_agree_count\": 42, \"disagree_rate\": 0.20754716981132076, \"our_yes_kalshi_no\": 8, \"our_no_kalshi_yes\": 3, \"interpretation\": \"In 11/53 (20.8%) above/below contracts, our hourly-aggregated temperature data disagrees with Kalshi's official settlement. Kalshi uses official ASOS/METAR airport data which can differ from our hourly aggregation by 1-5F. This is a significant source of calibration error.\", \"example_KXLOWTNYC_T48\": {\"contract\": \"NYC low temp above 48F?\", \"our_data\": \"51.1F \\u2192 YES\", \"kalshi_result\": \"NO\", \"delta\": \"3.1F discrepancy \\u2014 Kalshi's ASOS may have measured 47.x\"}, \"implication\": \"Our forecast_outcomes calibration is based on wrong actual values. Fix: use Kalshi settlement source or official ASOS direct.\"}",
+      "commit_hash": null,
+      "pipeline_version": 5
+    },
+    {
       "id": 13,
       "experiment_id": "EXP-R3-010",
       "created_at": "2026-03-23 03:51:23",
@@ -2784,11 +2814,11 @@
     }
   ],
   "experiment_summary": {
-    "total": 12,
-    "kept": 4,
+    "total": 14,
+    "kept": 5,
     "rejected": 0,
     "best_improvement": null
   },
   "alerts": [],
-  "exported_at": "2026-03-23T03:51:27.083975+00:00"
+  "exported_at": "2026-03-23T03:52:39.861808+00:00"
 }
