@@ -727,28 +727,71 @@
       <!-- ========== MARKET REGIME + ACTIVITY ========== -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
 
-        <!-- Market Regime -->
+        <!-- Market Regime (HMM) -->
         <div class="section-card fade-in stagger-3">
-          <div class="section-title">Market Regime</div>
-          <div class="flex items-center gap-6">
-            <div class="regime-indicator regime-neutral" id="regime-indicator">
-              <span id="regime-label">--</span>
+          <div class="section-title">
+            <span style="font-size:14px">🧠</span> HMM Market Regime
+            <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">hidden markov model</span>
+          </div>
+
+          <!-- Top row: confidence ring + stats -->
+          <div class="flex items-center gap-5 mb-4">
+            <!-- Confidence ring -->
+            <div class="hmm-confidence-ring" id="hmm-ring">
+              <svg viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                <circle class="ring-fill" id="hmm-ring-fill" cx="50" cy="50" r="42"
+                  stroke="#eab308"
+                  stroke-dasharray="263.9"
+                  stroke-dashoffset="263.9"/>
+              </svg>
+              <div class="ring-inner">
+                <div class="regime-name" id="hmm-regime-name" style="color:#eab308">--</div>
+                <div class="confidence-pct" id="hmm-confidence-pct">--%</div>
+              </div>
             </div>
-            <div class="flex-1">
-              <div class="flex items-baseline justify-between mb-2">
-                <span class="text-xs text-gray-500 uppercase tracking-wide">SPY RSI (14)</span>
-                <span class="text-lg font-bold text-white font-mono" id="spy-rsi">--</span>
+
+            <!-- Stats column -->
+            <div class="flex-1 space-y-2">
+              <div>
+                <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Recommendation</div>
+                <span class="regime-rec-badge" id="hmm-recommendation">--</span>
               </div>
-              <div class="rsi-gauge-track">
-                <div class="rsi-needle" id="rsi-needle" style="left:50%"></div>
-              </div>
-              <div class="flex justify-between text-xs mt-1.5" style="color:#4b5563">
-                <span>Oversold</span>
-                <span>Neutral</span>
-                <span>Overbought</span>
+              <div class="grid grid-cols-2 gap-3 mt-2">
+                <div>
+                  <div class="text-xs text-gray-500 uppercase" style="font-size:9px">Mean Return</div>
+                  <div class="text-sm font-bold font-mono text-white" id="hmm-mean-return">--</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500 uppercase" style="font-size:9px">Volatility</div>
+                  <div class="text-sm font-bold font-mono text-white" id="hmm-volatility">--</div>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Regime history timeline -->
+          <div class="mb-4">
+            <div class="text-xs text-gray-500 uppercase tracking-wide mb-2" style="font-size:9px">Regime History</div>
+            <div class="regime-timeline" id="hmm-timeline"></div>
+          </div>
+
+          <!-- SPY RSI Gauge (kept) -->
+          <div class="pt-3" style="border-top:1px solid rgba(55,65,81,0.3);">
+            <div class="flex items-baseline justify-between mb-2">
+              <span class="text-xs text-gray-500 uppercase tracking-wide">SPY RSI (14)</span>
+              <span class="text-lg font-bold text-white font-mono" id="spy-rsi">--</span>
+            </div>
+            <div class="rsi-gauge-track">
+              <div class="rsi-needle" id="rsi-needle" style="left:50%"></div>
+            </div>
+            <div class="flex justify-between text-xs mt-1.5" style="color:#4b5563">
+              <span>Oversold</span>
+              <span>Neutral</span>
+              <span>Overbought</span>
+            </div>
+          </div>
+
           <!-- Backtest badge -->
           <div class="mt-4 pt-3" style="border-top:1px solid rgba(55,65,81,0.3);" id="backtest-section" hidden>
             <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Latest Backtest</div>
@@ -795,6 +838,54 @@
             </thead>
             <tbody id="wheel-body"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- ========== HMM REGIME STRATEGY ========== -->
+      <div class="section-card fade-in stagger-5" style="animation-delay:0.28s">
+        <div class="section-title">
+          <span style="font-size:14px">🤖</span> HMM Regime Strategy
+          <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">automated regime-based trading</span>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Total P&L</div>
+            <div class="stat-value" style="font-size:1.2rem" id="hmm-total-pnl">$0.00</div>
+          </div>
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Trades</div>
+            <div class="stat-value" style="font-size:1.2rem" id="hmm-num-trades">0</div>
+          </div>
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value" style="font-size:1.2rem" id="hmm-win-rate">--</div>
+          </div>
+          <div class="stat-glass" style="padding:0.85rem">
+            <div class="stat-label">Open Positions</div>
+            <div class="stat-value" style="font-size:1.2rem" id="hmm-open-positions">0</div>
+          </div>
+        </div>
+
+        <!-- Regime distribution bar -->
+        <div class="mb-4">
+          <div class="text-xs text-gray-500 uppercase tracking-wide mb-2" style="font-size:9px">Regime Distribution</div>
+          <div class="hmm-dist-bar" id="hmm-dist-bar"></div>
+          <div class="hmm-dist-legend" id="hmm-dist-legend"></div>
+        </div>
+
+        <!-- Recent HMM trades table -->
+        <div id="hmm-trades-section">
+          <div id="hmm-trades-empty" class="text-gray-600 text-sm">No HMM trades recorded yet.</div>
+          <div class="overflow-x-auto">
+            <table class="data-table" id="hmm-trades-table" style="display:none;">
+              <thead>
+                <tr><th>Date</th><th>Symbol</th><th>Side</th><th>Regime</th><th>Entry</th><th>Exit</th><th>P&L</th></tr>
+              </thead>
+              <tbody id="hmm-trades-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1154,11 +1245,101 @@
         wrEl.className = 'stat-value pnl-zero';
       }
 
-      // Regime
-      const regime = s.macro_regime || 'neutral';
-      const regEl = document.getElementById('regime-indicator');
-      regEl.className = 'regime-indicator regime-' + regime.replace('_', '-').toLowerCase();
-      document.getElementById('regime-label').textContent = regime.replace('_', ' ');
+      // HMM Regime
+      const hmm = d.hmm_regime || {};
+      const hmmCur = hmm.current_regime || {};
+      const hmmRegime = (hmmCur.regime || 'sideways').toLowerCase();
+      const hmmConf = hmmCur.confidence != null ? hmmCur.confidence : 0;
+      const hmmRegimeColors = { bull: '#10b981', sideways: '#eab308', bear: '#f87171', crisis: '#ef4444' };
+      const hmmColor = hmmRegimeColors[hmmRegime] || '#6b7280';
+
+      // Confidence ring
+      const circumference = 2 * Math.PI * 42; // r=42
+      const ringFill = document.getElementById('hmm-ring-fill');
+      ringFill.setAttribute('stroke', hmmColor);
+      ringFill.style.strokeDashoffset = circumference - (circumference * hmmConf);
+
+      // Regime label + confidence
+      const nameEl = document.getElementById('hmm-regime-name');
+      nameEl.textContent = hmmRegime;
+      nameEl.style.color = hmmColor;
+      const confEl = document.getElementById('hmm-confidence-pct');
+      animateValue(confEl, 0, Math.round(hmmConf * 100), isRefresh ? 600 : 1200, v => v + '%');
+
+      // Recommendation badge
+      const rec = hmmCur.recommendation || '--';
+      const recEl = document.getElementById('hmm-recommendation');
+      recEl.textContent = rec.replace(/_/g, ' ');
+      recEl.className = 'regime-rec-badge ' + rec;
+
+      // Mean return & volatility
+      document.getElementById('hmm-mean-return').textContent = hmmCur.mean_return != null ? (hmmCur.mean_return * 100).toFixed(3) + '%' : '--';
+      document.getElementById('hmm-volatility').textContent = hmmCur.volatility != null ? (hmmCur.volatility * 100).toFixed(2) + '%' : '--';
+
+      // Regime history timeline
+      const history = (hmm.regime_history || []).slice(0, 7);
+      const tlEl = document.getElementById('hmm-timeline');
+      tlEl.innerHTML = history.map((h, i) => {
+        const r = (h.regime || 'sideways').toLowerCase();
+        const ts = new Date(h.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        return (i > 0 ? '<div class="regime-dot-connector"></div>' : '') +
+          '<div class="regime-dot ' + r + '" title="' + escHtml(r) + ' @ ' + escHtml(ts) + ' (' + Math.round((h.confidence||0)*100) + '%)"></div>';
+      }).join('');
+
+      // HMM Strategy stats
+      const hmmSum = hmm.hmm_summary || {};
+      const hmmPnlEl = document.getElementById('hmm-total-pnl');
+      hmmPnlEl.textContent = fmtPnl(hmmSum.total_pnl || 0);
+      hmmPnlEl.className = 'stat-value ' + pnlClass(hmmSum.total_pnl || 0);
+      document.getElementById('hmm-num-trades').textContent = hmmSum.num_trades ?? 0;
+      const hmmWrEl = document.getElementById('hmm-win-rate');
+      if (hmmSum.num_trades > 0) {
+        hmmWrEl.textContent = (hmmSum.win_rate || 0).toFixed(1) + '%';
+        hmmWrEl.className = 'stat-value ' + ((hmmSum.win_rate || 0) >= 50 ? 'pnl-pos' : 'pnl-neg');
+      } else {
+        hmmWrEl.textContent = '--';
+        hmmWrEl.className = 'stat-value pnl-zero';
+      }
+      document.getElementById('hmm-open-positions').textContent = hmmSum.current_positions ?? 0;
+
+      // Regime distribution bar
+      const distData = hmm.regime_distribution || [];
+      const distBar = document.getElementById('hmm-dist-bar');
+      const distLegend = document.getElementById('hmm-dist-legend');
+      const distColors = { bull: 'var(--emerald)', sideways: '#eab308', bear: 'var(--coral)', crisis: '#ef4444' };
+      distBar.innerHTML = distData.map(rd => {
+        const rn = (rd.regime || '').toLowerCase();
+        return '<div class="dist-segment ' + rn + '" style="width:' + rd.pct + '%">' + (rd.pct >= 10 ? rn + ' ' + Math.round(rd.pct) + '%' : '') + '</div>';
+      }).join('');
+      distLegend.innerHTML = distData.map(rd => {
+        const rn = (rd.regime || '').toLowerCase();
+        const bg = distColors[rn] || '#6b7280';
+        return '<div class="hmm-dist-legend-item"><div class="hmm-dist-legend-dot" style="background:' + bg + '"></div>' + rn + ' ' + rd.pct.toFixed(1) + '%</div>';
+      }).join('');
+
+      // HMM trades table
+      const hmmTrades = hmm.hmm_trades || [];
+      if (hmmTrades.length === 0) {
+        document.getElementById('hmm-trades-empty').style.display = '';
+        document.getElementById('hmm-trades-table').style.display = 'none';
+      } else {
+        document.getElementById('hmm-trades-empty').style.display = 'none';
+        document.getElementById('hmm-trades-table').style.display = '';
+        document.getElementById('hmm-trades-body').innerHTML = hmmTrades.slice(0, 20).map(tr => `
+          <tr>
+            <td>${escHtml(tr.date || tr.ts || '--')}</td>
+            <td class="font-semibold text-white">${escHtml(tr.symbol || '--')}</td>
+            <td>${escHtml(tr.side || '--')}</td>
+            <td><span class="regime-dot ${(tr.regime||'').toLowerCase()}" style="display:inline-block;width:8px;height:8px;vertical-align:middle;margin-right:4px"></span>${escHtml(tr.regime || '--')}</td>
+            <td>${tr.entry_price != null ? '$' + Number(tr.entry_price).toFixed(2) : '--'}</td>
+            <td>${tr.exit_price != null ? '$' + Number(tr.exit_price).toFixed(2) : '--'}</td>
+            <td class="${pnlClass(tr.pnl || 0)}">${fmtPnl(tr.pnl || 0)}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Legacy macro regime (fallback for regime indicator if no HMM)
+      const regime = hmmRegime || s.macro_regime || 'neutral';
 
       // RSI gauge
       const rsi = s.spy_rsi;
