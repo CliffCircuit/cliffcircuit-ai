@@ -2603,6 +2603,21 @@
   },
   "experiments": [
     {
+      "id": 13,
+      "experiment_id": "EXP-R3-010",
+      "created_at": "2026-03-23 03:51:23",
+      "hypothesis": "Analysis of 50+ active trades against new filter stack. Only 2/36 active trades pass all filters (price>=0.20, edge_ratio<0.5). Both are bucket contracts where warm bias poses risk. Active v4 trades have edge_ratio ~92x - completely outside filters.",
+      "change_description": "No code change. Analysis of active portfolio against new parameters. Finding: filters will dramatically reduce new trade entries going forward.",
+      "metric_name": "win_rate",
+      "baseline_value": 0.0714,
+      "new_value": 0.0714,
+      "delta": null,
+      "status": "informational",
+      "details": "{\"active_trades_passing_all_filters\": 2, \"trade_1\": {\"ticker\": \"KXHIGHTBOS-26MAR23-B38.5\", \"contract\": \"Will Boston high be 38-39F on Mar 23?\", \"entry_price\": 0.77, \"model_prob\": 0.953, \"edge_ratio\": 0.211, \"concern\": \"Boston warm bias +8.5F means actual high likely higher than 38-39F bucket \\u2192 possible LOSS\", \"risk\": \"medium-high\"}, \"trade_2\": {\"ticker\": \"KXLOWTMIA-26MAR23-B63.5\", \"contract\": \"Will Miami low be 63-64F on Mar 23?\", \"entry_price\": 0.83, \"model_prob\": 0.973, \"edge_ratio\": 0.16, \"concern\": \"Miami warm bias +5.2F means actual low likely above 64F \\u2192 miss bucket \\u2192 LOSS\", \"risk\": \"medium\"}, \"insight\": \"Both passing trades are 'between' (bucket) contracts. Warm bias means actual temps tend to be HIGHER than our model predicts. For bucket contracts, this shifts the probability mass away from predicted bucket.\"}",
+      "commit_hash": null,
+      "pipeline_version": 5
+    },
+    {
       "id": 12,
       "experiment_id": "EXP-R3-009",
       "created_at": "2026-03-23 03:50:40",
@@ -2769,11 +2784,11 @@
     }
   ],
   "experiment_summary": {
-    "total": 11,
+    "total": 12,
     "kept": 4,
     "rejected": 0,
     "best_improvement": null
   },
   "alerts": [],
-  "exported_at": "2026-03-23T03:50:45.867960+00:00"
+  "exported_at": "2026-03-23T03:51:27.083975+00:00"
 }
