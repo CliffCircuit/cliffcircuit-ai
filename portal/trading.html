@@ -502,7 +502,7 @@
       }
       body.innerHTML = filtered.slice(0, 30).map(t => `
         <tr>
-          <td class="text-cyan-400 text-xs">${fmtTimestamp(currentTradeFilter === 'settled' ? (t.close_time || t.resolved_at || t.entered_at) : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at) : t.entered_at))}</td>
+          <td class="text-xs" style="color: #22d3ee">${fmtTimestamp(currentTradeFilter === 'settled' ? (t.close_time || t.resolved_at || t.entered_at) : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at) : t.entered_at))}</td>
           <td><span class="text-sm text-white">${esc(parseTickerDescription(t.ticker) || t.description || t.ticker)}</span><br><span class="font-mono text-xs text-gray-500">${esc(t.ticker)}</span></td>
           <td><span class="text-xs ${t.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${t.platform}</span></td>
           <td><span class="${t.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${t.side}</span></td>
