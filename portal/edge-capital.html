@@ -1055,12 +1055,12 @@
             <div class="stat-value" id="exp-win-rate">--</div>
           </div>
           <div class="stat-glass">
-            <div class="stat-label">Avg P&L</div>
-            <div class="stat-value" id="exp-avg-pnl">--</div>
+            <div class="stat-label">Best P&L</div>
+            <div class="stat-value" id="exp-best-pnl">--</div>
           </div>
           <div class="stat-glass">
-            <div class="stat-label">Best Ticker</div>
-            <div class="stat-value text-white" id="exp-best-ticker">--</div>
+            <div class="stat-label">Active Model</div>
+            <div class="stat-value text-white" id="exp-active-model" style="font-size:0.85rem">--</div>
           </div>
         </div>
         <div style="position:relative;height:200px;margin-bottom:1.5rem;">
@@ -1098,7 +1098,7 @@
     let previousData = null;
     let currentStrategy = 'all';
     let latestData = null;
-    let expShowCount = 10;
+    let expShowCount = 25;
     let allExperimentsSorted = [];
 
     // Strategy mapping
@@ -1127,7 +1127,7 @@
     }
 
     function loadMoreExperiments() {
-      expShowCount += 10;
+      expShowCount += 25;
       renderExperimentsTable();
     }
 
@@ -1725,22 +1725,77 @@
       document.getElementById('research-last-report').textContent = r.last_report
         ? new Date(r.last_report).toLocaleString()
         : 'No reports yet';
+      // Clean up raw field names for signal effectiveness display
+      const signalNameMap = {
+        'error': 'Error Rate',
+        'trade_count': 'Trade Volume',
+        'avg_pnl': 'Average P&L',
+        'win_rate': 'Win Rate',
+        'max_drawdown': 'Max Drawdown',
+        'sharpe': 'Sharpe Ratio',
+        'sortino': 'Sortino Ratio',
+        'profit_factor': 'Profit Factor',
+        'avg_hold_time': 'Avg Hold Time',
+        'total_pnl': 'Total P&L',
+        'num_trades': 'Number of Trades',
+        'scanner': 'Signal Scanner',
+        'hmm_regime': 'Markov Regime',
+        'auto_trader': 'Signal Scanner',
+        'technical': 'Technical Analysis',
+        'momentum': 'Momentum',
+        'trend': 'Trend Following',
+        'news': 'News Sentiment',
+        'social': 'Social Buzz',
+        'fundamentals': 'Fundamentals',
+      };
+      function cleanSignalName(raw) {
+        if (signalNameMap[raw]) return signalNameMap[raw];
+        // Convert snake_case to Title Case
+        return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
       const eff = r.signal_effectiveness || {};
       const effKeys = Object.keys(eff);
+
+      // Separate into strategy-level rows (Signal Scanner / Markov) and signal-level rows
+      const strategyKeys = ['scanner', 'hmm_regime', 'auto_trader'];
+      const stratRows = effKeys.filter(k => strategyKeys.includes(k));
+      const signalRows = effKeys.filter(k => !strategyKeys.includes(k));
+
       if (effKeys.length > 0) {
-        document.getElementById('research-effectiveness').innerHTML = `
-          <table class="data-table">
-            <thead><tr><th>Signal</th><th>Avg P&L%</th><th>Win Rate</th><th>Trades</th></tr></thead>
-            <tbody>${effKeys.map(k => {
-              const e = eff[k];
-              return `<tr>
-                <td class="text-white">${escHtml(k)}</td>
-                <td class="${pnlClass(e.avg_pnl_pct)}">${e.avg_pnl_pct !== undefined ? fmtPct(e.avg_pnl_pct) : '--'}</td>
-                <td>${e.win_rate !== undefined ? e.win_rate.toFixed(1) + '%' : '--'}</td>
-                <td>${e.count ?? '--'}</td>
-              </tr>`;
-            }).join('')}</tbody>
-          </table>`;
+        let tableHtml = `<table class="data-table">
+          <thead><tr><th>Signal</th><th>Avg P&L%</th><th>Win Rate</th><th>Trades</th><th>Trend</th></tr></thead><tbody>`;
+
+        // Strategy rows first (bold, with separator)
+        if (stratRows.length > 0) {
+          stratRows.forEach(k => {
+            const e = eff[k];
+            const trendIcon = e.avg_pnl_pct > 0 ? '<span class="pnl-pos">↑ Improving</span>' : e.avg_pnl_pct < 0 ? '<span class="pnl-neg">↓ Declining</span>' : '<span class="text-gray-500">→ Flat</span>';
+            tableHtml += `<tr style="background:rgba(59,130,246,0.05)">
+              <td class="text-white font-semibold">${escHtml(cleanSignalName(k))}</td>
+              <td class="${pnlClass(e.avg_pnl_pct)}">${e.avg_pnl_pct !== undefined ? fmtPct(e.avg_pnl_pct) : '--'}</td>
+              <td>${e.win_rate !== undefined ? e.win_rate.toFixed(1) + '%' : '--'}</td>
+              <td>${e.count ?? '--'}</td>
+              <td>${trendIcon}</td>
+            </tr>`;
+          });
+        }
+
+        // Signal-level rows
+        signalRows.forEach(k => {
+          const e = eff[k];
+          const trendIcon = e.avg_pnl_pct > 0 ? '<span class="pnl-pos">↑</span>' : e.avg_pnl_pct < 0 ? '<span class="pnl-neg">↓</span>' : '<span class="text-gray-500">→</span>';
+          tableHtml += `<tr>
+            <td class="text-white">${escHtml(cleanSignalName(k))}</td>
+            <td class="${pnlClass(e.avg_pnl_pct)}">${e.avg_pnl_pct !== undefined ? fmtPct(e.avg_pnl_pct) : '--'}</td>
+            <td>${e.win_rate !== undefined ? e.win_rate.toFixed(1) + '%' : '--'}</td>
+            <td>${e.count ?? '--'}</td>
+            <td>${trendIcon}</td>
+          </tr>`;
+        });
+
+        tableHtml += '</tbody></table>';
+        document.getElementById('research-effectiveness').innerHTML = tableHtml;
       }
     }
 
@@ -1817,13 +1872,34 @@
         wrEl.className = 'stat-value ' + (wr >= 0.5 ? 'pnl-pos' : 'pnl-neg');
       } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
 
-      const pnlEl = document.getElementById('exp-avg-pnl');
-      if (summary.avg_pnl != null) {
-        pnlEl.textContent = (summary.avg_pnl >= 0 ? '+' : '') + summary.avg_pnl.toFixed(1) + '%';
-        pnlEl.className = 'stat-value ' + (summary.avg_pnl >= 0 ? 'pnl-pos' : 'pnl-neg');
-      } else { pnlEl.textContent = '--'; pnlEl.className = 'stat-value pnl-zero'; }
+      // Best P&L — highest avg_pnl from any KEPT experiment
+      const keptExps = experiments.filter(e => (e.status || '').toLowerCase() === 'kept');
+      const bestPnlExp = keptExps.length > 0 ? keptExps.reduce((best, e) => (e.avg_pnl || 0) > (best.avg_pnl || 0) ? e : best, keptExps[0]) : null;
+      const bestPnlEl = document.getElementById('exp-best-pnl');
+      if (bestPnlExp && bestPnlExp.avg_pnl != null) {
+        bestPnlEl.textContent = (bestPnlExp.avg_pnl >= 0 ? '+' : '') + bestPnlExp.avg_pnl.toFixed(1) + '%';
+        bestPnlEl.className = 'stat-value ' + (bestPnlExp.avg_pnl >= 0 ? 'pnl-pos' : 'pnl-neg');
+        bestPnlEl.title = bestPnlExp.experiment_id;
+      } else { bestPnlEl.textContent = '--'; bestPnlEl.className = 'stat-value pnl-zero'; }
 
-      document.getElementById('exp-best-ticker').textContent = summary.best_ticker || '--';
+      // Active Model — show deployed experiment + best undeployed candidate
+      const activeModelEl = document.getElementById('exp-active-model');
+      const activeId = summary.active_model || null;
+      const bestCandidate = keptExps.filter(e => e.experiment_id !== activeId)
+        .reduce((best, e) => (e.avg_pnl || 0) > (best ? best.avg_pnl || 0 : -Infinity) ? e : best, null);
+      if (activeId) {
+        let label = activeId;
+        if (bestCandidate && bestCandidate.avg_pnl != null) {
+          label += ` (Best: ${bestCandidate.experiment_id}, ${bestCandidate.avg_pnl >= 0 ? '+' : ''}${bestCandidate.avg_pnl.toFixed(1)}%)`;
+        }
+        activeModelEl.textContent = label;
+      } else {
+        let label = 'None';
+        if (bestCandidate && bestCandidate.avg_pnl != null) {
+          label += ` (Best: ${bestCandidate.experiment_id}, ${bestCandidate.avg_pnl >= 0 ? '+' : ''}${bestCandidate.avg_pnl.toFixed(1)}%)`;
+        }
+        activeModelEl.textContent = label;
+      }
 
       // Chart
       const canvas = document.getElementById('exp-chart');
@@ -1900,7 +1976,7 @@
 
       // Table with pagination
       allExperimentsSorted = [...experiments].reverse();
-      expShowCount = 10; // reset on data refresh
+      expShowCount = 25; // reset on data refresh
       renderExperimentsTable();
     }
 
