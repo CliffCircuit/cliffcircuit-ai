@@ -13,9 +13,21 @@
     .pnl-neg { color: #f87171; }
     .pnl-zero { color: #6b7280; }
     .stat-card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 1.25rem; }
-    .trade-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .trade-table th { text-align: left; color: #6b7280; font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #1f2937; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .trade-table td { padding: 4px 12px; border-bottom: 1px solid #111827; color: #d1d5db; }
+    .trade-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    .trade-table th { text-align: left; color: #6b7280; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #1f2937; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .trade-table td { padding: 4px 8px; border-bottom: 1px solid #111827; color: #d1d5db; white-space: nowrap; }
+    .trade-table .col-desc { width: 22%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trade-table .col-plat { width: 5%; }
+    .trade-table .col-side { width: 4%; }
+    .trade-table .col-price { width: 6%; }
+    .trade-table .col-size { width: 4%; }
+    .trade-table .col-ver { width: 3%; }
+    .trade-table .col-prob { width: 12%; }
+    .trade-table .col-edge { width: 12%; }
+    .trade-table .col-wl { width: 12%; }
+    .trade-table .col-entered { width: 10%; }
+    .trade-table .col-matures { width: 6%; }
+    .prev-val { color: #6b7280; font-size: 10px; }
     .trade-table tr:hover { background: #1f2937; }
     .health-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .health-dot.green { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
@@ -146,17 +158,17 @@
             <table class="trade-table">
               <thead>
                 <tr>
-                  <th>Description</th>
-                  <th>Platform</th>
-                  <th>Side</th>
-                  <th>Entry Price</th>
-                  <th>Size</th>
-                  <th>Ver</th>
-                  <th>Prob</th>
-                  <th>Edge</th>
-                  <th>Win / Loss</th>
-                  <th>Entered</th>
-                  <th>Matures</th>
+                  <th class="col-desc">Description</th>
+                  <th class="col-plat">Platform</th>
+                  <th class="col-side">Side</th>
+                  <th class="col-price">Entry</th>
+                  <th class="col-size">Size</th>
+                  <th class="col-ver">Ver</th>
+                  <th class="col-prob">Prob</th>
+                  <th class="col-edge">Edge</th>
+                  <th class="col-wl">Win / Loss</th>
+                  <th class="col-entered">Entered</th>
+                  <th class="col-matures">Matures</th>
                 </tr>
               </thead>
               <tbody id="positions-body">
@@ -459,17 +471,17 @@
         const desc = parseTickerDescription(p.ticker) || p.description || p.ticker;
         return `
         <tr>
-          <td><span class="text-sm text-white">${esc(desc)}</span><br><span class="font-mono text-xs text-gray-500">${esc(p.ticker)}</span></td>
-          <td><span class="text-xs ${p.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${p.platform}</span></td>
-          <td><span class="${p.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${p.side}</span></td>
-          <td>${Number(p.entry_price).toFixed(2)}¢</td>
-          <td>${p.contracts}</td>
-          <td class="text-gray-400 text-xs font-mono">v${p.pipeline_version || '?'}</td>
-          <td>${p.current_model_prob != null ? `<span class="${p.current_model_prob < p.model_prob ? 'text-red-400' : 'text-green-400'}">${(p.current_model_prob * 100).toFixed(1)}%</span> <span class="text-gray-500 text-xs">(${(Number(p.model_prob) * 100).toFixed(1)}%)</span>` : `${(Number(p.model_prob) * 100).toFixed(1)}%`}</td>
-          <td>${p.current_edge != null ? `<span class="${p.current_edge < 0 ? 'text-red-400' : 'text-green-400'}">${(p.current_edge * 100).toFixed(1)}%</span> <span class="text-gray-500 text-xs">(${(Number(p.edge) * 100).toFixed(1)}%)</span>` : `${(Number(p.edge) * 100).toFixed(1)}%`}</td>
-          <td class="text-xs">${fmtWinLoss(p.entry_price, p.contracts)}</td>
-          <td class="text-gray-400 text-xs">${fmtTimestamp(p.entered_at)}</td>
-          <td class="text-xs maturation-cell" data-close-time="${esc(p.close_time || '')}">${fmtMaturation(p.close_time)}</td>
+          <td class="col-desc" title="${esc(p.ticker)}"><span class="text-sm text-white" style="overflow:hidden;text-overflow:ellipsis;display:block">${esc(desc)}</span><span class="font-mono text-gray-500" style="font-size:10px;overflow:hidden;text-overflow:ellipsis;display:block">${esc(p.ticker)}</span></td>
+          <td><span style="font-size:11px" class="${p.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${p.platform === 'polymarket' ? 'poly' : p.platform}</span></td>
+          <td><span class="${p.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase" style="font-size:11px">${p.side}</span></td>
+          <td style="font-size:12px">${Number(p.entry_price).toFixed(2)}¢</td>
+          <td style="font-size:12px">${p.contracts}</td>
+          <td class="text-gray-400 font-mono" style="font-size:10px">v${p.pipeline_version || '?'}</td>
+          <td>${p.current_model_prob != null ? `<span class="${p.current_model_prob < p.model_prob ? 'text-red-400' : 'text-green-400'}" style="font-size:12px">${(p.current_model_prob * 100).toFixed(1)}%</span> <span class="prev-val">(${(Number(p.model_prob) * 100).toFixed(1)})</span>` : `<span style="font-size:12px">${(Number(p.model_prob) * 100).toFixed(1)}%</span>`}</td>
+          <td>${p.current_edge != null ? `<span class="${p.current_edge < 0 ? 'text-red-400' : 'text-green-400'}" style="font-size:12px">${(p.current_edge * 100).toFixed(1)}%</span> <span class="prev-val">(${(Number(p.edge) * 100).toFixed(1)})</span>` : `<span style="font-size:12px">${(Number(p.edge) * 100).toFixed(1)}%</span>`}</td>
+          <td style="font-size:11px">${fmtWinLoss(p.entry_price, p.contracts)}</td>
+          <td class="text-gray-400" style="font-size:11px">${fmtTimestamp(p.entered_at)}</td>
+          <td style="font-size:11px" class="maturation-cell" data-close-time="${esc(p.close_time || '')}">${fmtMaturation(p.close_time)}</td>
         </tr>
       `}).join('');
       if (positions.length > 25) {
