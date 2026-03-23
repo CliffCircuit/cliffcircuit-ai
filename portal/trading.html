@@ -138,7 +138,7 @@
                   <th>Size</th>
                   <th>Model Prob</th>
                   <th>Edge</th>
-                  <th>W / L</th>
+                  <th>Win / Loss</th>
                   <th>Entered</th>
                   <th>Matures</th>
                 </tr>
@@ -182,7 +182,7 @@
                   <th>Price</th>
                   <th>Size</th>
                   <th>Edge</th>
-                  <th>W / L</th>
+                  <th id="trades-wl-header">Win / Loss</th>
                   <th>P&L</th>
                   <th>Result</th>
                 </tr>
@@ -492,6 +492,11 @@
       // Update column header based on filter
       const timeHeader = document.getElementById('trades-time-header');
       if (timeHeader) timeHeader.textContent = currentTradeFilter === 'settled' ? 'Closed' : (currentTradeFilter === 'open' ? 'Matures' : 'Entered');
+      const wlHeader = document.getElementById('trades-wl-header');
+      if (wlHeader) {
+        const hideWL = currentTradeFilter === 'settled' || currentTradeFilter === 'wins' || currentTradeFilter === 'losses';
+        wlHeader.style.display = hideWL ? 'none' : '';
+      }
       document.getElementById('trades-count').textContent = `(${trades.length} total)`;
       const body = document.getElementById('trades-body');
       if (!filtered.length) {
@@ -507,7 +512,7 @@
           <td>${Number(t.entry_price).toFixed(2)}¢</td>
           <td>${t.contracts || 1}x</td>
           <td>${(Number(t.edge) * 100).toFixed(1)}%</td>
-          <td class="text-xs">${fmtWinLoss(t.entry_price, t.contracts || 1)}</td>
+          <td class="text-xs" ${(currentTradeFilter === 'settled' || currentTradeFilter === 'wins' || currentTradeFilter === 'losses') ? 'style="display:none"' : ''}>${fmtWinLoss(t.entry_price, t.contracts || 1)}</td>
           <td>${t.pnl != null && t.result ? (t.pnl >= 0 ? '<span class="pnl-pos">+' + Math.abs(t.pnl).toFixed(2) + '¢</span>' : '<span class="pnl-neg">-' + Math.abs(t.pnl).toFixed(2) + '¢</span>') : '<span class="text-gray-600">—</span>'}</td>
           <td>${resultPill(t.result)}</td>
         </tr>
