@@ -152,8 +152,8 @@
                   <th>Entry Price</th>
                   <th>Size</th>
                   <th>Model Prob</th>
-                  <th>Edge</th>
                   <th>Curr Prob</th>
+                  <th>Edge</th>
                   <th>Curr Edge</th>
                   <th>Win / Loss</th>
                   <th>Entered</th>
@@ -466,8 +466,8 @@
           <td>${Number(p.entry_price).toFixed(2)}¢</td>
           <td>${p.contracts}</td>
           <td>${(Number(p.model_prob) * 100).toFixed(1)}%</td>
-          <td>${(Number(p.edge) * 100).toFixed(1)}%</td>
           <td class="${p.current_model_prob != null ? ((p.current_model_prob < p.model_prob) ? 'text-red-400' : 'text-green-400') : 'text-gray-500'}">${p.current_model_prob != null ? (p.current_model_prob * 100).toFixed(1) + '%' : '—'}</td>
+          <td>${(Number(p.edge) * 100).toFixed(1)}%</td>
           <td class="${p.current_edge != null ? ((p.current_edge < 0) ? 'text-red-400' : 'text-green-400') : 'text-gray-500'}">${p.current_edge != null ? (p.current_edge * 100).toFixed(1) + '%' : '—'}</td>
           <td class="text-xs">${fmtWinLoss(p.entry_price, p.contracts)}</td>
           <td class="text-gray-400 text-xs">${fmtTimestamp(p.entered_at)}</td>
