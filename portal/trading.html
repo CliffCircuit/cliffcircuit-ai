@@ -138,12 +138,13 @@
                   <th>Size</th>
                   <th>Model Prob</th>
                   <th>Edge</th>
+                  <th>W / L</th>
                   <th>Entered</th>
                   <th>Matures</th>
                 </tr>
               </thead>
               <tbody id="positions-body">
-                <tr><td colspan="9" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
+                <tr><td colspan="10" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -181,12 +182,13 @@
                   <th>Price</th>
                   <th>Size</th>
                   <th>Edge</th>
+                  <th>W / L</th>
                   <th>P&L</th>
                   <th>Result</th>
                 </tr>
               </thead>
               <tbody id="trades-body">
-                <tr><td colspan="7" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
+                <tr><td colspan="10" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -317,6 +319,15 @@
       });
     }, 60000);
 
+    function fmtWinLoss(entryPrice, contracts) {
+      const ep = Number(entryPrice);
+      const qty = Number(contracts) || 1;
+      if (isNaN(ep)) return '<span class="text-gray-600">—</span>';
+      const win = qty * (1 - ep);
+      const loss = qty * ep;
+      return `<span style="color:#22c55e">+$${win.toFixed(2)}</span> / <span style="color:#ef4444">-$${loss.toFixed(2)}</span>`;
+    }
+
     function resultPill(r) {
       if (!r) return '<span class="pill bg-cyan-900 text-cyan-300">Open</span>';
       if (r === 'win') return '<span class="pill status-published">Won</span>';
@@ -391,7 +402,7 @@
       document.getElementById('positions-count').textContent = `(${positions.length})`;
       const body = document.getElementById('positions-body');
       if (!positions.length) {
-        body.innerHTML = '<tr><td colspan="10" class="text-gray-600 text-center py-4">No open positions</td></tr>';
+        body.innerHTML = '<tr><td colspan="11" class="text-gray-600 text-center py-4">No open positions</td></tr>';
         return;
       }
       // Show first 25
@@ -406,12 +417,13 @@
           <td>${p.contracts}</td>
           <td>${(Number(p.model_prob) * 100).toFixed(1)}%</td>
           <td>${(Number(p.edge) * 100).toFixed(1)}%</td>
+          <td class="text-xs">${fmtWinLoss(p.entry_price, p.contracts)}</td>
           <td class="text-gray-400 text-xs">${fmtTimestamp(p.entered_at)}</td>
           <td class="text-xs maturation-cell" data-close-time="${esc(p.close_time || '')}">${fmtMaturation(p.close_time)}</td>
         </tr>
       `}).join('');
       if (positions.length > 25) {
-        body.innerHTML += `<tr><td colspan="10" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
+        body.innerHTML += `<tr><td colspan="11" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
       }
     }
 
@@ -483,7 +495,7 @@
       document.getElementById('trades-count').textContent = `(${trades.length} total)`;
       const body = document.getElementById('trades-body');
       if (!filtered.length) {
-        body.innerHTML = '<tr><td colspan="9" class="text-gray-600 text-center py-4">No trades match this filter</td></tr>';
+        body.innerHTML = '<tr><td colspan="10" class="text-gray-600 text-center py-4">No trades match this filter</td></tr>';
         return;
       }
       body.innerHTML = filtered.slice(0, 30).map(t => `
@@ -495,12 +507,13 @@
           <td>${Number(t.entry_price).toFixed(2)}¢</td>
           <td>${t.contracts || 1}x</td>
           <td>${(Number(t.edge) * 100).toFixed(1)}%</td>
+          <td class="text-xs">${fmtWinLoss(t.entry_price, t.contracts || 1)}</td>
           <td>${t.pnl != null && t.result ? (t.pnl >= 0 ? '<span class="pnl-pos">+' + Math.abs(t.pnl).toFixed(2) + '¢</span>' : '<span class="pnl-neg">-' + Math.abs(t.pnl).toFixed(2) + '¢</span>') : '<span class="text-gray-600">—</span>'}</td>
           <td>${resultPill(t.result)}</td>
         </tr>
       `).join('');
       if (filtered.length > 30) {
-        body.innerHTML += `<tr><td colspan="9" class="text-gray-500 text-center py-2 text-xs">+ ${filtered.length - 30} more trades</td></tr>`;
+        body.innerHTML += `<tr><td colspan="10" class="text-gray-500 text-center py-2 text-xs">+ ${filtered.length - 30} more trades</td></tr>`;
       }
     }
 
