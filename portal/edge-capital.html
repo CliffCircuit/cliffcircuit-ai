@@ -675,7 +675,7 @@
         <div class="overflow-x-auto">
           <table class="data-table" id="positions-table" style="display:none;">
             <thead>
-              <tr><th>Ticker</th><th>Qty</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th><th>P&L %</th></tr>
+              <tr><th>Ticker</th><th>Qty</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th><th>P&L %</th><th>Exit Signal</th></tr>
             </thead>
             <tbody id="positions-body"></tbody>
           </table>
@@ -1077,8 +1077,32 @@
       } else {
         document.getElementById('positions-empty').style.display = 'none';
         document.getElementById('positions-table').style.display = '';
-        document.getElementById('positions-body').innerHTML = positions.map(pos => `
-          <tr>
+        document.getElementById('positions-body').innerHTML = positions.map(pos => {
+          const pctChg = pos.pnl_pct != null ? pos.pnl_pct / 100 : 0;
+          // Exit thresholds from auto_trader
+          const STOP = -0.05, TP = 0.15, TRAIL_GATE = 0.08, TRAIL_PCT = -0.03;
+          let exitHtml = '';
+          if (pctChg <= STOP) {
+            exitHtml = '<span style="color:#ef4444;font-weight:600">⛔ STOP HIT</span>';
+          } else if (pctChg >= TP) {
+            exitHtml = '<span style="color:#22c55e;font-weight:600">🎯 TP HIT</span>';
+          } else if (pctChg >= TRAIL_GATE) {
+            const trailDist = ((pctChg + TRAIL_PCT) * 100).toFixed(1);
+            exitHtml = `<span style="color:#eab308;font-weight:600">🔒 Trail active</span><br><span class="text-xs text-gray-500">sells if drops ${Math.abs(TRAIL_PCT*100)}% → ${trailDist}% trigger</span>`;
+          } else if (pctChg < 0) {
+            const toStop = ((STOP - pctChg) * 100).toFixed(1);
+            const pct = Math.min(100, Math.abs(pctChg / STOP) * 100).toFixed(0);
+            exitHtml = `<div style="display:flex;align-items:center;gap:6px"><div style="width:50px;height:6px;background:#374151;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#ef4444;border-radius:3px"></div></div><span class="text-xs text-gray-500">${toStop}% to stop</span></div>`;
+          } else {
+            const toTP = ((TP - pctChg) * 100).toFixed(1);
+            const toTrail = ((TRAIL_GATE - pctChg) * 100).toFixed(1);
+            const pct = Math.min(100, (pctChg / TP) * 100).toFixed(0);
+            exitHtml = `<div style="display:flex;align-items:center;gap:6px"><div style="width:50px;height:6px;background:#374151;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#22c55e;border-radius:3px"></div></div><span class="text-xs text-gray-500">${toTP}% to TP</span></div>`;
+            if (Number(toTrail) < Number(toTP)) {
+              exitHtml += `<div class="text-xs text-gray-600" style="margin-top:2px">🔒 trail in ${toTrail}%</div>`;
+            }
+          }
+          return `<tr>
             <td class="font-semibold text-white">${escHtml(pos.name || pos.ticker)} <span class="text-gray-600 text-xs">${escHtml(pos.ticker)}</span></td>
             <td>${pos.qty ?? '--'}</td>
             <td>${pos.entry_price ? '$' + Number(pos.entry_price).toFixed(2) : '--'}</td>
@@ -1086,8 +1110,9 @@
             <td>${fmt$(pos.market_value)}</td>
             <td class="${pnlClass(pos.pnl)}">${fmtPnl(pos.pnl)}</td>
             <td class="${pnlClass(pos.pnl_pct)}">${fmtPct(pos.pnl_pct)}</td>
-          </tr>
-        `).join('');
+            <td style="min-width:120px">${exitHtml}</td>
+          </tr>`;
+        }).join('');
       }
 
       // ─── TOP SIGNALS as cards ───
