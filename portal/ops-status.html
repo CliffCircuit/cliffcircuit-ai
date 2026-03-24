@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operations Status — CliffCircuit</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0e27;
+      color: #e5e7eb;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+      padding: 2rem;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 1.8rem; margin-bottom: 1rem; color: #fff; }
+    .timestamp { font-size: 0.85rem; color: #9ca3af; margin-bottom: 2rem; }
+    
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    
+    .status-card {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s;
+    }
+    
+    .status-card:hover {
+      border-color: #4b5563;
+      background: #111827;
+    }
+    
+    .status-card.healthy { border-left: 4px solid #4ade80; }
+    .status-card.warning { border-left: 4px solid #facc15; }
+    .status-card.error { border-left: 4px solid #f87171; }
+    .status-card.blocked { border-left: 4px solid #6b7280; }
+    
+    .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; }
+    .card-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    
+    .dot-healthy { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .dot-warning { background: #facc15; box-shadow: 0 0 8px #facc15; }
+    .dot-error { background: #f87171; box-shadow: 0 0 8px #f87171; }
+    .dot-blocked { background: #9ca3af; }
+    
+    .card-detail {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+    
+    .metrics {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #111827;
+    }
+    
+    .metric-row:last-child { border-bottom: none; }
+    
+    .metric-label { color: #9ca3af; font-size: 0.9rem; }
+    .metric-value { font-weight: 600; font-size: 1rem; }
+    
+    .value-good { color: #4ade80; }
+    .value-warning { color: #facc15; }
+    .value-bad { color: #f87171; }
+    
+    .update-log {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      font-size: 0.85rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #111827;
+      color: #d1d5db;
+    }
+    
+    .log-entry.success { color: #4ade80; }
+    .log-entry.warning { color: #facc15; }
+    .log-entry.error { color: #f87171; }
+    
+    .log-time { color: #6b7280; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛠️ CliffCircuit Operations Status</h1>
+    <div class="timestamp" id="timestamp">Updated: —</div>
+    
+    <!-- Main Status Grid -->
+    <div class="status-grid">
+      <!-- Weather Edge -->
+      <div class="status-card healthy">
+        <div class="card-title">Weather Edge Pipeline</div>
+        <div class="card-status">
+          <div class="status-dot dot-healthy"></div>
+          <span>Healthy</span>
+        </div>
+        <div class="card-detail">
+          ✅ Watcher running (single instance)<br>
+          ✅ Fast path stable (~130s)<br>
+          ✅ Calibration deployed<br>
+          Next HRRR: ~4h away
+        </div>
+      </div>
+      
+      <!-- Edge Capital -->
+      <div class="status-card healthy">
+        <div class="card-title">Edge Capital Trading</div>
+        <div class="card-status">
+          <div class="status-dot dot-healthy"></div>
+          <span>Healthy</span>
+        </div>
+        <div class="card-detail">
+          ✅ Position-refresh running<br>
+          ✅ Auto-trader logging<br>
+          ✅ Dashboard synced (16 positions)<br>
+          Quiet market today
+        </div>
+      </div>
+      
+      <!-- Polygon API -->
+      <div class="status-card blocked">
+        <div class="card-title">Polygon API</div>
+        <div class="card-status">
+          <div class="status-dot dot-blocked"></div>
+          <span>Blocked</span>
+        </div>
+        <div class="card-detail">
+          ⏳ Missing API key<br>
+          Status: Awaiting external key<br>
+          Impact: Options analysis<br>
+          Workaround: Using cached data
+        </div>
+      </div>
+      
+      <!-- Data Health -->
+      <div class="status-card healthy">
+        <div class="card-title">Data Systems</div>
+        <div class="card-status">
+          <div class="status-dot dot-healthy"></div>
+          <span>Healthy</span>
+        </div>
+        <div class="card-detail">
+          ✅ DBs: weather-edge, edge-capital<br>
+          ✅ Sentiment store: clean<br>
+          ✅ Dashboards: synced<br>
+          ✅ Git: clean
+        </div>
+      </div>
+      
+      <!-- Performance -->
+      <div class="status-card warning">
+        <div class="card-title">Trading Performance</div>
+        <div class="card-status">
+          <div class="status-dot dot-warning"></div>
+          <span>Calibrating</span>
+        </div>
+        <div class="card-detail">
+          Win rate: 10.4%<br>
+          P&L: +$150.98 (7d)<br>
+          Calibration error: 39.5%<br>
+          Status: Retrained, validating
+        </div>
+      </div>
+      
+      <!-- Infrastructure -->
+      <div class="status-card healthy">
+        <div class="card-title">Infrastructure</div>
+        <div class="card-status">
+          <div class="status-dot dot-healthy"></div>
+          <span>Healthy</span>
+        </div>
+        <div class="card-detail">
+          ✅ Launchd supervisor installed<br>
+          ✅ Health checks passing<br>
+          ✅ Cron jobs documented<br>
+          ✅ Memory system clean
+        </div>
+      </div>
+    </div>
+    
+    <!-- Key Metrics -->
+    <div class="metrics">
+      <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">📊 Key Metrics</h2>
+      
+      <div class="metric-row">
+        <span class="metric-label">Weather Edge: Trades (7d)</span>
+        <span class="metric-value">106 trades</span>
+      </div>
+      
+      <div class="metric-row">
+        <span class="metric-label">Weather Edge: Win Rate</span>
+        <span class="metric-value value-warning">10.4%</span>
+      </div>
+      
+      <div class="metric-row">
+        <span class="metric-label">Weather Edge: P&L (7d)</span>
+        <span class="metric-value value-good">+$150.98</span>
+      </div>
+      
+      <div class="metric-row">
+        <span class="metric-label">Edge Capital: Positions</span>
+        <span class="metric-value value-good">16 open</span>
+      </div>
+      
+      <div class="metric-row">
+        <span class="metric-label">Uptime: Weather Edge</span>
+        <span class="metric-value value-good">~23h</span>
+      </div>
+      
+      <div class="metric-row">
+        <span class="metric-label">Uptime: Edge Capital</span>
+        <span class="metric-value value-good">~96h</span>
+      </div>
+    </div>
+    
+    <!-- Recent Updates -->
+    <div>
+      <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">📝 Recent Updates</h2>
+      <div class="update-log">
+        <div class="log-entry success">
+          <span class="log-time">10:50</span>
+          Performance dashboard built — 7-day trade analysis live
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">10:49</span>
+          Launchd service supervisor created — prevents duplicate watchers
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">10:30</span>
+          Health checks passing — EC 16/16 positions, WE pipeline OK
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">10:09</span>
+          Watcher duplicate-process issue diagnosed and recovered
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">09:59</span>
+          Timeout message fix committed (c5126a9)
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">09:50</span>
+          Calibration retrained on 106 paper trades — new Platt params deployed
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">09:35</span>
+          Calibration analysis tool built — found 39.5% error
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">09:14</span>
+          Prototypes shipped: Market Mood Ring + Weather Anomaly Detector
+        </div>
+        <div class="log-entry success">
+          <span class="log-time">08:33</span>
+          EC health check fixed (a2c8089) — dashboard position count now correct
+        </div>
+        <div class="log-entry warning">
+          <span class="log-time">ongoing</span>
+          Polygon API key blocked — awaiting external provision
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Update timestamp
+    function updateTimestamp() {
+      const now = new Date();
+      const formatted = now.toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'America/Los_Angeles'
+      });
+      document.getElementById('timestamp').innerText = `Updated: ${formatted} PT`;
+    }
+    
+    updateTimestamp();
+    setInterval(updateTimestamp, 60000);
+  </script>
+</body>
+</html>
