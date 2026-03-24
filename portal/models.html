@@ -180,14 +180,15 @@
 
     // Descriptions for known models
     const MODEL_DESCRIPTIONS = {
-      'anthropic/claude-haiku-4-5':   'Fast, lightweight model. Great for quick tasks, summaries, and routine work.',
-      'anthropic/claude-sonnet-4-6':  'Balanced speed and reasoning. Default for most work. Excellent all-around performer.',
-      'anthropic/claude-opus-4-6':    'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.',
-      'openai-codex/gpt-5.3-codex':   'Codex variant. Strong on code generation and technical writing.',
-      'openai-codex/gpt-5.4':         'Workhorse model. Great balance of capability and cost. Recommended default.',
-      'google/gemini-2.5-pro':        'Most capable Gemini. Excellent reasoning, multimodal support, API-based.',
-      'google/gemini-2.5-flash':      'Fast, efficient Gemini. Good balance for most tasks. Lower latency.',
-      'google/gemini-2.0-flash':      'Earlier version, still capable. Good for compatibility testing.',
+      'anthropic/claude-haiku-4-5':             'Fast, lightweight model. Great for quick tasks, summaries, and routine work.',
+      'anthropic/claude-sonnet-4-6':            'Balanced speed and reasoning. Default for most work. Excellent all-around performer.',
+      'anthropic/claude-opus-4-6':              'Most capable. Deep reasoning, complex analysis, coding. Weekly token limit.',
+      'openai-codex/gpt-5.3-codex':             'Codex variant. Strong on code generation and technical writing.',
+      'openai-codex/gpt-5.4':                   'Workhorse model. Great balance of capability and cost. Recommended default.',
+      'google/gemini-3-flash-preview':          'Fast current Gemini preview. Good primary fallback and general-use model.',
+      'google/gemini-3.1-flash-lite-preview':   'Very fast and cheap Gemini option for light tasks and heartbeats.',
+      'google/gemini-2.5-flash':                'Stable fast Gemini model. Good balance of speed and quality.',
+      'google/gemini-2.5-flash-lite':           'Low-cost Gemini variant for lightweight tasks.',
     };
 
     // Provider display names
@@ -200,6 +201,18 @@
     // Health state: key -> { status, latencyMs, error }
     let _healthData = {}; // keyed by model key
 
+    const FRIENDLY_ALIASES = {
+      'anthropic/claude-haiku-4-5':           'Haiku',
+      'anthropic/claude-sonnet-4-6':          'sonnet',
+      'anthropic/claude-opus-4-6':            'opus',
+      'openai-codex/gpt-5.3-codex':           'Codex53',
+      'openai-codex/gpt-5.4':                 'GPT54',
+      'google/gemini-3-flash-preview':        'GeminiFlash',
+      'google/gemini-3.1-flash-lite-preview': 'GeminiLite',
+      'google/gemini-2.5-flash':              'Gemini25Flash',
+      'google/gemini-2.5-flash-lite':         'Gemini25Lite',
+    };
+
     function renderModels() {
       // Render table with "testing" placeholders immediately
       renderTable();
@@ -211,26 +224,25 @@
       const body = document.getElementById('models-body');
       body.innerHTML = '';
 
-      // Group by provider
-      const providers = {};
-      for (const [key, desc] of Object.entries(MODEL_DESCRIPTIONS)) {
-        const provider = key.split('/')[0];
-        if (!providers[provider]) providers[provider] = [];
-        const alias = extractAlias(key);
-        providers[provider].push({ key, alias, desc });
-      }
+      // Prefer live health data as the source of truth so removed models disappear
+      const sourceModels = Object.keys(_healthData).length
+        ? Object.values(_healthData).map(h => ({
+            key: h.key,
+            desc: MODEL_DESCRIPTIONS[h.key] || h.name || h.key,
+            alias: extractAlias(h.key, h),
+          }))
+        : Object.entries(MODEL_DESCRIPTIONS).map(([key, desc]) => ({
+            key,
+            desc,
+            alias: extractAlias(key),
+          }));
 
-      // Also add any models from health data not in our descriptions list
-      for (const [key, h] of Object.entries(_healthData)) {
-        const provider = key.split('/')[0];
-        if (!MODEL_DESCRIPTIONS[key]) {
-          if (!providers[provider]) providers[provider] = [];
-          if (!providers[provider].find(m => m.key === key)) {
-            const alias = extractAlias(key);
-            providers[provider].push({ key, alias, desc: h.name || key });
-          }
-        }
-      }
+      const providers = {};
+      sourceModels.forEach(model => {
+        const provider = model.key.split('/')[0];
+        if (!providers[provider]) providers[provider] = [];
+        providers[provider].push(model);
+      });
 
       const providerOrder = ['anthropic', 'openai-codex', 'google'];
       const allProviders = [...new Set([...providerOrder, ...Object.keys(providers)])];
@@ -265,18 +277,10 @@
       });
     }
 
-    function extractAlias(key) {
-      const aliases = {
-        'anthropic/claude-haiku-4-5':   'Haiku',
-        'anthropic/claude-sonnet-4-6':  'Sonnet',
-        'anthropic/claude-opus-4-6':    'Opus',
-        'openai-codex/gpt-5.3-codex':   'Codex53',
-        'openai-codex/gpt-5.4':         'GPT54',
-        'google/gemini-2.5-pro':        'GeminiPro',
-        'google/gemini-2.5-flash':      'GeminiFlash',
-        'google/gemini-2.0-flash':      'Gemini2Flash',
-      };
-      return aliases[key] !== undefined ? aliases[key] : null;
+    function extractAlias(key, healthRow) {
+      const taggedAlias = healthRow?.tags?.find(t => String(t).startsWith('alias:'));
+      if (taggedAlias) return taggedAlias.slice('alias:'.length);
+      return FRIENDLY_ALIASES[key] !== undefined ? FRIENDLY_ALIASES[key] : null;
     }
 
     function renderStatusCell(key) {
