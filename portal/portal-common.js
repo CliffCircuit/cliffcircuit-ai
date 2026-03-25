@@ -183,6 +183,12 @@ const LABEL_DISPLAY = {
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmt(n) { if (n == null) return '—'; return Number(n).toLocaleString(); }
 function fmtK(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(n||0); }
+function withTimeout(promise, ms, fallback = null) {
+  return Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 function ago(iso) {
   if (!iso) return '—';
@@ -763,8 +769,12 @@ async function initPortal(pageName, renderFn) {
   renderNav(pageName);
   if (renderFn) registerRenderer(renderFn);
 
-  // Ensure session labels, contacts, + dynamic cron UUID map are loaded before any rendering
-  await Promise.all([_sessionLabelsReady, _contactsReady, _cronMapReady]);
+  // Best-effort preload for nav/session metadata, but never block page hydration on it.
+  await Promise.allSettled([
+    withTimeout(_sessionLabelsReady, 1500),
+    withTimeout(_contactsReady, 1500),
+    withTimeout(_cronMapReady, 1500),
+  ]);
 
   const d = await loadData();
   if (d) {
