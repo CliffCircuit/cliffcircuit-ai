@@ -30,6 +30,7 @@
     .trade-table .trades-col-price { width: 70px; min-width: 70px; }
     .trade-table .trades-col-size { width: 62px; min-width: 62px; }
     .trade-table .trades-col-edge { width: 76px; min-width: 76px; }
+    .trade-table .trades-col-version { width: 56px; min-width: 56px; }
     .trade-table .trades-col-wl { min-width: 120px; }
     .trade-table .trades-col-pnl { width: 72px; min-width: 72px; }
     .trade-table .trades-col-result { width: 88px; min-width: 88px; }
@@ -195,7 +196,10 @@
 
         <!-- Recent Paper Trades -->
         <div class="card p-5 mb-6">
-          <div class="section-title">📋 Recent Paper Trades <span class="text-gray-500 text-sm font-normal" id="trades-count"></span></div>
+          <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <div class="section-title mb-0">📋 Recent Paper Trades <span class="text-gray-500 text-sm font-normal" id="trades-count"></span></div>
+          <button id="export-trades-btn" style="background:#0e4b6b;color:#22d3ee;border:1px solid #22d3ee;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;">Export CSV</button>
+        </div>
           <!-- Filter Tabs -->
           <div class="flex gap-2 mb-4 pb-4 border-b border-gray-700">
             <button class="trade-filter-btn active" data-filter="settled" style="background: #2d3748; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
@@ -222,13 +226,14 @@
                   <th class="trades-col-price">Price</th>
                   <th class="trades-col-size">Size</th>
                   <th class="trades-col-edge">Edge</th>
+                  <th class="trades-col-version">Ver</th>
                   <th id="trades-wl-header" class="trades-col-wl">Win / Loss</th>
                   <th class="trades-col-pnl">P&L</th>
                   <th class="trades-col-result">Result</th>
                 </tr>
               </thead>
               <tbody id="trades-body">
-                <tr><td colspan="10" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
+                <tr><td colspan="11" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -597,10 +602,10 @@
       document.getElementById('trades-count').textContent = `(${trades.length} total)`;
       const body = document.getElementById('trades-body');
       if (!filtered.length) {
-        body.innerHTML = '<tr><td colspan="10" class="text-gray-600 text-center py-4">No trades match this filter</td></tr>';
+        body.innerHTML = '<tr><td colspan="11" class="text-gray-600 text-center py-4">No trades match this filter</td></tr>';
         return;
       }
-      body.innerHTML = filtered.slice(0, 30).map(t => `
+      body.innerHTML = filtered.map(t => `
         <tr>
           <td class="text-xs trades-col-time" style="color: #22d3ee">${fmtTimestamp(currentTradeFilter === 'settled' ? (t.resolved_at || t.close_time || t.entered_at) : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at) : t.entered_at))}</td>
           <td class="trades-col-ticker"><span class="text-sm text-white trade-title">${esc(parseTickerDescription(t.ticker) || t.description || t.ticker)}</span><span class="font-mono text-xs text-gray-500 trade-subtitle">${esc(t.ticker)}</span></td>
@@ -609,14 +614,52 @@
           <td class="trades-col-price">${Number(t.entry_price).toFixed(2)}¢</td>
           <td class="trades-col-size">${t.contracts || 1}x</td>
           <td class="trades-col-edge">${(Number(t.edge) * 100).toFixed(1)}%</td>
+          <td class="trades-col-version"><span class="text-gray-400 font-mono">${t.pipeline_version != null ? `v${t.pipeline_version}` : '—'}</span></td>
           <td class="text-xs trades-col-wl" ${(currentTradeFilter === 'settled' || currentTradeFilter === 'wins' || currentTradeFilter === 'losses') ? 'style="display:none"' : ''}>${fmtWinLoss(t.entry_price, t.contracts || 1)}</td>
-          <td class="trades-col-pnl">${t.pnl != null && t.result ? (t.pnl >= 0 ? '<span class="pnl-pos">+' + Math.abs(t.pnl).toFixed(2) + '¢</span>' : '<span class="pnl-neg">-' + Math.abs(t.pnl).toFixed(2) + '¢</span>') : '<span class="text-gray-600">—</span>'}</td>
+          <td class="trades-col-pnl">${t.pnl != null && t.result ? fmtTradePnl(t.pnl) : '<span class="text-gray-600">—</span>'}</td>
           <td class="trades-col-result">${resultPill(t.result, t)}</td>
         </tr>
       `).join('');
-      if (filtered.length > 30) {
-        body.innerHTML += `<tr><td colspan="10" class="text-gray-500 text-center py-2 text-xs">+ ${filtered.length - 30} more trades</td></tr>`;
-      }
+    }
+
+    function exportTradesCsv() {
+      if (!allTrades.length) return;
+      const rows = sortTradesForDisplay([...allTrades], currentTradeFilter).map(t => ({
+        displayed_time: currentTradeFilter === 'settled'
+          ? (t.resolved_at || t.close_time || t.entered_at || '')
+          : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at || '') : (t.entered_at || '')),
+        entered_at: t.entered_at || '',
+        resolved_at: t.resolved_at || '',
+        close_time: t.close_time || '',
+        platform: t.platform || '',
+        version: t.pipeline_version != null ? t.pipeline_version : '',
+        side: t.side || '',
+        ticker: t.ticker || '',
+        description: t.description || parseTickerDescription(t.ticker) || '',
+        entry_price: t.entry_price ?? '',
+        contracts: t.contracts ?? '',
+        edge: t.edge ?? '',
+        model_prob: t.model_prob ?? '',
+        pnl: t.pnl ?? '',
+        result: t.result || '',
+        trade_score: t.trade_score ?? ''
+      }));
+      const headers = Object.keys(rows[0]);
+      const escCsv = (v) => {
+        const s = v == null ? '' : String(v);
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const csv = [headers.join(',')].concat(rows.map(r => headers.map(h => escCsv(r[h])).join(','))).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `weather-edge-paper-trades-${currentTradeFilter}-${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     }
 
     function renderPipelineHealth(h) {
@@ -827,6 +870,11 @@
           renderTrades(allTrades);
         });
       });
+
+      const exportBtn = document.getElementById('export-trades-btn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', exportTradesCsv);
+      }
     }
 
     // ── Init ────────────────────────────────────────────────────────────
