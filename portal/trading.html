@@ -476,9 +476,11 @@
     function renderSummary(s) {
       document.getElementById('total-bankroll').textContent = fmtMoney(s.paper_bankroll_current);
       document.getElementById('total-pnl').innerHTML = fmtPnl(s.paper_pnl);
-      document.getElementById('pnl-detail').textContent = s.paper_pnl_pct !== 0 ? `${s.paper_pnl_pct > 0 ? '+' : ''}${s.paper_pnl_pct}%` : 'No resolved trades yet';
+      document.getElementById('pnl-detail').textContent = s.paper_pnl_pct !== 0
+        ? `Conservative audit: ${s.paper_pnl_pct > 0 ? '+' : ''}${s.paper_pnl_pct}%`
+        : 'No resolved trades yet';
       document.getElementById('win-rate').textContent = s.paper_wins + s.paper_losses > 0 ? fmtPct(s.paper_win_rate) : 'N/A';
-      document.getElementById('win-rate-detail').textContent = s.paper_wins + s.paper_losses > 0 ? `${s.paper_wins}W / ${s.paper_losses}L` : 'No resolved trades';
+      document.getElementById('win-rate-detail').textContent = s.paper_wins + s.paper_losses > 0 ? `${s.paper_wins}W / ${s.paper_losses}L (deduped)` : 'No resolved trades';
       document.getElementById('total-trades').textContent = s.total_trades;
       document.getElementById('kalshi-trades').textContent = s.kalshi_paper_trades ?? s.total_paper_trades;
       document.getElementById('kalshi-open').textContent = s.kalshi_open_positions;
