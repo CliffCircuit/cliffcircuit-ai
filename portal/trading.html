@@ -13,20 +13,35 @@
     .pnl-neg { color: #f87171; }
     .pnl-zero { color: #6b7280; }
     .stat-card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 1.25rem; }
-    .trade-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
-    .trade-table th { text-align: left; color: #6b7280; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #1f2937; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
-    .trade-table td { padding: 4px 8px; border-bottom: 1px solid #111827; color: #d1d5db; white-space: nowrap; }
-    .trade-table .col-desc { width: 22%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .trade-table .col-plat { width: 5%; }
-    .trade-table .col-side { width: 4%; }
-    .trade-table .col-price { width: 6%; }
-    .trade-table .col-size { width: 4%; }
-    .trade-table .col-ver { width: 3%; }
-    .trade-table .col-prob { width: 12%; }
-    .trade-table .col-edge { width: 12%; }
-    .trade-table .col-wl { width: 12%; }
-    .trade-table .col-entered { width: 10%; }
-    .trade-table .col-matures { width: 6%; }
+    .trade-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+    .trade-table th { text-align: left; color: #6b7280; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #1f2937; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; vertical-align: top; }
+    .trade-table td { padding: 4px 8px; border-bottom: 1px solid #111827; color: #d1d5db; white-space: nowrap; vertical-align: top; }
+    .trade-table th, .trade-table td { overflow: hidden; text-overflow: ellipsis; }
+    .trade-table .col-desc { min-width: 280px; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trade-table .col-plat { min-width: 76px; }
+    .trade-table .trades-col-time { width: 118px; }
+    .trade-table .trades-col-ticker { min-width: 320px; width: 100%; white-space: normal; }
+    .trade-table .trades-col-ticker .trade-title,
+    .trade-table .trades-col-ticker .trade-subtitle { display: block; overflow: hidden; text-overflow: ellipsis; }
+    .trade-table .trades-col-ticker .trade-title { white-space: normal; line-height: 1.3; }
+    .trade-table .trades-col-ticker .trade-subtitle { white-space: nowrap; }
+    .trade-table .trades-col-platform { width: 92px; min-width: 92px; }
+    .trade-table .trades-col-side { width: 64px; min-width: 64px; }
+    .trade-table .trades-col-price { width: 70px; min-width: 70px; }
+    .trade-table .trades-col-size { width: 62px; min-width: 62px; }
+    .trade-table .trades-col-edge { width: 76px; min-width: 76px; }
+    .trade-table .trades-col-wl { min-width: 120px; }
+    .trade-table .trades-col-pnl { width: 72px; min-width: 72px; }
+    .trade-table .trades-col-result { width: 88px; min-width: 88px; }
+    .trade-table .col-side { min-width: 56px; }
+    .trade-table .col-price { min-width: 64px; }
+    .trade-table .col-size { min-width: 58px; }
+    .trade-table .col-ver { min-width: 48px; }
+    .trade-table .col-prob { min-width: 120px; }
+    .trade-table .col-edge { min-width: 120px; }
+    .trade-table .col-wl { min-width: 110px; }
+    .trade-table .col-entered { min-width: 132px; }
+    .trade-table .col-matures { min-width: 116px; }
     .prev-val { color: #6b7280; font-size: 10px; }
     .trade-table tr:hover { background: #1f2937; }
     .health-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -172,7 +187,7 @@
                 </tr>
               </thead>
               <tbody id="positions-body">
-                <tr><td colspan="10" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
+                <tr><td colspan="11" class="text-gray-600 text-center py-4 loading-pulse">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -200,16 +215,16 @@
             <table class="trade-table">
               <thead>
                 <tr>
-                  <th id="trades-time-header">Entered</th>
-                  <th>Ticker</th>
-                  <th>Platform</th>
-                  <th>Side</th>
-                  <th>Price</th>
-                  <th>Size</th>
-                  <th>Edge</th>
-                  <th id="trades-wl-header">Win / Loss</th>
-                  <th>P&L</th>
-                  <th>Result</th>
+                  <th id="trades-time-header" class="trades-col-time">Entered</th>
+                  <th class="trades-col-ticker">Ticker</th>
+                  <th class="trades-col-platform">Platform</th>
+                  <th class="trades-col-side">Side</th>
+                  <th class="trades-col-price">Price</th>
+                  <th class="trades-col-size">Size</th>
+                  <th class="trades-col-edge">Edge</th>
+                  <th id="trades-wl-header" class="trades-col-wl">Win / Loss</th>
+                  <th class="trades-col-pnl">P&L</th>
+                  <th class="trades-col-result">Result</th>
                 </tr>
               </thead>
               <tbody id="trades-body">
@@ -389,11 +404,19 @@
       return `<span style="color:#22c55e">+$${win.toFixed(2)}</span> / <span style="color:#ef4444">-$${loss.toFixed(2)}</span>`;
     }
 
-    function resultPill(r) {
-      if (!r) return '<span class="pill bg-cyan-900 text-cyan-300">Open</span>';
+    function isClosedTrade(t) {
+      if (!t) return false;
+      if (t.result === 'win' || t.result === 'loss' || t.resolved_at) return true;
+      if (!t.close_time) return false;
+      const close = new Date(t.close_time).getTime();
+      return !isNaN(close) && close <= Date.now();
+    }
+
+    function resultPill(r, t = null) {
       if (r === 'win') return '<span class="pill status-published">Won</span>';
       if (r === 'loss') return '<span class="pill status-error">Lost</span>';
-      return `<span class="pill bg-gray-800 text-gray-400">${r}</span>`;
+      if (isClosedTrade(t)) return '<span class="pill bg-amber-950 text-amber-300">Closed</span>';
+      return '<span class="pill bg-cyan-900 text-cyan-300">Open</span>';
     }
 
     // ── Ticker Description Parser ─────────────────────────────────────
@@ -448,9 +471,9 @@
       document.getElementById('win-rate').textContent = s.paper_wins + s.paper_losses > 0 ? fmtPct(s.paper_win_rate) : 'N/A';
       document.getElementById('win-rate-detail').textContent = s.paper_wins + s.paper_losses > 0 ? `${s.paper_wins}W / ${s.paper_losses}L` : 'No resolved trades';
       document.getElementById('total-trades').textContent = s.total_trades;
-      document.getElementById('kalshi-trades').textContent = s.total_paper_trades;
+      document.getElementById('kalshi-trades').textContent = s.kalshi_paper_trades ?? s.total_paper_trades;
       document.getElementById('kalshi-open').textContent = s.kalshi_open_positions;
-      document.getElementById('kalshi-pnl').innerHTML = fmtPnl(s.paper_pnl);
+      document.getElementById('kalshi-pnl').innerHTML = fmtPnl(s.kalshi_paper_pnl ?? s.paper_pnl);
       document.getElementById('poly-trades').textContent = s.poly_paper_trades;
       document.getElementById('poly-balance').textContent = fmtMoney(s.poly_paper_bankroll);
       document.getElementById('poly-pnl').innerHTML = fmtPnl(s.poly_paper_pnl);
@@ -460,14 +483,15 @@
     }
 
     function renderPositions(positions) {
-      document.getElementById('positions-count').textContent = `(${positions.length})`;
+      const activePositions = positions.filter(p => !isClosedTrade(p));
+      document.getElementById('positions-count').textContent = `(${activePositions.length})`;
       const body = document.getElementById('positions-body');
-      if (!positions.length) {
-        body.innerHTML = '<tr><td colspan="12" class="text-gray-600 text-center py-4">No open positions</td></tr>';
+      if (!activePositions.length) {
+        body.innerHTML = '<tr><td colspan="11" class="text-gray-600 text-center py-4">No open positions</td></tr>';
         return;
       }
       // Show first 25
-      body.innerHTML = positions.slice(0, 25).map(p => {
+      body.innerHTML = activePositions.slice(0, 25).map(p => {
         const desc = parseTickerDescription(p.ticker) || p.description || p.ticker;
         return `
         <tr>
@@ -484,8 +508,8 @@
           <td style="font-size:11px" class="maturation-cell" data-close-time="${esc(p.close_time || '')}">${fmtMaturation(p.close_time)}</td>
         </tr>
       `}).join('');
-      if (positions.length > 25) {
-        body.innerHTML += `<tr><td colspan="12" class="text-gray-500 text-center py-2 text-xs">+ ${positions.length - 25} more positions</td></tr>`;
+      if (activePositions.length > 25) {
+        body.innerHTML += `<tr><td colspan="11" class="text-gray-500 text-center py-2 text-xs">+ ${activePositions.length - 25} more positions</td></tr>`;
       }
     }
 
@@ -494,13 +518,13 @@
 
     function filterTradesByResult(trades, filter) {
       if (filter === 'settled') {
-        return trades.filter(t => t.result === 'win' || t.result === 'loss');
+        return trades.filter(t => isClosedTrade(t));
       } else if (filter === 'wins') {
         return trades.filter(t => t.result === 'win');
       } else if (filter === 'losses') {
         return trades.filter(t => t.result === 'loss');
       } else if (filter === 'open') {
-        return trades.filter(t => !t.result || t.result === null || t.result === '');
+        return trades.filter(t => !isClosedTrade(t));
       }
       return trades;
     }
@@ -567,16 +591,16 @@
       }
       body.innerHTML = filtered.slice(0, 30).map(t => `
         <tr>
-          <td class="text-xs" style="color: #22d3ee">${fmtTimestamp(currentTradeFilter === 'settled' ? (t.close_time || t.resolved_at || t.entered_at) : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at) : t.entered_at))}</td>
-          <td><span class="text-sm text-white">${esc(parseTickerDescription(t.ticker) || t.description || t.ticker)}</span><br><span class="font-mono text-xs text-gray-500">${esc(t.ticker)}</span></td>
-          <td><span class="text-xs ${t.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${t.platform}</span></td>
-          <td><span class="${t.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${t.side}</span></td>
-          <td>${Number(t.entry_price).toFixed(2)}¢</td>
-          <td>${t.contracts || 1}x</td>
-          <td>${(Number(t.edge) * 100).toFixed(1)}%</td>
-          <td class="text-xs" ${(currentTradeFilter === 'settled' || currentTradeFilter === 'wins' || currentTradeFilter === 'losses') ? 'style="display:none"' : ''}>${fmtWinLoss(t.entry_price, t.contracts || 1)}</td>
-          <td>${t.pnl != null && t.result ? (t.pnl >= 0 ? '<span class="pnl-pos">+' + Math.abs(t.pnl).toFixed(2) + '¢</span>' : '<span class="pnl-neg">-' + Math.abs(t.pnl).toFixed(2) + '¢</span>') : '<span class="text-gray-600">—</span>'}</td>
-          <td>${resultPill(t.result)}</td>
+          <td class="text-xs trades-col-time" style="color: #22d3ee">${fmtTimestamp(currentTradeFilter === 'settled' ? (t.resolved_at || t.close_time || t.entered_at) : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at) : t.entered_at))}</td>
+          <td class="trades-col-ticker"><span class="text-sm text-white trade-title">${esc(parseTickerDescription(t.ticker) || t.description || t.ticker)}</span><span class="font-mono text-xs text-gray-500 trade-subtitle">${esc(t.ticker)}</span></td>
+          <td class="trades-col-platform"><span class="text-xs ${t.platform === 'polymarket' ? 'text-purple-400' : 'text-indigo-400'}">${t.platform === 'polymarket' ? 'poly' : t.platform}</span></td>
+          <td class="trades-col-side"><span class="${t.side === 'yes' ? 'text-green-400' : 'text-red-400'} font-semibold uppercase">${t.side}</span></td>
+          <td class="trades-col-price">${Number(t.entry_price).toFixed(2)}¢</td>
+          <td class="trades-col-size">${t.contracts || 1}x</td>
+          <td class="trades-col-edge">${(Number(t.edge) * 100).toFixed(1)}%</td>
+          <td class="text-xs trades-col-wl" ${(currentTradeFilter === 'settled' || currentTradeFilter === 'wins' || currentTradeFilter === 'losses') ? 'style="display:none"' : ''}>${fmtWinLoss(t.entry_price, t.contracts || 1)}</td>
+          <td class="trades-col-pnl">${t.pnl != null && t.result ? (t.pnl >= 0 ? '<span class="pnl-pos">+' + Math.abs(t.pnl).toFixed(2) + '¢</span>' : '<span class="pnl-neg">-' + Math.abs(t.pnl).toFixed(2) + '¢</span>') : '<span class="text-gray-600">—</span>'}</td>
+          <td class="trades-col-result">${resultPill(t.result, t)}</td>
         </tr>
       `).join('');
       if (filtered.length > 30) {
