@@ -354,6 +354,15 @@
       const sign = n > 0 ? '+' : '';
       return `<span class="${cls}">${sign}$${Number(n).toFixed(2)}</span>`;
     }
+    function fmtTradePnl(n) {
+      if (n == null) return '<span class="text-gray-600">—</span>';
+      const v = Number(n);
+      const cls = v > 0 ? 'pnl-pos' : v < 0 ? 'pnl-neg' : 'pnl-zero';
+      const sign = v > 0 ? '+' : v < 0 ? '-' : '';
+      const abs = Math.abs(v);
+      if (abs >= 1) return `<span class="${cls}">${sign}$${abs.toFixed(2)}</span>`;
+      return `<span class="${cls}">${sign}${(abs * 100).toFixed(2)}¢</span>`;
+    }
     function fmtPct(n) { return n == null ? '—' : Number(n).toFixed(1) + '%'; }
 
     function relativeTime(ts) {
