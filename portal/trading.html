@@ -169,7 +169,14 @@
 
         <!-- Active Positions -->
         <div class="card p-5 mb-6">
-          <div class="section-title">📊 Active Positions <span class="text-gray-500 text-sm font-normal" id="positions-count"></span></div>
+          <div class="flex items-center gap-3 mb-3 flex-wrap">
+            <div class="section-title mb-0">📊 Active Positions <span class="text-gray-500 text-sm font-normal" id="positions-count"></span></div>
+            <div class="flex gap-2 ml-auto">
+              <button class="pos-platform-btn active" data-plat="all" style="background:#2d3748;color:white;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;">All</button>
+              <button class="pos-platform-btn" data-plat="kalshi" style="background:#1a202c;color:#818cf8;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3730a3;transition:all 0.2s;">Kalshi</button>
+              <button class="pos-platform-btn" data-plat="polymarket" style="background:#1a202c;color:#a78bfa;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #5b21b6;transition:all 0.2s;">Poly</button>
+            </div>
+          </div>
           <div class="overflow-x-auto">
             <table class="trade-table">
               <thead>
@@ -504,9 +511,22 @@
       if (s.polymarket_balance != null) document.getElementById('poly-real-bal').textContent = 'Real balance: ' + fmtMoney(s.polymarket_balance);
     }
 
+    let allPositions = [];
+    let currentPlatformFilter = 'all';
+
     function renderPositions(positions) {
-      const activePositions = positions.filter(p => !isClosedTrade(p));
-      document.getElementById('positions-count').textContent = `(${activePositions.length})`;
+      allPositions = positions.filter(p => !isClosedTrade(p));
+      _applyPositionPlatformFilter();
+    }
+
+    function _applyPositionPlatformFilter() {
+      const activePositions = currentPlatformFilter === 'all'
+        ? allPositions
+        : allPositions.filter(p => p.platform === currentPlatformFilter);
+      const total = allPositions.length;
+      const shown = activePositions.length;
+      document.getElementById('positions-count').textContent =
+        currentPlatformFilter === 'all' ? `(${total})` : `(${shown} of ${total})`;
       const body = document.getElementById('positions-body');
       if (!activePositions.length) {
         body.innerHTML = '<tr><td colspan="11" class="text-gray-600 text-center py-4">No open positions</td></tr>';
@@ -865,6 +885,22 @@
       }
     }
 
+    // ── Platform Filter Button Handlers (Active Positions) ───────────
+    function attachPlatformFilterListeners() {
+      document.querySelectorAll('.pos-platform-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.pos-platform-btn').forEach(b => {
+            b.style.background = '#1a202c';
+            b.style.color = b.dataset.plat === 'kalshi' ? '#818cf8' : b.dataset.plat === 'polymarket' ? '#a78bfa' : '#a0aec0';
+          });
+          btn.style.background = '#2d3748';
+          btn.style.color = 'white';
+          currentPlatformFilter = btn.dataset.plat;
+          _applyPositionPlatformFilter();
+        });
+      });
+    }
+
     // ── Filter Button Handlers ──────────────────────────────────────
     function attachFilterListeners() {
       document.querySelectorAll('.trade-filter-btn').forEach(btn => {
@@ -895,6 +931,7 @@
       if (!ok) return;
       await loadAll();
       attachFilterListeners();
+      attachPlatformFilterListeners();
       setInterval(loadAll, 60000);
     })();
   </script>
