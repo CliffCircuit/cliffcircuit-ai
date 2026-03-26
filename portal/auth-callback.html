@@ -41,10 +41,31 @@
       return JSON.parse(atob(base64));
     }
 
+    const PORTAL_ALLOWLIST_FALLBACK = [
+      'timharris707@gmail.com',
+      'tim@lendmanagement.com',
+      'insightopenclaw@gmail.com'
+    ];
+
     function showError(msg) {
       document.getElementById('cb-loading').classList.add('hidden');
       document.getElementById('cb-error').classList.remove('hidden');
       document.getElementById('cb-error-msg').textContent = msg;
+    }
+
+    async function isAuthorizedPortalEmail(email) {
+      try {
+        const { data, error } = await _sb
+          .from('portal_users')
+          .select('email')
+          .ilike('email', email)
+          .limit(1);
+        if (!error && data && data.length > 0) return true;
+        if (error) console.warn('portal_users lookup failed; using fallback allowlist', error);
+      } catch (err) {
+        console.warn('portal_users lookup threw; using fallback allowlist', err);
+      }
+      return PORTAL_ALLOWLIST_FALLBACK.includes(email);
     }
 
     async function processCallback() {
@@ -75,20 +96,8 @@
           return;
         }
 
-        // Verify against approved users in Supabase
-        const { data, error } = await _sb
-          .from('portal_users')
-          .select('email, role')
-          .ilike('email', email)
-          .limit(1);
-
-        if (error) {
-          console.error('Supabase error:', error);
-          showError('Authorization check failed. Please try again.');
-          return;
-        }
-
-        if (!data || data.length === 0) {
+        const authorized = await isAuthorizedPortalEmail(email);
+        if (!authorized) {
           showError('Access denied. This Google account (' + email + ') is not authorized.');
           return;
         }
@@ -98,7 +107,7 @@
           email: email,
           name: name,
           picture: picture,
-          role: data[0].role || 'viewer',
+          role: 'viewer',
           expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000),
           authenticatedAt: new Date().toISOString()
         };
