@@ -211,7 +211,7 @@
           <button id="export-trades-btn" style="background:#0e4b6b;color:#22d3ee;border:1px solid #22d3ee;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;">Export CSV</button>
         </div>
           <!-- Filter Tabs -->
-          <div class="flex gap-2 mb-4 pb-4 border-b border-gray-700 flex-wrap">
+          <div class="flex gap-2 mb-3 flex-wrap">
             <button class="trade-filter-btn active" data-filter="settled" style="background: #2d3748; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
               Closed <span class="trade-filter-count" data-filter="settled">(0)</span>
             </button>
@@ -227,6 +227,14 @@
             <button class="trade-filter-btn" data-filter="all" style="background: #1a202c; color: #a0aec0; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
               All Raw Rows <span class="trade-filter-count" data-filter="all">(0)</span>
             </button>
+          </div>
+          <!-- Platform Filter Row -->
+          <div class="flex gap-2 mb-4 pb-4 border-b border-gray-700 flex-wrap items-center">
+            <span class="text-xs text-gray-500">Platform:</span>
+            <button class="trade-plat-btn active" data-plat="all" style="background:#2d3748;color:white;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;">All</button>
+            <button class="trade-plat-btn" data-plat="kalshi" style="background:#1a202c;color:#818cf8;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #3730a3;transition:all 0.2s;">Kalshi only</button>
+            <button class="trade-plat-btn" data-plat="polymarket" style="background:#1a202c;color:#a78bfa;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #5b21b6;transition:all 0.2s;">Poly only</button>
+            <span class="text-xs text-gray-600 ml-2">CSV export respects active filters</span>
           </div>
           <div class="overflow-x-auto">
             <table class="trade-table">
@@ -557,6 +565,7 @@
 
     let allTrades = [];
     let currentTradeFilter = 'settled';
+    let currentTradePlatformFilter = 'all';
 
     function filterTradesByResult(trades, filter) {
       if (filter === 'settled') {
@@ -589,12 +598,18 @@
       });
     }
 
+    function platformFilteredTrades() {
+      if (currentTradePlatformFilter === 'all') return allTrades;
+      return allTrades.filter(t => t.platform === currentTradePlatformFilter);
+    }
+
     function updateTradeFilterCounts() {
-      const settled = filterTradesByResult(allTrades, 'settled').length;
-      const wins = filterTradesByResult(allTrades, 'wins').length;
-      const losses = filterTradesByResult(allTrades, 'losses').length;
-      const open = filterTradesByResult(allTrades, 'open').length;
-      const all = allTrades.length;
+      const base = platformFilteredTrades();
+      const settled = filterTradesByResult(base, 'settled').length;
+      const wins = filterTradesByResult(base, 'wins').length;
+      const losses = filterTradesByResult(base, 'losses').length;
+      const open = filterTradesByResult(base, 'open').length;
+      const all = base.length;
       
       document.querySelectorAll('.trade-filter-count[data-filter="settled"]').forEach(el => {
         el.textContent = `(${settled})`;
@@ -616,7 +631,8 @@
     function renderTrades(trades) {
       allTrades = trades;
       updateTradeFilterCounts();
-      const filtered = sortTradesForDisplay(trades, currentTradeFilter);
+      const platFiltered = platformFilteredTrades();
+      const filtered = sortTradesForDisplay(platFiltered, currentTradeFilter);
       // Update column header based on filter
       const timeHeader = document.getElementById('trades-time-header');
       if (timeHeader) timeHeader.textContent = currentTradeFilter === 'settled' ? 'Closed' : (currentTradeFilter === 'open' ? 'Matures' : 'Entered');
@@ -625,9 +641,10 @@
         const hideWL = currentTradeFilter === 'settled' || currentTradeFilter === 'wins' || currentTradeFilter === 'losses';
         wlHeader.style.display = hideWL ? 'none' : '';
       }
-      const closedCount = filterTradesByResult(trades, 'settled').length;
-      const openCount = filterTradesByResult(trades, 'open').length;
-      document.getElementById('trades-count').textContent = `(${trades.length} raw rows)`;
+      const closedCount = filterTradesByResult(platFiltered, 'settled').length;
+      const openCount = filterTradesByResult(platFiltered, 'open').length;
+      const platLabel = currentTradePlatformFilter === 'all' ? '' : ` · ${currentTradePlatformFilter === 'kalshi' ? 'Kalshi' : 'Poly'} only`;
+      document.getElementById('trades-count').textContent = `(${platFiltered.length} rows${platLabel})`;
       const subtitle = document.getElementById('trades-subtitle');
       if (subtitle) {
         subtitle.textContent = `Showing raw ledger rows: ${closedCount} closed, ${openCount} open. These counts are not deduped/audited.`;
@@ -656,7 +673,7 @@
 
     function exportTradesCsv() {
       if (!allTrades.length) return;
-      const rows = sortTradesForDisplay([...allTrades], currentTradeFilter).map(t => ({
+      const rows = sortTradesForDisplay([...platformFilteredTrades()], currentTradeFilter).map(t => ({
         displayed_time: currentTradeFilter === 'settled'
           ? (t.resolved_at || t.close_time || t.entered_at || '')
           : (currentTradeFilter === 'open' ? (t.close_time || t.entered_at || '') : (t.entered_at || '')),
@@ -687,7 +704,8 @@
       const a = document.createElement('a');
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
       a.href = url;
-      a.download = `weather-edge-paper-trades-${currentTradeFilter}-${stamp}.csv`;
+      const platSuffix = currentTradePlatformFilter === 'all' ? '' : `-${currentTradePlatformFilter}`;
+      a.download = `weather-edge-paper-trades-${currentTradeFilter}${platSuffix}-${stamp}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -885,6 +903,22 @@
       }
     }
 
+    // ── Platform Filter Button Handlers (Paper Trade Ledger) ─────────
+    function attachTradePlatformFilterListeners() {
+      document.querySelectorAll('.trade-plat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.trade-plat-btn').forEach(b => {
+            b.style.background = '#1a202c';
+            b.style.color = b.dataset.plat === 'kalshi' ? '#818cf8' : b.dataset.plat === 'polymarket' ? '#a78bfa' : '#a0aec0';
+          });
+          btn.style.background = '#2d3748';
+          btn.style.color = 'white';
+          currentTradePlatformFilter = btn.dataset.plat;
+          renderTrades(allTrades);
+        });
+      });
+    }
+
     // ── Platform Filter Button Handlers (Active Positions) ───────────
     function attachPlatformFilterListeners() {
       document.querySelectorAll('.pos-platform-btn').forEach(btn => {
@@ -931,6 +965,7 @@
       if (!ok) return;
       await loadAll();
       attachFilterListeners();
+      attachTradePlatformFilterListeners();
       attachPlatformFilterListeners();
       setInterval(loadAll, 60000);
     })();
