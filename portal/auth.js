@@ -10,20 +10,21 @@
   const LOGIN_PATH = '/portal/login.html';
 
   /**
-   * Get current authenticated user from localStorage.
-   * Returns { email, name, picture, expiresAt } or null.
+   * Get current authenticated session from localStorage.
+   * Returns { token, user: { email, name, picture, expiresAt, userId, roles } } or null.
    */
-  function getCurrentUser() {
+  function getCurrentSession() {
     try {
       const raw = localStorage.getItem(AUTH_KEY);
       if (!raw) return null;
-      const user = JSON.parse(raw);
-      // Check expiry
-      if (user.expiresAt && Date.now() > user.expiresAt) {
+      const session = JSON.parse(raw);
+      // Check expiry (if expiresAt is part of the stored user object or the session itself)
+      // Assuming session.user contains expiresAt from the JWT payload
+      if (session.user && session.user.expiresAt && Date.now() > session.user.expiresAt) {
         localStorage.removeItem(AUTH_KEY);
         return null;
       }
-      return user;
+      return session;
     } catch {
       localStorage.removeItem(AUTH_KEY);
       return null;
@@ -31,10 +32,11 @@
   }
 
   /**
-   * Store authenticated user session.
+   * Store authenticated session data, including the server-issued JWT.
+   * @param {object} sessionData - Object containing { token: string, user: object }
    */
-  function setAuthUser(userData) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(userData));
+  function setAuthUser(sessionData) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(sessionData));
   }
 
   /**
@@ -52,8 +54,8 @@
    * Call this on page load for protected pages.
    */
   function requireAuth() {
-    const user = getCurrentUser();
-    if (!user) {
+    const session = getCurrentSession();
+    if (!session) {
       // Save intended destination for post-login redirect
       const current = window.location.pathname + window.location.search;
       if (current !== LOGIN_PATH && !current.includes('auth-callback')) {
@@ -66,8 +68,8 @@
   }
 
   // Expose globally
-  window.getCurrentUser = getCurrentUser;
-  window.setAuthUser = setAuthUser;
+  window.getCurrentSession = getCurrentSession;
+  window.setAuthUser = setAuthUser; // Keep this name for now for backward compatibility or rename to setSession
   window.authLogout = authLogout;
   window.requireAuth = requireAuth;
 

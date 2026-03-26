@@ -100,8 +100,9 @@ function resolveChannelDir(channelId) {
   return null;
 }
 
+const jwt           = require('jsonwebtoken'); // For server-issued JWTs
+const JWT_SECRET    = process.env.JWT_SECRET || 'supersecretkey'; // TODO: Make this a strong, env-based secret
 const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
-const ALLOWED_EMAILS    = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
 
 // ─── Load device identity ───────────────────────────────────────────────────
 let identity;
@@ -118,19 +119,12 @@ try {
 async function validateToken(token) {
   if (!token) return null;
   try {
-    if (token.split('.').length === 3) {
-      const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`);
-      if (!resp.ok) return null;
-      const info = await resp.json();
-      if (info.aud !== GOOGLE_CLIENT_ID) return null;
-      if (!ALLOWED_EMAILS.includes(info.email)) return null;
-      return { email: info.email, name: info.name || info.email };
-    }
-    if (ALLOWED_EMAILS.includes(token)) {
-      return { email: token, name: token };
-    }
-    return null;
-  } catch {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    // You might want to do further authorization checks here based on decoded.roles or decoded.userId
+    // For now, if the token is valid, we consider the user authenticated.
+    return { email: decoded.email, name: decoded.name || decoded.email, userId: decoded.userId, roles: decoded.roles };
+  } catch (err) {
+    console.warn('[proxy] JWT validation failed:', err.message);
     return null;
   }
 }
@@ -326,6 +320,65 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ error: err.message }));
     }
+    return;
+  }
+
+  // ─── Google OAuth Configuration (for initial ID token validation) ──────────────────────────────────
+  const GOOGLE_CLIENT_ID_AUTH = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
+  const ALLOWED_EMAILS_AUTH = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
+  // ──────────────────────────────────────────────────────────────────────────────────────────────────
+
+  if (req.method === 'POST' && req.url === '/api/auth/google-callback') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', async () => {
+      try {
+        const { idToken } = JSON.parse(body);
+        if (!idToken) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Missing idToken' }));
+          return;
+        }
+
+        const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+        if (!resp.ok) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid Google ID token' }));
+          return;
+        }
+        const userInfo = await resp.json();
+
+        if (userInfo.aud !== GOOGLE_CLIENT_ID_AUTH) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Mismatched client ID' }));
+          return;
+        }
+
+        // TODO: Replace this with Supabase user lookup and authorization check
+        if (!ALLOWED_EMAILS_AUTH.includes(userInfo.email)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'User not authorized to access Portal' }));
+          return;
+        }
+
+        const user = {
+          userId: userInfo.sub, // Google user ID
+          email: userInfo.email,
+          name: userInfo.name || userInfo.email,
+          picture: userInfo.picture,
+          roles: ['user'], // Example role
+        };
+
+        const sessionJwt = jwt.sign(user, JWT_SECRET, { expiresIn: '1h' }); // 1 hour expiry
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, token: sessionJwt, user }));
+      } catch (err) {
+        console.error('[proxy] /api/auth/google-callback error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
     return;
   }
 
