@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-14T18:31:30.551Z",
-  "count": 81,
+  "generatedAt": "2026-04-14T18:46:31.755Z",
+  "count": 84,
   "previews": {
     "agent:main:main": {
       "task": "System: [2026-04-13 19:50:40 PDT] Pipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nA scheduled reminder has been triggered. The reminder content is:\n\nPipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nPlease relay this reminder to the user in a helpful and friendly way.\nCurrent time: Monday, April 13th, 2026 — 7:50 PM (America/Los_Angeles) / 2026-04-14 02:50 UTC",
-      "response": "Position-refresh is down again. Restarting:",
+      "response": "Committed (cecea78). The position-refresh daemon was crashing because Alpaca API calls had no timeout — one hung request would block forever until the process died. Now it'll raise a `ReadTimeout` after 30s, log it as an error, and loop back to retry on the next cycle instead of dying.\n\nHEARTBEAT_OK\n\nREPLY_SKIP",
       "sessionId": "38b49256-f175-4203-a106-2bf7ddd825b4"
     },
     "38b49256-f175-4203-a106-2bf7ddd825b4": {
       "task": "System: [2026-04-13 19:50:40 PDT] Pipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nA scheduled reminder has been triggered. The reminder content is:\n\nPipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nPlease relay this reminder to the user in a helpful and friendly way.\nCurrent time: Monday, April 13th, 2026 — 7:50 PM (America/Los_Angeles) / 2026-04-14 02:50 UTC",
-      "response": "Position-refresh is down again. Restarting:",
+      "response": "Committed (cecea78). The position-refresh daemon was crashing because Alpaca API calls had no timeout — one hung request would block forever until the process died. Now it'll raise a `ReadTimeout` after 30s, log it as an error, and loop back to retry on the next cycle instead of dying.\n\nHEARTBEAT_OK\n\nREPLY_SKIP",
       "sessionId": "38b49256-f175-4203-a106-2bf7ddd825b4"
     },
     "agent:main:cron:4638a8d0-53e7-4a92-ae2f-8575bba084b8": {
@@ -64,12 +64,12 @@
     },
     "agent:main:telegram:direct:8386624734": {
       "task": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"20528\",\n  \"sender_id\": \"8386624734\",\n  \"sender\": \"Tim H\",\n  \"timestamp\": \"Mon 2026-04-13 19:53 PDT\"\n}\n```\n\nSender (untrusted metadata):\n```json\n{\n  \"label\": \"Tim H (8386624734)\",\n  \"id\": \"8386624734\",\n  \"name\": \"Tim H\"\n}\n```\n\nHI Cliff",
-      "response": "[[reply_to_current]] Done.\n\nI restarted the live `position-refresh` daemon and verified the patched code is active.\n\nWhat I confirmed:\n- `dashboard.json` is now refreshing live again\n- `updated_at` is current\n- `trades.recent` now includes sells\n- example visible in the live feed: **`JBL` sell**\n- the daemon also successfully pushed the portal dashboard to GitHub at **11:30:02**\n\nSo from here on:\n- positions should keep updating normally\n- recent trades should keep including buys **and sells**\n\nIf the page still doesn’t show them on your browser after a refresh, that would be frontend rendering/cache, not the backend feed anymore.",
+      "response": "I found the bug: those columns are just hardcoded fallbacks right now.\n\nSpecifically:\n- `getModelLabel()` defaults to `Signal v1` / `Markov v1`\n- `getVersionLabel()` defaults to `v1`\n- and the backend feed isn’t supplying real version metadata for most rows\n\nSo your screenshot is exactly the problem.\n\nI’m fixing this at the data layer so:\n- **trades** carry actual commit/version info\n- **positions** inherit the version/model from the buy that opened them\n- the page stops falling back to fake `v1` labels everywhere",
       "sessionId": "6c45ac15-b004-4b07-beeb-97ff917cdc89"
     },
     "6c45ac15-b004-4b07-beeb-97ff917cdc89": {
       "task": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"20528\",\n  \"sender_id\": \"8386624734\",\n  \"sender\": \"Tim H\",\n  \"timestamp\": \"Mon 2026-04-13 19:53 PDT\"\n}\n```\n\nSender (untrusted metadata):\n```json\n{\n  \"label\": \"Tim H (8386624734)\",\n  \"id\": \"8386624734\",\n  \"name\": \"Tim H\"\n}\n```\n\nHI Cliff",
-      "response": "[[reply_to_current]] Done.\n\nI restarted the live `position-refresh` daemon and verified the patched code is active.\n\nWhat I confirmed:\n- `dashboard.json` is now refreshing live again\n- `updated_at` is current\n- `trades.recent` now includes sells\n- example visible in the live feed: **`JBL` sell**\n- the daemon also successfully pushed the portal dashboard to GitHub at **11:30:02**\n\nSo from here on:\n- positions should keep updating normally\n- recent trades should keep including buys **and sells**\n\nIf the page still doesn’t show them on your browser after a refresh, that would be frontend rendering/cache, not the backend feed anymore.",
+      "response": "I found the bug: those columns are just hardcoded fallbacks right now.\n\nSpecifically:\n- `getModelLabel()` defaults to `Signal v1` / `Markov v1`\n- `getVersionLabel()` defaults to `v1`\n- and the backend feed isn’t supplying real version metadata for most rows\n\nSo your screenshot is exactly the problem.\n\nI’m fixing this at the data layer so:\n- **trades** carry actual commit/version info\n- **positions** inherit the version/model from the buy that opened them\n- the page stops falling back to fake `v1` labels everywhere",
       "sessionId": "6c45ac15-b004-4b07-beeb-97ff917cdc89"
     },
     "agent:main:cron:e5849b75-71ec-47dd-86f1-60ba969dc777": {
@@ -307,15 +307,25 @@
       "response": "**Edge Capital Auto-Trade — 2026-04-14 11:15 PT**\n\n**Portfolio:** $109,957.35 | 33 open positions\n\n**New Entries (2):**\n- BUY TPL × 8 @ $529.73\n- BUY LITE × 7 @ $616.29\n\n**Exits:** None\n\n**Wheel (Dry Run — 4 puts queued, not executed):**\n- CRDO PUT $115 & $125, exp 5/15 @ $1.72–$1.88 (~17.7%/yr)\n- ALAB PUT $145 & $150, exp 5/15 @ $2.17–$2.25 (~17.7%/yr)\n- ⚠️ MOD skipped — failed position size risk check\n\n**Note:** Reddit rate-limited (429) — social signals disabled for 2h this run.",
       "sessionId": "53a1ac26-c38b-44f1-8187-d5d0084e909c"
     },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 10:47 AM (America/Los_Angeles) / 2026-04-14 17:47 UTC",
-      "response": "Acknowledged. Scout is active and ready. \n\n**Current Status:**\n- **Time:** Tuesday, April 14th, 2026 — 10:47 AM PT / 17:47 UTC\n- **Agent:** scout (heartbeat received)\n- **Runtime:** openclaw | Claude Haiku 4.5 | arm64 macOS\n\nStanding by for tasks.",
-      "sessionId": "98ccefe0-23ff-4802-aa00-315aaf9a292e"
+    "agent:samantha:main": {
+      "task": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.\nWhen reading HEARTBEAT.md, use workspace file /Users/openclaw/workspace/runtime/agents/samantha/HEARTBEAT.md (exact case). Do not read docs/heartbeat.md.\nCurrent time: Tuesday, April 14th, 2026 — 11:34 AM (America/Los_Angeles) / 2026-04-14 18:34 UTC",
+      "response": "HEARTBEAT_OK",
+      "sessionId": "edc0e1ce-fff8-4d42-bae8-59b913f8de62"
     },
-    "98ccefe0-23ff-4802-aa00-315aaf9a292e": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 10:47 AM (America/Los_Angeles) / 2026-04-14 17:47 UTC",
-      "response": "Acknowledged. Scout is active and ready. \n\n**Current Status:**\n- **Time:** Tuesday, April 14th, 2026 — 10:47 AM PT / 17:47 UTC\n- **Agent:** scout (heartbeat received)\n- **Runtime:** openclaw | Claude Haiku 4.5 | arm64 macOS\n\nStanding by for tasks.",
-      "sessionId": "98ccefe0-23ff-4802-aa00-315aaf9a292e"
+    "edc0e1ce-fff8-4d42-bae8-59b913f8de62": {
+      "task": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.\nWhen reading HEARTBEAT.md, use workspace file /Users/openclaw/workspace/runtime/agents/samantha/HEARTBEAT.md (exact case). Do not read docs/heartbeat.md.\nCurrent time: Tuesday, April 14th, 2026 — 11:34 AM (America/Los_Angeles) / 2026-04-14 18:34 UTC",
+      "response": "HEARTBEAT_OK",
+      "sessionId": "edc0e1ce-fff8-4d42-bae8-59b913f8de62"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:40 AM (America/Los_Angeles) / 2026-04-14 18:40 UTC",
+      "response": "Got it — heartbeat received. I'm active and ready to help.\n\n**Current time:** Tuesday, April 14th, 2026 — 11:40 AM PT (6:40 PM UTC)\n\nWhat would you like to do?",
+      "sessionId": "e773ec7a-499f-4b7e-87f5-ef5c5737e9a1"
+    },
+    "e773ec7a-499f-4b7e-87f5-ef5c5737e9a1": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:40 AM (America/Los_Angeles) / 2026-04-14 18:40 UTC",
+      "response": "Got it — heartbeat received. I'm active and ready to help.\n\n**Current time:** Tuesday, April 14th, 2026 — 11:40 AM PT (6:40 PM UTC)\n\nWhat would you like to do?",
+      "sessionId": "e773ec7a-499f-4b7e-87f5-ef5c5737e9a1"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:74e8f6b8-9a93-4871-9fe6-1e543f2ca7f0": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 8:09 PM (America/Los_Angeles) / 2026-04-14 03:09 UTC",
@@ -811,6 +821,26 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 10:47 AM (America/Los_Angeles) / 2026-04-14 17:47 UTC",
       "response": "Acknowledged. Scout is active and ready. \n\n**Current Status:**\n- **Time:** Tuesday, April 14th, 2026 — 10:47 AM PT / 17:47 UTC\n- **Agent:** scout (heartbeat received)\n- **Runtime:** openclaw | Claude Haiku 4.5 | arm64 macOS\n\nStanding by for tasks.",
       "sessionId": "98ccefe0-23ff-4802-aa00-315aaf9a292e"
+    },
+    "98ccefe0-23ff-4802-aa00-315aaf9a292e": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 10:47 AM (America/Los_Angeles) / 2026-04-14 17:47 UTC",
+      "response": "Acknowledged. Scout is active and ready. \n\n**Current Status:**\n- **Time:** Tuesday, April 14th, 2026 — 10:47 AM PT / 17:47 UTC\n- **Agent:** scout (heartbeat received)\n- **Runtime:** openclaw | Claude Haiku 4.5 | arm64 macOS\n\nStanding by for tasks.",
+      "sessionId": "98ccefe0-23ff-4802-aa00-315aaf9a292e"
+    },
+    "agent:scout:main": {
+      "task": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.\nWhen reading HEARTBEAT.md, use workspace file /Users/openclaw/workspace/runtime/agents/scout/HEARTBEAT.md (exact case). Do not read docs/heartbeat.md.\nCurrent time: Tuesday, April 14th, 2026 — 11:34 AM (America/Los_Angeles) / 2026-04-14 18:34 UTC",
+      "response": "HEARTBEAT_OK",
+      "sessionId": "569072b2-f3fb-4952-baae-469b5420968d"
+    },
+    "569072b2-f3fb-4952-baae-469b5420968d": {
+      "task": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.\nWhen reading HEARTBEAT.md, use workspace file /Users/openclaw/workspace/runtime/agents/scout/HEARTBEAT.md (exact case). Do not read docs/heartbeat.md.\nCurrent time: Tuesday, April 14th, 2026 — 11:34 AM (America/Los_Angeles) / 2026-04-14 18:34 UTC",
+      "response": "HEARTBEAT_OK",
+      "sessionId": "569072b2-f3fb-4952-baae-469b5420968d"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:e773ec7a-499f-4b7e-87f5-ef5c5737e9a1": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:40 AM (America/Los_Angeles) / 2026-04-14 18:40 UTC",
+      "response": "Got it — heartbeat received. I'm active and ready to help.\n\n**Current time:** Tuesday, April 14th, 2026 — 11:40 AM PT (6:40 PM UTC)\n\nWhat would you like to do?",
+      "sessionId": "e773ec7a-499f-4b7e-87f5-ef5c5737e9a1"
     }
   }
 }
