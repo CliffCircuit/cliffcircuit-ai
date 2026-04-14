@@ -1179,6 +1179,10 @@
   <script src="/portal/portal-common.js"></script>
   <script>
     const DATA_URL = '/portal/edge-capital-data.json';
+    const DATA_URL_CANDIDATES = [
+      '/portal/shared/edge-capital-dashboard.json',
+      DATA_URL,
+    ];
     const REFRESH_MS = 30 * 1000;
     let previousData = null;
     let currentStrategy = 'all'; // kept for backward compat with filtered views
@@ -1281,6 +1285,70 @@
     function escHtml(s) {
       if (!s) return '';
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function parseTimestamp(ts) {
+      const ms = Date.parse(ts || '');
+      return Number.isFinite(ms) ? ms : 0;
+    }
+
+    function normalizeDashboardData(raw, sourceUrl) {
+      const data = raw && typeof raw === 'object' ? structuredClone(raw) : {};
+      const portfolio = data.portfolio && typeof data.portfolio === 'object' ? data.portfolio : {};
+      const positions = Array.isArray(portfolio.positions) ? portfolio.positions : [];
+      const computedMarketValue = positions.reduce((sum, pos) => sum + (Number(pos.market_value) || 0), 0);
+      const computedTotalPnl = positions.reduce((sum, pos) => sum + (Number(pos.pnl) || 0), 0);
+
+      if (portfolio.equity == null && portfolio.portfolio_value != null) {
+        portfolio.equity = portfolio.portfolio_value;
+      }
+      if (portfolio.portfolio_value == null && portfolio.equity != null) {
+        portfolio.portfolio_value = portfolio.equity;
+      }
+      if (portfolio.total_pnl == null && positions.length) {
+        portfolio.total_pnl = computedTotalPnl;
+      }
+      if (portfolio.cash == null && portfolio.equity != null) {
+        portfolio.cash = Number(portfolio.equity) - computedMarketValue;
+      }
+      if ((portfolio.total_pnl_pct == null || Number.isNaN(Number(portfolio.total_pnl_pct))) && portfolio.equity != null) {
+        const costBasis = Number(portfolio.equity) - Number(portfolio.total_pnl || 0);
+        if (costBasis > 0) {
+          portfolio.total_pnl_pct = (Number(portfolio.total_pnl || 0) / costBasis) * 100;
+        }
+      }
+
+      data.portfolio = portfolio;
+      data._source_url = sourceUrl;
+      data._freshness_ts = Math.max(
+        parseTimestamp(data.positions_updated_at),
+        parseTimestamp(data.updated_at),
+        parseTimestamp(data.social_updated_at),
+      );
+      return data;
+    }
+
+    async function fetchDashboardData() {
+      const responses = await Promise.all(DATA_URL_CANDIDATES.map(async (url) => {
+        try {
+          const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) return null;
+          const json = await res.json();
+          return normalizeDashboardData(json, url);
+        } catch {
+          return null;
+        }
+      }));
+
+      const candidates = responses.filter(Boolean);
+      if (!candidates.length) throw new Error('No dashboard data available');
+
+      candidates.sort((a, b) => {
+        const freshnessDiff = (b._freshness_ts || 0) - (a._freshness_ts || 0);
+        if (freshnessDiff !== 0) return freshnessDiff;
+        return DATA_URL_CANDIDATES.indexOf(a._source_url) - DATA_URL_CANDIDATES.indexOf(b._source_url);
+      });
+      return candidates[0];
     }
 
     // ─── Animated counter ───
@@ -1453,9 +1521,7 @@
       const indicator = document.getElementById('refresh-indicator');
       if (isRefresh) indicator.classList.add('visible');
       try {
-        const res = await fetch(DATA_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('not found');
-        const d = await res.json();
+        const d = await fetchDashboardData();
         latestData = d;
         renderDashboard(d, isRefresh);
         renderActivity(d);
