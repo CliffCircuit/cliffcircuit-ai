@@ -823,7 +823,7 @@
           <button class="strategy-btn" data-strategy="hmm_regime" onclick="setStrategyFilter('hmm_regime')">🤖 Markov</button>
         </div>
         <div class="markov-capital-note" id="markov-capital-note">
-          ⚠️ Markov strategy uses ~30% of portfolio capital (~$30K allocation)
+          ⚠️ Strategy filter shows only directly observed live positions/trades. No assumed capital allocation is applied.
         </div>
 
         <!-- Stat cards row -->
@@ -1225,12 +1225,16 @@
     }
     function getModelLabel(item) {
       if (item.model_name) return escHtml(item.model_name);
-      return normalizeStrategy(item) === 'hmm_regime' ? 'Markov v1' : 'Signal v1';
+      const strategy = normalizeStrategy(item);
+      if (strategy === 'hmm_regime') return 'Markov';
+      if (strategy === 'wheel') return 'Wheel';
+      return 'Signal Scanner';
     }
     function getVersionLabel(item) {
       if (item.pipeline_version) return escHtml(item.pipeline_version);
+      if (item.code_version) return escHtml(item.code_version);
       if (item.experiment_id) return escHtml(item.experiment_id);
-      return 'v1';
+      return '--';
     }
     function setPositionsInlineFilter(f) {
       positionsInlineFilter = f;
@@ -1549,48 +1553,40 @@
       const t = d.trades || {};
       const r = d.research || {};
 
-      // Portfolio hero — strategy-aware
-      // Compute strategy allocation ratios
-      const MARKOV_RATIO = 0.30;  // ~30% of portfolio
-      const SCANNER_RATIO = 0.70; // ~70% of portfolio
+      // Portfolio hero — only use directly observed live data
       let displayEquity, displayCash, displayEquityInvested;
 
       if (currentStrategy === 'all') {
-        displayEquity = p.equity || 0;
-        displayCash = p.cash || 0;
-      } else if (currentStrategy === 'hmm_regime') {
-        // Markov: $30K allocation — portfolio value = allocation + unrealized P&L
-        const MARKOV_ALLOC = 30000;
-        const markovPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'hmm_regime'));
-        const markovMktVal = markovPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
-        const markovUnrealizedPnl = markovPositions.reduce((sum, pos) => sum + (pos.pnl || 0), 0);
-        displayCash = Math.max(0, MARKOV_ALLOC - markovMktVal);
-        displayEquity = MARKOV_ALLOC + markovUnrealizedPnl;
+        displayEquity = p.equity ?? p.portfolio_value ?? 0;
+        displayCash = p.cash;
+        displayEquityInvested = (displayEquity != null && displayCash != null) ? (displayEquity - displayCash) : null;
       } else {
-        // Scanner: $70K allocation — portfolio value = allocation + unrealized P&L
-        const SCANNER_ALLOC = 70000;
-        const scannerPositions = (p.positions || []).filter(pos => matchesStrategy(pos, 'scanner'));
-        const scannerMktVal = scannerPositions.reduce((sum, pos) => sum + (pos.market_value || 0), 0);
-        const scannerUnrealizedPnl = scannerPositions.reduce((sum, pos) => sum + (pos.pnl || 0), 0);
-        displayCash = Math.max(0, SCANNER_ALLOC - scannerMktVal);
-        displayEquity = SCANNER_ALLOC + scannerUnrealizedPnl;
+        const strategyPositions = (p.positions || []).filter(pos => matchesStrategy(pos, currentStrategy));
+        const strategyMarketValue = strategyPositions.reduce((sum, pos) => sum + (Number(pos.market_value) || 0), 0);
+        displayEquity = strategyMarketValue;
+        displayCash = null;
+        displayEquityInvested = strategyMarketValue;
       }
-      displayEquityInvested = displayEquity - displayCash;
 
       const eqEl = document.getElementById('portfolio-equity');
-      const prevEq = previousData?.portfolio?.equity || 0;
-      animateValue(eqEl, prevEq, displayEquity, isRefresh ? 800 : 1200, v => fmt$(v));
+      const prevEq = currentStrategy === 'all'
+        ? (previousData?.portfolio?.equity ?? previousData?.portfolio?.portfolio_value ?? 0)
+        : 0;
+      animateValue(eqEl, prevEq, Number(displayEquity || 0), isRefresh ? 800 : 1200, v => fmt$(v));
 
-      // Cash
-      document.getElementById('portfolio-cash').textContent = fmt$(displayCash);
+      // Cash / invested
+      document.getElementById('portfolio-cash').textContent = currentStrategy === 'all' ? fmt$(displayCash) : '--';
       document.getElementById('portfolio-equity-invested').textContent = fmt$(displayEquityInvested);
 
       // Positions count & Unrealized P&L — filtered
       const filteredPositions = (p.positions || []).filter(pos => matchesStrategy(pos, currentStrategy));
       document.getElementById('positions-count').textContent = filteredPositions.length;
 
-      const filteredPnl = currentStrategy === 'all' ? p.total_pnl : filteredPositions.reduce((sum, pos) => sum + (pos.pnl || 0), 0);
-      const filteredPnlPct = currentStrategy === 'all' ? p.total_pnl_pct : (filteredPositions.length > 0 ? filteredPositions.reduce((sum, pos) => sum + (pos.pnl_pct || 0), 0) / filteredPositions.length : 0);
+      const filteredPnl = currentStrategy === 'all' ? p.total_pnl : filteredPositions.reduce((sum, pos) => sum + (Number(pos.pnl) || 0), 0);
+      const filteredCostBasis = filteredPositions.reduce((sum, pos) => sum + ((Number(pos.entry_price) || 0) * (Number(pos.qty) || 0)), 0);
+      const filteredPnlPct = currentStrategy === 'all'
+        ? p.total_pnl_pct
+        : (filteredCostBasis > 0 ? (filteredPnl / filteredCostBasis) * 100 : null);
 
       const pnlEl = document.getElementById('total-pnl');
       pnlEl.textContent = fmtPnl(filteredPnl);
@@ -1598,18 +1594,11 @@
       document.getElementById('total-pnl-pct').textContent = fmtPct(filteredPnlPct);
 
       const dpnl = document.getElementById('daily-pnl');
-      // For strategy views, show unrealized P&L and % relative to allocation
-      let displayDailyPnl, displayDailyPnlPct;
-      if (currentStrategy === 'all') {
-        displayDailyPnl = filteredPnl;
-        displayDailyPnlPct = filteredPnlPct;
-      } else {
-        const stratAlloc = currentStrategy === 'hmm_regime' ? 30000 : 70000;
-        displayDailyPnl = filteredPnl;
-        displayDailyPnlPct = stratAlloc > 0 ? (filteredPnl / stratAlloc) * 100 : 0;
-      }
+      const displayDailyPnl = filteredPnl;
+      const displayDailyPnlPct = filteredPnlPct;
       if (displayDailyPnl != null) {
-        dpnl.textContent = fmtPnl(displayDailyPnl) + ' (' + fmtPct(displayDailyPnlPct) + ')';
+        const pctPart = displayDailyPnlPct != null ? ' (' + fmtPct(displayDailyPnlPct) + ')' : '';
+        dpnl.textContent = fmtPnl(displayDailyPnl) + pctPart;
         dpnl.className = 'text-sm font-semibold ' + pnlClass(displayDailyPnl);
       }
 
@@ -1632,7 +1621,7 @@
         } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       } else if (currentStrategy === 'hmm_regime') {
         // Compute from hmm_trades array (summary may be stale)
-        const hmmTradesArr = (d.hmm_regime || {}).hmm_trades || [];
+        const hmmTradesArr = ((d.hmm_regime || {}).hmm_trades || []).filter(tr => !tr.dry_run);
         const hmmTradeNum = hmmTradesArr.length;
         document.getElementById('total-trades').textContent = hmmTradeNum;
         const wrEl = document.getElementById('win-rate');
@@ -1646,7 +1635,7 @@
         } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
       } else {
         // Scanner: total minus HMM
-        const hmmTradeCount = ((d.hmm_regime || {}).hmm_trades || []).length;
+        const hmmTradeCount = ((d.hmm_regime || {}).hmm_trades || []).filter(tr => !tr.dry_run).length;
         const scannerTotal = (t.total_trades || 0) - hmmTradeCount;
         document.getElementById('total-trades').textContent = scannerTotal;
         const wrEl = document.getElementById('win-rate');
@@ -1702,7 +1691,7 @@
       }).join('');
 
       // HMM/Markov Strategy stats — compute from actual trade data + positions
-      const hmmTrades_ = hmm.hmm_trades || [];
+      const hmmTrades_ = (hmm.hmm_trades || []).filter(tr => !tr.dry_run);
       const hmmPositions = (p.positions || []).filter(pos => normalizeStrategy(pos) === 'hmm_regime');
       const hmmOpenCount = hmmPositions.length;
       const hmmTradeCount = hmmTrades_.length;
@@ -1822,7 +1811,7 @@
       }).join('');
 
       // HMM trades table
-      const hmmTrades = hmm.hmm_trades || [];
+      const hmmTrades = (hmm.hmm_trades || []).filter(tr => !tr.dry_run);
       if (hmmTrades.length === 0) {
         document.getElementById('hmm-trades-empty').style.display = '';
         document.getElementById('hmm-trades-table').style.display = 'none';
