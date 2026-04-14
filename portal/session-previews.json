@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-04-14T04:59:53.640Z",
-  "count": 23,
+  "generatedAt": "2026-04-14T05:14:54.760Z",
+  "count": 25,
   "previews": {
     "agent:main:main": {
       "task": "System: [2026-04-13 19:50:40 PDT] Pipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nA scheduled reminder has been triggered. The reminder content is:\n\nPipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nPlease relay this reminder to the user in a helpful and friendly way.\nCurrent time: Monday, April 13th, 2026 — 7:50 PM (America/Los_Angeles) / 2026-04-14 02:50 UTC",
@@ -153,16 +153,21 @@
       "sessionId": "ab758f67-a7a6-4c01-994f-2de1a0eb0083"
     },
     "agent:main:cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1": {
+      "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Monday, April 13th, 2026 — 10:09 PM (America/Los_Angeles) / 2026-04-14 05:09 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
+      "response": "**Watchlist Scan Summary — Monday, April 13th**\n\n✅ **Scan completed.** Processed 17 companies.\n\n**Findings:** 5 notable events detected and logged to watchlist-data.json.\n\n⚠️ **Issue:** Telegram digest send failed. Portal data was pushed successfully, but the Telegram notification to the main group didn't go through (exit status 1). The updated watchlist data is in the repo and available on the portal — Tim should see it there. I'll flag this for follow-up if it persists.\n\n---\n\n**Stocks flagged:** CRDO, ALAB, MOD, INOD, FN, COHR, LITE, SOUN, AAOI, PATH, MKSI, TER, AEIS, VRT, BBAI, AI, MSTR — all scanned and assessed.",
+      "sessionId": "f8be5c1a-d677-4207-8110-8274f31846e7"
+    },
+    "f8be5c1a-d677-4207-8110-8274f31846e7": {
+      "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Monday, April 13th, 2026 — 10:09 PM (America/Los_Angeles) / 2026-04-14 05:09 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
+      "response": "**Watchlist Scan Summary — Monday, April 13th**\n\n✅ **Scan completed.** Processed 17 companies.\n\n**Findings:** 5 notable events detected and logged to watchlist-data.json.\n\n⚠️ **Issue:** Telegram digest send failed. Portal data was pushed successfully, but the Telegram notification to the main group didn't go through (exit status 1). The updated watchlist data is in the repo and available on the portal — Tim should see it there. I'll flag this for follow-up if it persists.\n\n---\n\n**Stocks flagged:** CRDO, ALAB, MOD, INOD, FN, COHR, LITE, SOUN, AAOI, PATH, MKSI, TER, AEIS, VRT, BBAI, AI, MSTR — all scanned and assessed.",
+      "sessionId": "f8be5c1a-d677-4207-8110-8274f31846e7"
+    },
+    "agent:main:cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1:run:c703f02e-5a0f-43be-bae3-58802467416e": {
       "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Monday, April 13th, 2026 — 8:25 PM (America/Los_Angeles) / 2026-04-14 03:25 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "**Watchlist Scan Complete — Monday 8:25 PM (April 13th)**\n\n✓ **17 companies scanned** (CRDO, ALAB, MOD, INOD, FN, COHR, LITE, SOUN, AAOI, PATH, MKSI, TER, AEIS, VRT, BBAI, AI, MSTR)  \n✓ **5 notable events detected** — data saved locally\n\n**⚠ Two issues:**\n1. **Telegram send failed** — digest not delivered to group. Likely auth/connection issue with the Telegram channel\n2. **Git push failed** — updated watchlist data not committed upstream\n\nThe scanner itself ran cleanly and found activity. The pipeline breaks at notification/persistence. Both errors need investigation before the next run.",
       "sessionId": "c703f02e-5a0f-43be-bae3-58802467416e"
     },
     "c703f02e-5a0f-43be-bae3-58802467416e": {
-      "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Monday, April 13th, 2026 — 8:25 PM (America/Los_Angeles) / 2026-04-14 03:25 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "**Watchlist Scan Complete — Monday 8:25 PM (April 13th)**\n\n✓ **17 companies scanned** (CRDO, ALAB, MOD, INOD, FN, COHR, LITE, SOUN, AAOI, PATH, MKSI, TER, AEIS, VRT, BBAI, AI, MSTR)  \n✓ **5 notable events detected** — data saved locally\n\n**⚠ Two issues:**\n1. **Telegram send failed** — digest not delivered to group. Likely auth/connection issue with the Telegram channel\n2. **Git push failed** — updated watchlist data not committed upstream\n\nThe scanner itself ran cleanly and found activity. The pipeline breaks at notification/persistence. Both errors need investigation before the next run.",
-      "sessionId": "c703f02e-5a0f-43be-bae3-58802467416e"
-    },
-    "agent:main:cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1:run:c703f02e-5a0f-43be-bae3-58802467416e": {
       "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Monday, April 13th, 2026 — 8:25 PM (America/Los_Angeles) / 2026-04-14 03:25 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "**Watchlist Scan Complete — Monday 8:25 PM (April 13th)**\n\n✓ **17 companies scanned** (CRDO, ALAB, MOD, INOD, FN, COHR, LITE, SOUN, AAOI, PATH, MKSI, TER, AEIS, VRT, BBAI, AI, MSTR)  \n✓ **5 notable events detected** — data saved locally\n\n**⚠ Two issues:**\n1. **Telegram send failed** — digest not delivered to group. Likely auth/connection issue with the Telegram channel\n2. **Git push failed** — updated watchlist data not committed upstream\n\nThe scanner itself ran cleanly and found activity. The pipeline breaks at notification/persistence. Both errors need investigation before the next run.",
       "sessionId": "c703f02e-5a0f-43be-bae3-58802467416e"
@@ -177,15 +182,20 @@
       "response": "Morning digest generated and delivered to Tim via Telegram. Here's the summary:\n\n**Digest sent successfully.** Key highlights:\n- **Edge Capital equity:** $107,213.39 | 36 open positions, best performer SNDK (+59.8%)\n- **Market regime:** 🔴 risk_off (SPY RSI 36) — cautious environment\n- **Top overnight picks:** AAOI (+23), VRT (+11), LITE (+11)\n- **Weather Edge:** ⚠️ offline due to import error — needs attention\n- **Reddit:** rate-limited (429), temporarily disabled for 2h\n\nThe Weather Edge import error is worth investigating — I'll flag that for the next working session.",
       "sessionId": "251ca653-5fd9-4299-bd41-a6e68e1c5f0a"
     },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles) / 2026-04-14 04:51 UTC",
-      "response": "Heartbeat received. Scout session is active and monitoring.\n\n**Status Summary:**\n- 🟢 Session: online\n- ⏰ Time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles)\n- 📍 Ready for tasks\n\nNo pending alerts or issues detected. Awaiting instructions.",
-      "sessionId": "d1125fc6-fbc0-4d0b-8258-b2687236fdd1"
+    "agent:main:cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1:run:f8be5c1a-d677-4207-8110-8274f31846e7": {
+      "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Monday, April 13th, 2026 — 10:09 PM (America/Los_Angeles) / 2026-04-14 05:09 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
+      "response": "**Watchlist Scan Summary — Monday, April 13th**\n\n✅ **Scan completed.** Processed 17 companies.\n\n**Findings:** 5 notable events detected and logged to watchlist-data.json.\n\n⚠️ **Issue:** Telegram digest send failed. Portal data was pushed successfully, but the Telegram notification to the main group didn't go through (exit status 1). The updated watchlist data is in the repo and available on the portal — Tim should see it there. I'll flag this for follow-up if it persists.\n\n---\n\n**Stocks flagged:** CRDO, ALAB, MOD, INOD, FN, COHR, LITE, SOUN, AAOI, PATH, MKSI, TER, AEIS, VRT, BBAI, AI, MSTR — all scanned and assessed.",
+      "sessionId": "f8be5c1a-d677-4207-8110-8274f31846e7"
     },
-    "d1125fc6-fbc0-4d0b-8258-b2687236fdd1": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles) / 2026-04-14 04:51 UTC",
-      "response": "Heartbeat received. Scout session is active and monitoring.\n\n**Status Summary:**\n- 🟢 Session: online\n- ⏰ Time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles)\n- 📍 Ready for tasks\n\nNo pending alerts or issues detected. Awaiting instructions.",
-      "sessionId": "d1125fc6-fbc0-4d0b-8258-b2687236fdd1"
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 10:09 PM (America/Los_Angeles) / 2026-04-14 05:09 UTC",
+      "response": "Heartbeat received. Scout standing by on Monday, April 13th, 2026 at 10:09 PM (PT). Ready for tasks. 🟢",
+      "sessionId": "952312f1-5100-4ce2-bbc7-13394e9ef277"
+    },
+    "952312f1-5100-4ce2-bbc7-13394e9ef277": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 10:09 PM (America/Los_Angeles) / 2026-04-14 05:09 UTC",
+      "response": "Heartbeat received. Scout standing by on Monday, April 13th, 2026 at 10:09 PM (PT). Ready for tasks. 🟢",
+      "sessionId": "952312f1-5100-4ce2-bbc7-13394e9ef277"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:74e8f6b8-9a93-4871-9fe6-1e543f2ca7f0": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 8:09 PM (America/Los_Angeles) / 2026-04-14 03:09 UTC",
@@ -231,6 +241,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles) / 2026-04-14 04:51 UTC",
       "response": "Heartbeat received. Scout session is active and monitoring.\n\n**Status Summary:**\n- 🟢 Session: online\n- ⏰ Time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles)\n- 📍 Ready for tasks\n\nNo pending alerts or issues detected. Awaiting instructions.",
       "sessionId": "d1125fc6-fbc0-4d0b-8258-b2687236fdd1"
+    },
+    "d1125fc6-fbc0-4d0b-8258-b2687236fdd1": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles) / 2026-04-14 04:51 UTC",
+      "response": "Heartbeat received. Scout session is active and monitoring.\n\n**Status Summary:**\n- 🟢 Session: online\n- ⏰ Time: Monday, April 13th, 2026 — 9:51 PM (America/Los_Angeles)\n- 📍 Ready for tasks\n\nNo pending alerts or issues detected. Awaiting instructions.",
+      "sessionId": "d1125fc6-fbc0-4d0b-8258-b2687236fdd1"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:952312f1-5100-4ce2-bbc7-13394e9ef277": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 10:09 PM (America/Los_Angeles) / 2026-04-14 05:09 UTC",
+      "response": "Heartbeat received. Scout standing by on Monday, April 13th, 2026 at 10:09 PM (PT). Ready for tasks. 🟢",
+      "sessionId": "952312f1-5100-4ce2-bbc7-13394e9ef277"
     }
   }
 }
