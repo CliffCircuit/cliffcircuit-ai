@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge Capital Options — CliffCircuit Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+  <style>
+    :root {
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.15);
+      --coral: #f87171;
+      --electric: #3b82f6;
+      --surface: rgba(17, 24, 39, 0.62);
+      --border: rgba(55, 65, 81, 0.55);
+      --bg-deep: #030712;
+    }
+    body {
+      background: var(--bg-deep);
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 1px 1px, rgba(75, 85, 99, 0.15) 1px, transparent 0);
+      background-size: 100% 100%, 100% 100%, 24px 24px;
+      min-height: 100vh;
+      color: #e5e7eb;
+    }
+    .section-card {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08));
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(16,185,129,0.06), transparent 35%, rgba(59,130,246,0.05));
+      pointer-events: none;
+    }
+    .hero-value, .stat-value { font-variant-numeric: tabular-nums; }
+    .hero-value { font-size: 3rem; font-weight: 800; color: #f9fafb; line-height: 1; }
+    .hero-label, .stat-label, .section-title {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
+    .stat-card {
+      background: rgba(17,24,39,0.5);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+    .stat-value { font-size: 1.55rem; font-weight: 700; color: #f9fafb; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid rgba(75,85,99,0.5);
+      background: rgba(17,24,39,0.45);
+      color: #d1d5db;
+    }
+    .pill.good { color: #a7f3d0; border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.1); }
+    .pill.warn { color: #fde68a; border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.1); }
+    .pill.bad { color: #fecaca; border-color: rgba(248,113,113,0.35); background: rgba(248,113,113,0.1); }
+    .pill.info { color: #bfdbfe; border-color: rgba(59,130,246,0.35); background: rgba(59,130,246,0.1); }
+    .table-shell { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af;
+      text-align: left; padding: 0.8rem 0.75rem; border-bottom: 1px solid rgba(55,65,81,0.55);
+    }
+    td {
+      padding: 0.9rem 0.75rem; border-bottom: 1px solid rgba(31,41,55,0.75); vertical-align: top;
+      color: #e5e7eb; font-size: 0.95rem;
+    }
+    .muted { color: #9ca3af; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .pos { color: #34d399; }
+    .neg { color: #f87171; }
+    .empty-state {
+      border: 1px dashed rgba(75,85,99,0.8);
+      border-radius: 14px;
+      padding: 1rem;
+      color: #9ca3af;
+      background: rgba(17,24,39,0.35);
+    }
+  </style>
+</head>
+<body>
+  <div id="portal-nav"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0 18px;">
+      <a href="/portal/edge-capital.html" style="padding:8px 14px;border-radius:999px;border:1px solid rgba(59,130,246,0.22);background:rgba(17,24,39,0.55);color:#93c5fd;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;">Overview</a>
+      <a href="/portal/edge-capital-options.html" style="padding:8px 14px;border-radius:999px;border:1px solid rgba(16,185,129,0.35);background:rgba(16,185,129,0.12);color:#d1fae5;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;">Options</a>
+      <span style="font-size:11px;color:#6b7280;letter-spacing:0.06em;text-transform:uppercase;">Live Alpaca paper account + wheel exports</span>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <section class="section-card hero-card">
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div>
+          <div class="hero-label">Options Paper Account</div>
+          <div class="hero-value" id="portfolio-value">--</div>
+          <div class="mt-3 flex flex-wrap gap-2" id="status-pills"></div>
+        </div>
+        <div class="text-sm text-gray-400">
+          <div>Last refresh</div>
+          <div class="mono text-gray-200 mt-1" id="updated-at">--</div>
+          <div class="mt-2 text-xs muted" id="source-note">Reading /portal/shared/edge-capital-options.json</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-5">
+      <div class="stat-card"><div class="stat-label">Cash</div><div class="stat-value" id="cash">--</div></div>
+      <div class="stat-card"><div class="stat-label">Buying Power</div><div class="stat-value" id="buying-power">--</div></div>
+      <div class="stat-card"><div class="stat-label">Options Buying Power</div><div class="stat-value" id="options-buying-power">--</div></div>
+      <div class="stat-card"><div class="stat-label">Open Option Positions</div><div class="stat-value" id="open-count">--</div></div>
+      <div class="stat-card"><div class="stat-label">Recent Option Orders</div><div class="stat-value" id="orders-count">--</div></div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div class="xl:col-span-2">
+        <div class="section-card">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="section-title">Open option positions</div>
+              <div class="text-sm muted">Live Alpaca options-paper positions only.</div>
+            </div>
+          </div>
+          <div id="positions-wrap"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="section-title">Recent option orders & fills</div>
+              <div class="text-sm muted">If no real trades have happened yet, this stays empty on purpose.</div>
+            </div>
+          </div>
+          <div id="orders-wrap"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="section-title">Wheel pipeline state</div>
+              <div class="text-sm muted">Real wheel exports and wheel research history from Edge Capital.</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="stat-card"><div class="stat-label">Last Wheel Run</div><div class="stat-value text-lg" id="wheel-last-run">--</div></div>
+            <div class="stat-card"><div class="stat-label">Signals Captured</div><div class="stat-value" id="wheel-signal-count">--</div></div>
+            <div class="stat-card"><div class="stat-label">Closed Wheel Signals</div><div class="stat-value" id="wheel-closed-count">--</div></div>
+            <div class="stat-card"><div class="stat-label">Active Wheel Positions</div><div class="stat-value" id="wheel-active-count">--</div></div>
+          </div>
+          <div id="wheel-active-wrap" class="mb-5"></div>
+          <div id="wheel-candidates-wrap"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-card">
+          <div class="section-title mb-4">Account readiness</div>
+          <div id="readiness-list" class="space-y-3"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title mb-4">Provable P&L</div>
+          <div class="space-y-4">
+            <div>
+              <div class="stat-label">Unrealized options P&L</div>
+              <div class="stat-value" id="unrealized-pnl">--</div>
+            </div>
+            <div>
+              <div class="stat-label">Realized options P&L</div>
+              <div class="stat-value" id="realized-pnl">--</div>
+            </div>
+            <div class="empty-state text-sm" id="pnl-note">--</div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title mb-4">Account metadata</div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between gap-3"><span class="muted">Status</span><span id="meta-status">--</span></div>
+            <div class="flex justify-between gap-3"><span class="muted">Options level</span><span id="meta-level">--</span></div>
+            <div class="flex justify-between gap-3"><span class="muted">Pattern day trader</span><span id="meta-pdt">--</span></div>
+            <div class="flex justify-between gap-3"><span class="muted">Trading blocked</span><span id="meta-blocked">--</span></div>
+            <div class="flex justify-between gap-3"><span class="muted">Account created</span><span id="meta-created" class="text-right">--</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/portal/portal-common.js"></script>
+  <script>
+    const DATA_URL = '/portal/shared/edge-capital-options.json';
+    const money = (n) => (n == null || Number.isNaN(Number(n))) ? '--' : Number(n).toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+    const num = (n) => (n == null || Number.isNaN(Number(n))) ? '--' : Number(n).toLocaleString();
+    const pct = (n) => (n == null || Number.isNaN(Number(n))) ? '--' : `${Number(n).toFixed(2)}%`;
+    const when = (iso) => iso ? new Date(iso).toLocaleString() : '--';
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const signClass = (n) => n > 0 ? 'pos' : n < 0 ? 'neg' : '';
+
+    function readinessRow(label, ok, detail) {
+      const cls = ok ? 'good' : 'warn';
+      const word = ok ? 'Ready' : 'Waiting';
+      return `
+        <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-900/40 p-3">
+          <div>
+            <div class="font-medium text-slate-100">${esc(label)}</div>
+            <div class="text-sm muted mt-1">${esc(detail)}</div>
+          </div>
+          <span class="pill ${cls}">${word}</span>
+        </div>`;
+    }
+
+    function renderPositions(positions) {
+      const wrap = document.getElementById('positions-wrap');
+      if (!positions?.length) {
+        wrap.innerHTML = '<div class="empty-state">No open option positions in the Alpaca options paper account right now.</div>';
+        return;
+      }
+      wrap.innerHTML = `
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr><th>Contract</th><th>Side</th><th>Qty</th><th>Cost Basis</th><th>Market Value</th><th>Unrealized</th></tr>
+            </thead>
+            <tbody>
+              ${positions.map((p) => `
+                <tr>
+                  <td><div class="font-medium text-slate-100 mono">${esc(p.symbol)}</div><div class="muted text-xs mt-1">${esc(p.underlying_symbol || p.asset_class || '--')}</div></td>
+                  <td>${esc(p.side || '--')}</td>
+                  <td class="mono">${num(p.qty)}</td>
+                  <td class="mono">${money(p.cost_basis)}</td>
+                  <td class="mono">${money(p.market_value)}</td>
+                  <td class="mono ${signClass(Number(p.unrealized_pl))}">${money(p.unrealized_pl)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function renderOrders(orders, activities) {
+      const wrap = document.getElementById('orders-wrap');
+      if (!orders?.length && !activities?.length) {
+        wrap.innerHTML = '<div class="empty-state">No option orders or fills yet. That means the page is showing real readiness, not fake performance.</div>';
+        return;
+      }
+      const orderRows = (orders || []).map((o) => `
+        <tr>
+          <td><div class="font-medium text-slate-100 mono">${esc(o.symbol || '--')}</div><div class="muted text-xs mt-1">${esc(o.id || '--')}</div></td>
+          <td>${esc(o.side || '--')}</td>
+          <td>${esc(o.status || '--')}</td>
+          <td class="mono">${esc(o.qty || '--')}</td>
+          <td class="mono">${money(o.limit_price || o.filled_avg_price)}</td>
+          <td class="text-sm">${esc(when(o.filled_at || o.submitted_at || o.created_at))}</td>
+        </tr>`).join('');
+      const actRows = (activities || []).map((a) => `
+        <tr>
+          <td><div class="font-medium text-slate-100 mono">${esc(a.symbol || '--')}</div><div class="muted text-xs mt-1">${esc(a.activity_type || '--')}</div></td>
+          <td>${esc(a.side || '--')}</td>
+          <td>${esc(a.type || '--')}</td>
+          <td class="mono">${esc(a.qty || '--')}</td>
+          <td class="mono">${money(a.net_amount || a.price)}</td>
+          <td class="text-sm">${esc(when(a.transaction_time))}</td>
+        </tr>`).join('');
+      wrap.innerHTML = `
+        ${orders?.length ? `<div class="table-shell mb-4"><table><thead><tr><th>Order</th><th>Side</th><th>Status</th><th>Qty</th><th>Price</th><th>Timestamp</th></tr></thead><tbody>${orderRows}</tbody></table></div>` : ''}
+        ${activities?.length ? `<div class="table-shell"><table><thead><tr><th>Fill</th><th>Side</th><th>Type</th><th>Qty</th><th>Net / Price</th><th>Timestamp</th></tr></thead><tbody>${actRows}</tbody></table></div>` : ''}`;
+    }
+
+    function renderWheel(data) {
+      const wheel = data.wheel || {};
+      document.getElementById('wheel-last-run').textContent = wheel.last_run ? new Date(wheel.last_run).toLocaleString() : '--';
+      document.getElementById('wheel-signal-count').textContent = num(wheel.research_summary?.total_signals);
+      document.getElementById('wheel-closed-count').textContent = num(wheel.research_summary?.closed_signals);
+      document.getElementById('wheel-active-count').textContent = num((wheel.active_positions || []).length);
+
+      const activeWrap = document.getElementById('wheel-active-wrap');
+      if (wheel.active_positions?.length) {
+        activeWrap.innerHTML = `<div class="table-shell"><table><thead><tr><th>Ticker</th><th>State</th><th>Strike</th><th>Expiry</th><th>Premium</th><th>Updated</th></tr></thead><tbody>${wheel.active_positions.map((p) => `<tr><td class="mono">${esc(p.ticker || '--')}</td><td>${esc(p.state || '--')}</td><td class="mono">${money(p.strike)}</td><td>${esc(p.expiry || '--')}</td><td class="mono">${money(p.premium_collected || p.total_premium_earned)}</td><td>${esc(when(p.updated_at))}</td></tr>`).join('')}</tbody></table></div>`;
+      } else {
+        activeWrap.innerHTML = '<div class="empty-state">No active wheel positions recorded right now.</div>';
+      }
+
+      const candidatesWrap = document.getElementById('wheel-candidates-wrap');
+      if (wheel.recent_candidates?.length) {
+        candidatesWrap.innerHTML = `<div class="section-title mb-3">Recent wheel candidates</div><div class="table-shell"><table><thead><tr><th>Ticker</th><th>Type</th><th>Spot</th><th>Strike</th><th>DTE</th><th>Premium</th><th>Annualized</th><th>Captured</th></tr></thead><tbody>${wheel.recent_candidates.map((c) => `<tr><td class="mono">${esc(c.ticker || '--')}</td><td>${esc(c.trade_type || '--')}</td><td class="mono">${money(c.spot_price)}</td><td class="mono">${money(c.strike)}</td><td class="mono">${num(c.dte)}</td><td class="mono">${money(c.premium)}</td><td class="mono">${pct(c.ann_yield)}</td><td>${esc(when(c.captured_at))}</td></tr>`).join('')}</tbody></table></div>`;
+      } else {
+        candidatesWrap.innerHTML = '<div class="empty-state">No wheel candidates exported yet.</div>';
+      }
+    }
+
+    async function load() {
+      const res = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Failed to load ${DATA_URL}`);
+      const data = await res.json();
+      const account = data.account || {};
+      const ready = data.readiness || {};
+
+      document.getElementById('portfolio-value').textContent = money(account.portfolio_value);
+      document.getElementById('cash').textContent = money(account.cash);
+      document.getElementById('buying-power').textContent = money(account.buying_power);
+      document.getElementById('options-buying-power').textContent = money(account.options_buying_power);
+      document.getElementById('open-count').textContent = num((data.open_positions || []).length);
+      document.getElementById('orders-count').textContent = num((data.recent_orders || []).length + (data.recent_activities || []).length);
+      document.getElementById('updated-at').textContent = when(data.updated_at);
+
+      document.getElementById('status-pills').innerHTML = [
+        `<span class="pill ${account.status === 'ACTIVE' ? 'good' : 'warn'}">${esc(account.status || 'Unknown')}</span>`,
+        `<span class="pill info">Options level ${esc(account.options_trading_level ?? account.options_approved_level ?? '--')}</span>`,
+        `<span class="pill ${(data.open_positions || []).length ? 'good' : 'warn'}">${(data.open_positions || []).length ? 'Live positions' : 'No open positions'}</span>`
+      ].join('');
+
+      document.getElementById('unrealized-pnl').textContent = money(data.pnl?.unrealized_total);
+      document.getElementById('unrealized-pnl').className = `stat-value ${signClass(Number(data.pnl?.unrealized_total))}`;
+      document.getElementById('realized-pnl').textContent = money(data.pnl?.realized_total);
+      document.getElementById('realized-pnl').className = `stat-value ${signClass(Number(data.pnl?.realized_total))}`;
+      document.getElementById('pnl-note').textContent = data.pnl?.note || '--';
+
+      document.getElementById('meta-status').textContent = account.status || '--';
+      document.getElementById('meta-level').textContent = `${account.options_trading_level ?? '--'} / approved ${account.options_approved_level ?? '--'}`;
+      document.getElementById('meta-pdt').textContent = account.pattern_day_trader ? 'Yes' : 'No';
+      document.getElementById('meta-blocked').textContent = (account.trading_blocked || account.account_blocked) ? 'Yes' : 'No';
+      document.getElementById('meta-created').textContent = when(account.created_at);
+
+      document.getElementById('readiness-list').innerHTML = [
+        readinessRow('API credentials', ready.credentials_present, ready.credentials_present ? 'Options-paper credentials resolved successfully.' : 'Missing options-paper credentials.'),
+        readinessRow('Account access', ready.account_accessible, ready.account_accessible ? 'Live account snapshot loaded from Alpaca.' : 'Could not reach the options paper account.'),
+        readinessRow('Options enabled', ready.options_enabled, `Trading level ${account.options_trading_level ?? '--'}, approved level ${account.options_approved_level ?? '--'}.`),
+        readinessRow('Trade history', ready.has_recent_orders, ready.has_recent_orders ? 'Recent orders or fills found.' : 'No real options orders/fills yet.'),
+        readinessRow('Wheel pipeline', ready.has_wheel_activity, ready.has_wheel_activity ? 'Wheel signals/export activity is present.' : 'No wheel activity exported yet.')
+      ].join('');
+
+      renderPositions(data.open_positions || []);
+      renderOrders(data.recent_orders || [], data.recent_activities || []);
+      renderWheel(data);
+    }
+
+    load().catch((err) => {
+      console.error(err);
+      document.getElementById('portfolio-value').textContent = '--';
+      document.getElementById('source-note').textContent = 'Options data failed to load.';
+      document.getElementById('positions-wrap').innerHTML = `<div class="empty-state">${esc(err.message)}</div>`;
+      document.getElementById('orders-wrap').innerHTML = '<div class="empty-state">Could not load options order data.</div>';
+      document.getElementById('wheel-active-wrap').innerHTML = '<div class="empty-state">Could not load wheel export.</div>';
+      document.getElementById('wheel-candidates-wrap').innerHTML = '';
+      document.getElementById('readiness-list').innerHTML = readinessRow('Data load', false, err.message);
+    });
+  </script>
+</body>
+</html>
