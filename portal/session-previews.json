@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-04-15T06:32:25.831Z",
-  "count": 114,
+  "generatedAt": "2026-04-15T06:47:26.972Z",
+  "count": 113,
   "previews": {
     "agent:main:main": {
       "task": "System: [2026-04-13 19:50:40 PDT] Pipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nA scheduled reminder has been triggered. The reminder content is:\n\nPipeline health check triggered. Run: bash /Users/openclaw/workspace/repos/weather-edge/scripts/pipeline-health-check.sh — If exit code is non-zero, diagnose and fix the issue yourself. Read logs, edit code, restart processes. Only message Tim on Telegram if you cannot fix it. If OK, reply HEARTBEAT_OK.\n\nPlease relay this reminder to the user in a helpful and friendly way.\nCurrent time: Monday, April 13th, 2026 — 7:50 PM (America/Los_Angeles) / 2026-04-14 02:50 UTC",
@@ -111,16 +111,6 @@
       "task": "[cron:cb37c6e9-9e72-4ff4-a9c5-330a6b107ce1 watchlist-nightly-scan] Run the watchlist scanner: cd /Users/openclaw/workspace/repos/weather-edge && source .venv/bin/activate && python3 -m src.watchlist_scanner 2>&1 | tail -30. Report any notable findings briefly.\nCurrent time: Tuesday, April 14th, 2026 — 10:04 PM (America/Los_Angeles) / 2026-04-15 05:04 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
       "response": "**Watchlist Scan Complete — Tuesday, April 14 @ 10:04 PM**\n\n✅ **Status:** Scanner ran successfully. 17 companies scanned.\n\n📊 **Findings:**\n- **3 notable events** detected and logged\n- Watchlist data updated and pushed to portal repo\n\n⚠️ **Issue:** Telegram digest delivery failed (exit status 1). Data was saved locally and pushed to repo, but Tim's alert wasn't sent. This may be a channel/auth issue or network hiccup.\n\n---\n\n**Recommendation:** Check Telegram integration on next heartbeat. The scan itself is working; the notification pipe is the blocker.",
       "sessionId": "9fbb140d-b114-42ab-84b4-b4bd6715f114"
-    },
-    "agent:main:cron:248701de-21b3-4c1a-86b6-164a8de04ca3:run:31e513df-ea38-46c9-bbc6-16c8835ac300": {
-      "task": "[cron:248701de-21b3-4c1a-86b6-164a8de04ca3 nightly-git-backup] Nightly git backup: cd /Users/openclaw/workspace && git add -A && git commit -m \"Nightly backup: $(date +%Y-%m-%d)\" && git push origin main\nCurrent time: Monday, April 13th, 2026 — 11:31 PM (America/Los_Angeles) / 2026-04-14 06:31 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "**Nightly git backup complete — 2026-04-13**\n\n- **10 files changed:** 125 insertions, 11 deletions\n- **New files:** crontab snapshot, 3 YouTube monitor notes\n- **Deleted:** pipeline-alert.txt (stale)\n- **Push:** successful to origin/main\n\nAll workspace changes backed up and synced.",
-      "sessionId": "31e513df-ea38-46c9-bbc6-16c8835ac300"
-    },
-    "31e513df-ea38-46c9-bbc6-16c8835ac300": {
-      "task": "[cron:248701de-21b3-4c1a-86b6-164a8de04ca3 nightly-git-backup] Nightly git backup: cd /Users/openclaw/workspace && git add -A && git commit -m \"Nightly backup: $(date +%Y-%m-%d)\" && git push origin main\nCurrent time: Monday, April 13th, 2026 — 11:31 PM (America/Los_Angeles) / 2026-04-14 06:31 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
-      "response": "**Nightly git backup complete — 2026-04-13**\n\n- **10 files changed:** 125 insertions, 11 deletions\n- **New files:** crontab snapshot, 3 YouTube monitor notes\n- **Deleted:** pipeline-alert.txt (stale)\n- **Push:** successful to origin/main\n\nAll workspace changes backed up and synced.",
-      "sessionId": "31e513df-ea38-46c9-bbc6-16c8835ac300"
     },
     "agent:main:cron:4638a8d0-53e7-4a92-ae2f-8575bba084b8:run:54fa98f8-58f1-4b34-ba37-394b94e91d41": {
       "task": "[cron:4638a8d0-53e7-4a92-ae2f-8575bba084b8 youtube-monitor] Run the YouTube channel monitor: bash /Users/openclaw/workspace/runtime/youtube-monitor/monitor.sh\n\nIf new videos were found and processed (notes saved), read each note file in /Users/openclaw/workspace/runtime/youtube-monitor/notes/ and compose a brief message with:\n1. Video title and channel\n2. 3-4 key takeaways (bullet points)\n3. Any actionable insights for Edge Capital watchlist, Weather Edge, or Cliff Circuit\n4. Link to the video\n\nFill in the Actionable Insights and Relevance sections in the note file too.\n\nIf no new videos, reply HEARTBEAT_OK.\nCurrent time: Tuesday, April 14th, 2026 — 12:03 AM (America/Los_Angeles) / 2026-04-14 07:03 UTC\n\nReturn your summary as plain text; it will be delivered automatically. If the task explicitly calls for messaging a specific external recipient, note who/where it should go instead of sending it yourself.",
@@ -303,24 +293,14 @@
       "sessionId": "edc0e1ce-fff8-4d42-bae8-59b913f8de62"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:24 PM (America/Los_Angeles) / 2026-04-15 06:24 UTC",
-      "response": "Heartbeat received. Scout is online and ready.\n\n**Current Status:**\n- **Date & Time:** Tuesday, April 14th, 2026 at 11:24 PM (PDT) / 2026-04-15 06:24 UTC\n- **Agent:** scout\n- **Runtime:** Active\n\nReady to assist. What can I help you with?",
-      "sessionId": "248eb8af-76f3-4de4-bbf5-f99d1086248f"
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:39 PM (America/Los_Angeles) / 2026-04-15 06:39 UTC",
+      "response": "**All systems nominal.** Scout heartbeat confirmed.\n\n**Job Status Summary:**\n- ✅ **18 active jobs** | **1 error** (edge-capital-monitor timeout — 2 consecutive failures)\n- Last scout heartbeat: **4.5s runtime** — healthy\n- Last memory-checkpoint: skipped (quiet hours) \n- Weather pipeline & Edge Capital: both due for 6 AM check (PT)\n- Morning reports already sent (7 AM)\n- Evening check complete, nightly git backup done\n\nThe **edge-capital-monitor** job has hit a timeout twice; this may need attention in the next business day. All other jobs are running clean.\n\nReady for the next heartbeat cycle. 🟢",
+      "sessionId": "db44f5e7-f571-484f-aa4c-94e633551983"
     },
-    "248eb8af-76f3-4de4-bbf5-f99d1086248f": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:24 PM (America/Los_Angeles) / 2026-04-15 06:24 UTC",
-      "response": "Heartbeat received. Scout is online and ready.\n\n**Current Status:**\n- **Date & Time:** Tuesday, April 14th, 2026 at 11:24 PM (PDT) / 2026-04-15 06:24 UTC\n- **Agent:** scout\n- **Runtime:** Active\n\nReady to assist. What can I help you with?",
-      "sessionId": "248eb8af-76f3-4de4-bbf5-f99d1086248f"
-    },
-    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:f37e00b2-d71f-4757-a39a-aaa34b4e22fc": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 11:39 PM (America/Los_Angeles) / 2026-04-14 06:39 UTC",
-      "response": "Heartbeat acknowledged. Scout session is alive and ready. ✓\n\nCurrent timestamp: **Monday, April 13th, 2026 — 11:39 PM PT** (2026-04-14 06:39 UTC)\n\nNo pending tasks or errors. Standing by for instructions.",
-      "sessionId": "f37e00b2-d71f-4757-a39a-aaa34b4e22fc"
-    },
-    "f37e00b2-d71f-4757-a39a-aaa34b4e22fc": {
-      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 11:39 PM (America/Los_Angeles) / 2026-04-14 06:39 UTC",
-      "response": "Heartbeat acknowledged. Scout session is alive and ready. ✓\n\nCurrent timestamp: **Monday, April 13th, 2026 — 11:39 PM PT** (2026-04-14 06:39 UTC)\n\nNo pending tasks or errors. Standing by for instructions.",
-      "sessionId": "f37e00b2-d71f-4757-a39a-aaa34b4e22fc"
+    "db44f5e7-f571-484f-aa4c-94e633551983": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:39 PM (America/Los_Angeles) / 2026-04-15 06:39 UTC",
+      "response": "**All systems nominal.** Scout heartbeat confirmed.\n\n**Job Status Summary:**\n- ✅ **18 active jobs** | **1 error** (edge-capital-monitor timeout — 2 consecutive failures)\n- Last scout heartbeat: **4.5s runtime** — healthy\n- Last memory-checkpoint: skipped (quiet hours) \n- Weather pipeline & Edge Capital: both due for 6 AM check (PT)\n- Morning reports already sent (7 AM)\n- Evening check complete, nightly git backup done\n\nThe **edge-capital-monitor** job has hit a timeout twice; this may need attention in the next business day. All other jobs are running clean.\n\nReady for the next heartbeat cycle. 🟢",
+      "sessionId": "db44f5e7-f571-484f-aa4c-94e633551983"
     },
     "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:0968202f-4781-43f8-8e31-5f0abe54e3b3": {
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Monday, April 13th, 2026 — 11:54 PM (America/Los_Angeles) / 2026-04-14 06:54 UTC",
@@ -1146,6 +1126,16 @@
       "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:24 PM (America/Los_Angeles) / 2026-04-15 06:24 UTC",
       "response": "Heartbeat received. Scout is online and ready.\n\n**Current Status:**\n- **Date & Time:** Tuesday, April 14th, 2026 at 11:24 PM (PDT) / 2026-04-15 06:24 UTC\n- **Agent:** scout\n- **Runtime:** Active\n\nReady to assist. What can I help you with?",
       "sessionId": "248eb8af-76f3-4de4-bbf5-f99d1086248f"
+    },
+    "248eb8af-76f3-4de4-bbf5-f99d1086248f": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:24 PM (America/Los_Angeles) / 2026-04-15 06:24 UTC",
+      "response": "Heartbeat received. Scout is online and ready.\n\n**Current Status:**\n- **Date & Time:** Tuesday, April 14th, 2026 at 11:24 PM (PDT) / 2026-04-15 06:24 UTC\n- **Agent:** scout\n- **Runtime:** Active\n\nReady to assist. What can I help you with?",
+      "sessionId": "248eb8af-76f3-4de4-bbf5-f99d1086248f"
+    },
+    "agent:scout:cron:68645ed3-0fff-4d0d-b760-fc5201605d5b:run:db44f5e7-f571-484f-aa4c-94e633551983": {
+      "task": "[cron:68645ed3-0fff-4d0d-b760-fc5201605d5b scout-heartbeat] heartbeat\nCurrent time: Tuesday, April 14th, 2026 — 11:39 PM (America/Los_Angeles) / 2026-04-15 06:39 UTC",
+      "response": "**All systems nominal.** Scout heartbeat confirmed.\n\n**Job Status Summary:**\n- ✅ **18 active jobs** | **1 error** (edge-capital-monitor timeout — 2 consecutive failures)\n- Last scout heartbeat: **4.5s runtime** — healthy\n- Last memory-checkpoint: skipped (quiet hours) \n- Weather pipeline & Edge Capital: both due for 6 AM check (PT)\n- Morning reports already sent (7 AM)\n- Evening check complete, nightly git backup done\n\nThe **edge-capital-monitor** job has hit a timeout twice; this may need attention in the next business day. All other jobs are running clean.\n\nReady for the next heartbeat cycle. 🟢",
+      "sessionId": "db44f5e7-f571-484f-aa4c-94e633551983"
     }
   }
 }
