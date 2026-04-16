@@ -488,6 +488,7 @@ function renderNav(activePage) {
   const pages = [
     { id: 'dashboard', label: 'Dashboard', href: '/portal/' },
     { id: 'marketing', label: 'Marketing', href: '/portal/marketing.html' },
+    { id: 'twitter-strategy', label: 'X Strategy', href: '/portal/twitter-strategy.html' },
     { id: 'agents', label: 'Agents', href: '/portal/agents.html' },
     { id: 'ideas', label: 'Ideas', href: '/portal/ideas.html' },
     { id: 'models', label: 'Models', href: '/portal/models.html' },
