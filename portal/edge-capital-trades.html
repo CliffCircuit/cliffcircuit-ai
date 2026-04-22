@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade History — Edge Capital</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/portal/portal-common.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e2e8f0; }
+
+    .page-header {
+      background: linear-gradient(135deg, #0f1117 0%, #1a1f2e 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #94a3b8;
+      font-size: 0.875rem;
+      text-decoration: none;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all 0.15s;
+    }
+    .back-btn:hover { color: #e2e8f0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+
+    .page-title { font-size: 1.25rem; font-weight: 600; color: #f8fafc; }
+    .page-subtitle { font-size: 0.75rem; color: #64748b; margin-top: 0.125rem; }
+
+    .main-content { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: #1a1f2e;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+    }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 0.375rem; }
+    .stat-val { font-size: 1.5rem; font-weight: 700; color: #f8fafc; line-height: 1; }
+    .stat-val.green { color: #10b981; }
+    .stat-val.red { color: #f87171; }
+    .stat-val.yellow { color: #fbbf24; }
+
+    /* Filters */
+    .filter-bar {
+      background: #1a1f2e;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .filter-group { display: flex; align-items: center; gap: 0.5rem; }
+    .filter-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; white-space: nowrap; }
+
+    .filter-btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+    .filter-btn.active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.5); color: #a5b4fc; }
+    .filter-btn.active-green { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #6ee7b7; }
+    .filter-btn.active-red { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.4); color: #fca5a5; }
+
+    .search-input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.5rem;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      outline: none;
+      width: 160px;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: rgba(99,102,241,0.5); }
+    .search-input::placeholder { color: #475569; }
+
+    /* Table */
+    .table-card {
+      background: #1a1f2e;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .table-title { font-size: 0.875rem; font-weight: 600; color: #94a3b8; }
+    .table-count { font-size: 0.75rem; color: #64748b; }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .data-table th {
+      padding: 0.625rem 0.875rem;
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #475569;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .data-table th:hover { color: #94a3b8; }
+    .data-table th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+    .data-table th.sort-asc .sort-arrow::after { content: '↑'; opacity: 1; }
+    .data-table th.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; }
+    .data-table th .sort-arrow::after { content: '↕'; }
+
+    .data-table td {
+      padding: 0.625rem 0.875rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.375rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .badge-buy { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
+    .badge-sell { background: rgba(248,113,113,0.15); color: #fca5a5; border: 1px solid rgba(248,113,113,0.25); }
+    .badge-tp { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.2); font-size: 0.65rem; }
+    .badge-sl { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); font-size: 0.65rem; }
+    .badge-drydark { background: rgba(100,116,139,0.12); color: #64748b; border: 1px solid rgba(100,116,139,0.2); font-size: 0.65rem; }
+
+    .symbol-cell { font-weight: 600; color: #f1f5f9; letter-spacing: 0.03em; }
+    .price-cell { font-variant-numeric: tabular-nums; color: #cbd5e1; }
+    .pnl-pos { color: #10b981; font-weight: 600; }
+    .pnl-neg { color: #f87171; font-weight: 600; }
+    .pnl-zero { color: #64748b; }
+    .score-cell { font-variant-numeric: tabular-nums; color: #a5b4fc; }
+    .ts-cell { color: #475569; font-size: 0.75rem; }
+    .reason-cell { color: #475569; font-size: 0.72rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: #475569;
+      font-size: 0.875rem;
+    }
+
+    .freshness { font-size: 0.7rem; color: #475569; }
+    .freshness span { color: #64748b; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .page-btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-info { font-size: 0.75rem; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/portal/edge-capital.html" class="back-btn">← EC Dashboard</a>
+  <div>
+    <div class="page-title">Trade History</div>
+    <div class="page-subtitle" id="freshness-line">Loading…</div>
+  </div>
+</div>
+
+<div class="main-content">
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Trades</div>
+      <div class="stat-val" id="stat-total">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Buys</div>
+      <div class="stat-val green" id="stat-buys">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Sells</div>
+      <div class="stat-val red" id="stat-sells">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Take Profits</div>
+      <div class="stat-val green" id="stat-tps">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Stop Losses</div>
+      <div class="stat-val red" id="stat-sls">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-val green" id="stat-winrate">--</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Exit P&amp;L</div>
+      <div class="stat-val" id="stat-avgpnl">--</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <span class="filter-label">Side</span>
+      <button class="filter-btn active" id="f-all" onclick="setFilter('side','all')">All</button>
+      <button class="filter-btn" id="f-buy" onclick="setFilter('side','buy')">Buys</button>
+      <button class="filter-btn" id="f-sell" onclick="setFilter('side','sell')">Sells</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Type</span>
+      <button class="filter-btn active" id="f-type-all" onclick="setFilter('type','all')">All</button>
+      <button class="filter-btn" id="f-type-tp" onclick="setFilter('type','take_profit')">Take Profit</button>
+      <button class="filter-btn" id="f-type-sl" onclick="setFilter('type','stop_loss')">Stop Loss</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Live / Dry</span>
+      <button class="filter-btn active" id="f-live-all" onclick="setFilter('live','all')">All</button>
+      <button class="filter-btn" id="f-live-live" onclick="setFilter('live','live')">Live</button>
+      <button class="filter-btn" id="f-live-dry" onclick="setFilter('live','dry')">Dry Run</button>
+    </div>
+    <div class="filter-group" style="margin-left:auto;">
+      <input type="text" class="search-input" id="symbol-search" placeholder="Search symbol…" oninput="applyFilters()" />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">All Trades</span>
+      <span class="table-count" id="table-count">-- trades</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="data-table" id="trades-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('ts')" data-col="ts">Date<span class="sort-arrow"></span></th>
+            <th onclick="sortBy('symbol')" data-col="symbol">Symbol<span class="sort-arrow"></span></th>
+            <th onclick="sortBy('side')" data-col="side">Side<span class="sort-arrow"></span></th>
+            <th onclick="sortBy('qty')" data-col="qty">Qty<span class="sort-arrow"></span></th>
+            <th onclick="sortBy('price')" data-col="price">Price<span class="sort-arrow"></span></th>
+            <th onclick="sortBy('pnl_pct')" data-col="pnl_pct">Exit P&amp;L<span class="sort-arrow"></span></th>
+            <th onclick="sortBy('score')" data-col="score">Score<span class="sort-arrow"></span></th>
+            <th>Type</th>
+            <th>Reason</th>
+            <th>Ver</th>
+          </tr>
+        </thead>
+        <tbody id="trades-body">
+          <tr><td colspan="10" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <button class="page-btn" id="btn-prev" onclick="changePage(-1)" disabled>← Prev</button>
+      <span class="page-info" id="page-info">Page 1</span>
+      <button class="page-btn" id="btn-next" onclick="changePage(1)">Next →</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/portal/portal-common.js"></script>
+<script>
+  const DATA_URL = '/portal/shared/edge-capital-trades.json';
+  const PAGE_SIZE = 50;
+
+  let allTrades = [];
+  let filteredTrades = [];
+  let currentPage = 1;
+
+  let sortCol = 'ts';
+  let sortDir = 'desc';
+
+  const filters = { side: 'all', type: 'all', live: 'live' };  // default: live trades only
+
+  // ─── Load ───
+  async function loadData() {
+    try {
+      const r = await fetch(DATA_URL + '?_=' + Date.now());
+      const d = await r.json();
+
+      allTrades = d.trades || [];
+
+      const updatedAt = d.updated_at ? new Date(d.updated_at) : null;
+      document.getElementById('freshness-line').textContent =
+        updatedAt ? 'Updated ' + updatedAt.toLocaleString() : 'Edge Capital — all trades';
+
+      // Stats (from all live trades, regardless of filter)
+      const s = d.stats || {};
+      document.getElementById('stat-total').textContent = s.total_trades ?? '--';
+      document.getElementById('stat-buys').textContent = s.total_buys ?? '--';
+      document.getElementById('stat-sells').textContent = s.total_sells ?? '--';
+      document.getElementById('stat-tps').textContent = s.take_profits ?? '--';
+      document.getElementById('stat-sls').textContent = s.stop_losses ?? '--';
+
+      const wr = s.win_rate;
+      const wrEl = document.getElementById('stat-winrate');
+      wrEl.textContent = wr != null ? (wr * 100).toFixed(1) + '%' : '--';
+      wrEl.className = 'stat-val ' + (wr == null ? '' : wr >= 0.5 ? 'green' : 'red');
+
+      const avg = s.avg_exit_pnl_pct;
+      const avgEl = document.getElementById('stat-avgpnl');
+      avgEl.textContent = avg != null ? (avg > 0 ? '+' : '') + avg.toFixed(1) + '%' : '--';
+      avgEl.className = 'stat-val ' + (avg == null ? '' : avg > 0 ? 'green' : avg < 0 ? 'red' : '');
+
+      // Set default filter to live trades
+      setFilter('live', 'live', /* skipRender */ false);
+
+    } catch(e) {
+      console.error('Failed to load trades:', e);
+      document.getElementById('trades-body').innerHTML = '<tr><td colspan="10" class="empty-state">Failed to load trade data.</td></tr>';
+    }
+  }
+
+  // ─── Filters ───
+  function setFilter(group, value, skipRender) {
+    filters[group] = value;
+
+    // Update button states
+    if (group === 'side') {
+      ['all','buy','sell'].forEach(v => {
+        const el = document.getElementById('f-' + v);
+        if (!el) return;
+        el.className = 'filter-btn' + (v === value ? (v === 'buy' ? ' active-green' : v === 'sell' ? ' active-red' : ' active') : '');
+      });
+    }
+    if (group === 'type') {
+      ['all','take_profit','stop_loss'].forEach(v => {
+        const id = 'f-type-' + (v === 'all' ? 'all' : v === 'take_profit' ? 'tp' : 'sl');
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = 'filter-btn' + (v === value ? ' active' : '');
+      });
+    }
+    if (group === 'live') {
+      ['all','live','dry'].forEach(v => {
+        const el = document.getElementById('f-live-' + v);
+        if (!el) return;
+        el.className = 'filter-btn' + (v === value ? ' active' : '');
+      });
+    }
+
+    if (!skipRender) applyFilters();
+  }
+
+  function applyFilters() {
+    const symbol = (document.getElementById('symbol-search').value || '').toUpperCase().trim();
+    filteredTrades = allTrades.filter(t => {
+      if (filters.side !== 'all' && t.side !== filters.side) return false;
+      if (filters.type !== 'all' && t.exit_type !== filters.type) return false;
+      if (filters.live === 'live' && t.dry_run) return false;
+      if (filters.live === 'dry' && !t.dry_run) return false;
+      if (symbol && !(t.symbol || '').toUpperCase().includes(symbol)) return false;
+      return true;
+    });
+
+    // Sort
+    filteredTrades.sort((a, b) => {
+      let av = a[sortCol], bv = b[sortCol];
+      if (av == null) av = sortDir === 'asc' ? Infinity : -Infinity;
+      if (bv == null) bv = sortDir === 'asc' ? Infinity : -Infinity;
+      if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  // ─── Sort ───
+  function sortBy(col) {
+    if (sortCol === col) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortCol = col;
+      sortDir = col === 'ts' ? 'desc' : 'asc';
+    }
+    // Update header classes
+    document.querySelectorAll('.data-table th').forEach(th => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (th.dataset.col === col) th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    });
+    applyFilters();
+  }
+
+  // ─── Render ───
+  function renderTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page = filteredTrades.slice(start, start + PAGE_SIZE);
+    const total = filteredTrades.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+
+    document.getElementById('table-count').textContent = total + ' trade' + (total !== 1 ? 's' : '');
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${Math.max(1, totalPages)} (${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total})`;
+    document.getElementById('btn-prev').disabled = currentPage <= 1;
+    document.getElementById('btn-next').disabled = currentPage >= totalPages;
+
+    if (page.length === 0) {
+      document.getElementById('trades-body').innerHTML = '<tr><td colspan="10" class="empty-state">No trades match the current filters.</td></tr>';
+      return;
+    }
+
+    document.getElementById('trades-body').innerHTML = page.map(t => {
+      const ts = t.ts ? t.ts.slice(0, 16).replace('T', ' ') : '--';
+      const side = t.side || '';
+      const sideBadge = side === 'buy'
+        ? '<span class="badge badge-buy">BUY</span>'
+        : '<span class="badge badge-sell">SELL</span>';
+
+      let typeBadge = '';
+      if (t.exit_type === 'take_profit') typeBadge = '<span class="badge badge-tp">TP</span>';
+      else if (t.exit_type === 'stop_loss') typeBadge = '<span class="badge badge-sl">SL</span>';
+      else if (t.dry_run) typeBadge = '<span class="badge badge-drydark">dry</span>';
+
+      const pnl = t.pnl_pct;
+      let pnlCell = '--';
+      if (pnl != null) {
+        const cls = pnl > 0 ? 'pnl-pos' : pnl < 0 ? 'pnl-neg' : 'pnl-zero';
+        pnlCell = `<span class="${cls}">${pnl > 0 ? '+' : ''}${pnl.toFixed(1)}%</span>`;
+      }
+
+      const score = t.score != null ? `<span class="score-cell">${t.score.toFixed(1)}</span>` : '<span style="color:#334155">--</span>';
+      const price = t.price != null ? '$' + Number(t.price).toFixed(2) : '--';
+      const qty = t.qty != null ? Number(t.qty).toLocaleString() : '--';
+      const reason = escHtml((t.reason || '').replace('score=', 's='));
+      const ver = t.code_version ? `<span style="font-family:monospace;font-size:0.68rem;color:#334155">${escHtml(t.code_version.slice(0,7))}</span>` : '';
+
+      return `<tr>
+        <td class="ts-cell">${ts}</td>
+        <td class="symbol-cell">${escHtml(t.symbol || '--')}</td>
+        <td>${sideBadge}</td>
+        <td class="price-cell">${qty}</td>
+        <td class="price-cell">${price}</td>
+        <td>${pnlCell}</td>
+        <td>${score}</td>
+        <td>${typeBadge}</td>
+        <td class="reason-cell" title="${escHtml(t.reason || '')}">${reason}</td>
+        <td>${ver}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function changePage(delta) {
+    const totalPages = Math.ceil(filteredTrades.length / PAGE_SIZE);
+    currentPage = Math.max(1, Math.min(totalPages, currentPage + delta));
+    renderTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Init
+  if (typeof initPortal === 'function') initPortal({ activePage: 'edge-capital' });
+
+  // Mark sort direction on initial column
+  document.querySelectorAll('.data-table th').forEach(th => {
+    if (th.dataset.col === sortCol) th.classList.add('sort-desc');
+  });
+
+  loadData();
+</script>
+</body>
+</html>
