@@ -103,6 +103,7 @@ function resolveChannelDir(channelId) {
 const jwt           = require('jsonwebtoken'); // For server-issued JWTs
 const JWT_SECRET    = process.env.JWT_SECRET || 'supersecretkey'; // TODO: Make this a strong, env-based secret
 const GOOGLE_CLIENT_ID  = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
+const ALLOWED_EMAILS = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
 
 // ─── Load device identity ───────────────────────────────────────────────────
 let identity;
@@ -324,8 +325,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ─── Google OAuth Configuration (for initial ID token validation) ──────────────────────────────────
-  const GOOGLE_CLIENT_ID_AUTH = '947274046017-kfgdo6mnr02td2sab68ts491vb57b3iu.apps.googleusercontent.com';
-  const ALLOWED_EMAILS_AUTH = ['timharris707@gmail.com', 'tim@lendmanagement.com', 'insightopenclaw@gmail.com'];
+  const GOOGLE_CLIENT_ID_AUTH = GOOGLE_CLIENT_ID;
+  const ALLOWED_EMAILS_AUTH = ALLOWED_EMAILS;
   // ──────────────────────────────────────────────────────────────────────────────────────────────────
 
   if (req.method === 'POST' && req.url === '/api/auth/google-callback') {
@@ -453,6 +454,29 @@ const server = http.createServer(async (req, res) => {
       return null;
     }
     return user;
+  }
+
+  // --- Personal portfolio live data (auth required; never served as static GitHub Pages JSON) ---
+  if (req.method === 'GET' && req.url.startsWith('/api/personal-portfolio/data')) {
+    const user = await requireAuth(req, res);
+    if (!user) return;
+    const DASHBOARD_PATH = path.join(
+      process.env.HOME || '/Users/openclaw',
+      'workspace/repos/edge-capital/data/personal_portfolio_dashboard.json'
+    );
+    try {
+      const raw = fs.readFileSync(DASHBOARD_PATH, 'utf8');
+      res.writeHead(200, {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      });
+      res.end(raw);
+    } catch (err) {
+      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
   }
 
   if (req.method === 'GET' && req.url.startsWith('/api/channels')) {

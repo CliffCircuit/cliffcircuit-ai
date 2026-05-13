@@ -1190,7 +1190,9 @@
   <script src="/portal/portal-common.js"></script>
   <script>
     const DATA_URL = '/portal/personal-portfolio-data.json';
+    const PERSONAL_API_URL = 'https://chat-proxy.cliffcircuit.ai/api/personal-portfolio/data';
     const DATA_URL_CANDIDATES = [
+      PERSONAL_API_URL,
       '/portal/shared/personal-portfolio-dashboard.json',
       DATA_URL,
     ];
@@ -1339,9 +1341,14 @@
     }
 
     async function fetchDashboardData() {
+      const session = window.getCurrentSession ? window.getCurrentSession() : null;
       const responses = await Promise.all(DATA_URL_CANDIDATES.map(async (url) => {
         try {
-          const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
+          const headers = {};
+          if (url === PERSONAL_API_URL && session?.token) {
+            headers.Authorization = 'Bearer ' + session.token;
+          }
+          const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-store', headers });
           if (!res.ok) return null;
           const json = await res.json();
           return normalizeDashboardData(json, url);
