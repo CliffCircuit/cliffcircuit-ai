@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-05-13T05:31:14.530Z",
+  "generatedAt": "2026-05-13T05:46:15.836Z",
   "count": 9,
   "previews": {
     "agent:main:telegram:direct:8386624734": {
       "task": "You there?",
-      "response": "Found them. You were right — the live personal pair is in Keychain under the personal names, and it authenticates against Alpaca live. I’m wiring the exporter to those names now, and I’ll keep the real data behind the authenticated API path rather than static GitHub JSON.",
+      "response": "You were right. I found the live personal Alpaca credentials in Keychain.\n\nFixed and deployed:\n- Personal exporter now reads the live Keychain items: `alpaca-personal-key` / `alpaca-personal-secret`\n- It successfully synced your live account snapshot: **10 positions, 10 recent orders**\n- Added protected API: `https://chat-proxy.cliffcircuit.ai/api/personal-portfolio/data`\n- Verified unauthenticated access returns **401**\n- Verified authenticated access returns live personal portfolio data\n- Personal portfolio page now loads the protected API first, with static placeholder fallback only\n- Chat proxy is running again; I also fixed its missing `jsonwebtoken` dependency\n\nCommits:\n- Edge Capital: `081f560`\n- Portal/chat-proxy: `aa5b9b555`\n- GitHub Pages deploy: success (`25780477933`)\n\nAnd yes — I was wrong earlier. I checked the wrong credential names and mistook “not found there” for “not available.” Glad you pushed back.",
       "sessionId": "d5df4f62-69a0-48a5-b1a3-14d9bb129a49"
     },
     "d5df4f62-69a0-48a5-b1a3-14d9bb129a49": {
       "task": "You there?",
-      "response": "Found them. You were right — the live personal pair is in Keychain under the personal names, and it authenticates against Alpaca live. I’m wiring the exporter to those names now, and I’ll keep the real data behind the authenticated API path rather than static GitHub JSON.",
+      "response": "You were right. I found the live personal Alpaca credentials in Keychain.\n\nFixed and deployed:\n- Personal exporter now reads the live Keychain items: `alpaca-personal-key` / `alpaca-personal-secret`\n- It successfully synced your live account snapshot: **10 positions, 10 recent orders**\n- Added protected API: `https://chat-proxy.cliffcircuit.ai/api/personal-portfolio/data`\n- Verified unauthenticated access returns **401**\n- Verified authenticated access returns live personal portfolio data\n- Personal portfolio page now loads the protected API first, with static placeholder fallback only\n- Chat proxy is running again; I also fixed its missing `jsonwebtoken` dependency\n\nCommits:\n- Edge Capital: `081f560`\n- Portal/chat-proxy: `aa5b9b555`\n- GitHub Pages deploy: success (`25780477933`)\n\nAnd yes — I was wrong earlier. I checked the wrong credential names and mistook “not found there” for “not available.” Glad you pushed back.",
       "sessionId": "d5df4f62-69a0-48a5-b1a3-14d9bb129a49"
     },
     "agent:main:cron:e5849b75-71ec-47dd-86f1-60ba969dc777": {
