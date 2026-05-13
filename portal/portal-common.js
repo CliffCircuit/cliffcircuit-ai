@@ -494,6 +494,7 @@ function renderNav(activePage) {
     { id: 'models', label: 'Models', href: '/portal/models.html' },
     { id: 'trading', label: 'Weather Edge', href: '/portal/trading.html' },
     { id: 'edge-capital', label: 'Edge Capital', href: '/portal/edge-capital.html' },
+    { id: 'personal-portfolio', label: 'Personal Portfolio', href: '/portal/personal-portfolio.html' },
     { id: 'watchlist', label: 'Watchlist', href: '/portal/watchlist.html' },
     { id: 'tokens', label: 'Token Usage', href: '/portal/tokens.html' },
     { id: 'chat', label: 'Chat', href: '/portal/chat.html' },
