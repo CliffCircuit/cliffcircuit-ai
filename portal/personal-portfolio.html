@@ -1645,6 +1645,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div>
               <span class="text-white font-semibold" style="font-size:16px">${escHtml(COMPANY_NAMES[ticker] || posData.name || ticker)}</span>
+              <a href="https://finance.yahoo.com/quote/${ticker}" target="_blank" title="Open on Yahoo Finance" style="color:#4b5563;text-decoration:none;font-size:12px;margin-left:4px;transition:color 0.15s" onmouseover="this.style.color='#9ca3af'" onmouseout="this.style.color='#4b5563'">↗</a>
               <span class="text-gray-500 text-sm" style="margin-left:8px">${ticker}</span>
             </div>
             <button onclick="document.getElementById('position-detail-panel').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px">✕</button>
@@ -2174,6 +2175,7 @@
                 <div class="flex items-center gap-2">
                   ${owned ? '<span title="You own this" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.4);flex-shrink:0"></span>' : ''}
                   <span class="text-white font-bold text-lg">${escHtml(pk.ticker)}</span>
+                  <a href="https://finance.yahoo.com/quote/${pk.ticker}" target="_blank" onclick="event.stopPropagation()" title="Open on Yahoo Finance" style="color:#4b5563;text-decoration:none;font-size:11px;transition:color 0.15s" onmouseover="this.style.color='#9ca3af'" onmouseout="this.style.color='#4b5563'">↗</a>
                   ${recBadge(pk.rec || (score >= 45 ? 'buy' : score >= 30 ? 'consider' : 'hold'))}
                   <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(99,102,241,0.15);color:#a5b4fc">${escHtml(sector)}</span>
                 </div>
