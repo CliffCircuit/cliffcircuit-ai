@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal Portfolio — CliffCircuit Portal</title>
+  <title>Personal Portfolio - CliffCircuit Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -183,7 +183,7 @@
     .stagger-7 { animation-delay: 0.35s; }
     .stagger-8 { animation-delay: 0.4s; }
 
-    /* Activity feed — terminal style */
+    /* Activity feed - terminal style */
     .activity-feed {
       max-height: 420px;
       overflow-y: auto;
@@ -1087,9 +1087,14 @@
         </div>
       </div>
 
-      <!-- ========== TOP SIGNALS — CARD GRID ========== -->
+      <!-- ========== TOP SIGNALS - CARD GRID ========== -->
       <div class="section-card fade-in stagger-6">
-        <div class="section-title">Today’s Ideas <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">scanner picks to consider — not automatic orders</span></div>
+        <div class="section-title">Today's Ideas <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">scanner picks to consider - not automatic orders</span></div>
+        <div class="inline-strategy-filters" style="margin-bottom:10px">
+          <button class="inline-strategy-btn active" data-filter="all" onclick="setIdeasFilter('all')">All</button>
+          <button class="inline-strategy-btn" data-filter="owned" onclick="setIdeasFilter('owned')">Owned</button>
+          <button class="inline-strategy-btn" data-filter="not-owned" onclick="setIdeasFilter('not-owned')">Not Owned</button>
+        </div>
         <div id="signals-empty" class="text-gray-600 text-sm" style="display:none;">No scanner data available.</div>
         <div id="signals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
       </div>
@@ -1229,6 +1234,7 @@
     let currentStrategy = 'all'; // kept for backward compat with filtered views
     let positionsInlineFilter = 'all';
     let tradesInlineFilter = 'all';
+    let ideasFilter = 'all';
     let sortField = 'market_value'; let sortDir = -1;
     let latestData = null;
 
@@ -1262,7 +1268,7 @@
     function getStrategyLabel(s) {
       return 'Personal Portfolio';
     }
-    // HMM/Markov instruments — positions for these tickers are attributed to hmm_regime
+    // HMM/Markov instruments - positions for these tickers are attributed to hmm_regime
     const HMM_TICKERS = new Set(['SPXL']);
 
     function normalizeStrategy(item) {
@@ -1311,6 +1317,18 @@
       });
       if (latestData) renderDashboard(latestData, true);
     }
+
+    function setIdeasFilter(f) {
+      ideasFilter = f;
+      document.querySelectorAll('#signals-grid').forEach(g => {
+        // Force re-render on next renderDashboard
+      });
+      document.querySelectorAll('.inline-strategy-btn').forEach(b => {
+        const isIdeasBtn = b.closest('#signals-grid') || b.onclick?.toString().includes('setIdeasFilter');
+      });
+      if (latestData) renderDashboard(latestData, true);
+    }
+
     function setStrategyFilter(strategy) {
       currentStrategy = strategy;
       document.querySelectorAll('.strategy-btn').forEach(b => {
@@ -1676,7 +1694,7 @@
       const t = d.trades || {};
       const r = d.research || {};
 
-      // Portfolio hero — only use directly observed live data
+      // Portfolio hero - only use directly observed live data
       let displayEquity, displayCash, displayEquityInvested;
 
       if (currentStrategy === 'all') {
@@ -1701,7 +1719,7 @@
       document.getElementById('portfolio-cash').textContent = currentStrategy === 'all' ? fmt$(displayCash) : '--';
       document.getElementById('portfolio-equity-invested').textContent = fmt$(displayEquityInvested);
 
-      // Positions count & Unrealized P&L — filtered
+      // Positions count & Unrealized P&L - filtered
       const filteredPositions = (p.positions || []).filter(pos => matchesStrategy(pos, currentStrategy));
       document.getElementById('positions-count').textContent = filteredPositions.length;
 
@@ -1725,7 +1743,7 @@
         dpnl.className = 'text-sm font-semibold ' + pnlClass(displayDailyPnl);
       }
 
-      // Trades summary — filtered by strategy
+      // Trades summary - filtered by strategy
       const allRecent = t.recent || [];
       const filteredRecent = allRecent.filter(tr => matchesStrategy(tr, currentStrategy));
       const allToday = t.today || [];
@@ -1813,7 +1831,7 @@
           '<div class="regime-dot ' + r + '" title="' + escHtml(r) + ' @ ' + escHtml(ts) + ' (' + Math.round((h.confidence||0)*100) + '%)"></div>';
       }).join('');
 
-      // HMM/Markov Strategy stats — compute from actual trade data + positions
+      // HMM/Markov Strategy stats - compute from actual trade data + positions
       const hmmTrades_ = (hmm.hmm_trades || []).filter(tr => !tr.dry_run);
       const hmmPositions = (p.positions || []).filter(pos => normalizeStrategy(pos) === 'hmm_regime');
       const hmmOpenCount = hmmPositions.length;
@@ -1858,7 +1876,7 @@
       const scannerTrades = (t.recent || []).filter(tr => normalizeStrategy(tr) !== 'hmm_regime');
       const allTradeHistory = d.trade_history || [];
       const scannerHistory = allTradeHistory.filter(tr => normalizeStrategy(tr) !== 'hmm_regime');
-      
+
       let scannerTotalPnl = 0;
       let scannerWins = 0;
       let scannerClosed = 0;
@@ -1944,7 +1962,7 @@
         // Build a position lookup for open HMM trades
         const posLookup = {};
         (p.positions || []).forEach(pos => { posLookup[pos.ticker] = pos; });
-        
+
         document.getElementById('hmm-trades-body').innerHTML = hmmTrades.slice(0, 20).map(tr => {
           const entryP = tr.entry_price ?? tr.price;
           const pos = posLookup[tr.symbol];
@@ -2038,7 +2056,7 @@
         `).join('');
       }
 
-      // Positions table — filtered by strategy (hero + inline)
+      // Positions table - filtered by strategy (hero + inline)
       const allPositions = p.positions || [];
       const positions = allPositions
         .filter(pos => matchesStrategy(pos, currentStrategy) && matchesStrategy(pos, positionsInlineFilter))
@@ -2093,6 +2111,7 @@
       }
 
       // ─── TOP SIGNALS as cards ───
+      const ownedSet = new Set(allPositions.map(p => p.ticker));
       const picks = [...(s.top_picks || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
       if (picks.length === 0) {
         document.getElementById('signals-empty').style.display = '';
@@ -2101,14 +2120,45 @@
         document.getElementById('signals-empty').style.display = 'none';
         document.getElementById('signals-grid').innerHTML = picks.map((pk, i) => {
           const ss = pk.signal_stack || {};
+          const tech = pk.technical || {};
           const score = pk.score || 0;
           const sector = (pk.sector || '').replace(/_/g, ' ');
           const rating = pk.analyst_rating || ss.analyst || 'N/A';
           const upside = pk.upside_pct != null ? Number(pk.upside_pct).toFixed(1) : '—';
           const headlines = pk.news_headlines || [];
+          const newsUrls = pk.news_urls || [];
 
-          // Score ring color
+          // Owned indicator
+          const owned = ownedSet.has(pk.ticker);
+          const ownedBadge = owned ? '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;font-size:9px">OWNED</span>' : '';
+
+          // Matching ideaFilter
+          if (ideasFilter === 'owned' && !owned) return '';
+          if (ideasFilter === 'not-owned' && owned) return '';
+
           const ringColor = score >= 60 ? '#10b981' : score >= 45 ? '#3b82f6' : score >= 30 ? '#eab308' : '#6b7280';
+
+          // Multi-factor bars: RSI, Trend, Momentum, Volume, News
+          const techScore = tech.rsi != null ? Math.min(100, Math.max(0, (tech.rsi - 30) / 0.7)) : 50;
+          const trendScore = tech.trend || 50;
+          const momScore = tech.momentum || 50;
+          const volScore = tech.volume || 50;
+          const newsScore = headlines.length > 1 ? 80 : headlines.length ? 60 : 30;
+          const subScores = [
+            { label: 'Tech', val: techScore, color: '#3b82f6' },
+            { label: 'Trend', val: trendScore, color: '#8b5cf6' },
+            { label: 'Mom', val: momScore, color: '#22d3ee' },
+            { label: 'Vol', val: volScore, color: '#f97316' },
+            { label: 'News', val: newsScore, color: '#eab308' },
+          ];
+          const barsHtml = subScores.map(s => {
+            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <div style="width:100%;height:28px;background:rgba(55,65,81,0.25);border-radius:3px;position:relative;overflow:hidden">
+                <div style="position:absolute;bottom:0;width:100%;height:${s.val}%;background:${s.color};border-radius:3px;transition:height 0.6s"></div>
+              </div>
+              <span style="font-size:7px;color:#6b7280;text-transform:uppercase">${s.label}</span>
+            </div>`;
+          }).join('');
 
           return `<div class="signal-card" onclick="toggleSignalDetail(${i})" style="animation-delay:${i * 0.06}s">
             <div class="flex items-start justify-between mb-3">
@@ -2116,6 +2166,7 @@
                 <div class="flex items-center gap-2">
                   <span class="text-white font-bold text-lg">${escHtml(pk.ticker)}</span>
                   ${recBadge(pk.rec || (score >= 45 ? 'buy' : score >= 30 ? 'consider' : 'hold'))}
+                  ${ownedBadge}
                   <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(99,102,241,0.15);color:#a5b4fc">${escHtml(sector)}</span>
                 </div>
                 <div class="text-gray-500 text-xs mt-0.5">${escHtml(pk.name || pk.ticker)}</div>
@@ -2123,32 +2174,39 @@
               </div>
               ${radialScoreSVG(score)}
             </div>
-            
+
+            <!-- Multi-Factor Bars -->
+            <div style="display:flex;gap:3px;margin-bottom:6px">${barsHtml}</div>
+
             <!-- Analyst Stats -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
-              <div style="background:rgba(17,24,39,0.5);border-radius:6px;padding:6px;text-align:center">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px">
+              <div style="background:rgba(17,24,39,0.5);border-radius:4px;padding:4px;text-align:center">
                 <div class="text-xs text-gray-500">Rating</div>
-                <div class="text-white text-xs font-semibold" style="color:${rating.toLowerCase().includes('buy') ? '#10b981' : rating.toLowerCase().includes('sell') ? '#ef4444' : '#eab308'}">${escHtml(rating)}</div>
+                <div class="text-white text-2xs font-semibold" style="font-size:10px;color:${rating.toLowerCase().includes('buy') ? '#10b981' : rating.toLowerCase().includes('sell') ? '#ef4444' : '#eab308'}">${escHtml(rating)}</div>
               </div>
-              <div style="background:rgba(17,24,39,0.5);border-radius:6px;padding:6px;text-align:center">
+              <div style="background:rgba(17,24,39,0.5);border-radius:4px;padding:4px;text-align:center">
                 <div class="text-xs text-gray-500">Upside</div>
                 <div class="text-white text-xs font-semibold" style="color:${Number(upside) > 0 ? '#10b981' : '#ef4444'}">${upside}%</div>
               </div>
-              <div style="background:rgba(17,24,39,0.5);border-radius:6px;padding:6px;text-align:center">
-                <div class="text-xs text-gray-500">Price</div>
-                <div class="text-white text-xs font-semibold">$${Number(pk.price_current || 0).toFixed(2)}</div>
+              <div style="background:rgba(17,24,39,0.5);border-radius:4px;padding:4px;text-align:center">
+                <div class="text-xs text-gray-500">RSI</div>
+                <div class="text-white text-xs font-semibold" style="color:${tech.rsi != null && tech.rsi > 70 ? '#ef4444' : tech.rsi != null && tech.rsi < 30 ? '#10b981' : '#eab308'}">${tech.rsi != null ? Math.round(tech.rsi) : '—'}</div>
               </div>
             </div>
 
-            <!-- News headlines -->
-            ${headlines.length > 0 ? `<div style="margin-bottom:6px">
-              <div class="text-xs text-gray-500 uppercase mb-1">Latest</div>
-              ${headlines.map(h => `<div class="text-xs text-gray-400" style="line-height:1.4;margin-bottom:2px">${escHtml(h.substring(0, 100))}${h.length > 100 ? '...' : ''}</div>`).join('')}
+            <!-- Clickable News -->
+            ${headlines.length > 0 ? `<div style="margin-bottom:4px">
+              ${headlines.map((h, hi) => {
+                const url = newsUrls[hi] || '#';
+                return `<a href="${url}" target="_blank" onclick="event.stopPropagation()" style="display:block;font-size:10px;color:#9ca3af;line-height:1.3;margin-bottom:2px;text-decoration:none;padding:3px 4px;border-radius:3px;background:rgba(55,65,81,0.2)" 
+                  onmouseover="this.style.color='#f9fafb';this.style.background='rgba(55,65,81,0.4)'"
+                  onmouseout="this.style.color='#9ca3af';this.style.background='rgba(55,65,81,0.2)'">${escHtml(h.substring(0, 100))}${h.length > 100 ? '...' : ''}</a>`;
+              }).join('')}
             </div>` : ''}
 
             <div class="flex items-center justify-between">
               <span style="color:${Number(upside) > 0 ? '#10b981' : '#6b7280'};font-size:11px">${ss.thesis || ''}</span>
-              <span class="expand-chevron" id="chevron-${i}">&#9654;</span>
+              <span class="expand-chevron" id="chevron-${i}">▶</span>
             </div>
             <div class="signal-detail-panel" id="signal-detail-${i}">
               <div style="padding:8px 0">
@@ -2156,15 +2214,15 @@
                 <div class="text-white text-sm">${escHtml(sector)} — ${escHtml(pk.sector_desc || '')}</div>
                 <div class="text-xs text-gray-500 mt-2">Analyst Target:</div>
                 <div class="text-white text-sm">${pk.analyst_target ? '$' + Number(pk.analyst_target).toFixed(2) : 'N/A'}</div>
-                ${headlines.length > 0 ? `<div class="text-xs text-gray-500 mt-2">Recent Headlines:</div>
-                ${headlines.map(h => `<div class="text-xs text-gray-400 mt-1" style="line-height:1.5">▸ ${escHtml(h)}</div>`).join('')}` : ''}
+                <div class="text-xs text-gray-500 mt-2">Technicals:</div>
+                <div class="text-gray-400 text-xs">RSI: ${tech.rsi != null ? Math.round(tech.rsi) : '—'} · Trend: ${tech.trend || '—'}% · MA20: ${tech.ma20 ? '$'+tech.ma20 : '—'}</div>
               </div>
             </div>
           </div>`;
-        }).join('');
+        }).filter(Boolean).join('');
       }
 
-      // Recent trades — filtered by strategy (hero + inline)
+      // Recent trades - filtered by strategy (hero + inline)
       const recent = filteredRecent.filter(tr => matchesStrategy(tr, tradesInlineFilter));
       if (recent.length === 0) {
         document.getElementById('trades-empty').style.display = '';
@@ -2316,7 +2374,7 @@
             break;
           case 'regime_detect':
             typeClass = 'type-scan'; typeLabel = 'REGIME';
-            msg = `${escHtml(ev.symbol || 'SPY')} → <span class="font-semibold text-white">${escHtml((ev.regime || '').toUpperCase())}</span> (${(ev.confidence * 100).toFixed(0)}%) — ${escHtml(ev.recommendation || '')}`;
+            msg = `${escHtml(ev.symbol || 'SPY')} → <span class="font-semibold text-white">${escHtml((ev.regime || '').toUpperCase())}</span> (${(ev.confidence * 100).toFixed(0)}%) - ${escHtml(ev.recommendation || '')}`;
             break;
           case 'order_placed':
             typeClass = 'type-order'; typeLabel = 'ORDER';
@@ -2365,7 +2423,7 @@
         wrEl.className = 'stat-value ' + (wr >= 0.5 ? 'pnl-pos' : 'pnl-neg');
       } else { wrEl.textContent = '--'; wrEl.className = 'stat-value pnl-zero'; }
 
-      // Best P&L — highest avg_pnl from any KEPT experiment
+      // Best P&L - highest avg_pnl from any KEPT experiment
       const keptExps = experiments.filter(e => (e.status || '').toLowerCase() === 'kept');
       const bestPnlExp = keptExps.length > 0 ? keptExps.reduce((best, e) => (e.avg_pnl || 0) > (best.avg_pnl || 0) ? e : best, keptExps[0]) : null;
       const bestPnlEl = document.getElementById('exp-best-pnl');
@@ -2375,7 +2433,7 @@
         bestPnlEl.title = bestPnlExp.experiment_id;
       } else { bestPnlEl.textContent = '--'; bestPnlEl.className = 'stat-value pnl-zero'; }
 
-      // Active Model — show deployed experiment + best undeployed candidate
+      // Active Model - show deployed experiment + best undeployed candidate
       const activeModelEl = document.getElementById('exp-active-model');
       const activeId = summary.active_model || null;
       const bestCandidate = keptExps.filter(e => e.experiment_id !== activeId)
