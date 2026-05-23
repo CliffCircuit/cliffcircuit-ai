@@ -583,6 +583,7 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      white-space: nowrap;
     }
     .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
     .badge-red { background: rgba(248, 113, 113, 0.12); color: var(--coral); }
@@ -693,12 +694,12 @@
       margin-bottom: 0.75rem;
     }
     .inline-strategy-btn {
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-size: 8px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.05em;
       border: 1px solid var(--border);
       background: rgba(17, 24, 39, 0.4);
       color: #6b7280;
@@ -706,7 +707,6 @@
       transition: all 0.2s;
       white-space: nowrap;
       flex-shrink: 0;
-      line-height: 1.2;
     }
     .inline-strategy-btn:hover { border-color: rgba(75,85,99,0.8); color: #d1d5db; }
     .inline-strategy-btn.active { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.6); color: #bfdbfe; box-shadow: 0 0 8px rgba(59,130,246,0.15); }
@@ -1519,9 +1519,12 @@
     function recBadge(rec) {
       if (!rec) return '<span class="badge badge-gray">--</span>';
       const r = rec.toLowerCase();
-      if (r === 'buy' || r === 'strong buy') return `<span class="badge badge-green">${escHtml(rec)}</span>`;
-      if (r === 'sell' || r === 'strong sell') return `<span class="badge badge-red">${escHtml(rec)}</span>`;
-      return `<span class="badge badge-yellow">${escHtml(rec)}</span>`;
+      let label = rec;
+      if (r === 'strong buy') label = 'Strong';
+      else if (r === 'strong sell') label = 'Strong';
+      if (label === 'Strong' || r === 'buy' || r === 'strong buy') return `<span class="badge badge-green">${escHtml(label)}</span>`;
+      if (r === 'sell' || r === 'strong sell') return `<span class="badge badge-red">${escHtml(label)}</span>`;
+      return `<span class="badge badge-yellow">${escHtml(label)}</span>`;
     }
     function wheelStateBadge(state) {
       if (!state) return '<span class="badge badge-gray">--</span>';
