@@ -1095,6 +1095,14 @@
           <button class="inline-strategy-btn" data-filter="owned" onclick="setIdeasFilter('owned')">Owned</button>
           <button class="inline-strategy-btn" data-filter="not-owned" onclick="setIdeasFilter('not-owned')">Not Owned</button>
         </div>
+        <div class="inline-strategy-filters" style="margin-bottom:10px">
+          <button class="inline-strategy-btn active" data-sector="all" onclick="setSectorFilter('all')">All Sectors</button>
+          <button class="inline-strategy-btn" data-sector="semiconductors" onclick="setSectorFilter('semiconductors')">Semis</button>
+          <button class="inline-strategy-btn" data-sector="ai_infrastructure" onclick="setSectorFilter('ai_infrastructure')">AI Infra</button>
+          <button class="inline-strategy-btn" data-sector="power_energy" onclick="setSectorFilter('power_energy')">Power</button>
+          <button class="inline-strategy-btn" data-sector="memory_storage" onclick="setSectorFilter('memory_storage')">Memory</button>
+          <button class="inline-strategy-btn" data-sector="quantum_computing" onclick="setSectorFilter('quantum_computing')">Quantum</button>
+        </div>
         <div id="signals-empty" class="text-gray-600 text-sm" style="display:none;">No scanner data available.</div>
         <div id="signals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
       </div>
@@ -1235,6 +1243,7 @@
     let positionsInlineFilter = 'all';
     let tradesInlineFilter = 'all';
     let ideasFilter = 'all';
+    let sectorFilter = 'all';
     let sortField = 'market_value'; let sortDir = -1;
     let latestData = null;
 
@@ -1320,12 +1329,11 @@
 
     function setIdeasFilter(f) {
       ideasFilter = f;
-      document.querySelectorAll('#signals-grid').forEach(g => {
-        // Force re-render on next renderDashboard
-      });
-      document.querySelectorAll('.inline-strategy-btn').forEach(b => {
-        const isIdeasBtn = b.closest('#signals-grid') || b.onclick?.toString().includes('setIdeasFilter');
-      });
+      if (latestData) renderDashboard(latestData, true);
+    }
+
+    function setSectorFilter(s) {
+      sectorFilter = s;
       if (latestData) renderDashboard(latestData, true);
     }
 
@@ -2135,6 +2143,7 @@
           // Matching ideaFilter
           if (ideasFilter === 'owned' && !owned) return '';
           if (ideasFilter === 'not-owned' && owned) return '';
+          if (sectorFilter !== 'all' && pk.sector !== sectorFilter) return '';
 
           const ringColor = score >= 60 ? '#10b981' : score >= 45 ? '#3b82f6' : score >= 30 ? '#eab308' : '#6b7280';
 
