@@ -2101,62 +2101,64 @@
         document.getElementById('signals-empty').style.display = 'none';
         document.getElementById('signals-grid').innerHTML = picks.map((pk, i) => {
           const ss = pk.signal_stack || {};
-          const tech = ss.technical || {};
-          const news = ss.news || {};
-          const fund = ss.fundamentals || {};
-          const soc = ss.social || {};
-          const trend = ss.trend || {};
-          const mom = ss.momentum || {};
-          const compositeScore = pk.score || 0;
+          const score = pk.score || 0;
+          const sector = (pk.sector || '').replace(/_/g, ' ');
+          const rating = pk.analyst_rating || ss.analyst || 'N/A';
+          const upside = pk.upside_pct != null ? Number(pk.upside_pct).toFixed(1) : '—';
+          const headlines = pk.news_headlines || [];
 
-          // Mini bar chart data for sub-scores
-          const subScores = [
-            { label: 'Tech', val: tech.score, color: '#3b82f6' },
-            { label: 'Trend', val: trend.score, color: '#8b5cf6' },
-            { label: 'Mom', val: mom.score, color: '#22d3ee' },
-            { label: 'News', val: news.score, color: '#eab308' },
-            { label: 'Social', val: soc.score, color: '#f97316' },
-          ];
-          const barsHtml = subScores.map(s => {
-            const val = s.val != null ? s.val : 0;
-            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-              <div style="width:100%;height:32px;background:rgba(55,65,81,0.2);border-radius:3px;position:relative;overflow:hidden">
-                <div style="position:absolute;bottom:0;width:100%;height:${val}%;background:${s.color};border-radius:3px;transition:height 0.8s cubic-bezier(0.4,0,0.2,1)"></div>
-              </div>
-              <span style="font-size:8px;color:#6b7280;text-transform:uppercase">${s.label}</span>
-            </div>`;
-          }).join('');
-
-          const priceInfo = pk.signals?.latest_close
-            ? `<span class="text-white text-sm font-semibold">$${Number(pk.signals.latest_close).toFixed(2)}</span>`
-            : '';
+          // Score ring color
+          const ringColor = score >= 60 ? '#10b981' : score >= 45 ? '#3b82f6' : score >= 30 ? '#eab308' : '#6b7280';
 
           return `<div class="signal-card" onclick="toggleSignalDetail(${i})" style="animation-delay:${i * 0.06}s">
             <div class="flex items-start justify-between mb-3">
               <div>
                 <div class="flex items-center gap-2">
                   <span class="text-white font-bold text-lg">${escHtml(pk.ticker)}</span>
-                  ${recBadge(pk.rec)}
+                  ${recBadge(pk.rec || (score >= 45 ? 'buy' : score >= 30 ? 'consider' : 'hold'))}
+                  <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(99,102,241,0.15);color:#a5b4fc">${escHtml(sector)}</span>
                 </div>
-                <div class="text-gray-500 text-xs mt-0.5" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(pk.name)}</div>
-                <div class="mt-1">${priceInfo}</div>
+                <div class="text-gray-500 text-xs mt-0.5">${escHtml(pk.name || pk.ticker)}</div>
+                <div class="mt-1"><span class="text-white text-sm font-semibold">$${Number(pk.price_current || 0).toFixed(2)}</span></div>
               </div>
-              ${radialScoreSVG(compositeScore)}
+              ${radialScoreSVG(score)}
             </div>
-            <div style="display:flex;gap:3px;margin-bottom:8px">${barsHtml}</div>
-            <div class="flex items-center justify-between">
-              <div class="flex gap-1 flex-wrap">
-                ${scorePill(tech.score)} ${scorePill(trend.score)} ${scorePill(mom.score)}
+            
+            <!-- Analyst Stats -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+              <div style="background:rgba(17,24,39,0.5);border-radius:6px;padding:6px;text-align:center">
+                <div class="text-xs text-gray-500">Rating</div>
+                <div class="text-white text-xs font-semibold" style="color:${rating.toLowerCase().includes('buy') ? '#10b981' : rating.toLowerCase().includes('sell') ? '#ef4444' : '#eab308'}">${escHtml(rating)}</div>
               </div>
+              <div style="background:rgba(17,24,39,0.5);border-radius:6px;padding:6px;text-align:center">
+                <div class="text-xs text-gray-500">Upside</div>
+                <div class="text-white text-xs font-semibold" style="color:${Number(upside) > 0 ? '#10b981' : '#ef4444'}">${upside}%</div>
+              </div>
+              <div style="background:rgba(17,24,39,0.5);border-radius:6px;padding:6px;text-align:center">
+                <div class="text-xs text-gray-500">Price</div>
+                <div class="text-white text-xs font-semibold">$${Number(pk.price_current || 0).toFixed(2)}</div>
+              </div>
+            </div>
+
+            <!-- News headlines -->
+            ${headlines.length > 0 ? `<div style="margin-bottom:6px">
+              <div class="text-xs text-gray-500 uppercase mb-1">Latest</div>
+              ${headlines.map(h => `<div class="text-xs text-gray-400" style="line-height:1.4;margin-bottom:2px">${escHtml(h.substring(0, 100))}${h.length > 100 ? '...' : ''}</div>`).join('')}
+            </div>` : ''}
+
+            <div class="flex items-center justify-between">
+              <span style="color:${Number(upside) > 0 ? '#10b981' : '#6b7280'};font-size:11px">${ss.thesis || ''}</span>
               <span class="expand-chevron" id="chevron-${i}">&#9654;</span>
             </div>
             <div class="signal-detail-panel" id="signal-detail-${i}">
-              ${renderTechnicalLayer(tech)}
-              ${renderTrendLayer(trend)}
-              ${renderMomentumLayer(mom)}
-              ${renderNewsLayer(news)}
-              ${renderFundamentalsLayer(fund)}
-              ${renderSocialLayer(soc)}
+              <div style="padding:8px 0">
+                <div class="text-xs text-gray-500">Sector:</div>
+                <div class="text-white text-sm">${escHtml(sector)} — ${escHtml(pk.sector_desc || '')}</div>
+                <div class="text-xs text-gray-500 mt-2">Analyst Target:</div>
+                <div class="text-white text-sm">${pk.analyst_target ? '$' + Number(pk.analyst_target).toFixed(2) : 'N/A'}</div>
+                ${headlines.length > 0 ? `<div class="text-xs text-gray-500 mt-2">Recent Headlines:</div>
+                ${headlines.map(h => `<div class="text-xs text-gray-400 mt-1" style="line-height:1.5">▸ ${escHtml(h)}</div>`).join('')}` : ''}
+              </div>
             </div>
           </div>`;
         }).join('');
