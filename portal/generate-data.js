@@ -330,7 +330,7 @@ async function main() {
   let execEvents = { total: 0, failureCount: 0, items: [] };
   try {
     // Incremental DB sync — only scans JSONL files modified since last run (~50ms)
-    try { require('child_process').execSync('node /Users/openclaw/workspace/runtime/portal-db-sync.js', { timeout: 15000, stdio: 'pipe' }); } catch(e) { console.error('sync warn:', e.message); }
+    try { require('child_process').execSync('node /Users/openclaw/workspace/portal-db-sync.js', { timeout: 15000, stdio: 'pipe' }); } catch(e) { console.error('sync warn:', e.message); }
     const Database = require('better-sqlite3');
     const db = new Database('/Users/openclaw/workspace/runtime/portal-data.db', { readonly: true });
 
