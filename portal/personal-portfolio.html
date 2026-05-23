@@ -1330,6 +1330,10 @@
 
     function setIdeasFilter(f) {
       ideasFilter = f;
+      // Update ownership filter button states
+      document.querySelectorAll('[data-filter]').forEach(b => {
+        if (b.dataset.filter) b.classList.toggle('active', b.dataset.filter === f);
+      });
       if (latestData) renderDashboard(latestData, true);
     }
 
