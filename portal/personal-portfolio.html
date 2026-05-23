@@ -706,7 +706,7 @@
       transition: all 0.2s;
     }
     .inline-strategy-btn:hover { border-color: rgba(75,85,99,0.8); color: #d1d5db; }
-    .inline-strategy-btn.active { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
+    .inline-strategy-btn.active { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.6); color: #bfdbfe; box-shadow: 0 0 8px rgba(59,130,246,0.15); }
     .markov-capital-note {
       display: none;
       background: rgba(139, 92, 246, 0.1);
@@ -1090,18 +1090,18 @@
       <!-- ========== TOP SIGNALS - CARD GRID ========== -->
       <div class="section-card fade-in stagger-6">
         <div class="section-title">Today's Ideas <span style="font-weight:400;color:#4b5563;text-transform:none;letter-spacing:0;font-size:11px">scanner picks to consider - not automatic orders</span></div>
-        <div class="inline-strategy-filters" style="margin-bottom:10px">
-          <button class="inline-strategy-btn active" data-filter="all" onclick="setIdeasFilter('all')">All</button>
+        <div class="inline-strategy-filters" style="margin-bottom:8px">
+          <button class="inline-strategy-btn active" data-filter="all" onclick="setIdeasFilter('all')">All Positions</button>
           <button class="inline-strategy-btn" data-filter="owned" onclick="setIdeasFilter('owned')">Owned</button>
           <button class="inline-strategy-btn" data-filter="not-owned" onclick="setIdeasFilter('not-owned')">Not Owned</button>
         </div>
         <div class="inline-strategy-filters" style="margin-bottom:10px">
-          <button class="inline-strategy-btn active" data-sector="all" onclick="setSectorFilter('all')">All Sectors</button>
-          <button class="inline-strategy-btn" data-sector="semiconductors" onclick="setSectorFilter('semiconductors')">Semis</button>
-          <button class="inline-strategy-btn" data-sector="ai_infrastructure" onclick="setSectorFilter('ai_infrastructure')">AI Infra</button>
-          <button class="inline-strategy-btn" data-sector="power_energy" onclick="setSectorFilter('power_energy')">Power</button>
-          <button class="inline-strategy-btn" data-sector="memory_storage" onclick="setSectorFilter('memory_storage')">Memory</button>
-          <button class="inline-strategy-btn" data-sector="quantum_computing" onclick="setSectorFilter('quantum_computing')">Quantum</button>
+          <button class="inline-strategy-btn active sector-chip" data-sector="all" onclick="setSectorFilter('all')">All Sectors</button>
+          <button class="inline-strategy-btn sector-chip" data-sector="semiconductors" onclick="toggleSector('semiconductors')">Semis</button>
+          <button class="inline-strategy-btn sector-chip" data-sector="ai_infrastructure" onclick="toggleSector('ai_infrastructure')">AI Infra</button>
+          <button class="inline-strategy-btn sector-chip" data-sector="power_energy" onclick="toggleSector('power_energy')">Power</button>
+          <button class="inline-strategy-btn sector-chip" data-sector="memory_storage" onclick="toggleSector('memory_storage')">Memory</button>
+          <button class="inline-strategy-btn sector-chip" data-sector="quantum_computing" onclick="toggleSector('quantum_computing')">Quantum</button>
         </div>
         <div id="signals-empty" class="text-gray-600 text-sm" style="display:none;">No scanner data available.</div>
         <div id="signals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
@@ -1243,7 +1243,7 @@
     let positionsInlineFilter = 'all';
     let tradesInlineFilter = 'all';
     let ideasFilter = 'all';
-    let sectorFilter = 'all';
+    let activeSectors = new Set();
     let sortField = 'market_value'; let sortDir = -1;
     let latestData = null;
 
@@ -1333,7 +1333,28 @@
     }
 
     function setSectorFilter(s) {
-      sectorFilter = s;
+      activeSectors.clear();
+      document.querySelectorAll('.sector-chip').forEach(b => {
+        b.classList.toggle('active', b.dataset.sector === 'all');
+      });
+      if (latestData) renderDashboard(latestData, true);
+    }
+
+    function toggleSector(s) {
+      document.querySelector('.sector-chip[data-sector="all"]').classList.remove('active');
+      if (activeSectors.has(s)) {
+        activeSectors.delete(s);
+      } else {
+        activeSectors.add(s);
+      }
+      // Update button states
+      document.querySelectorAll('.sector-chip').forEach(b => {
+        if (b.dataset.sector !== 'all') {
+          b.classList.toggle('active', activeSectors.has(b.dataset.sector));
+        } else {
+          b.classList.toggle('active', activeSectors.size === 0);
+        }
+      });
       if (latestData) renderDashboard(latestData, true);
     }
 
@@ -2143,7 +2164,7 @@
           // Matching ideaFilter
           if (ideasFilter === 'owned' && !owned) return '';
           if (ideasFilter === 'not-owned' && owned) return '';
-          if (sectorFilter !== 'all' && pk.sector !== sectorFilter) return '';
+          if (activeSectors.size > 0 && !activeSectors.has(pk.sector)) return '';
 
           const ringColor = score >= 60 ? '#10b981' : score >= 45 ? '#3b82f6' : score >= 30 ? '#eab308' : '#6b7280';
 
