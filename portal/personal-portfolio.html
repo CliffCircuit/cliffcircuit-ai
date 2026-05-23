@@ -561,6 +561,20 @@
     .data-table tbody tr:nth-child(even) { background: rgba(17, 24, 39, 0.3); }
     .data-table tbody tr:nth-child(even):hover { background: rgba(31, 41, 55, 0.5); }
 
+    /* Sortable headers */
+    .data-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .data-table th.sortable:hover { color: #f9fafb; }
+    .sort-arrow { color: #6b7280; font-size: 10px; }
+
+    /* Clickable position rows */
+    .position-row.clickable { cursor: pointer; }
+    .position-row.active { background: rgba(59, 130, 246, 0.12) !important; }
+    .position-row.active td:first-child { border-left: 2px solid #3b82f6; }
+
     /* Badges */
     .badge {
       border-radius: 6px;
@@ -1092,11 +1106,25 @@
         <div class="overflow-x-auto">
           <table class="data-table" id="positions-table" style="display:none;">
             <thead>
-              <tr><th>Ticker</th><th>Strategy</th><th>Model</th><th>Ver</th><th>Qty</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th><th>P&L %</th><th>Exit Signal</th></tr>
+              <tr>
+                <th class="sortable" onclick="sortPositions('ticker')">Company <span class="sort-arrow" id="sort-ticker"></span></th>
+                <th class="sortable" onclick="sortPositions('qty')">Qty <span class="sort-arrow" id="sort-qty"></span></th>
+                <th class="sortable" onclick="sortPositions('entry_price')">Entry <span class="sort-arrow" id="sort-entry_price"></span></th>
+                <th class="sortable" onclick="sortPositions('current_price')">Current <span class="sort-arrow" id="sort-current_price"></span></th>
+                <th class="sortable" onclick="sortPositions('market_value')">Value <span class="sort-arrow" id="sort-market_value"></span></th>
+                <th class="sortable" onclick="sortPositions('pnl')">P&L <span class="sort-arrow" id="sort-pnl"></span></th>
+                <th class="sortable" onclick="sortPositions('pnl_pct')">P&L % <span class="sort-arrow" id="sort-pnl_pct"></span></th>
+                <th>Exit Signal</th>
+              </tr>
             </thead>
             <tbody id="positions-body"></tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Position Detail Panel (shown on row click) -->
+      <div id="position-detail-panel" class="section-card" style="display:none;animation:fadeSlideUp 0.3s ease-out">
+        <div id="position-detail-content"></div>
       </div>
 
       <!-- ========== RECENT TRADES ========== -->
@@ -1201,7 +1229,32 @@
     let currentStrategy = 'all'; // kept for backward compat with filtered views
     let positionsInlineFilter = 'all';
     let tradesInlineFilter = 'all';
+    let sortField = 'market_value'; let sortDir = -1;
     let latestData = null;
+
+    // Ticker → Company name map
+    const COMPANY_NAMES = {
+      AAPL:'Apple Inc.',ALAB:'Astera Labs',AVGO:'Broadcom Inc.',CEG:'Constellation Energy',
+      CRDO:'Credo Technology',ETN:'Eaton Corp.',FN:'Fabrinet',INOD:'Innodata Inc.',
+      INTC:'Intel Corp.',MOD:'Modine Manufacturing',MRVL:'Marvell Technology',
+      NVDA:'NVIDIA Corp.',VRT:'Vertiv Holdings',AMZN:'Amazon.com',AMD:'Advanced Micro Devices',
+      GOOGL:'Alphabet Inc.',META:'Meta Platforms',MSFT:'Microsoft Corp.',TSLA:'Tesla Inc.',
+      DELL:'Dell Technologies',SMCI:'Super Micro Computer',ANET:'Arista Networks',
+      SNOW:'Snowflake Inc.',PLTR:'Palantir Technologies',UBER:'Uber Technologies',
+      SOUN:'SoundHound AI',ARM:'Arm Holdings',QCOM:'Qualcomm Inc.',MU:'Micron Technology',
+      IONQ:'IonQ Inc.',RGTI:'Rigetti Computing',QBTS:'D-Wave Quantum',
+      CEG:'Constellation Energy',GEV:'GE Vernova',ETR:'Entergy Corp.',
+      VST:'Vistra Corp.',TLN:'Talen Energy',SMR:'NuScale Power',
+      OKLO:'Oklo Inc.',BWXT:'BWX Technologies',CCJ:'Cameco Corp.',
+      O:'Realty Income',PG:'Procter & Gamble',KMB:'Kimberly-Clark',KMI:'Kinder Morgan',
+      EOG:'EOG Resources',COP:'ConocoPhillips',DVN:'Devon Energy',OXY:'Occidental Petroleum',
+      XOM:'Exxon Mobil',CF:'CF Industries',CL:'Colgate-Palmolive',CTVA:'Corteva Inc.',
+      DE:'Deere & Co.',DOW:'Dow Inc.',EQT:'EQT Corp.',GRMN:'Garmin Ltd.',
+      KIM:'Kimco Realty',LYB:'LyondellBasell',PHM:'PulteGroup',TER:'Teradyne Inc.',
+      VZ:'Verizon',WELL:'Welltower Inc.',LITE:'Lumentum Holdings',APA:'APA Corp.',
+      WMB:'Williams Companies',TPL:'Texas Pacific Land',ROST:'Ross Stores',
+      MSI:'Motorola Solutions',KEYS:'Keysight Technologies',PWR:'Quanta Services',
+    };
     let expShowCount = 10;
     let allExperimentsSorted = [];
 
@@ -1531,6 +1584,63 @@
       if (!panel) return;
       panel.classList.toggle('open');
       if (chevron) chevron.classList.toggle('open');
+    }
+
+    // ─── Sortable positions ───
+    function sortPositions(field) {
+      if (sortField === field) { sortDir *= -1; } else { sortField = field; sortDir = -1; }
+      document.querySelectorAll('.sort-arrow').forEach(el => el.innerHTML = '');
+      const arrow = document.getElementById('sort-' + field);
+      if (arrow) arrow.innerHTML = sortDir > 0 ? ' ▴' : ' ▾';
+      if (latestData) renderDashboard(latestData, false);
+    }
+
+    // ─── Position detail panel ───
+    async function showPositionDetail(ticker) {
+      const positions = (latestData && latestData.portfolio && latestData.portfolio.positions) || [];
+      const posData = positions.find(p => p.ticker === ticker) || {};
+      const panel = document.getElementById('position-detail-panel');
+      const content = document.getElementById('position-detail-content');
+      const currentActive = document.querySelector('.position-row.active');
+      if (currentActive) currentActive.classList.remove('active');
+      const clickedRow = document.querySelector(`.position-row[data-ticker="${ticker}"]`);
+      if (clickedRow) { clickedRow.classList.add('active'); clickedRow.scrollIntoView({behavior:'smooth',block:'center'}); }
+
+      // Show loading
+      panel.style.display = '';
+      content.innerHTML = `<div style="padding:24px;text-align:center;color:#6b7280"><div class="spinner"></div><div style="margin-top:12px">Loading news for ${ticker}...</div></div>`;
+
+      try {
+        const resp = await fetch(`https://api.polygon.io/v2/reference/news?ticker=${ticker}&limit=5&sort=published_utc&apiKey=9lBb1J4gu1Q8QlsAGk3jQeGd8kR8uPiy`);
+        const news = await resp.json();
+        const articles = news.results || [];
+
+        content.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div>
+              <span class="text-white font-semibold" style="font-size:16px">${escHtml(COMPANY_NAMES[ticker] || posData.name || ticker)}</span>
+              <span class="text-gray-500 text-sm" style="margin-left:8px">${ticker}</span>
+            </div>
+            <button onclick="document.getElementById('position-detail-panel').style.display='none'" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px">✕</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;padding:12px;background:rgba(17,24,39,0.5);border-radius:8px">
+            <div><span class="text-gray-500 text-xs">Qty</span><div class="text-white">${Number(posData.qty).toFixed(4)}</div></div>
+            <div><span class="text-gray-500 text-xs">Entry</span><div class="text-white">$${Number(posData.entry_price).toFixed(2)}</div></div>
+            <div><span class="text-gray-500 text-xs">Current</span><div class="text-white">$${Number(posData.current_price).toFixed(2)}</div></div>
+            <div><span class="text-gray-500 text-xs">P&L</span><div class="${Number(posData.pnl) >= 0 ? 'pnl-pos' : 'pnl-neg'}">${Number(posData.pnl) >= 0 ? '+' : ''}$${Number(posData.pnl).toFixed(2)} (${Number(posData.pnl_pct).toFixed(1)}%)</div></div>
+          </div>
+          <div class="text-xs text-gray-500 uppercase mb-2">Recent News</div>
+          ${articles.length === 0 ? '<div class="text-gray-600 text-sm">No recent news available.</div>' : articles.map(a => `
+            <div style="padding:10px;border-bottom:1px solid rgba(55,65,81,0.3);margin-bottom:8px">
+              <a href="${a.article_url || '#'}" target="_blank" class="text-blue-400 text-sm font-medium" style="text-decoration:none">${escHtml(a.title || '')}</a>
+              <div class="text-gray-500 text-xs" style="margin-top:4px">${a.publisher?.name || ''} · ${new Date(a.published_utc).toLocaleDateString()}</div>
+              <div class="text-gray-400 text-xs" style="margin-top:4px;line-height:1.5">${escHtml((a.description || '').substring(0, 200))}${(a.description || '').length > 200 ? '...' : ''}</div>
+            </div>
+          `).join('')}
+        `;
+      } catch (e) {
+        content.innerHTML = `<div style="padding:24px;color:#ef4444;text-align:center">Failed to load news. Try again later.</div>`;
+      }
     }
 
     // ─── Load & render ───
@@ -1930,7 +2040,14 @@
 
       // Positions table — filtered by strategy (hero + inline)
       const allPositions = p.positions || [];
-      const positions = allPositions.filter(pos => matchesStrategy(pos, currentStrategy) && matchesStrategy(pos, positionsInlineFilter));
+      const positions = allPositions
+        .filter(pos => matchesStrategy(pos, currentStrategy) && matchesStrategy(pos, positionsInlineFilter))
+        .sort((a, b) => {
+          const av = sortField === 'ticker' ? (a.name || a.ticker || '') : (Number(a[sortField]) || 0);
+          const bv = sortField === 'ticker' ? (b.name || b.ticker || '') : (Number(b[sortField]) || 0);
+          if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+          return sortDir * (av - bv);
+        });
       if (positions.length === 0) {
         document.getElementById('positions-empty').style.display = '';
         document.getElementById('positions-table').style.display = 'none';
@@ -1962,12 +2079,9 @@
               exitHtml += `<div class="text-xs text-gray-600" style="margin-top:2px">🔒 trail in ${toTrail}%</div>`;
             }
           }
-          return `<tr>
-            <td class="font-semibold text-white">${escHtml(pos.name || pos.ticker)} <span class="text-gray-600 text-xs">${escHtml(pos.ticker)}</span></td>
-            <td>${getStrategyPill(pos)}</td>
-            <td class="text-gray-400 text-xs">${getModelLabel(pos)}</td>
-            <td class="text-gray-500 text-xs">${getVersionLabel(pos)}</td>
-            <td>${pos.qty ?? '--'}</td>
+          return `<tr class="position-row clickable" data-ticker="${escHtml(pos.ticker)}" onclick="showPositionDetail('${escHtml(pos.ticker)}')">
+            <td class="font-semibold text-white">${escHtml(COMPANY_NAMES[pos.ticker] || pos.name || pos.ticker)} <span class="text-gray-500 text-xs">${escHtml(pos.ticker)}</span></td>
+            <td>${pos.qty != null ? Number(pos.qty).toFixed(4) : '--'}</td>
             <td>${pos.entry_price ? '$' + Number(pos.entry_price).toFixed(2) : '--'}</td>
             <td>${pos.current_price ? '$' + Number(pos.current_price).toFixed(2) : '--'}</td>
             <td>${fmt$(pos.market_value)}</td>
@@ -2396,7 +2510,11 @@
 
     // ─── Init ───
     if (typeof initPortal === 'function') initPortal({ activePage: 'personal-portfolio' });
-    loadDashboard(false);
+    loadDashboard(false).then(() => {
+      // Show initial sort indicator
+      const arrow = document.getElementById('sort-market_value');
+      if (arrow) arrow.innerHTML = ' ▾';
+    });
     setInterval(() => loadDashboard(true), REFRESH_MS);
   </script>
 </body>
